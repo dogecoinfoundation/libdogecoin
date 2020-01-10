@@ -22,7 +22,7 @@ The --host flag requires you to provide the name of the host architecture used w
 - arm-linux-gnueabihf
 - aarch64-linux-gnu
 - x86_64-pc-linux-gnu (default)
-- x86_64-apple-darwin
+- x86_64-apple-darwin14
 - x86_64-w64-mingw32
 - i686-w64-mingw32
 - i686-pc-linux-gnu

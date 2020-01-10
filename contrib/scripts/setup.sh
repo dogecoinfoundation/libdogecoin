@@ -66,7 +66,7 @@ if has_param '--host' "$@"; then
             sudo update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
             sudo update-binfmts --import /usr/share/binfmts/wine
         ;;
-        "x86_64-apple-darwin")
+        "x86_64-apple-darwin14")
             ARCH_PACKAGES="cmake zlib xorriso"
             TARGET_ARCH="amd64"
         ;;
@@ -87,7 +87,7 @@ fi
 
 OPTIONS=""
 # sudo dpkg --add-architecture $TARGET_ARCH
-if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin" ]]; then
+if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin14" ]]; then
     unameOut="$(uname -s)"
     case "${unameOut}" in
         Linux*)
@@ -117,18 +117,18 @@ if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin" ]]; then
     echo ${machine}
     SDK_VERSION=10.14
     SDK_URL=https://bitcoincore.org/depends-sources/sdks
-    SDK_SHASUM="328aff47e28c17093d59a72712a9b2e62cd8a8b87bbe03f91abb32960b413f0f"
+    SDK_SHASUM="436df6dfc7073365d12f8ef6c1fdb060777c720602cc67c2dcf9a59d94290e38"
     mkdir -p ./depends/sdk-sources
     mkdir -p ./depends/SDKs
-    echo "$SDK_SHASUM depends/sdk-sources/MacOSX$SDK_VERSION.sdk.tar.gz" | sha256sum -c || \
-    curl --location --fail $SDK_URL/MacOSX$SDK_VERSION.sdk.tar.gz -o depends/sdk-sources/MacOSX$SDK_VERSION.sdk.tar.gz && \
-    echo "$SDK_SHASUM depends/sdk-sources/MacOSX$SDK_VERSION.sdk.tar.gz" | sha256sum -c
-    tar -C depends/SDKs -xf depends/sdk-sources/MacOSX$SDK_VERSION.sdk.tar.gz
+    echo "$SDK_SHASUM depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz" | sha256sum -c || \
+    curl --location --fail $SDK_URL/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz -o depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz && \
+    echo "$SDK_SHASUM depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz" | sha256sum -c
+    tar -C depends/SDKs -xf depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz
 else
     sudo apt-get update
     DEBIAN_FRONTEND=noninteractive sudo apt-get install --no-install-recommends -y $COMMON_PACKAGES $ARCH_PACKAGES
 fi
-NO_X_COMPILE=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "x86_64-apple-darwin");
+NO_X_COMPILE=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "x86_64-apple-darwin14");
 
 if [ "$DEPENDS" = "1" ]; then
     match=0
