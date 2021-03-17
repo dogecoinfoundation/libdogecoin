@@ -62,7 +62,8 @@ jobs:
             config-opts: "--enable-static --disable-shared"
             packages: cmake zlib xorriso
             goal: install
-            sdk: 11.3.1-11C505
+            sdk: 12.1-12A7403
+            sdk-shasum: be17f48fd0b08fb4dcd229f55a6ae48d9f781d210839b4ea313ef17dd12d6ea5
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386

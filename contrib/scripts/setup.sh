@@ -117,13 +117,13 @@ if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin14" ]]; then
     echo ${machine}
     SDK_VERSION=10.14
     SDK_URL=https://bitcoincore.org/depends-sources/sdks
-    SDK_SHASUM="436df6dfc7073365d12f8ef6c1fdb060777c720602cc67c2dcf9a59d94290e38"
+    SDK_SHASUM="be17f48fd0b08fb4dcd229f55a6ae48d9f781d210839b4ea313ef17dd12d6ea5"
     mkdir -p ./depends/sdk-sources
     mkdir -p ./depends/SDKs
-    echo "$SDK_SHASUM depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz" | sha256sum -c || \
-    curl --location --fail $SDK_URL/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz -o depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz && \
-    echo "$SDK_SHASUM depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz" | sha256sum -c
-    tar -C depends/SDKs -xf depends/sdk-sources/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz
+    echo "$SDK_SHASUM depends/sdk-sources/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz" | sha256sum -c || \
+    curl --location --fail $SDK_URL/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz -o depends/sdk-sources/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz && \
+    echo "$SDK_SHASUM depends/sdk-sources/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz" | sha256sum -c
+    tar -C depends/SDKs -xf depends/sdk-sources/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
 else
     sudo apt-get update
     DEBIAN_FRONTEND=noninteractive sudo apt-get install --no-install-recommends -y $COMMON_PACKAGES $ARCH_PACKAGES
