@@ -475,7 +475,8 @@ dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypat
     static char digits[] = "0123456789";
     uint64_t idx = 0;
     assert(strlens(keypath) < 1024);
-    char *pch, *kp = dogecoin_calloc(1, strlens(keypath) + 1);
+    char *pch, *kp = dogecoin_malloc(strlens(keypath) + 1);
+    char *saveptr; /* for strtok_r calls - fix for concurrent calls error*/
 
     if (!kp) {
         return false;
@@ -503,7 +504,7 @@ dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypat
         dogecoin_hdnode_fill_public_key(node);
     }
 
-    pch = strtok(kp + 2, delim);
+    pch = strtok_r(kp + 2, delim, &saveptr);
     while (pch != NULL) {
         size_t i = 0;
         int prm = 0;
@@ -532,7 +533,7 @@ dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypat
                 goto err;
             }
         }
-        pch = strtok(NULL, delim);
+        pch = strtok_r(NULL, delim, &saveptr);
     }
     dogecoin_free(kp);
     return true;
