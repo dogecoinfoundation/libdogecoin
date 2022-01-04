@@ -40,6 +40,20 @@ the library starts to become a dependency for real projects this will likely cha
 * Collaborate before you innovate! 
 * Have fun <3
 
+### Structure
+
+Advice on how to navigate this library:
+
+`/include/*.h` provides header files for libdogecoin users, look here for .h</br>
+`/src/<feature>/*.c,*.h` look here for local .c/.h source implementing the contracts in `/include`
+`/build/<arch>/*.a,*.so,*.dll` output targets, see `Makefile`, excluded in .gitignore
+`/contrib/<proj>` a place for misc non-core experiments, utils, demo-nodes etc
+`/bindings/<lang>/` individual language bindings
+`/test/` test suite
+`/doc/*.md` general library documentation
+`/doc/spec/*.md` A place to begin documenting the Dogecoin Standard as we go
+`/` Makefile, license etc.
+
 ### Code of Shibes
 
 By contributing to this repository you agree to be a basic human being, please see `CONDUCT.md`
