@@ -33,9 +33,9 @@ the library starts to become a dependency for real projects this will likely cha
 * Contact Michi/Tim/Ross to get added to the libdogecoin team on GitHub and the Foundation discord server.
 * Branch/PRs
 * Rebasing before merging
-* Write tests before merging to main
+* Ensure tests written before merging to main
 * Document how Dogecoin works as each feature is developed in `/docs/spec`
-* 1 approval from another contributor required to merge to master
+* 1 approval from another contributor required to merge to main
 * Don't introduce dependencies without discussion
 * Collaborate before you innovate! 
 * Have fun <3
