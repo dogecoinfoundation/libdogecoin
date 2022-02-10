@@ -1,0 +1,55 @@
+# codeql gh-actions file
+name: codeql
+
+on:
+  push:
+    branches:
+      - '*-dev'
+      - 'main'
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches:
+      - '*-dev'
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - 'contrib/**'
+      - 'doc/**'
+
+jobs:
+  analyze:
+    name: analyze
+    runs-on: ubuntu-20.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'cpp', 'python' ]
+        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
+
+    steps:
+    - name: checkout repository
+      uses: actions/checkout@v2
+
+    - name: update system
+      run: |
+        sudo apt-get update --yes
+        sudo apt-get install autoconf automake libtool build-essential libevent-dev python3 --yes
+
+    - name: init codeql
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: build libdogecoin
+      run: |
+       ./autogen.sh
+       ./configure
+       make check -j3 VERBOSE=1
+
+    - name: perform codeql analysis
+      uses: github/codeql-action/analyze@v1

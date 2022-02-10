@@ -1,5 +1,7 @@
 # Libdogecoin, a clean C library of Dogecoin building blocks.
 
+[![CI](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ci.yml/badge.svg)](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ci.yml)[![CodeQL](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ql.yml/badge.svg)](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ql.yml)
+
 Libdogecoin will be a complete implementation of the Dogecoin Protocols, as a C library 
 (and series of bindings to popular languages) which will allow anyone to build a Dogecoin 
 compliant product, without needing to worry about the deeper specifics of the crypto 
