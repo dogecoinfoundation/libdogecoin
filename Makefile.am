@@ -6,6 +6,7 @@ lib_LTLIBRARIES = libdogecoin.la
 include_HEADERS = \
     include/dogecoin/crypto/aes.h \
     include/dogecoin/dogecoin.h \
+    include/dogecoin/crypto/sha2.h \
     include/dogecoin/utils.h
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -13,6 +14,7 @@ pkgconfig_DATA = libdogecoin.pc
 
 libdogecoin_la_SOURCES = \
     src/crypto/aes.c \
+    src/crypto/sha2.c \
     src/utils.c
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include
@@ -22,6 +24,7 @@ noinst_PROGRAMS = tests
 tests_LDADD = libdogecoin.la
 tests_SOURCES = \
     test/aes_tests.c \
+    test/sha2_tests.c \
     test/utest.h \
     test/unittester.c \
     test/utils_tests.c
