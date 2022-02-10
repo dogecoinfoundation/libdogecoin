@@ -35,6 +35,9 @@
         }                                                  \
     } while (0)
 
+extern void test_sha_256();
+extern void test_sha_512();
+extern void test_sha_hmac();
 extern void test_utils();
 extern void test_aes();
 
@@ -45,6 +48,9 @@ int main()
 {
     u_run_test(test_utils);
     u_run_test(test_aes);
+    u_run_test(test_sha_256);
+    u_run_test(test_sha_512);
+    u_run_test(test_sha_hmac);
 
     return U_TESTS_FAIL;
 }
