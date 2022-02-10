@@ -35,10 +35,16 @@
         }                                                  \
     } while (0)
 
+extern void test_utils();
+extern void test_aes();
+
 int U_TESTS_RUN = 0;
 int U_TESTS_FAIL = 0;
 
 int main()
 {
+    u_run_test(test_utils);
+    u_run_test(test_aes);
+
     return U_TESTS_FAIL;
 }

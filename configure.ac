@@ -42,7 +42,7 @@ AC_ARG_ENABLE([debug],
 if test "x$enable_debug" = xyes; then
   CFLAGS="$CFLAGS -g3 -O0 -DDEBUG"
   CXXFLAGS="$CXXFLAGS -g3 -O0 -DDEBUG"
-  AC_DEFINE_UNQUOTED([ENABLE_DEBUG],[1],[Define to 1 to enable debung output])
+  AC_DEFINE_UNQUOTED([ENABLE_DEBUG],[1],[Define to 1 to enable debug output])
 fi
 
 AC_ARG_ENABLE(tests,
