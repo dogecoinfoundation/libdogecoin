@@ -35,15 +35,10 @@
         }                                                  \
     } while (0)
 
-extern void dogecoin_ecc_start();
-extern void dogecoin_ecc_stop();
-
 int U_TESTS_RUN = 0;
 int U_TESTS_FAIL = 0;
 
 int main()
 {
-    dogecoin_ecc_start();
-    dogecoin_ecc_stop();
     return U_TESTS_FAIL;
 }

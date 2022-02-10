@@ -1,14 +1,17 @@
 ACLOCAL_AMFLAGS = -I build-aux/m4
-AUTOMAKE_OPTIONS = serial-tests
 .PHONY: gen
 .INTERMEDIATE: $(GENBIN)
 
 lib_LTLIBRARIES = libdogecoin.la
-libdogecoinincludedir = $(includedir)/dogecoin
-libdogecoininclude_HEADERS = include/dogecoin/dogecoin.h
+include_HEADERS = \
+    include/dogecoin/crypto/aes.h \
+    include/dogecoin/dogecoin.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdogecoin.pc
+
+libdogecoin_la_SOURCES = \
+    src/crypto/aes.c
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include
 
