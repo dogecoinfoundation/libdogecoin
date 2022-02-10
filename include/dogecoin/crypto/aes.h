@@ -38,9 +38,7 @@
 
 #include "../dogecoin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+LIBDOGECOIN_BEGIN_DECL
 
 #if 1
 #define AES_ENC_PREKEYED /* AES encryption with a precomputed key schedule  */
@@ -171,9 +169,6 @@ LIBDOGECOIN_API void aes_decrypt_256(const unsigned char in[N_BLOCK],
                      unsigned char o_key[2 * N_BLOCK]);
 #endif
 
-
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif //__LIBDOGECOIN_CRYPTO_AES_H__
