@@ -20,7 +20,7 @@ During the process of extracting the fundamentals from the Dogecoin Core Wallet 
 implementation) we aim to document ‘how Dogecoin works’ as a suite of tests and documents we 
 are calling the Dogecoin Standard. 
 
-See `/docs/spec`
+See `/doc/spec`
 
 By doing this we will be able to verify that the Libdogecoin implementation of Dogecoin’s 
 internals is accurate to the OG wallet, and thus provide a mechanism for any future Dogecoin 
@@ -54,7 +54,7 @@ the library starts to become a dependency for real projects this will likely cha
 * Branch/PRs in this repository (see above point for access)
 * Rebasing not merging
 * Ensure tests
-* Document how Dogecoin works as each feature is developed in `/docs/spec`
+* Document how Dogecoin works as each feature is developed in `/doc/spec`
 * 1 approval from another contributor required to merge to main
 * Don't introduce dependencies without discussion (MIT)
 * Collaborate before you innovate! 
@@ -88,16 +88,16 @@ as a useful C library with a handfull of higher level language wrappers early,
 should force us to solve fundamental concerns such as language wrappers, testing
 and other issues before getting too far down a rabbit hole.
 
-![Stage 1 Diagram](/docs/diagrams/libdogecoin-stage1.png)
+![Stage 1 Diagram](/doc/diagrams/libdogecoin-stage1.png)
 
 Stage one lets us learn and understand the lowest level building blocks of Dogecoin
 as we build each slice of functionality and deliver incremental releases with full
-tests, docs and perhaps even commandline utilities that exercise them. We expect 
+tests, doc and perhaps even commandline utilities that exercise them. We expect 
 that this approach will gain momentum after the first and second 'slice' as we face
 and solve the problems of library design, building effective language wrappers etc.
 
 
-![Stage 2 Diagram](/docs/diagrams/libdogecoin-stage2.png)
+![Stage 2 Diagram](/doc/diagrams/libdogecoin-stage2.png)
 
 Stage two makes use of the low level building blocks we've delivered by combinging
 them into higher level components that are needed to build wallets and nodes. This
@@ -105,7 +105,7 @@ is where we deliver the parts needed for other members of the community to cobbl
 together operational doge projects.
 
 
-![Stage 3a Diagram](/docs/diagrams/libdogecoin-stage3.png)
+![Stage 3a Diagram](/doc/diagrams/libdogecoin-stage3.png)
 
 Stage three A takes what we've built and uses it to create a new Dogecoin Node 
 service (in C) capable of joining the network and participating in the blockchain. 
@@ -115,7 +115,7 @@ a simple-to-setup manner that will encourage new users to support the network.
 This DogeNode should be far simpler to maintain, being abstracted from the many
 'and the kitchen sink' additions that encumber the Dogecoin Core daemon.
 
-![Stage 3b Diagram](/docs/diagrams/libdogecoin-stage3b.png)
+![Stage 3b Diagram](/doc/diagrams/libdogecoin-stage3b.png)
 
 At the same time, GigaWallet which is being built around the Dogecoin Core APIs
 can be easily ported to libdogecoin so it can operate directly on L1 to transact
