@@ -35,14 +35,12 @@
 
 #include "dogecoin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define TO_UINT8_HEX_BUF_LEN 2048
 #define VARINT_LEN 20
 
 #define strlens(s) (s == NULL ? 0 : strlen(s))
+
+LIBDOGECOIN_BEGIN_DECL
 
 LIBDOGECOIN_API void utils_clear_buffers(void);
 LIBDOGECOIN_API void utils_hex_to_bin(const char* str, unsigned char* out, int inLen, int* outLen);
@@ -53,8 +51,6 @@ LIBDOGECOIN_API void utils_reverse_hex(char* h, int len);
 
 LIBDOGECOIN_API void * safe_malloc(size_t size);
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBDOGECOIN_UTILS_H__*/
