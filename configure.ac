@@ -39,6 +39,18 @@ AC_ARG_ENABLE([debug],
   [enable_debug=$enableval],
   [enable_debug=no])
 
+case $host in
+  *mingw*)
+     TARGET_OS=windows
+     ;;
+  *darwin*)
+     TARGET_OS=darwin
+     ;;
+  *linux*)
+     TARGET_OS=linux
+     ;;
+esac
+
 if test "x$enable_debug" = xyes; then
   CFLAGS="$CFLAGS -g3 -O0 -DDEBUG"
   CXXFLAGS="$CXXFLAGS -g3 -O0 -DDEBUG"
@@ -78,9 +90,24 @@ AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(BUILD_EXEEXT)
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 
+ac_configure_args="${ac_configure_args} --enable-module-recovery"
+AC_CONFIG_SUBDIRS([src/secp256k1])
+
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
 unset PKG_CONFIG_PATH
 PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
 
 AC_OUTPUT
+
+echo 
+echo "Options used to compile and link:"
+echo
+echo "  target os     = $TARGET_OS"
+echo
+echo "  CC            = $CC"
+echo "  CFLAGS        = $CFLAGS"
+echo "  CXX           = $CXX"
+echo "  CXXFLAGS      = $CXXFLAGS"
+echo "  LDFLAGS       = $LDFLAGS"
+echo 

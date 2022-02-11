@@ -1,6 +1,14 @@
 ACLOCAL_AMFLAGS = -I build-aux/m4
+AUTOMAKE_OPTIONS = serial-tests
 .PHONY: gen
 .INTERMEDIATE: $(GENBIN)
+
+DIST_SUBDIRS = src/secp256k1
+
+LIBSECP256K1=src/secp256k1/libsecp256k1.la
+
+$(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/include/*)
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 lib_LTLIBRARIES = libdogecoin.la
 include_HEADERS = \
@@ -20,6 +28,7 @@ libdogecoin_la_SOURCES = \
     src/utils.c
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include
+libdogecoin_la_LIBADD = $(LIBSECP256K1)
 
 if USE_TESTS
 noinst_PROGRAMS = tests
@@ -37,3 +46,6 @@ tests_CPPFLAGS = -I$(top_srcdir)/src
 tests_LDFLAGS = -static
 TESTS = tests
 endif
+
+clean-local:
+	-$(MAKE) -C src/secp256k1 clean
