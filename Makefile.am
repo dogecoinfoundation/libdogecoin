@@ -15,6 +15,7 @@ include_HEADERS = \
     include/dogecoin/crypto/aes.h \
     include/dogecoin/crypto/base58.h \
     include/dogecoin/dogecoin.h \
+    include/dogecoin/crypto/random.h \
     include/dogecoin/crypto/rmd160.h \
     include/dogecoin/crypto/sha2.h \
     include/dogecoin/utils.h
@@ -25,6 +26,7 @@ pkgconfig_DATA = libdogecoin.pc
 libdogecoin_la_SOURCES = \
     src/crypto/aes.c \
     src/crypto/base58.c \
+    src/crypto/random.c \
     src/crypto/rmd160.c \
     src/crypto/sha2.c \
     src/utils.c
@@ -38,6 +40,7 @@ tests_LDADD = libdogecoin.la
 tests_SOURCES = \
     test/aes_tests.c \
     test/base58_tests.c \
+    test/random_tests.c \
     test/rmd160_tests.c \
     test/sha2_tests.c \
     test/utest.h \
