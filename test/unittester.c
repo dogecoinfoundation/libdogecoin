@@ -36,6 +36,7 @@
     } while (0)
 
 extern void test_aes();
+extern void test_base58();
 extern void test_rmd160();
 extern void test_sha_256();
 extern void test_sha_512();
@@ -48,6 +49,7 @@ int U_TESTS_FAIL = 0;
 int main()
 {
     u_run_test(test_aes);
+    u_run_test(test_base58);
     u_run_test(test_rmd160);
     u_run_test(test_sha_256);
     u_run_test(test_sha_512);
