@@ -15,6 +15,7 @@ include_HEADERS = \
     include/dogecoin/crypto/aes.h \
     include/dogecoin/crypto/base58.h \
     include/dogecoin/buffer.h \
+    include/dogecoin/chainparams.h \
     include/dogecoin/cstr.h \
     include/dogecoin/dogecoin.h \
     include/dogecoin/crypto/ecc.h \
@@ -33,6 +34,7 @@ libdogecoin_la_SOURCES = \
     src/crypto/aes.c \
     src/crypto/base58.c \
     src/buffer.c \
+    src/chainparams.c \
     src/cstr.c \
     src/crypto/ecc.c \
     src/mem.c \
