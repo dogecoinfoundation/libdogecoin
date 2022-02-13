@@ -37,13 +37,17 @@
 
 extern void test_aes();
 extern void test_base58();
+extern void test_buffer();
+extern void test_cstr();
 extern void test_ecc();
+extern void test_memory();
 extern void test_random();
 extern void test_rmd160();
 extern void test_sha_256();
 extern void test_sha_512();
 extern void test_sha_hmac();
 extern void test_utils();
+extern void test_vector();
 
 extern void dogecoin_ecc_start();
 extern void dogecoin_ecc_stop();
@@ -57,13 +61,17 @@ int main()
 
     u_run_test(test_aes);
     u_run_test(test_base58);
+    u_run_test(test_buffer);
+    u_run_test(test_cstr);
     u_run_test(test_ecc);
+    u_run_test(test_memory);    
     u_run_test(test_random);
     u_run_test(test_rmd160);
     u_run_test(test_sha_256);
     u_run_test(test_sha_512);
     u_run_test(test_sha_hmac);
     u_run_test(test_utils);
+    u_run_test(test_vector);
 
     dogecoin_ecc_stop();
     return U_TESTS_FAIL;

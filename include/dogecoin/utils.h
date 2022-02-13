@@ -30,10 +30,9 @@
 #ifndef __LIBDOGECOIN_UTILS_H__
 #define __LIBDOGECOIN_UTILS_H__
 
-#include <stdint.h>
-#include <stddef.h>
-
 #include "dogecoin.h"
+#include "cstr.h"
+#include "mem.h"
 
 #define TO_UINT8_HEX_BUF_LEN 2048
 #define VARINT_LEN 20
@@ -48,9 +47,30 @@ LIBDOGECOIN_API void utils_bin_to_hex(unsigned char* bin_in, size_t inlen, char*
 LIBDOGECOIN_API uint8_t* utils_hex_to_uint8(const char* str);
 LIBDOGECOIN_API char* utils_uint8_to_hex(const uint8_t* bin, size_t l);
 LIBDOGECOIN_API void utils_reverse_hex(char* h, int len);
+LIBDOGECOIN_API void utils_uint256_sethex(char* psz, uint8_t* out);
+LIBDOGECOIN_API void* safe_malloc(size_t size);
+LIBDOGECOIN_API void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len);
+LIBDOGECOIN_API void dogecoin_get_default_datadir(cstring *path_out);
+LIBDOGECOIN_API void dogecoin_file_commit(FILE *file);
 
-LIBDOGECOIN_API void * safe_malloc(size_t size);
+/* support substitute for GNU only tdestroy */
+/* let's hope the node struct is always compatible */
+
+struct dogecoin_btree_node {
+    void *key;
+    struct dogecoin_btree_node *left;
+    struct dogecoin_btree_node *right;
+};
+
+static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *)) {
+    struct dogecoin_btree_node *r = (struct dogecoin_btree_node*)root;
+    if (r == 0) return;
+    dogecoin_btree_tdestroy(r->left, freekey);
+    dogecoin_btree_tdestroy(r->right, freekey);
+    if (freekey) freekey(r->key);
+    dogecoin_free(r);
+}
 
 LIBDOGECOIN_END_DECL
 
-#endif /* __LIBDOGECOIN_UTILS_H__*/
+#endif // __LIBDOGECOIN_UTILS_H__
