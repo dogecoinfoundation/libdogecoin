@@ -18,6 +18,7 @@ include_HEADERS = \
     include/dogecoin/cstr.h \
     include/dogecoin/dogecoin.h \
     include/dogecoin/crypto/ecc.h \
+    include/dogecoin/crypto/hash.h \
     include/dogecoin/mem.h \
     include/dogecoin/crypto/random.h \
     include/dogecoin/crypto/rmd160.h \
@@ -53,6 +54,7 @@ tests_SOURCES = \
     test/buffer_tests.c \
     test/cstr_tests.c \
     test/ecc_tests.c \
+    test/hash_tests.c \
     test/mem_tests.c \
     test/random_tests.c \
     test/rmd160_tests.c \
