@@ -94,7 +94,7 @@ jobs:
       - name: install packages
         run: |
           sudo apt-get update
-          sudo apt-get install autoconf automake libtool build-essential libevent-dev python3
+          sudo apt-get install autoconf automake libtool build-essential libevent-dev python3 valgrind
           sudo apt-get install ${{ matrix.packages }}
 
       - name: post install
@@ -112,4 +112,4 @@ jobs:
       - name: build libdogecoin & test
         if: ${{ matrix.run-tests }}
         run: |
-          make check -j"$(getconf _NPROCESSORS_ONLN)" VERBOSE=1
+          make check -j"$(getconf _NPROCESSORS_ONLN)" VERBOSE=1 && python3 tooltests.py
