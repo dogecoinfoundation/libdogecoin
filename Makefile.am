@@ -20,6 +20,7 @@ include_HEADERS = \
     include/dogecoin/dogecoin.h \
     include/dogecoin/crypto/ecc.h \
     include/dogecoin/crypto/hash.h \
+    include/dogecoin/crypto/key.h \
     include/dogecoin/mem.h \
     include/dogecoin/crypto/random.h \
     include/dogecoin/crypto/rmd160.h \
@@ -37,6 +38,7 @@ libdogecoin_la_SOURCES = \
     src/chainparams.c \
     src/cstr.c \
     src/crypto/ecc.c \
+    src/crypto/key.c \
     src/mem.c \
     src/crypto/random.c \
     src/crypto/rmd160.c \
@@ -57,6 +59,7 @@ tests_SOURCES = \
     test/cstr_tests.c \
     test/ecc_tests.c \
     test/hash_tests.c \
+    test/key_tests.c \
     test/mem_tests.c \
     test/random_tests.c \
     test/rmd160_tests.c \

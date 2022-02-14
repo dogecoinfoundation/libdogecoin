@@ -41,6 +41,7 @@ extern void test_buffer();
 extern void test_cstr();
 extern void test_ecc();
 extern void test_hash();
+extern void test_key();
 extern void test_memory();
 extern void test_random();
 extern void test_rmd160();
@@ -56,8 +57,7 @@ extern void dogecoin_ecc_stop();
 int U_TESTS_RUN = 0;
 int U_TESTS_FAIL = 0;
 
-int main()
-{
+int main() {
     dogecoin_ecc_start();
 
     u_run_test(test_aes);
@@ -66,6 +66,7 @@ int main()
     u_run_test(test_cstr);
     u_run_test(test_ecc);
     u_run_test(test_hash);
+    u_run_test(test_key);
     u_run_test(test_memory);
     u_run_test(test_random);
     u_run_test(test_rmd160);
