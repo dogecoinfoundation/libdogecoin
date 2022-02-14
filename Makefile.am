@@ -14,6 +14,7 @@ lib_LTLIBRARIES = libdogecoin.la
 include_HEADERS = \
     include/dogecoin/crypto/aes.h \
     include/dogecoin/crypto/base58.h \
+    include/dogecoin/bip32.h \
     include/dogecoin/buffer.h \
     include/dogecoin/chainparams.h \
     include/dogecoin/cstr.h \
@@ -34,6 +35,7 @@ pkgconfig_DATA = libdogecoin.pc
 libdogecoin_la_SOURCES = \
     src/crypto/aes.c \
     src/crypto/base58.c \
+    src/bip32.c \
     src/buffer.c \
     src/chainparams.c \
     src/cstr.c \
@@ -55,6 +57,7 @@ tests_LDADD = libdogecoin.la
 tests_SOURCES = \
     test/aes_tests.c \
     test/base58_tests.c \
+    test/bip32_tests.c \
     test/buffer_tests.c \
     test/cstr_tests.c \
     test/ecc_tests.c \
