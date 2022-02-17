@@ -13,6 +13,7 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 lib_LTLIBRARIES = libdogecoin.la
 includedir = $(includedir)/dogecoin
 include_HEADERS = \
+    include/dogecoin/address.h \
     include/dogecoin/crypto/aes.h \
     include/dogecoin/crypto/base58.h \
     include/dogecoin/bip32.h \
@@ -41,6 +42,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdogecoin.pc
 
 libdogecoin_la_SOURCES = \
+    src/address.c \
     src/crypto/aes.c \
     src/crypto/base58.c \
     src/bip32.c \
@@ -69,6 +71,7 @@ if USE_TESTS
 noinst_PROGRAMS = tests
 tests_LDADD = libdogecoin.la
 tests_SOURCES = \
+    test/address_tests.c \
     test/aes_tests.c \
     test/base58_tests.c \
     test/bip32_tests.c \
