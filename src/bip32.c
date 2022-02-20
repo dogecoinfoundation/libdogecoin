@@ -24,8 +24,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <dogecoin/bip32.h>
-
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -33,6 +31,7 @@
 #include <string.h>
 
 #include <dogecoin/crypto/base58.h>
+#include <dogecoin/bip32.h>
 #include <dogecoin/crypto/ecc.h>
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/crypto/hash.h>

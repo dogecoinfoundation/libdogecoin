@@ -6,13 +6,15 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#include <dogecoin/crypto/random.h>
-#include "utest.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include <test/utest.h>
+
+#include <dogecoin/crypto/random.h>
 
 void test_random_init_cb(void) {
 }

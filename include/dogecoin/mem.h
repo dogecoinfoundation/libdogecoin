@@ -29,7 +29,7 @@
 #ifndef __LIBDOGECOIN_MEM_H__
 #define __LIBDOGECOIN_MEM_H__
 
-#include "dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

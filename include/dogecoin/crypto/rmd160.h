@@ -26,7 +26,7 @@
 #ifndef __LIBDOGECOIN_CRYPTO_RMD160_H__
 #define __LIBDOGECOIN_CRYPTO_RMD160_H__
 
-#include "../dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -34,4 +34,4 @@ LIBDOGECOIN_API void rmd160(const uint8_t* msg, uint32_t msg_len, uint8_t* hash)
 
 LIBDOGECOIN_END_DECL
 
-#endif
+#endif // __LIBDOGECOIN_CRYPTO_RMD160_H__

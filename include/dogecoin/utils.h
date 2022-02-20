@@ -30,9 +30,9 @@
 #ifndef __LIBDOGECOIN_UTILS_H__
 #define __LIBDOGECOIN_UTILS_H__
 
-#include "dogecoin.h"
-#include "cstr.h"
-#include "mem.h"
+#include <dogecoin/cstr.h>
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/mem.h>
 
 #define TO_UINT8_HEX_BUF_LEN 2048
 #define VARINT_LEN 20

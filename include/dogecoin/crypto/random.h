@@ -26,10 +26,10 @@
 
 */
 
-#ifndef __LIBDOGECOIN_RANDOM_H__
-#define __LIBDOGECOIN_RANDOM_H__
+#ifndef __LIBDOGECOIN_CRYPTO_RANDOM_H__
+#define __LIBDOGECOIN_CRYPTO_RANDOM_H__
 
-#include "../dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -48,4 +48,4 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_random_bytes(uint8_t* buf, uint32_t len, 
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_TX_H__
+#endif // __LIBDOGECOIN_CRYPTO_RANDOM_H__

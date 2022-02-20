@@ -24,10 +24,10 @@
 #ifndef __LIBDOGECOIN_ADDRESS_H__
 #define __LIBDOGECOIN_ADDRESS_H__
 
-#include "dogecoin.h"
-#include "tool.h"
-
 #include <stdbool.h>
+
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/tool.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

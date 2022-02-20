@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "limits.h"
+#include <limits.h>
 
 #include <dogecoin/buffer.h>
 

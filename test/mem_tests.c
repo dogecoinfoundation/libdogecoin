@@ -4,13 +4,14 @@
 * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
 **********************************************************************/
 
-#include <dogecoin/mem.h>
-#include "utest.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include <test/utest.h>
+
+#include <dogecoin/mem.h>
 
 void* test_memory_malloc(size_t size) {
     (void)(size);

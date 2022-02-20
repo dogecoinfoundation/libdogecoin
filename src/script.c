@@ -27,7 +27,6 @@
  
 */
 
-#include <dogecoin/script.h>
 
 #include <assert.h>
 #include <string.h>
@@ -35,6 +34,7 @@
 #include <dogecoin/buffer.h>
 #include <dogecoin/crypto/hash.h>
 #include <dogecoin/crypto/rmd160.h>
+#include <dogecoin/script.h>
 #include <dogecoin/serialize.h>
 
 dogecoin_bool dogecoin_script_copy_without_op_codeseperator(const cstring* script_in, cstring* script_out) {

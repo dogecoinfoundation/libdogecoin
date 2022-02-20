@@ -23,11 +23,11 @@
 #define __LIBDOGECOIN_CRYPTO_SEGWIT_ADDR_H__
 #define _SEGWIT_ADDR_H_ 0
 
-#include "../dogecoin.h"
+#include <stdint.h>
+
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
-
-#include <stdint.h>
 
 /** Encode a SegWit address
  *
@@ -85,4 +85,4 @@ LIBDOGECOIN_API int bech32_decode(char *hrp, uint8_t *data, size_t *data_len,
 
 LIBDOGECOIN_END_DECL
 
-#endif
+#endif // __LIBDOGECOIN_CRYPTO_SEGWIT_ADDR_H__

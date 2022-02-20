@@ -23,10 +23,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
+
 #include <dogecoin/crypto/base58.h>
 #include <dogecoin/crypto/sha2.h>
 

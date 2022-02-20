@@ -28,10 +28,10 @@
 #ifndef __LIBDOGECOIN_BIP32_H__
 #define __LIBDOGECOIN_BIP32_H__
 
-#include "dogecoin.h"
-#include "chainparams.h"
-
 #include <stdint.h>
+
+#include <dogecoin/chainparams.h>
+#include <dogecoin/dogecoin.h>
 
 #define DOGECOIN_BIP32_CHAINCODE_SIZE 32
 

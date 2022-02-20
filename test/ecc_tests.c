@@ -11,11 +11,12 @@
 #include <string.h>
 #include <assert.h>
 
+#include <test/utest.h>
+
 #include <dogecoin/crypto/ecc.h>
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/crypto/random.h>
 #include <dogecoin/utils.h>
-#include "utest.h"
 
 void test_ecc() {
     unsigned char r_buf[32];

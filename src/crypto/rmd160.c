@@ -25,7 +25,7 @@
 
 #include <string.h>
 
-#include "dogecoin/crypto/rmd160.h"
+#include <dogecoin/crypto/rmd160.h>
 
 #define ROL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 

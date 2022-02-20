@@ -27,8 +27,9 @@
 #include <string.h>
 #include <assert.h>
 
+#include <test/utest.h>
+
 #include <dogecoin/crypto/key.h>
-#include "utest.h"
 #include <dogecoin/utils.h>
 
 void test_key() {

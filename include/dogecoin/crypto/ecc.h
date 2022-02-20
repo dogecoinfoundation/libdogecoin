@@ -26,10 +26,10 @@
 
 */
 
-#ifndef __LIBDOGECOIN_ECC_H__
-#define __LIBDOGECOIN_ECC_H__
+#ifndef __LIBDOGECOIN_CRYPTO_ECC_H__
+#define __LIBDOGECOIN_CRYPTO_ECC_H__
 
-#include "../dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -77,4 +77,4 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_verify_sig(const uint8_t* public_key,
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_ECC_H__
+#endif // __LIBDOGECOIN_CRYPTO_ECC_H__

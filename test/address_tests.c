@@ -5,12 +5,12 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <test/utest.h>
+
 #include <dogecoin/address.h>
 #include <dogecoin/crypto/base58.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/utils.h>
-
-#include "utest.h"
 
 void test_address()
 {

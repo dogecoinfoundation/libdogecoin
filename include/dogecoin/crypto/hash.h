@@ -26,14 +26,14 @@
 
 */
 
-#ifndef __LIBDOGECOIN_HASH_H__
-#define __LIBDOGECOIN_HASH_H__
+#ifndef __LIBDOGECOIN_CRYPTO_HASH_H__
+#define __LIBDOGECOIN_CRYPTO_HASH_H__
 
-#include "../dogecoin.h"
-#include "../cstr.h"
-#include "../mem.h"
-#include "sha2.h"
-#include "../vector.h"
+#include <dogecoin/cstr.h>
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/mem.h>
+#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/vector.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -64,4 +64,4 @@ LIBDOGECOIN_API static inline void dogecoin_hash_sngl_sha256(const unsigned char
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_HASH_H__
+#endif // __LIBDOGECOIN_CRYPTO_HASH_H__

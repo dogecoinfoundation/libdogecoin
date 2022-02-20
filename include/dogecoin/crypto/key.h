@@ -26,11 +26,11 @@
 
 */
 
-#ifndef __LIBDOGECOIN_KEY_H__
-#define __LIBDOGECOIN_KEY_H__
+#ifndef __LIBDOGECOIN_CRYPTO_KEY_H__
+#define __LIBDOGECOIN_CRYPTO_KEY_H__
 
-#include "../dogecoin.h"
-#include "../chainparams.h"
+#include <dogecoin/chainparams.h>
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -88,4 +88,4 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2wpkh(const dogecoin_pubk
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_KEY_H__
+#endif // __LIBDOGECOIN_CRYPTO_KEY_H__

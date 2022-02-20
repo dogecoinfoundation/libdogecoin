@@ -26,7 +26,14 @@
  
 */
 
-#include "libdogecoin-config.h"
+#include <assert.h>
+#include <src/libdogecoin-config.h>
+#include <getopt.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/chainparams.h>
@@ -35,14 +42,6 @@
 #include <dogecoin/tool.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
-
-#include <assert.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <getopt.h>
 
 static struct option long_options[] =
 {

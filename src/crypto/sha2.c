@@ -32,6 +32,7 @@
 
 #include <string.h>
 #include <stdint.h>
+
 #include <dogecoin/crypto/sha2.h>
 
 /*

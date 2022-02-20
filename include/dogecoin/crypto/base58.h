@@ -23,10 +23,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __LIBDOGECOIN_BASE58_H__
-#define __LIBDOGECOIN_BASE58_H__
+#ifndef __LIBDOGECOIN_CRYPTO_BASE58_H__
+#define __LIBDOGECOIN_CRYPTO_BASE58_H__
 
-#include "../dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -38,4 +38,4 @@ LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char
 
 LIBDOGECOIN_END_DECL
 
-#endif //__LIBDOGECOIN_BASE58_H__
+#endif //__LIBDOGECOIN_CRYPTO_BASE58_H__

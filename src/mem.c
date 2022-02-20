@@ -26,10 +26,10 @@
 
 */
 
-#include <dogecoin/mem.h>
-
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <dogecoin/mem.h>
 
 void* dogecoin_malloc_internal(size_t size);
 void* dogecoin_calloc_internal(size_t count, size_t size);

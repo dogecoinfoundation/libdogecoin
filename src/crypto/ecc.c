@@ -1,9 +1,9 @@
-#include "secp256k1/include/secp256k1.h"
-#include "secp256k1/include/secp256k1_recovery.h"
-
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <secp256k1/include/secp256k1.h>
+#include <secp256k1/include/secp256k1_recovery.h>
 
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/crypto/random.h>

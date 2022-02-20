@@ -30,12 +30,12 @@
 #ifndef __LIBDOGECOIN_TX_H__
 #define __LIBDOGECOIN_TX_H__
 
-#include "dogecoin.h"
-#include "chainparams.h"
-#include "cstr.h"
-#include "crypto/hash.h"
-#include "script.h"
-#include "vector.h"
+#include <dogecoin/chainparams.h>
+#include <dogecoin/cstr.h>
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/crypto/hash.h>
+#include <dogecoin/script.h>
+#include <dogecoin/vector.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

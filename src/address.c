@@ -25,20 +25,12 @@
 
  */
 
-#include <dogecoin/address.h>
-
-#ifdef HAVE_CONFIG_H
-#  include "libdogecoin-config.h"
-#endif
-#include <dogecoin/tool.h>
-#include <dogecoin/bip32.h>
-#include <dogecoin/crypto/key.h>
-#include <dogecoin/crypto/random.h>
-#include <dogecoin/utils.h>
-
 #include <assert.h>
 #ifndef _MSC_VER
 #  include <getopt.h>
+#endif
+#ifdef HAVE_CONFIG_H
+#  include <src/libdogecoin-config.h>
 #endif
 #include <stdbool.h>
 #include <stdio.h>
@@ -47,6 +39,13 @@
 #ifndef _MSC_VER
 #  include <unistd.h>
 #endif
+
+#include <dogecoin/address.h>
+#include <dogecoin/tool.h>
+#include <dogecoin/bip32.h>
+#include <dogecoin/crypto/key.h>
+#include <dogecoin/crypto/random.h>
+#include <dogecoin/utils.h>
 
 int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet) {
     /* internal variables */

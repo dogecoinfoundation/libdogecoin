@@ -6,7 +6,7 @@
  **********************************************************************/
 
 #if defined HAVE_CONFIG_H
-#include "libdogecoin-config.h"
+#include <src/libdogecoin-config.h>
 #endif
 
 #include <stdio.h>
@@ -14,7 +14,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #ifdef HAVE_BUILTIN_EXPECT
 #define EXPECT(x, c) __builtin_expect((x), (c))

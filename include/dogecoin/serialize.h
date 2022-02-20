@@ -29,13 +29,12 @@
 #ifndef __LIBDOGECOIN_SERIALIZE_H__
 #define __LIBDOGECOIN_SERIALIZE_H__
 
-#include <dogecoin/cstr.h>
-#include <dogecoin/buffer.h>
-
-#include "compat/portable_endian.h"
-
 #include <stdint.h>
 #include <stdio.h>
+
+#include <dogecoin/buffer.h>
+#include <dogecoin/cstr.h>
+#include <dogecoin/compat/portable_endian.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

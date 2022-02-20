@@ -50,7 +50,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-
 /* define if you have fast 32-bit types on your system */
 #if 1
 #define HAVE_UINT_32T
@@ -68,7 +67,7 @@
 #define VERSION_1
 #endif
 
-#include "dogecoin/crypto/aes.h"
+#include <dogecoin/crypto/aes.h>
 
 #if defined(HAVE_UINT_32T)
 //typedef unsigned long uint_32t;

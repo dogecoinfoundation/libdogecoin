@@ -8,15 +8,15 @@
 #ifndef __LIBDOGECOIN_COMPAT_BYTESWAP_H__
 #define __LIBDOGECOIN_COMPAT_BYTESWAP_H__
 
-#if defined(HAVE_CONFIG_H)
-#include "src/libdogecoin-config.h"
-#endif
-
-#include <stdint.h>
-
 #if defined(HAVE_BYTESWAP_H)
 #include <byteswap.h>
 #endif
+
+#if defined(HAVE_CONFIG_H)
+#include <src/libdogecoin-config.h>
+#endif
+
+#include <stdint.h>
 
 #if defined(__APPLE__)
 

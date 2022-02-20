@@ -30,7 +30,7 @@
 #ifndef __LIBDOGECOIN_CSTR_H__
 #define __LIBDOGECOIN_CSTR_H__
 
-#include "dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

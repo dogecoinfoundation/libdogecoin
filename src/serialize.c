@@ -3,10 +3,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
 
+#include <string.h>
+
 #include <dogecoin/cstr.h>
 #include <dogecoin/serialize.h>
-
-#include <string.h>
 
 void ser_bytes(cstring* s, const void* p, size_t len)
 {

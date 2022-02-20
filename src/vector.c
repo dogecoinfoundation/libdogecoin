@@ -26,8 +26,8 @@
 
  */
 
-#include <dogecoin/vector.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/vector.h>
 
 vector* vector_new(size_t res, void (*free_f)(void*)) {
     vector* vec = dogecoin_calloc(1, sizeof(vector));

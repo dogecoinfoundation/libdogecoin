@@ -8,7 +8,8 @@
 #define __LIBDOGECOIN_COMPAT_PORTABLE_ENDIAN_H__
 
 #include <stdint.h>
-#include <include/dogecoin/compat/byteswap.h>
+
+#include <dogecoin/compat/byteswap.h>
 
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 

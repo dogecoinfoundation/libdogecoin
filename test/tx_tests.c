@@ -11,15 +11,14 @@
 #include <string.h>
 #include <assert.h>
 
-#include <dogecoin/tx.h>
+#include <test/utest.h>
 
 #include <dogecoin/cstr.h>
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/script.h>
-#include "utest.h"
 #include <dogecoin/utils.h>
-
 #include <dogecoin/tool.h>
+#include <dogecoin/tx.h>
 #include <dogecoin/bip32.h>
 
 struct txtest_sighash {

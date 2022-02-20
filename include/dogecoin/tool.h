@@ -25,11 +25,11 @@
 #ifndef __LIBDOGECOIN_TOOL_H__
 #define __LIBDOGECOIN_TOOL_H__
 
-#include "dogecoin.h"
-#include "tx.h"
-
 #include <stdint.h>
 #include <stddef.h>
+
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/tx.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

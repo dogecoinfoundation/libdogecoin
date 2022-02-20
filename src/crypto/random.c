@@ -26,20 +26,19 @@
 
 */
 
-#include <dogecoin/crypto/random.h>
-#ifdef HAVE_CONFIG_H
-#  include "libdogecoin-config.h"
-#endif
-
 #include <assert.h>
+#ifdef HAVE_CONFIG_H
+#  include <src/libdogecoin-config.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
 #ifdef WIN32
 #include <windows.h>
 #include <wincrypt.h>
 #endif
+
+#include <dogecoin/crypto/random.h>
 
 void dogecoin_random_init_internal(void);
 dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const uint8_t update_seed);

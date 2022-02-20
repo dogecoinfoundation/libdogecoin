@@ -36,7 +36,7 @@
 #ifndef __LIBDOGECOIN_CRYPTO_AES_H__
 #define __LIBDOGECOIN_CRYPTO_AES_H__
 
-#include "../dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
