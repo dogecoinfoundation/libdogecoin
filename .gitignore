@@ -74,10 +74,7 @@ config.log
 config.status
 configure
 libtool
-dogecointool
-dogecoin-send-tx
-dogecoin-spv
-dogecoin-txref
+such
 src/libdogecoin-config.h
 src/libdogecoin-config.h.in
 src/libdogecoin-config.h.in~

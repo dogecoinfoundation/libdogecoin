@@ -11,9 +11,10 @@
 #include <string.h>
 #include <assert.h>
 
+#include <test/utest.h>
+
 #include <dogecoin/crypto/aes.h>
 #include <dogecoin/utils.h>
-#include "utest.h"
 
 struct nist_aes_test_vector
 {

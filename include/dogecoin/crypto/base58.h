@@ -3,7 +3,7 @@
  * Copyright (c) 2013-2014 Pavol Rusnak
  * Copyright (c) 2022 bluezr
  * Copyright (c) 2022 The Dogecoin Foundation
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -23,15 +23,19 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __LIBDOGECOIN_CRYPTO_RMD160_H__
-#define __LIBDOGECOIN_CRYPTO_RMD160_H__
+#ifndef __LIBDOGECOIN_CRYPTO_BASE58_H__
+#define __LIBDOGECOIN_CRYPTO_BASE58_H__
 
 #include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-LIBDOGECOIN_API void rmd160(const uint8_t* msg, uint32_t msg_len, uint8_t* hash);
+LIBDOGECOIN_API int dogecoin_base58_encode_check(const uint8_t* data, int len, char* str, int base58_length);
+LIBDOGECOIN_API int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen);
+
+LIBDOGECOIN_API int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t binsz);
+LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58);
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_CRYPTO_RMD160_H__
+#endif //__LIBDOGECOIN_CRYPTO_BASE58_H__

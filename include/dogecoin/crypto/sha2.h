@@ -33,10 +33,10 @@
 #ifndef __LIBDOGECOIN_CRYPTO_SHA2_H__
 #define __LIBDOGECOIN_CRYPTO_SHA2_H__
 
-#include "../dogecoin.h"
-
 #include <stdint.h>
 #include <stddef.h>
+
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
