@@ -22,11 +22,13 @@ Addresses are found in `include/dogecoin/address.h` and are:
 
 **To Generate:**
 
-* generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
+* `generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)`
 
 This function will populate provided private/public char* variables with a freshly
 generated private/public key pair, specifically for the network specified by the
 third parameter. 
+
+
 
 _Python usage:_
 ```py
