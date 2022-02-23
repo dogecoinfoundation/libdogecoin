@@ -3,17 +3,17 @@ import sys
 import os
 
 
-# LOAD SHARED LIBRARY - there has to be a better way to do this
-def get_lib(library_file):
-    path = os.path.abspath(__file__+"../../../../.libs")
-    sys.path.insert(0, path)
-    path = os.path.join(path, library_file)
+# LOAD SHARED LIBRARY ON INIT - TODO: change path to be more flexible
+path = os.path.abspath(__file__+"../../../../.libs")
+sys.path.insert(0, path)
+path = os.path.join(path, "libdogecoin.so")
 
-    cdll.LoadLibrary(path)
-    return CDLL(path)
+# all functions from libdogecoin accessed through lib variable
+cdll.LoadLibrary(path)
+lib = CDLL(path)
 
 #=======================================================ADDRESS.C
-def py_generatePrivPubKeypair(lib, chain_code):
+def py_generatePrivPubKeypair(chain_code=0, as_bytes=False):
     # prepare arguments
     sz = 100
     wif_privkey = (c_char * sz)()
@@ -26,11 +26,13 @@ def py_generatePrivPubKeypair(lib, chain_code):
     lib.generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, is_testnet)
     lib.dogecoin_ecc_stop()
 
-    # return results in bytes tuple form
-    return (wif_privkey.value, p2pkh_pubkey.value)
+    # return results in str/bytes tuple form
+    if as_bytes:
+        return (wif_privkey.value, p2pkh_pubkey.value)
+    return (wif_privkey.value.decode('utf-8'), p2pkh_pubkey.value.decode('utf-8'))
 
 
-def py_generateHDMasterPubKeypair(lib, chain_code):
+def py_generateHDMasterPubKeypair(chain_code=0, as_bytes=False):
     # prepare arguments
     sz = 111
     wif_privkey_master = (c_char * sz)()
@@ -43,12 +45,13 @@ def py_generateHDMasterPubKeypair(lib, chain_code):
     lib.generateHDMasterPubKeypair(wif_privkey_master, p2pkh_pubkey_master, is_testnet)
     lib.dogecoin_ecc_stop()
 
-
-
     # return results in bytes tuple form
-    return (wif_privkey_master.value, p2pkh_pubkey_master.value)
+    if as_bytes:
+        return (wif_privkey_master.value, p2pkh_pubkey_master.value)
+    return (wif_privkey_master.value.decode('utf-8'), p2pkh_pubkey_master.value.decode('utf-8'))
 
-def py_generateDerivedHDPubkey(lib, wif_privkey_master):
+
+def py_generateDerivedHDPubkey(wif_privkey_master, as_bytes=False):
     # verify arguments are valid
     assert(isinstance(wif_privkey_master, str) or isinstance(wif_privkey_master, bytes))
     if not isinstance(wif_privkey_master, bytes):
@@ -65,7 +68,9 @@ def py_generateDerivedHDPubkey(lib, wif_privkey_master):
     lib.dogecoin_ecc_stop()
 
     # return results in bytes
-    return child_p2pkh_pubkey.value
+    if as_bytes:
+        return child_p2pkh_pubkey.value
+    return child_p2pkh_pubkey.value.decode('utf-8')
 
 #=======================================================TOOLFUNC.C (deprecated)
 class Dogecoin_chain(Structure):
@@ -123,7 +128,7 @@ def get_chain(code):
 
 
 
-def py_gen_privkey(lib, chain_code):
+def py_gen_privkey(chain_code):
 
     #start context
     lib.dogecoin_ecc_start()
@@ -147,7 +152,7 @@ def py_gen_privkey(lib, chain_code):
     return (str(bytes(newprivkey_wif).decode('utf-8')), str(bytes(newprivkey_hex).decode('utf-8')))
 
 
-def py_pubkey_from_privatekey(lib, chain, pkey_wif):
+def py_pubkey_from_privatekey(chain, pkey_wif):
 
     #start context
     lib.dogecoin_ecc_start()
@@ -169,7 +174,7 @@ def py_pubkey_from_privatekey(lib, chain, pkey_wif):
     return str(bytes(pubkey_hex).decode('utf-8'))
 
 
-def py_address_from_pubkey(lib, chain_code, pubkey_hex):
+def py_address_from_pubkey(chain_code, pubkey_hex):
     
     #start context
     lib.dogecoin_ecc_start()
@@ -192,7 +197,7 @@ def py_address_from_pubkey(lib, chain_code, pubkey_hex):
     return str(bytes(address).decode('utf-8'))
 
 
-def py_hd_gen_master(lib, chain_code):
+def py_hd_gen_master(chain_code):
 
     #start context
     lib.dogecoin_ecc_start()
@@ -215,7 +220,7 @@ def py_hd_gen_master(lib, chain_code):
     return (bytes(masterkey).decode('utf-8'), bytes(masterkey).hex())
 
 
-def py_hd_derive(lib, chain_code, master_key, derived_path):
+def py_hd_derive(chain_code, master_key, derived_path):
     
     #start context
     lib.dogecoin_ecc_start()
@@ -312,35 +317,35 @@ def print_uint256_hash(hash):
     print(bytes(hash.value).hex())
 
 
-def py_dogecoin_block_header_new(lib):
+def py_dogecoin_block_header_new():
     #creates a new empty block header (all fields initialized to 0)
     lib.dogecoin_block_header_new.restype = c_void_p
     header = c_void_p(lib.dogecoin_block_header_new())
     return header
 
-def py_dogecoin_block_header_deserialize(lib, header_ser, ilen, header_ptr):
+def py_dogecoin_block_header_deserialize(header_ser, ilen, header_ptr):
     #puts information from buf into header
     lib.dogecoin_block_header_new.restype = c_int32
     if not lib.dogecoin_block_header_deserialize(header_ser, ilen, header_ptr):
         print("py_dogecoin_block_header_deserialize: deserialization failed!\n")
 
-def py_dogecoin_block_header_serialize(lib, cstr_ptr, header_ptr):
+def py_dogecoin_block_header_serialize(cstr_ptr, header_ptr):
     #given non-empty block header, translate info into cstring pointer
     lib.dogecoin_block_header_new.restype = None
     lib.dogecoin_block_header_serialize(cstr_ptr, header_ptr)
 
-def py_dogecoin_block_header_copy(lib, new_header_ptr, old_header_ptr):
+def py_dogecoin_block_header_copy(new_header_ptr, old_header_ptr):
     #given existing block header, copy information to a new block header
     lib.dogecoin_block_header_copy.restype = None
     lib.dogecoin_block_header_copy(new_header_ptr, old_header_ptr)
 
-def py_dogecoin_block_header_free(lib, header_ptr):
+def py_dogecoin_block_header_free(header_ptr):
     #given existing block header, set to zero and free the memory allocated for that header
     # Why memset if going to be freed? Not all bits stay at zero after free
     lib.dogecoin_block_header_free.restype = None
     lib.dogecoin_block_header_free(header_ptr)
 
-def py_dogecoin_block_header_hash(lib, header_ptr, hash_ptr):
+def py_dogecoin_block_header_hash(header_ptr, hash_ptr):
     #calculate and store the hash of a given block header
     lib.dogecoin_block_header_hash.restype = c_byte
     lib.dogecoin_block_header_hash(header_ptr, hash_ptr)
