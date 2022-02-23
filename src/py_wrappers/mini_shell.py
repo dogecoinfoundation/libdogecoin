@@ -1,10 +1,8 @@
-import wrappers as w
+import wrappers as libdogecoin
 
 
 # MAIN METHOD
 if __name__ == "__main__":
-    # load library
-    libdoge = w.get_lib("libdogecoin.so")
 
     # print option menu
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
@@ -41,18 +39,18 @@ if __name__ == "__main__":
             if not args or not args[0].isdigit() or int(args[0])>1:
                 print(cmd+": enter valid chain code (0:main, 1:test)")
             else:
-                res = w.py_generatePrivPubKeypair(libdoge, int(args[0]))
-                print("private key wif:", res[0].decode('utf-8'))
-                print("public key:", res[1].decode('utf-8'))
+                res = libdogecoin.py_generatePrivPubKeypair(int(args[0]))
+                print("private key wif:", res[0])
+                print("public key:", res[1])
         
         # heirarchical deterministic key pair generation
         elif cmd == "gen_hdkeypair":
             if not args or not args[0].isdigit() or int(args[0])>1:
                 print(cmd+": enter valid chain code (0:main, 1:test)")
             else:
-                res = w.py_generateHDMasterPubKeypair(libdoge, int(args[0]))
-                print("master private key:", res[0].decode('utf-8'))
-                print("master public key:", res[1].decode('utf-8'))
+                res = libdogecoin.py_generateHDMasterPubKeypair(int(args[0]))
+                print("master private key:", res[0])
+                print("master public key:", res[1])
 
         # derive child key from hd master key
         elif cmd == "derive_hdpubkey":
@@ -61,8 +59,8 @@ if __name__ == "__main__":
             elif len(args[0]) < 50:
                 print(cmd+": private key must be WIF-encoded")
             else:
-                res = w.py_generateDerivedHDPubkey(libdoge, args[0])
-                print("new derived child public key:", res.decode('utf-8'))
+                res = libdogecoin.py_generateDerivedHDPubkey(args[0])
+                print("new derived child public key:", res)
             
 
         # #private key generation
