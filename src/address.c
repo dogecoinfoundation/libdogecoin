@@ -107,6 +107,7 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
 
     /* determine if mainnet or testnet/regtest */
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+
     /* generate a new hd master key */
     hd_gen_master(chain, hd_privkey_master, strsize);
 
@@ -132,7 +133,10 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey) 
     /* require master key */
     if (!wif_privkey_master) return false;
 
-    const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
+    /* determine address prefix for network chainparams */
+    char prefix[1];
+    memcpy(prefix, wif_privkey_master, 1);
+    const dogecoin_chainparams* chain = memcmp(prefix, "d", 1) == 0 ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
     size_t strsize = 128;
     char str[strsize];
