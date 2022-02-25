@@ -104,17 +104,19 @@ dogecoin_bool hd_gen_master(const dogecoin_chainparams* chain, char *masterkeyhe
 dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char *nodeser) {
     dogecoin_hdnode node;
     if (!dogecoin_hdnode_deserialize(nodeser, chain, &node)) return false;
+    printf("ext key: %s\n", nodeser);
+    printf("depth: %d\n", node.depth);
+    printf("child_num: %d\n", node.child_num);
+    printf("fingerprint: %d\n", node.fingerprint);
     size_t strsize = 128;
     char str[strsize];
     dogecoin_hdnode_get_p2pkh_address(&node, chain, str, strsize);
+    printf("p2pkh address: %s\n", str);
     if (!dogecoin_hdnode_get_pub_hex(&node, str, &strsize)) return false;
+    printf("pubkey hex: %s\n", str);
     strsize = 128;
     dogecoin_hdnode_serialize_public(&node, chain, str, strsize);
-    // printf("ext key: %s\n", nodeser);
-    // printf("depth: %d\n", node.depth);
-    // printf("p2pkh address: %s\n", str);
-    // printf("pubkey hex: %s\n", str);
-    // printf("extended pubkey: %s\n", str);
+    printf("extended pubkey: %s\n", str);
     return true;
 }
 
