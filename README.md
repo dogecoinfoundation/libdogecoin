@@ -124,3 +124,119 @@ can be easily ported to libdogecoin so it can operate directly on L1 to transact
 dogecoin. This will be the first major project using libdogecoin via a language
 binding, and prove the ability for libdogecoin to enable greater flexibility in
 how the community can get involved in development.
+
+### Current features
+----------------
+* Generating and storing private and public keys
+* ECDSA secp256k1 signing and verification (through [libsecp256k1](https://github.com/bitcoin-core/secp256k1) included as git subtree)
+* Generate recoverable signatures (and recover pubkey from signatures)
+* BIP32 hierarchical deterministic key derivation
+* Transaction generation, manipulation, signing and ser-/deserialization including P2PKH, P2SH, multisig
+* Address generation
+* Base58check encoding
+* Native implementation of SHA256, SHA512, SHA512_HMAC, RIPEMD-160 including NIST testvectors
+* Native constant time AES (+256CBC) cipher implementation including NIST testvectors
+* Keystore (wallet) databases (through logdb https://github.com/liblogdb/liblogdb)
+* Event based dogecoin P2P client capable of connecting to multiple nodes in a single thread (requires [libevent](https://github.com/libevent/libevent))
+
+#### Advantages of libdogecoin?
+----------------
+
+* No dependencies in case no p2p network client is required (only dependency is [libsecp256k1](https://github.com/bitcoin-core/secp256k1) added as git subtree)
+* The only dependency for the p2p network client is [libevent](https://github.com/libevent/libevent) (very portable)
+* optimized for MCU and low mem environments
+* ~full test coverage
+* mem leak free (valgrind check during CI)
+
+### How to Build (Quick Start)
+----------------
+
+#### Install dependencies
+
+##### Debian / Ubuntu
+```
+sudo apt-get install autoconf automake libtool build-essential libevent-dev
+```
+
+##### Other
+Please submit a pull request to add dependencies for your system, or update these.
+
+#### Full library including CLI tool and wallet database
+```
+./autogen.sh
+./configure
+make check
+```
+
+#### Pure library without net support
+```
+./autogen.sh
+./configure --disable-net --disable-tools
+make check
+```
+
+Brief examples of the such command line tool
+----------------
+
+##### Generate a new privatekey WIF and HEX encoded:
+
+    ./such -c generate_private_key
+    > privatekey WIF: QSPDnjzvrSPAeiM7N2jCkzv2dqsi7fxoHipgpPfz2zdE3ZpYp74j
+    > privatekey HEX: 7073fa30281cf89195dca333134368d539e7abad712abb532c9eaf5f3666d9d1
+
+##### Generate the public key, p2pkh and p2sh-p2pkh address from a WIF encoded private key
+
+    ./such -c generate_public_key -p QSPDnjzvrSPAeiM7N2jCkzv2dqsi7fxoHipgpPfz2zdE3ZpYp74j
+    > pubkey: 02cf2c99c2db4b3d72d4289aa23bdaf5f3ccf4867ec8e5f8223ea716a7a3de10bc
+    > p2pkh address: D62RKK6AGkzX6fM8RzoVM8fjPx2nzrdvKU
+    > p2sh-p2wpkh address: 9zXbecoxo4aDsG8Ng1osUhGN9URrF1P9JZ
+
+##### Generate the P2PKH address from a hex encoded compact public key
+
+    ./such -c generate_public_key -pubkey 02cf2c99c2db4b3d72d4289aa23bdaf5f3ccf4867ec8e5f8223ea716a7a3de10bc
+    > p2pkh address: D62RKK6AGkzX6fM8RzoVM8fjPx2nzrdvKU
+    > p2sh-p2wpkh address: 9zXbecoxo4aDsG8Ng1osUhGN9URrF1P9JZ
+    > p2wpkh (doge / bech32) address: doge1qpx6wxh9xv780a7uj675vl0c88zd3fg4v26vlsn
+
+##### Generate new BIP32 master key
+
+    ./such -c bip32_extended_master_key
+    > masterkey: dgpv51eADS3spNJh9qLpW8S7B7uZmusTpNE85NgXsYD7eGuVhebMDfEsj6fNR6DHgpSBCmYdAvw9YRSqRWnFxtYn1bM8AdNipwdi9dDXFCY8vkY
+
+
+##### Print HD node
+
+    ./such -c print_keys -privkey dgpv51eADS3spNJh9qLpW8S7B7uZmusTpNE85NgXsYD7eGuVhebMDfEsj6fNR6DHgpSBCmYdAvw9YRSqRWnFxtYn1bM8AdNipwdi9dDXFCY8vkY
+    > ext key: dgpv51eADS3spNJh9qLpW8S7B7uZmusTpNE85NgXsYD7eGuVhebMDfEsj6fNR6DHgpSBCmYdAvw9YRSqRWnFxtYn1bM8AdNipwdi9dDXFCY8vkY
+    > privatekey WIF: QTtXPXYWc4G6WuA6qNRYeQ3TAdsBUUqrLwN1eWVFEvfHdd8M1ed5
+    > depth: 0
+    > child index: 0
+    > p2pkh address: D79Q3spkucaM2DvLxUZjgV1X4cQcWDLuyt
+    > pubkey hex: 025368ca428b4c4e0c48631c5f8510d704858a52c7264d4ba74f34b2bcee374220
+    > extended pubkey: dgub8kXBZ7ymNWy2SgzyYN45HyTAEUF6eVFqMyTk2ec6SPxWFhi3dRneNQ51zJadLERvA1ns9uvMGKM9wYKTSnCP9QrSPJMCKjdfSv4qmT3PkP2
+
+##### Derive child key (second child key at level 1 in this case)
+
+    ./such -c derive_child_keys -keypath m/1h -privkey dgpv51eADS3spNJh9qLpW8S7B7uZmusTpNE85NgXsYD7eGuVhebMDfEsj6fNR6DHgpSBCmYdAvw9YRSqRWnFxtYn1bM8AdNipwdi9dDXFCY8vkY
+    > ext key: dgpv53gfwGVYiKVgf3hybqGjXuxrW2s2iCArhBURxAWaFszfqfP6wc23KFVyCuGj4fGzAX6oC8QmvhvkWz18v4VcdhzYCxoTR3XQizrVtjMwQHS
+    > depth: 1
+    > p2pkh address: DFqonEEA56VE8zEGvhXNgjiPT3PaPFNQQu
+    > pubkey hex: 023973b755fdaf5b2b7b20ac134c936ec7882b1ce0a3a75857fc490c12cdf4fb4f
+    > extended pubkey: dgub8nZhGxRSGUA1wuN8e4themWSxbEfYKCZynFe7GuZ413gPiVoMNZoxYucn8DQ5doeqt1cmZnxZ4Ms9SdsraiSbUkZSYbx1GzpGbrAqmFdSSL
+
+### The sendtx CLI
+----------------
+This tools can be used to broadcast a raw transaction to peers retrived from a dns seed or specified by ip/port.
+The application will try to connect to max 6 peers, send the transaction two two of them and listens on the remaining ones if the transaction has been relayed back.
+
+##### Send a raw transaction to random peers on mainnet
+
+    ./sendtx <txhex>
+
+##### Send a raw transaction to random peers on testnet and show debug infos
+
+    ./sendtx -d -t <txhex>
+
+##### Send a raw transaction to specific peers on mainnet and show debug infos use a timeout of 5s
+
+    ./sendtx -d -s 5 -i 192.168.1.110:22556,127.0.0.1:22556 <txhex>
