@@ -1,4 +1,3 @@
-
 """Testing module for wrappers from address.c"""
 
 import unittest
