@@ -5,14 +5,12 @@ import wrappers as libdogecoin
 # MAIN METHOD
 if __name__ == "__main__":
 
-    # start ECC context
-    libdogecoin.dogecoin_ecc_start()
-
     # print option menu
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
-               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>"]
+               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
+               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1, test"]
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -62,14 +60,29 @@ if __name__ == "__main__":
 
         # verify private and p2pkh address pair
         elif cmd == "verify_keypair":
-            if not args or not isinstance(args[0], str):
+            if not args or not args[0].isdigit():
                 print(cmd+": enter WIF-encoded private key")
-            elif len(args) < 2 or not isinstance(args[1], str):
+            elif len(args) < 2 or args[1].isdigit():
                 print(cmd+": enter p2pkh address")
             elif len(args) < 3 or not args[2].isdigit():
                 print(cmd+": enter valid chain code")
             else:
                 res = libdogecoin.verify_priv_pub_keypair(args[0], args[1], int(args[2]))
+                if res:
+                    print("Keypair is valid.")
+                else:
+                    print("Keypair is invalid")
+
+        # verify hd master private and p2pkh address pair
+        elif cmd == "verify_hdkeypair":
+            if not args or args[0].isdigit():
+                print(cmd+": enter WIF-encoded private master key")
+            elif len(args) < 2 or args[1].isdigit():
+                print(cmd+": enter p2pkh master pubkey")
+            elif len(args) < 3 or not args[2].isdigit():
+                print(cmd+": enter valid chain code")
+            else:
+                res = libdogecoin.verify_master_priv_pub_keypair(args[0], args[1], int(args[2]))
                 if res:
                     print("Keypair is valid.")
                 else:
@@ -82,6 +95,3 @@ if __name__ == "__main__":
         # accept next command
         print()
         inp = input("$ ").split()
-
-    # stop ECC context
-    libdogecoin.dogecoin_ecc_stop()

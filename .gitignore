@@ -109,3 +109,6 @@ test-suite.log
 *.db
 *.tar.gz
 *.pc
+**/__pycache__/
+*.py[cod]
+
