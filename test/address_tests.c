@@ -14,15 +14,35 @@
 
 void test_address()
 {
-    size_t privkeywiflen = 100;
-    char privkeywif[privkeywiflen];
-    char privkeyhex[100];
-    u_assert_int_eq(generatePrivPubKeypair(privkeywif, privkeyhex, false), true)
-    u_assert_int_eq(generatePrivPubKeypair(privkeywif, NULL, false), true)
+    size_t privkeywiflen = 100;    char privkeywif_main[privkeywiflen];
+    char privkeywif_test[privkeywiflen];
+    char p2pkh_pubkey_main[100];
+    char p2pkh_pubkey_test[100];
+
+    // test generation ability
+    u_assert_int_eq(generatePrivPubKeypair(privkeywif_main, NULL, false), true)
+    u_assert_int_eq(generatePrivPubKeypair(privkeywif_main, p2pkh_pubkey_main, false), true)
+    u_assert_int_eq(generatePrivPubKeypair(privkeywif_test, p2pkh_pubkey_test, true), true);
+
+    // test key validity and association
+    u_assert_int_eq(verifyPrivPubKeypair(privkeywif_main, p2pkh_pubkey_main, false), true);
+    u_assert_int_eq(verifyPrivPubKeypair(privkeywif_test, p2pkh_pubkey_test, true), true);
+    u_assert_int_eq(verifyPrivPubKeypair(privkeywif_main, p2pkh_pubkey_main, true), false);
+    u_assert_int_eq(verifyPrivPubKeypair(privkeywif_test, p2pkh_pubkey_test, false), false);
+
+    // test address format correctness (0.003% false negative rate)
+    u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_main, false), true);
+    u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_test, true), true);
+    u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_main, true), false);
+    u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_test, false), false);
+
+    // test entropy check
+    u_assert_int_eq(verifyP2pkhAddress("Dasdfasdfasdfasdfasdfasdfasdfasdfx", false), false);
+    u_assert_int_eq(verifyP2pkhAddress("DP6xxxDJxxxJAaWucRfsPvXLPGRyF3DdeP", false), false);
+
     
     size_t masterkeysize = 200;
     char masterkey[masterkeysize];
-    char p2pkh_pubkey;
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey, NULL, false), true)
     u_assert_int_eq(generateHDMasterPubKeypair(NULL, NULL, false), true)
     u_assert_int_eq(generateHDMasterPubKeypair(NULL, NULL, NULL), true)
