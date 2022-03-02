@@ -184,13 +184,13 @@ void utils_uint256_sethex(char* psz, uint8_t* out) {
     unsigned char* pend = p1 + sizeof(uint256);
     while (psz >= pbegin && p1 < pend) { 
         *p1 = utils_hex_digit(--*psz);
-        if (psz >= pbegin) *p1 |= ((unsigned char)utils_hex_digit(*psz--) << 4); ++p1;
+        if (psz >= pbegin) { *p1 |= ((unsigned char)utils_hex_digit(--*psz) << 4); ++p1; };
     }
 }
 
 void* safe_malloc(size_t size) {
     void* result;
-    if ((result = malloc(size))) return (result); /* assignment intentional */
+    if ((result = malloc(size))) { return (result); } /* assignment intentional */
     else {
         printf("memory overflow: malloc failed in safe_malloc.");
         printf("  Exiting Program.\n");
