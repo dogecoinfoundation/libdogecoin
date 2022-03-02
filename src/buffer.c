@@ -8,29 +8,45 @@
 #include <dogecoin/buffer.h>
 #include <dogecoin/mem.h>
 
-int buffer_equal(const void* a_, const void* b_) {
+int buffer_equal(const void* a_, const void* b_)
+{
     const struct buffer* a = a_;
     const struct buffer* b = b_;
-    if (a->len != b->len) return 0;
+
+    if (a->len != b->len)
+        return 0;
     return memcmp(a->p, b->p, a->len) == 0;
 }
 
-void buffer_free(void* struct_buffer) {
+void buffer_free(void* struct_buffer)
+{
     struct buffer* buf = struct_buffer;
-    if (!buf) return;
+    if (!buf) {
+        return;
+    }
+
     dogecoin_free(buf->p);
     dogecoin_free(buf);
 }
 
-struct buffer* buffer_copy(const void* data, size_t data_len) {
+struct buffer* buffer_copy(const void* data, size_t data_len)
+{
     struct buffer* buf;
     buf = dogecoin_malloc(sizeof(*buf));
-    if (!buf) goto err_out;
+    if (!buf) {
+        goto err_out;
+    }
+
     buf->p = dogecoin_malloc(data_len);
-    if (!buf->p) goto err_out_free; 
+    if (!buf->p) {
+        goto err_out_free;
+    }
+
     memcpy(buf->p, data, data_len);
     buf->len = data_len;
-    return buf; 
+
+    return buf;
+
 err_out_free:
     dogecoin_free(buf);
 err_out:

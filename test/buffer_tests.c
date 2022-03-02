@@ -6,16 +6,17 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <dogecoin/buffer.h>
 
-void test_buffer() {
+void test_buffer()
+{
     struct const_buffer buf0 = {"data", 4};
-    struct const_buffer buf0a= {"data1", 5};
+    struct const_buffer buf0a = {"data1", 5};
     struct const_buffer buf1 = {"data", 4};
     struct buffer* buf2;
     assert(buffer_equal(&buf0, &buf1) == 1);

@@ -6,10 +6,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <test/utest.h>
 
@@ -18,11 +18,13 @@
 #include <dogecoin/crypto/random.h>
 #include <dogecoin/utils.h>
 
-void test_ecc() {
+void test_ecc()
+{
     unsigned char r_buf[32];
     memset(r_buf, 0, 32);
     dogecoin_random_init();
-    while (dogecoin_ecc_verify_privatekey(r_buf) == 0) dogecoin_random_bytes(r_buf, 32, 0);
+    while (dogecoin_ecc_verify_privatekey(r_buf) == 0)
+        dogecoin_random_bytes(r_buf, 32, 0);
     memset(r_buf, 0xFF, 32);
     u_assert_int_eq(dogecoin_ecc_verify_privatekey(r_buf), 0); //secp256k1 overflow
     uint8_t pub_key33[33], pub_key33_invalid[33], pub_key65[65], pub_key65_invalid[65];
@@ -46,7 +48,7 @@ void test_ecc() {
     unsigned char sigder[74];
     size_t sigderlen = 74;
     u_assert_int_eq(dogecoin_ecc_der_to_compact(sig, outlen, sigcomp), true);
-    u_assert_int_eq(dogecoin_ecc_compact_to_der_normalized(sigcomp, sigder, &sigderlen),  true);
+    u_assert_int_eq(dogecoin_ecc_compact_to_der_normalized(sigcomp, sigder, &sigderlen), true);
     u_assert_int_eq(outlen, sigderlen);
-    u_assert_int_eq(memcmp(sig,sigder,sigderlen), 0);
+    u_assert_int_eq(memcmp(sig, sigder, sigderlen), 0);
 }

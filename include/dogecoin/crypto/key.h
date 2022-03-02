@@ -50,8 +50,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_privkey_gen(dogecoin_key* privkey);
 LIBDOGECOIN_API dogecoin_bool dogecoin_privkey_verify_pubkey(dogecoin_key* privkey, dogecoin_pubkey* pubkey);
 
 // form a WIF encoded string from the given pubkey, make sure privkey_wif is large enough and strsize_inout contains the size of the buffer
-LIBDOGECOIN_API void dogecoin_privkey_encode_wif(const dogecoin_key* privkey, const dogecoin_chainparams* chain, char *privkey_wif, size_t *strsize_inout);
-LIBDOGECOIN_API dogecoin_bool dogecoin_privkey_decode_wif(const char *privkey_wif, const dogecoin_chainparams* chain, dogecoin_key* privkey);
+LIBDOGECOIN_API void dogecoin_privkey_encode_wif(const dogecoin_key* privkey, const dogecoin_chainparams* chain, char* privkey_wif, size_t* strsize_inout);
+LIBDOGECOIN_API dogecoin_bool dogecoin_privkey_decode_wif(const char* privkey_wif, const dogecoin_chainparams* chain, dogecoin_key* privkey);
 
 LIBDOGECOIN_API void dogecoin_pubkey_init(dogecoin_pubkey* pubkey);
 
@@ -75,16 +75,16 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash(const dogecoin_key* privkey
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen);
 
 //sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
-LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int *recid);
+LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
 
 //verifies a DER encoded signature with given pubkey and return true if valid
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, int len);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2sh_p2wpkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char *addrout);
-LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char *addrout);
-LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2wpkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char *addrout);
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2sh_p2wpkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2wpkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
 
 LIBDOGECOIN_END_DECL
 

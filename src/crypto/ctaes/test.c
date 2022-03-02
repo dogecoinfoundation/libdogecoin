@@ -1,12 +1,12 @@
- /*********************************************************************
+/*********************************************************************
  * Copyright (c) 2016 Pieter Wuille                                   *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 #include <dogecoin/crypto/ctaes/ctaes.h>
 
@@ -35,10 +35,10 @@ static const ctaes_test ctaes_tests[] = {
     {256, "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "6bc1bee22e409f96e93d7e117393172a", "f3eed1bdb5d2a03c064b5a7e3db181f8"},
     {256, "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "ae2d8a571e03ac9c9eb76fac45af8e51", "591ccb10d410ed26dc5ba74a31362870"},
     {256, "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "30c81c46a35ce411e5fbc1191a0a52ef", "b6ed21b99ca6f4f9f153e7b1beafed1d"},
-    {256, "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "f69f2445df4f9b17ad2b417be66c3710", "23304b7a39f9f3ff067d8d8f9e24ecc7"}
-};
+    {256, "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "f69f2445df4f9b17ad2b417be66c3710", "23304b7a39f9f3ff067d8d8f9e24ecc7"}};
 
-static void from_hex(unsigned char* data, int len, const char* hex) {
+static void from_hex(unsigned char* data, int len, const char* hex)
+{
     int p;
     for (p = 0; p < len; p++) {
         int v = 0;
@@ -57,7 +57,8 @@ static void from_hex(unsigned char* data, int len, const char* hex) {
     assert(*hex == 0);
 }
 
-int main(void) {
+int main(void)
+{
     int i;
     int fail = 0;
     for (i = 0; i < sizeof(ctaes_tests) / sizeof(ctaes_tests[0]); i++) {
@@ -67,30 +68,30 @@ int main(void) {
         from_hex(plain, 16, test->plain);
         from_hex(cipher, 16, test->cipher);
         switch (test->keysize) {
-            case 128: {
-                AES128_ctx ctx;
-                from_hex(key, 16, test->key);
-                AES128_init(&ctx, key);
-                AES128_encrypt(&ctx, 1, ciphered, plain);
-                AES128_decrypt(&ctx, 1, deciphered, cipher);
-                break;
-            }
-            case 192: {
-                AES192_ctx ctx;
-                from_hex(key, 24, test->key);
-                AES192_init(&ctx, key);
-                AES192_encrypt(&ctx, 1, ciphered, plain);
-                AES192_decrypt(&ctx, 1, deciphered, cipher);
-                break;
-            }
-            case 256: {
-                AES256_ctx ctx;
-                from_hex(key, 32, test->key);
-                AES256_init(&ctx, key);
-                AES256_encrypt(&ctx, 1, ciphered, plain);
-                AES256_decrypt(&ctx, 1, deciphered, cipher);
-                break;
-            }
+        case 128: {
+            AES128_ctx ctx;
+            from_hex(key, 16, test->key);
+            AES128_init(&ctx, key);
+            AES128_encrypt(&ctx, 1, ciphered, plain);
+            AES128_decrypt(&ctx, 1, deciphered, cipher);
+            break;
+        }
+        case 192: {
+            AES192_ctx ctx;
+            from_hex(key, 24, test->key);
+            AES192_init(&ctx, key);
+            AES192_encrypt(&ctx, 1, ciphered, plain);
+            AES192_decrypt(&ctx, 1, deciphered, cipher);
+            break;
+        }
+        case 256: {
+            AES256_ctx ctx;
+            from_hex(key, 32, test->key);
+            AES256_init(&ctx, key);
+            AES256_encrypt(&ctx, 1, ciphered, plain);
+            AES256_decrypt(&ctx, 1, deciphered, cipher);
+            break;
+        }
         }
         if (memcmp(cipher, ciphered, 16)) {
             fprintf(stderr, "E(key=\"%s\", plain=\"%s\") != \"%s\"\n", test->key, test->plain, test->cipher);

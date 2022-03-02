@@ -96,7 +96,8 @@
         (c) = ROL((c), 10);                           \
     }
 
-static void compress(uint32_t* MDbuf, uint32_t* X) {
+static void compress(uint32_t* MDbuf, uint32_t* X)
+{
     uint32_t aa = MDbuf[0], bb = MDbuf[1], cc = MDbuf[2], dd = MDbuf[3], ee = MDbuf[4];
     uint32_t aaa = MDbuf[0], bbb = MDbuf[1], ccc = MDbuf[2], ddd = MDbuf[3], eee = MDbuf[4];
 
@@ -289,7 +290,8 @@ static void compress(uint32_t* MDbuf, uint32_t* X) {
     MDbuf[0] = ddd;
 }
 
-void rmd160(const uint8_t* msg, uint32_t msg_len, uint8_t* hash) {
+void rmd160(const uint8_t* msg, uint32_t msg_len, uint8_t* hash)
+{
     uint32_t i;
     int j;
     uint32_t digest[5] = {0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0UL};

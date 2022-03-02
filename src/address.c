@@ -27,27 +27,28 @@
 
 #include <assert.h>
 #ifndef _MSC_VER
-#  include <getopt.h>
+#include <getopt.h>
 #endif
 #ifdef HAVE_CONFIG_H
-#  include <src/libdogecoin-config.h>
+#include <src/libdogecoin-config.h>
 #endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #ifndef _MSC_VER
-#  include <unistd.h>
+#include <unistd.h>
 #endif
 
 #include <dogecoin/address.h>
-#include <dogecoin/tool.h>
 #include <dogecoin/bip32.h>
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/crypto/random.h>
+#include <dogecoin/tool.h>
 #include <dogecoin/utils.h>
 
-int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet) {
+int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
+{
     /* internal variables */
     size_t sizeout = 100;
     char wif_privkey_internal[sizeout];
@@ -55,9 +56,15 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     bool is_testnet_internal = false;
 
     /* if nothing is passed in use internal variables */
-    if (wif_privkey) memcpy(wif_privkey_internal, wif_privkey, sizeout);
-    if (p2pkh_pubkey) memcpy(p2pkh_pubkey_internal, p2pkh_pubkey, sizeout);
-    if (is_testnet) is_testnet_internal = is_testnet;
+    if (wif_privkey) {
+        memcpy(wif_privkey_internal, wif_privkey, sizeout);
+    }
+    if (p2pkh_pubkey) {
+        memcpy(p2pkh_pubkey_internal, p2pkh_pubkey, sizeout);
+    }
+    if (is_testnet) {
+        is_testnet_internal = is_testnet;
+    }
 
     /* determine if mainnet or testnet/regtest */
     const dogecoin_chainparams* chain = is_testnet_internal ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
@@ -73,12 +80,16 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     dogecoin_pubkey_init(&pubkey);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 0);
     dogecoin_pubkey_from_key(&key, &pubkey);
-    
+
     /* export p2pkh_pubkey address */
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_pubkey_internal);
 
-    if (wif_privkey) memcpy(wif_privkey, wif_privkey_internal, sizeout);
-    if (p2pkh_pubkey) memcpy(p2pkh_pubkey, p2pkh_pubkey_internal, sizeout);
+    if (wif_privkey) {
+        memcpy(wif_privkey, wif_privkey_internal, sizeout);
+    }
+    if (p2pkh_pubkey) {
+        memcpy(p2pkh_pubkey, p2pkh_pubkey_internal, sizeout);
+    }
 
     // printf("wif_privkey:  %s\n", wif_privkey);
     // printf("p2pkh_pubkey: %s\n\n", p2pkh_pubkey);
@@ -94,16 +105,23 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     return true;
 }
 
-int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet) {
+int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
+{
     size_t strsize = 128;
     char hd_privkey_master[strsize];
     char hd_pubkey_master[strsize];
     bool is_testnet_internal = false;
 
     /* if nothing is passed use internal variables */
-    if (wif_privkey_master) memcpy(hd_privkey_master, wif_privkey_master, strsize);
-    if (p2pkh_pubkey_master) memcpy(hd_pubkey_master, p2pkh_pubkey_master, strsize);
-    if (is_testnet) is_testnet_internal = is_testnet; 
+    if (wif_privkey_master) {
+        memcpy(hd_privkey_master, wif_privkey_master, strsize);
+    }
+    if (p2pkh_pubkey_master) {
+        memcpy(hd_pubkey_master, p2pkh_pubkey_master, strsize);
+    }
+    if (is_testnet) {
+        is_testnet_internal = is_testnet;
+    }
 
     /* determine if mainnet or testnet/regtest */
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
@@ -112,8 +130,12 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
 
     generateDerivedHDPubkey(hd_privkey_master, hd_pubkey_master);
 
-    if (wif_privkey_master) memcpy(wif_privkey_master, hd_privkey_master, strlen(hd_privkey_master));
-    if (p2pkh_pubkey_master) memcpy(p2pkh_pubkey_master, hd_pubkey_master, strlen(hd_pubkey_master));
+    if (wif_privkey_master) {
+        memcpy(wif_privkey_master, hd_privkey_master, strlen(hd_privkey_master));
+    }
+    if (p2pkh_pubkey_master) {
+        memcpy(p2pkh_pubkey_master, hd_pubkey_master, strlen(hd_pubkey_master));
+    }
 
     /* reset internal variables */
     memset(hd_privkey_master, 0, strlen(hd_privkey_master));
@@ -128,9 +150,12 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     return true;
 }
 
-int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey) {
+int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
+{
     /* require master key */
-    if (!wif_privkey_master) return false;
+    if (!wif_privkey_master) {
+        return false;
+    }
 
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
@@ -138,7 +163,9 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey) 
     char str[strsize];
 
     /* if nothing is passed in use internal variables */
-    if (p2pkh_pubkey) memcpy(str, p2pkh_pubkey, strsize);
+    if (p2pkh_pubkey) {
+        memcpy(str, p2pkh_pubkey, strsize);
+    }
 
     dogecoin_hdnode node;
     dogecoin_hdnode_deserialize(wif_privkey_master, chain, &node);
@@ -146,7 +173,9 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey) 
     dogecoin_hdnode_get_p2pkh_address(&node, chain, str, strsize);
 
     /* pass back to external variable if exists */
-    if (p2pkh_pubkey) memcpy(p2pkh_pubkey, str, strsize);
+    if (p2pkh_pubkey) {
+        memcpy(p2pkh_pubkey, str, strsize);
+    }
 
     /* reset internal variables */
     memset(str, 0, strlen(str));

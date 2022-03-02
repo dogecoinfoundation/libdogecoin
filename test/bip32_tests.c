@@ -11,7 +11,8 @@
 #include <dogecoin/bip32.h>
 #include <dogecoin/utils.h>
 
-void test_bip32() {
+void test_bip32()
+{
     dogecoin_hdnode node, node2, node3, node4;
     char str[112];
     int r;
@@ -236,13 +237,13 @@ void test_bip32() {
     dogecoin_hdnode_serialize_public(&node4, &dogecoin_chainparams_test, str, sizeof(str));
     u_assert_str_eq(str, "tpubD8MQJFN9LVzG9L2CzDwdBRfnyvoJWr8zGR8UrAsMjq89BqGwLQihzyrMJVaMm1WE91LavvHKqfWtk6Ce5Rr8mdPEacB1R2Ln6mc92FNPihs");
 
-    dogecoin_hdnode *nodeheap;
+    dogecoin_hdnode* nodeheap;
     nodeheap = dogecoin_hdnode_new();
-    dogecoin_hdnode *nodeheap_copy = dogecoin_hdnode_copy(nodeheap);
+    dogecoin_hdnode* nodeheap_copy = dogecoin_hdnode_copy(nodeheap);
 
     u_assert_int_eq(memcmp(nodeheap->private_key, nodeheap_copy->private_key, 32), 0);
     u_assert_int_eq(memcmp(nodeheap->public_key, nodeheap_copy->public_key, 33), 0)
 
-    dogecoin_hdnode_free(nodeheap);
+        dogecoin_hdnode_free(nodeheap);
     dogecoin_hdnode_free(nodeheap_copy);
 }

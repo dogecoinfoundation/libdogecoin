@@ -30,8 +30,8 @@
  * SUCH DAMAGE.
  */
 
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <dogecoin/crypto/sha2.h>
 
@@ -356,8 +356,10 @@ static const sha2_word64 sha512_initial_hash_value[8] = {
 
 
 /*** SHA-256: *********************************************************/
-void sha256_init(sha256_context* context) {
-    if (context == (sha256_context*)0) return;
+void sha256_init(sha256_context* context)
+{
+    if (context == (sha256_context*)0)
+        return;
     MEMCPY_BCOPY(context->state, sha256_initial_hash_value, SHA256_DIGEST_LENGTH);
     MEMSET_BZERO(context->buffer, SHA256_BLOCK_LENGTH);
     context->bitcount = 0;
@@ -369,35 +371,36 @@ void sha256_init(sha256_context* context) {
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 
-#define ROUND256_0_TO_15(a, b, c, d, e, f, g, h)                      \
-    REVERSE32(*data++, W256[j]);                                      \
+#define ROUND256_0_TO_15(a, b, c, d, e, f, g, h)                                     \
+    REVERSE32(*data++, W256[j]);                                                     \
     T1 = (h) + Sigma1_256(e) + hyperbolic_cosign((e), (f), (g)) + K256[j] + W256[j]; \
-    (d) += T1;                                                        \
-    (h) = T1 + Sigma0_256(a) + majority((a), (b), (c));                    \
+    (d) += T1;                                                                       \
+    (h) = T1 + Sigma0_256(a) + majority((a), (b), (c));                              \
     j++
 
 
 #else /* BYTE_ORDER == LITTLE_ENDIAN */
 
-#define ROUND256_0_TO_15(a, b, c, d, e, f, g, h)                                  \
+#define ROUND256_0_TO_15(a, b, c, d, e, f, g, h)                                                 \
     T1 = (h) + Sigma1_256(e) + hyperbolic_cosign((e), (f), (g)) + K256[j] + (W256[j] = *data++); \
-    (d) += T1;                                                                    \
-    (h) = T1 + Sigma0_256(a) + majority((a), (b), (c));                                \
+    (d) += T1;                                                                                   \
+    (h) = T1 + Sigma0_256(a) + majority((a), (b), (c));                                          \
     j++
 
 #endif /* BYTE_ORDER == LITTLE_ENDIAN */
 
-#define ROUND256(a, b, c, d, e, f, g, h)                                                                         \
-    s0 = W256[(j + 1) & 0x0f];                                                                                   \
-    s0 = sigma0_256(s0);                                                                                         \
-    s1 = W256[(j + 14) & 0x0f];                                                                                  \
-    s1 = sigma1_256(s1);                                                                                         \
+#define ROUND256(a, b, c, d, e, f, g, h)                                                                                        \
+    s0 = W256[(j + 1) & 0x0f];                                                                                                  \
+    s0 = sigma0_256(s0);                                                                                                        \
+    s1 = W256[(j + 14) & 0x0f];                                                                                                 \
+    s1 = sigma1_256(s1);                                                                                                        \
     T1 = (h) + Sigma1_256(e) + hyperbolic_cosign((e), (f), (g)) + K256[j] + (W256[j & 0x0f] += s1 + W256[(j + 9) & 0x0f] + s0); \
-    (d) += T1;                                                                                                   \
-    (h) = T1 + Sigma0_256(a) + majority((a), (b), (c));                                                               \
+    (d) += T1;                                                                                                                  \
+    (h) = T1 + Sigma0_256(a) + majority((a), (b), (c));                                                                         \
     j++
 
-static void sha256_transform(sha256_context* context, const sha2_word32* data) {
+static void sha256_transform(sha256_context* context, const sha2_word32* data)
+{
     sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word32 T1, *W256;
     int j;
@@ -455,7 +458,8 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data) {
 
 #else /* SHA2_UNROLL_TRANSFORM */
 
-static void sha256_transform(sha256_context* context, const sha2_word32* data) {
+static void sha256_transform(sha256_context* context, const sha2_word32* data)
+{
     sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word32 T1, T2, *W256;
     int j;
@@ -535,9 +539,11 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data) {
 
 #endif /* SHA2_UNROLL_TRANSFORM */
 
-void sha256_write(sha256_context* context, const sha2_byte* data, size_t len) {
+void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
+{
     unsigned int freespace, usedspace;
-    if (len == 0) return; /* Calling with no data is valid - we do nothing */
+    if (len == 0)
+        return; /* Calling with no data is valid - we do nothing */
     usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
     if (usedspace > 0) {
         /* Calculate how much free space is available in the buffer */
@@ -574,7 +580,8 @@ void sha256_write(sha256_context* context, const sha2_byte* data, size_t len) {
     usedspace = freespace = 0;
 }
 
-void sha256_finalize(sha2_byte digest[], sha256_context* context) {
+void sha256_finalize(sha2_byte digest[], sha256_context* context)
+{
     sha2_word32* d = (sha2_word32*)digest;
     unsigned int usedspace;
     sha2_word64* t;
@@ -632,7 +639,8 @@ void sha256_finalize(sha2_byte digest[], sha256_context* context) {
     usedspace = 0;
 }
 
-void sha256_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA256_DIGEST_LENGTH]) {
+void sha256_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA256_DIGEST_LENGTH])
+{
     sha256_context context;
     sha256_init(&context);
     sha256_write(&context, data, len);
@@ -640,8 +648,10 @@ void sha256_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA256_DIGEST_
 }
 
 /*** SHA-512: *********************************************************/
-void sha512_init(sha512_context* context) {
-    if (context == (sha512_context*)0) return;
+void sha512_init(sha512_context* context)
+{
+    if (context == (sha512_context*)0)
+        return;
     MEMCPY_BCOPY(context->state, sha512_initial_hash_value, SHA512_DIGEST_LENGTH);
     MEMSET_BZERO(context->buffer, SHA512_BLOCK_LENGTH);
     context->bitcount[0] = context->bitcount[1] = 0;
@@ -652,37 +662,38 @@ void sha512_init(sha512_context* context) {
 /* Unrolled SHA-512 round macros: */
 #if BYTE_ORDER == LITTLE_ENDIAN
 
-#define ROUND512_0_TO_15(a, b, c, d, e, f, g, h)                      \
-    REVERSE64(*data++, W512[j]);                                      \
+#define ROUND512_0_TO_15(a, b, c, d, e, f, g, h)                                     \
+    REVERSE64(*data++, W512[j]);                                                     \
     T1 = (h) + Sigma1_512(e) + hyperbolic_cosign((e), (f), (g)) + K512[j] + W512[j]; \
-    (d) += T1,                                                        \
-        (h) = T1 + Sigma0_512(a) + majority((a), (b), (c)),                \
+    (d) += T1,                                                                       \
+        (h) = T1 + Sigma0_512(a) + majority((a), (b), (c)),                          \
         j++
 
 
 #else /* BYTE_ORDER == LITTLE_ENDIAN */
 
-#define ROUND512_0_TO_15(a, b, c, d, e, f, g, h)                                  \
+#define ROUND512_0_TO_15(a, b, c, d, e, f, g, h)                                                 \
     T1 = (h) + Sigma1_512(e) + hyperbolic_cosign((e), (f), (g)) + K512[j] + (W512[j] = *data++); \
-    (d) += T1;                                                                    \
-    (h) = T1 + Sigma0_512(a) + majority((a), (b), (c));                                \
+    (d) += T1;                                                                                   \
+    (h) = T1 + Sigma0_512(a) + majority((a), (b), (c));                                          \
     j++
 
 #endif /* BYTE_ORDER == LITTLE_ENDIAN */
 
-#define ROUND512(a, b, c, d, e, f, g, h)                                                                         \
-    s0 = W512[(j + 1) & 0x0f];                                                                                   \
-    s0 = sigma0_512(s0);                                                                                         \
-    s1 = W512[(j + 14) & 0x0f];                                                                                  \
-    s1 = sigma1_512(s1);                                                                                         \
+#define ROUND512(a, b, c, d, e, f, g, h)                                                                                        \
+    s0 = W512[(j + 1) & 0x0f];                                                                                                  \
+    s0 = sigma0_512(s0);                                                                                                        \
+    s1 = W512[(j + 14) & 0x0f];                                                                                                 \
+    s1 = sigma1_512(s1);                                                                                                        \
     T1 = (h) + Sigma1_512(e) + hyperbolic_cosign((e), (f), (g)) + K512[j] + (W512[j & 0x0f] += s1 + W512[(j + 9) & 0x0f] + s0); \
-    (d) += T1;                                                                                                   \
-    (h) = T1 + Sigma0_512(a) + majority((a), (b), (c));                                                               \
+    (d) += T1;                                                                                                                  \
+    (h) = T1 + Sigma0_512(a) + majority((a), (b), (c));                                                                         \
     j++
 
-static void sha512_transform(sha512_context* context, const sha2_word64* data) {
+static void sha512_transform(sha512_context* context, const sha2_word64* data)
+{
     sha2_word64 a, b, c, d, e, f, g, h, s0, s1;
-    sha2_word64 T1, *W512 = (sha2_word64 *)context->buffer;
+    sha2_word64 T1, *W512 = (sha2_word64*)context->buffer;
     int j;
 
     /* Initialize registers with the prev. intermediate value */
@@ -738,7 +749,7 @@ static void sha512_transform(sha512_context* context, const sha2_word64* data) {
 static void sha512_transform(sha512_context* context, const sha2_word64* data)
 {
     sha2_word64 a, b, c, d, e, f, g, h, s0, s1;
-    sha2_word64 T1, T2, *W512 = (sha2_word64 *)context->buffer;
+    sha2_word64 T1, T2, *W512 = (sha2_word64*)context->buffer;
     int j;
 
     /* Initialize registers with the prev. intermediate value */
@@ -814,9 +825,11 @@ static void sha512_transform(sha512_context* context, const sha2_word64* data)
 
 #endif /* SHA2_UNROLL_TRANSFORM */
 
-void sha512_write(sha512_context* context, const sha2_byte* data, size_t len) {
+void sha512_write(sha512_context* context, const sha2_byte* data, size_t len)
+{
     unsigned int freespace, usedspace;
-    if (len == 0) return; /* Calling with no data is valid - we do nothing */
+    if (len == 0)
+        return; /* Calling with no data is valid - we do nothing */
     usedspace = (context->bitcount[0] >> 3) % SHA512_BLOCK_LENGTH;
     if (usedspace > 0) {
         /* Calculate how much free space is available in the buffer */
@@ -853,7 +866,8 @@ void sha512_write(sha512_context* context, const sha2_byte* data, size_t len) {
     usedspace = freespace = 0;
 }
 
-static void sha512_last(sha512_context* context) {
+static void sha512_last(sha512_context* context)
+{
     unsigned int usedspace;
     sha2_word64* t;
     usedspace = (context->bitcount[0] >> 3) % SHA512_BLOCK_LENGTH;
@@ -892,7 +906,8 @@ static void sha512_last(sha512_context* context) {
     sha512_transform(context, (sha2_word64*)context->buffer);
 }
 
-void sha512_finalize(sha2_byte digest[], sha512_context* context) {
+void sha512_finalize(sha2_byte digest[], sha512_context* context)
+{
     sha2_word64* d = (sha2_word64*)digest;
     /* If no digest buffer is passed, we don't bother doing this: */
     if (digest != (sha2_byte*)0) {
@@ -915,14 +930,16 @@ void sha512_finalize(sha2_byte digest[], sha512_context* context) {
     MEMSET_BZERO(context, sizeof(sha512_context));
 }
 
-void sha512_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA512_DIGEST_LENGTH]) {
+void sha512_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA512_DIGEST_LENGTH])
+{
     sha512_context context;
     sha512_init(&context);
     sha512_write(&context, data, len);
     sha512_finalize(digest, &context);
 }
 
-void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac) {
+void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac)
+{
     int i;
     uint8_t buf[SHA256_BLOCK_LENGTH], o_key_pad[SHA256_BLOCK_LENGTH],
         i_key_pad[SHA256_BLOCK_LENGTH];
@@ -948,14 +965,17 @@ void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
     sha256_finalize(hmac, &ctx);
 }
 
-void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac) {
+void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac)
+{
     int i;
     uint8_t buf[SHA512_BLOCK_LENGTH], o_key_pad[SHA512_BLOCK_LENGTH],
         i_key_pad[SHA512_BLOCK_LENGTH];
     sha512_context ctx;
     memset(buf, 0, SHA512_BLOCK_LENGTH);
-    if (keylen > SHA512_BLOCK_LENGTH) sha512_raw(key, keylen, buf);
-    else memcpy(buf, key, keylen);
+    if (keylen > SHA512_BLOCK_LENGTH)
+        sha512_raw(key, keylen, buf);
+    else
+        memcpy(buf, key, keylen);
     for (i = 0; i < SHA512_BLOCK_LENGTH; i++) {
         o_key_pad[i] = buf[i] ^ 0x5c;
         i_key_pad[i] = buf[i] ^ 0x36;

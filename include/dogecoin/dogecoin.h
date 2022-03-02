@@ -36,21 +36,21 @@
 typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 
 #ifndef __cplusplus
-# ifndef true
-#  define true 1
-# endif
+#ifndef true
+#define true 1
+#endif
 
-# ifndef false
-#  define false 0
-# endif
+#ifndef false
+#define false 0
+#endif
 #endif //__cplusplus
 
 #ifdef __cplusplus
-# define LIBDOGECOIN_BEGIN_DECL extern "C" {
-# define LIBDOGECOIN_END_DECL	}
+#define LIBDOGECOIN_BEGIN_DECL extern "C" {
+#define LIBDOGECOIN_END_DECL }
 #else
-# define LIBDOGECOIN_BEGIN_DECL /* empty */
-# define LIBDOGECOIN_END_DECL	/* empty */
+#define LIBDOGECOIN_BEGIN_DECL /* empty */
+#define LIBDOGECOIN_END_DECL   /* empty */
 #endif
 
 #ifndef LIBDOGECOIN_API
@@ -78,8 +78,8 @@ typedef SSIZE_T ssize_t;
 #define DOGECOIN_ECKEY_PKEY_LENGTH 32
 #define DOGECOIN_HASH_LENGTH 32
 
-#define DOGECOIN_MIN(a,b) (((a)<(b))?(a):(b))
-#define DOGECOIN_MAX(a,b) (((a)>(b))?(a):(b))
+#define DOGECOIN_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define DOGECOIN_MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 LIBDOGECOIN_BEGIN_DECL
 

@@ -50,7 +50,7 @@ LIBDOGECOIN_API void* dogecoin_calloc(size_t count, size_t size);
 LIBDOGECOIN_API void* dogecoin_realloc(void* ptr, size_t size);
 LIBDOGECOIN_API void dogecoin_free(void* ptr);
 
-LIBDOGECOIN_API volatile void *dogecoin_mem_zero(volatile void *dst, size_t len);
+LIBDOGECOIN_API volatile void* dogecoin_mem_zero(volatile void* dst, size_t len);
 
 LIBDOGECOIN_END_DECL
 

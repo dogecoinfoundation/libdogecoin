@@ -9,10 +9,10 @@
 #include <src/libdogecoin-config.h>
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <test/utest.h>
 
@@ -69,7 +69,8 @@ extern void dogecoin_ecc_stop();
 int U_TESTS_RUN = 0;
 int U_TESTS_FAIL = 0;
 
-int main() {
+int main()
+{
     dogecoin_ecc_start();
 
     u_run_test(test_aes);

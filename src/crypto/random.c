@@ -28,14 +28,14 @@
 
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
-#  include <src/libdogecoin-config.h>
+#include <src/libdogecoin-config.h>
 #endif
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #ifdef WIN32
-#include <windows.h>
 #include <wincrypt.h>
+#include <windows.h>
 #endif
 
 #include <dogecoin/crypto/random.h>
@@ -46,35 +46,45 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
 static const dogecoin_rnd_mapper default_rnd_mapper = {dogecoin_random_init_internal, dogecoin_random_bytes_internal};
 static dogecoin_rnd_mapper current_rnd_mapper = {dogecoin_random_init_internal, dogecoin_random_bytes_internal};
 
-void dogecoin_rnd_set_mapper_default() {
+void dogecoin_rnd_set_mapper_default()
+{
     current_rnd_mapper = default_rnd_mapper;
 }
 
-void dogecoin_rnd_set_mapper(const dogecoin_rnd_mapper mapper) {
+void dogecoin_rnd_set_mapper(const dogecoin_rnd_mapper mapper)
+{
     current_rnd_mapper = mapper;
 }
 
-void dogecoin_random_init(void) {
+void dogecoin_random_init(void)
+{
     current_rnd_mapper.dogecoin_random_init();
 }
 
-dogecoin_bool dogecoin_random_bytes(uint8_t* buf, uint32_t len, const uint8_t update_seed) {
+dogecoin_bool dogecoin_random_bytes(uint8_t* buf, uint32_t len, const uint8_t update_seed)
+{
     return current_rnd_mapper.dogecoin_random_bytes(buf, len, update_seed);
 }
 
 #ifdef TESTING
-void dogecoin_random_init_internal(void) {
+void dogecoin_random_init_internal(void)
+{
     srand(time(NULL));
 }
 
-dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, uint8_t update_seed) {
+dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, uint8_t update_seed)
+{
     (void)update_seed;
-    for (uint32_t i = 0; i < len; i++) buf[i] = rand();
+    for (uint32_t i = 0; i < len; i++)
+        buf[i] = rand();
     return true;
 }
 #else
-void dogecoin_random_init_internal(void) {}
-dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const uint8_t update_seed) {
+void dogecoin_random_init_internal(void)
+{
+}
+dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const uint8_t update_seed)
+{
 #ifdef WIN32
     HCRYPTPROV hProvider;
     int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
@@ -86,7 +96,8 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
 #else
     (void)update_seed; //unused
     FILE* frand = fopen(RANDOM_DEVICE, "r");
-    if (!frand) return false;
+    if (!frand)
+        return false;
     size_t len_read = fread(buf, 1, len, frand);
     assert(len_read == len);
     fclose(frand);
