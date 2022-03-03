@@ -31,9 +31,9 @@
 #define __LIBDOGECOIN_TX_H__
 
 #include <dogecoin/chainparams.h>
+#include <dogecoin/crypto/hash.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
-#include <dogecoin/crypto/hash.h>
 #include <dogecoin/script.h>
 #include <dogecoin/vector.h>
 
@@ -99,13 +99,13 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2pkh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160 hash160);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2pkh_out(dogecoin_tx* tx, int64_t amount, const dogecoin_pubkey* pubkey);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_data_out(dogecoin_tx* tx, const int64_t amount, const uint8_t *data, const size_t datalen);
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_puzzle_out(dogecoin_tx* tx, const int64_t amount, const uint8_t *puzzle, const size_t puzzlelen);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_data_out(dogecoin_tx* tx, const int64_t amount, const uint8_t* data, const size_t datalen);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_puzzle_out(dogecoin_tx* tx, const int64_t amount, const uint8_t* puzzle, const size_t puzzlelen);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_outpoint_is_null(dogecoin_tx_outpoint* tx);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_is_coinbase(dogecoin_tx* tx);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_has_witness(const dogecoin_tx *tx);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_has_witness(const dogecoin_tx* tx);
 
 enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_UNKNOWN = 0,
@@ -118,7 +118,7 @@ enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_OK = 1,
 };
 const char* dogecoin_tx_sign_result_to_str(const enum dogecoin_tx_sign_result result);
-enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx *tx_in_out, const cstring *script, uint64_t amount, const dogecoin_key *privkey, int inputindex, int sighashtype, uint8_t *sigcompact_out, uint8_t *sigder_out, int *sigder_len);
+enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, uint64_t amount, const dogecoin_key* privkey, int inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, int* sigder_len);
 
 LIBDOGECOIN_END_DECL
 

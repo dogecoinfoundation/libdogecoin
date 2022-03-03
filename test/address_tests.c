@@ -8,8 +8,8 @@
 #include <test/utest.h>
 
 #include <dogecoin/address.h>
-#include <dogecoin/crypto/base58.h>
 #include <dogecoin/chainparams.h>
+#include <dogecoin/crypto/base58.h>
 #include <dogecoin/utils.h>
 
 void test_address()

@@ -6,10 +6,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <dogecoin/cstr.h>
 #include <dogecoin/serialize.h>
@@ -22,9 +22,9 @@ void test_serialize()
     struct const_buffer buf2;
     uint16_t num0;
     uint32_t num1;
-    int32_t  num1a;
+    int32_t num1a;
     uint64_t num2;
-    int64_t  num2a;
+    int64_t num2a;
     uint32_t num3;
     char strbuf[255];
     cstring* deser_test;
@@ -33,7 +33,7 @@ void test_serialize()
     uint32_t u32;
     uint64_t u64;
     int32_t i32;
-    uint8_t hash[32] = {0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03,0x00,0x01,0x02,0x03};
+    uint8_t hash[32] = {0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03};
     uint8_t hashc[32];
 
     ser_u16(s2, 0xAAFF);
@@ -49,7 +49,8 @@ void test_serialize()
     ser_u256(s2, hash);
     cstr_free(s3, true);
 
-    buf2.p = s2->str; buf2.len = s2->len;
+    buf2.p = s2->str;
+    buf2.len = s2->len;
     deser_u16(&num0, &buf2);
     assert(num0 == 43775); /* 0xAAFF */
     deser_u32(&num1, &buf2);

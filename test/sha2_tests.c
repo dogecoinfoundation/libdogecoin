@@ -6,10 +6,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <dogecoin/crypto/sha2.h>
 #include <dogecoin/utils.h>

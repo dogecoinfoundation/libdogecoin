@@ -6,10 +6,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <dogecoin/crypto/base58.h>
 #include <dogecoin/utils.h>
@@ -132,7 +132,8 @@ static const char* base58_invalid_vector[] = {
     0,
     0};
 
-void test_base58() {
+void test_base58()
+{
     const char** raw = base58_vector;
     const char** str = base58_vector + 1;
     uint8_t rawn[96];
@@ -156,8 +157,10 @@ void test_base58() {
         memcpy(i_rawn, utils_hex_to_uint8(*i_raw), len);
         unsigned char outbuf[1024];
         int r = 0;
-        if (strncmp(*i_cmd, "ec", 2) == 0) r = dogecoin_base58_encode_check(i_rawn, len, strn, sizeof(strn));  
-        else r = dogecoin_base58_decode_check(*i_raw, outbuf, sizeof(outbuf));
+        if (strncmp(*i_cmd, "ec", 2) == 0)
+            r = dogecoin_base58_encode_check(i_rawn, len, strn, sizeof(strn));
+        else
+            r = dogecoin_base58_decode_check(*i_raw, outbuf, sizeof(outbuf));
         assert(r == 0);
         i_raw += 2;
         i_cmd += 2;

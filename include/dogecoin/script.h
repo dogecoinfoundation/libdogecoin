@@ -30,16 +30,15 @@
 #ifndef __LIBDOGECOIN_SCRIPT_H__
 #define __LIBDOGECOIN_SCRIPT_H__
 
+#include <dogecoin/crypto/key.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
-#include <dogecoin/crypto/key.h>
 #include <dogecoin/vector.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
 /** Sighash version types */
-enum dogecoin_sig_version
-{
+enum dogecoin_sig_version {
     SIGVERSION_BASE = 0,
     SIGVERSION_WITNESS_V0 = 1,
 };
@@ -239,9 +238,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2wpkh(cstring* script, cons
 LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160 hash160);
 LIBDOGECOIN_API dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160 scripthash);
 
-LIBDOGECOIN_API const char * dogecoin_tx_out_type_to_str(const enum dogecoin_tx_out_type type);
+LIBDOGECOIN_API const char* dogecoin_tx_out_type_to_str(const enum dogecoin_tx_out_type type);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_is_witnessprogram(const cstring* script, uint8_t* version_out, uint8_t *program_out, int *programm_len_out);
+LIBDOGECOIN_API dogecoin_bool dogecoin_script_is_witnessprogram(const cstring* script, uint8_t* version_out, uint8_t* program_out, int* programm_len_out);
 
 LIBDOGECOIN_END_DECL
 

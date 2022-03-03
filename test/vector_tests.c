@@ -6,10 +6,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <dogecoin/utils.h>
 #include <dogecoin/vector.h>
@@ -19,13 +19,15 @@ struct teststruct {
     void* dummy2;
 };
 
-void free_dummy(void* data) {
+void free_dummy(void* data)
+{
     dogecoin_free(((struct teststruct*)data)->dummy1);
     dogecoin_free(((struct teststruct*)data)->dummy2);
     dogecoin_free((struct teststruct*)data);
 }
 
-void test_vector() {
+void test_vector()
+{
     dogecoin_bool res;
     char str0[] = "string";
     char str1[] = "rumba";

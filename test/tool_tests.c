@@ -8,8 +8,8 @@
 
 #include <test/utest.h>
 
-#include <dogecoin/crypto/base58.h>
 #include <dogecoin/chainparams.h>
+#include <dogecoin/crypto/base58.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/utils.h>
 
@@ -39,8 +39,8 @@ void test_tool()
     u_assert_int_eq(privkey_data[0] == dogecoin_chainparams_main.b58prefix_secret_address, true);
 
     char privkey_hex_or_null[65];
-    utils_bin_to_hex(privkey_data+1, DOGECOIN_ECKEY_PKEY_LENGTH, privkey_hex_or_null);
-    u_assert_str_eq(privkeyhex,privkey_hex_or_null);
+    utils_bin_to_hex(privkey_data + 1, DOGECOIN_ECKEY_PKEY_LENGTH, privkey_hex_or_null);
+    u_assert_str_eq(privkeyhex, privkey_hex_or_null);
 
     size_t masterkeysize = 200;
     char masterkey[masterkeysize];
@@ -49,11 +49,10 @@ void test_tool()
 
     size_t extoutsize = 200;
     char extout[extoutsize];
-    const char *privkey = "dgpv557t1z21sLCnAz3cJPW5DiVErXdAi7iWpSJwBBaeN87umwje8LuTKREPTYPTNGXGnB3oNd2z6RmFFDU99WKbiRDJKKXfHxf48puZibauJYB";
+    const char* privkey = "dgpv557t1z21sLCnAz3cJPW5DiVErXdAi7iWpSJwBBaeN87umwje8LuTKREPTYPTNGXGnB3oNd2z6RmFFDU99WKbiRDJKKXfHxf48puZibauJYB";
 
     u_assert_int_eq(hd_derive(&dogecoin_chainparams_main, privkey, "m/0", extout, extoutsize), true);
     u_assert_str_eq(extout, "dgpv544MJMFeoz5LXkwbZTWwouwFje2Yp9c1A8ReNaapDFjW44jEcLXv3B3KQg3fjWXWVC9FGRyxLaCHjN1DUeGgoYJxMYM723wrLN6BArKUxe3");
 
     u_assert_int_eq(hd_derive(&dogecoin_chainparams_main, "dgpv51eADS3spNJh9gCpE1AyQ9NpMGkGh6MJKxM84Tf87KVLNeodEW76V2nJJRPorYLGnvZGJKTgEgvqGCtf9VS9RqhfJaTxV7iqm86VpMUNi5G", "m/3", extout, extoutsize), true);
-    
 }

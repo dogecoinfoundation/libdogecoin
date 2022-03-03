@@ -33,8 +33,8 @@
 #ifndef __LIBDOGECOIN_CRYPTO_SHA2_H__
 #define __LIBDOGECOIN_CRYPTO_SHA2_H__
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <dogecoin/dogecoin.h>
 

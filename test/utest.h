@@ -77,9 +77,9 @@
 
 #ifndef _UTEST_H_
 #define _UTEST_H_
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
 
 #define u_run_test(TEST)                      \
     do {                                      \
@@ -113,8 +113,8 @@
         do {                                                             \
             if (r_ != e_) {                                              \
                 printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
-                printf("\tExpect: \t%" PRIu64 "\n", e_);                        \
-                printf("\tReceive:\t%" PRIu64 "\n", r_);                        \
+                printf("\tExpect: \t%" PRIu64 "\n", e_);                 \
+                printf("\tReceive:\t%" PRIu64 "\n", r_);                 \
                 U_TESTS_FAIL++;                                          \
                 return;                                                  \
             };                                                           \

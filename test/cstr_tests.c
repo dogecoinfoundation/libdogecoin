@@ -7,14 +7,15 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <dogecoin/cstr.h>
 
-void test_cstr() {
+void test_cstr()
+{
     cstring* s1 = cstr_new("foo");
     cstring* s2 = cstr_new("foo");
     cstring* s3 = cstr_new("bar");
@@ -56,11 +57,11 @@ void test_cstr() {
     memcpy(s->str, "food", 4);
     assert(strcmp(s->str, "food") == 0);
     cstr_free(s, true);
-    assert(cstr_compare(s1, s2) ==  0);
-    assert(cstr_compare(s1, s3) ==  1);
-    assert(cstr_compare(s3, s1) ==  -1);
-    assert(cstr_compare(s3, s4) ==  -1);
-    assert(cstr_compare(s4, s3) ==  1);
+    assert(cstr_compare(s1, s2) == 0);
+    assert(cstr_compare(s1, s3) == 1);
+    assert(cstr_compare(s3, s1) == -1);
+    assert(cstr_compare(s3, s4) == -1);
+    assert(cstr_compare(s4, s3) == 1);
     assert(cstr_equal(s1, s2) == true);
     assert(cstr_equal(s1, s3) == false);
     assert(cstr_equal(s1, NULL) == false);

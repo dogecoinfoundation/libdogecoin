@@ -22,17 +22,18 @@
  OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include <test/utest.h>
 
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/utils.h>
 
-void test_key() {
+void test_key()
+{
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     assert(dogecoin_privkey_is_valid(&key) == 0);
@@ -45,7 +46,8 @@ void test_key() {
     assert(dogecoin_pubkey_is_valid(&pubkey) == 1);
     assert(dogecoin_privkey_verify_pubkey(&key, &pubkey) == 1);
     unsigned int i;
-    for (i = 33; i < DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH; ++i) assert(pubkey.pubkey[i] == 0);
+    for (i = 33; i < DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH; ++i)
+        assert(pubkey.pubkey[i] == 0);
     uint8_t* hash = utils_hex_to_uint8((const char*)"26db47a48a10b9b0b697b793f5c0231aa35fe192c9d063d7b03a55e3c302850a");
     unsigned char sig[74];
     size_t outlen = 74;

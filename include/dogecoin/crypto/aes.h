@@ -75,7 +75,7 @@ typedef uint_8t return_type;
 typedef uint_8t length_type;
 
 typedef struct
-    {
+{
     uint_8t ksch[(N_MAX_ROUNDS + 1) * N_BLOCK];
     uint_8t rnd;
 } aes_context;
@@ -91,34 +91,34 @@ typedef struct
 #if defined(AES_ENC_PREKEYED) || defined(AES_DEC_PREKEYED)
 
 LIBDOGECOIN_API return_type aes_set_key(const unsigned char key[],
-                        length_type keylen,
-                        aes_context ctx[1]);
+                                        length_type keylen,
+                                        aes_context ctx[1]);
 #endif
 
 #if defined(AES_ENC_PREKEYED)
 
 LIBDOGECOIN_API return_type aes_encrypt(const unsigned char in[N_BLOCK],
-                        unsigned char out[N_BLOCK],
-                        const aes_context ctx[1]);
+                                        unsigned char out[N_BLOCK],
+                                        const aes_context ctx[1]);
 
 LIBDOGECOIN_API return_type aes_cbc_encrypt(const unsigned char* in,
-                            unsigned char* out,
-                            int n_block,
-                            unsigned char iv[N_BLOCK],
-                            const aes_context ctx[1]);
+                                            unsigned char* out,
+                                            int n_block,
+                                            unsigned char iv[N_BLOCK],
+                                            const aes_context ctx[1]);
 #endif
 
 #if defined(AES_DEC_PREKEYED)
 
 LIBDOGECOIN_API return_type aes_decrypt(const unsigned char in[N_BLOCK],
-                        unsigned char out[N_BLOCK],
-                        const aes_context ctx[1]);
+                                        unsigned char out[N_BLOCK],
+                                        const aes_context ctx[1]);
 
 LIBDOGECOIN_API return_type aes_cbc_decrypt(const unsigned char* in,
-                            unsigned char* out,
-                            int n_block,
-                            unsigned char iv[N_BLOCK],
-                            const aes_context ctx[1]);
+                                            unsigned char* out,
+                                            int n_block,
+                                            unsigned char iv[N_BLOCK],
+                                            const aes_context ctx[1]);
 #endif
 
 /*  The following calls are for 'on the fly' keying.  In this case the
@@ -143,30 +143,30 @@ LIBDOGECOIN_API return_type aes_cbc_decrypt(const unsigned char* in,
 
 #if defined(AES_ENC_128_OTFK)
 LIBDOGECOIN_API void aes_encrypt_128(const unsigned char in[N_BLOCK],
-                     unsigned char out[N_BLOCK],
-                     const unsigned char key[N_BLOCK],
-                     uint_8t o_key[N_BLOCK]);
+                                     unsigned char out[N_BLOCK],
+                                     const unsigned char key[N_BLOCK],
+                                     uint_8t o_key[N_BLOCK]);
 #endif
 
 #if defined(AES_DEC_128_OTFK)
 LIBDOGECOIN_API void aes_decrypt_128(const unsigned char in[N_BLOCK],
-                     unsigned char out[N_BLOCK],
-                     const unsigned char key[N_BLOCK],
-                     unsigned char o_key[N_BLOCK]);
+                                     unsigned char out[N_BLOCK],
+                                     const unsigned char key[N_BLOCK],
+                                     unsigned char o_key[N_BLOCK]);
 #endif
 
 #if defined(AES_ENC_256_OTFK)
 LIBDOGECOIN_API void aes_encrypt_256(const unsigned char in[N_BLOCK],
-                     unsigned char out[N_BLOCK],
-                     const unsigned char key[2 * N_BLOCK],
-                     unsigned char o_key[2 * N_BLOCK]);
+                                     unsigned char out[N_BLOCK],
+                                     const unsigned char key[2 * N_BLOCK],
+                                     unsigned char o_key[2 * N_BLOCK]);
 #endif
 
 #if defined(AES_DEC_256_OTFK)
 LIBDOGECOIN_API void aes_decrypt_256(const unsigned char in[N_BLOCK],
-                     unsigned char out[N_BLOCK],
-                     const unsigned char key[2 * N_BLOCK],
-                     unsigned char o_key[2 * N_BLOCK]);
+                                     unsigned char out[N_BLOCK],
+                                     const unsigned char key[2 * N_BLOCK],
+                                     unsigned char o_key[2 * N_BLOCK]);
 #endif
 
 LIBDOGECOIN_END_DECL
