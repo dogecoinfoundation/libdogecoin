@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
         # derive child key from hd master key
         elif cmd == "derive_hdpubkey":
-            if not args:
+            if not args or args[0].isdigit():
                 print(cmd+": enter WIF-encoded master private key")
             elif len(args[0]) < 50:
                 print(cmd+": private key must be WIF-encoded")
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
         # verify private and p2pkh address pair
         elif cmd == "verify_keypair":
-            if not args or not args[0].isdigit():
+            if not args or args[0].isdigit():
                 print(cmd+": enter WIF-encoded private key")
             elif len(args) < 2 or args[1].isdigit():
                 print(cmd+": enter p2pkh address")
