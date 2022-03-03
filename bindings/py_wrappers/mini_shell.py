@@ -10,7 +10,8 @@ if __name__ == "__main__":
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
                "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
-               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1, test"]
+               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test",
+               "verify_address <p2pkh address>"]
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -87,6 +88,19 @@ if __name__ == "__main__":
                     print("Keypair is valid.")
                 else:
                     print("Keypair is invalid")
+
+        # verify p2pkh address
+        elif cmd == "verify_address":
+            if not args or args[0].isdigit():
+                print(cmd+": enter p2pkh address")
+            elif len(args) < 2 or not args[1].isdigit():
+                print(cmd+": enter valid chain code")
+            else:
+                res = libdogecoin.verify_p2pkh_address(args[0], int(args[1]))
+                if res:
+                    print("Address is valid.")
+                else:
+                    print("Address is invalid")
 
         # handle incorrect argument format
         else:
