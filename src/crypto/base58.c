@@ -120,7 +120,6 @@ int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t bi
 }
 
 int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, int strsize) {
-    int ret;
     if (datalen > 128) return 0;
     uint8_t buf[datalen + 32];
     memset(buf, 0, sizeof(buf));

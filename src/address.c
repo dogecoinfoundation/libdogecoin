@@ -43,6 +43,7 @@
 #include <dogecoin/address.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/bip32.h>
+#include <dogecoin/crypto/base58.h>
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/crypto/random.h>
 #include <dogecoin/utils.h>
@@ -219,10 +220,16 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, bool is_testnet) {
     /* check first character */
     if (p2pkh_pubkey[0] != (is_testnet ? 'n' : 'D')) return false;
 
-    /* check randomness */
-    double entropy;
-    utils_calculate_shannon_entropy(p2pkh_pubkey, &entropy);
-    if (entropy < 0.12244) return false;
+    /* get chain params */
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+    
+    /* base58 decode */
+    uint8_t addr_data[strlen(p2pkh_pubkey)];
+    int outlen = dogecoin_base58_decode_check(p2pkh_pubkey, addr_data, sizeof(addr_data));
+    if (outlen==0) return false;
+
+    /* check prefix */
+    if (addr_data[0] != chain->b58prefix_pubkey_address) return false;
 
     return true;
 }
