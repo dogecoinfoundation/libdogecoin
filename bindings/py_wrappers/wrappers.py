@@ -199,6 +199,7 @@ def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
     res = lib.verifyP2pkhAddress(p2pkh_pubkey_ptr, ct.c_int(chain_code))
 
     # stop context
+    lib.dogcoine_ecc_start()
 
     # return boolean result
     return res
