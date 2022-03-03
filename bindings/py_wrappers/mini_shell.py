@@ -9,7 +9,7 @@ if __name__ == "__main__":
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
-               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
+               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1:test>",
                "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test",
                "verify_address <p2pkh address>"]
     print("="*85)
