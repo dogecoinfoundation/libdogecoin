@@ -580,8 +580,7 @@ void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
     usedspace = freespace = 0;
 }
 
-void sha256_finalize(sha2_byte digest[], sha256_context* context)
-{
+void sha256_finalize(sha256_context* context, sha2_byte digest[]) {
     sha2_word32* d = (sha2_word32*)digest;
     unsigned int usedspace;
     sha2_word64* t;
@@ -644,7 +643,7 @@ void sha256_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA256_DIGEST_
     sha256_context context;
     sha256_init(&context);
     sha256_write(&context, data, len);
-    sha256_finalize(digest, &context);
+    sha256_finalize(&context, digest);
 }
 
 /*** SHA-512: *********************************************************/
@@ -906,8 +905,7 @@ static void sha512_last(sha512_context* context)
     sha512_transform(context, (sha2_word64*)context->buffer);
 }
 
-void sha512_finalize(sha2_byte digest[], sha512_context* context)
-{
+void sha512_finalize(sha512_context* context, sha2_byte digest[]) {
     sha2_word64* d = (sha2_word64*)digest;
     /* If no digest buffer is passed, we don't bother doing this: */
     if (digest != (sha2_byte*)0) {
@@ -935,7 +933,7 @@ void sha512_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA512_DIGEST_
     sha512_context context;
     sha512_init(&context);
     sha512_write(&context, data, len);
-    sha512_finalize(digest, &context);
+    sha512_finalize(&context, digest);
 }
 
 void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac)
@@ -958,11 +956,11 @@ void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
     sha256_init(&ctx);
     sha256_write(&ctx, i_key_pad, SHA256_BLOCK_LENGTH);
     sha256_write(&ctx, msg, msglen);
-    sha256_finalize(buf, &ctx);
+    sha256_finalize(&ctx, buf);
     sha256_init(&ctx);
     sha256_write(&ctx, o_key_pad, SHA256_BLOCK_LENGTH);
     sha256_write(&ctx, buf, SHA256_DIGEST_LENGTH);
-    sha256_finalize(hmac, &ctx);
+    sha256_finalize(&ctx, hmac);
 }
 
 void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac)
@@ -983,9 +981,9 @@ void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
     sha512_init(&ctx);
     sha512_write(&ctx, i_key_pad, SHA512_BLOCK_LENGTH);
     sha512_write(&ctx, msg, msglen);
-    sha512_finalize(buf, &ctx);
+    sha512_finalize(&ctx, buf);
     sha512_init(&ctx);
     sha512_write(&ctx, o_key_pad, SHA512_BLOCK_LENGTH);
     sha512_write(&ctx, buf, SHA512_DIGEST_LENGTH);
-    sha512_finalize(hmac, &ctx);
+    sha512_finalize(&ctx, hmac);
 }

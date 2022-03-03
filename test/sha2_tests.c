@@ -440,7 +440,7 @@ void test_sha_256()
         } else {
             sha256_write(&context, msg_buf, oLen);
         }
-        sha256_finalize(buf, &context);
+        sha256_finalize(&context, buf);
         digest_out = utils_hex_to_uint8((const char*)nist_sha256_test_vectors_long[i].digest_hex);
         assert(memcmp(buf, digest_out, SHA256_DIGEST_LENGTH) == 0);
     }
@@ -475,7 +475,7 @@ void test_sha_512()
         } else {
             sha512_write(&context, msg_buf, oLen);
         }
-        sha512_finalize(buf, &context);
+        sha512_finalize(&context, buf);
 
         digest_out = utils_hex_to_uint8((const char*)nist_sha512_test_vectors_long[i].digest_hex);
         assert(memcmp(buf, digest_out, SHA512_DIGEST_LENGTH) == 0);

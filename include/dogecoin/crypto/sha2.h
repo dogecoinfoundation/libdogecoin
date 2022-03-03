@@ -60,12 +60,12 @@ typedef struct _sha512_context {
 
 LIBDOGECOIN_API void sha256_init(sha256_context*);
 LIBDOGECOIN_API void sha256_write(sha256_context*, const uint8_t*, size_t);
-LIBDOGECOIN_API void sha256_finalize(uint8_t[SHA256_DIGEST_LENGTH], sha256_context*);
+LIBDOGECOIN_API void sha256_finalize(sha256_context*, uint8_t[SHA256_DIGEST_LENGTH]);
 LIBDOGECOIN_API void sha256_raw(const uint8_t*, size_t, uint8_t[SHA256_DIGEST_LENGTH]);
 
 LIBDOGECOIN_API void sha512_init(sha512_context*);
 LIBDOGECOIN_API void sha512_write(sha512_context*, const uint8_t*, size_t);
-LIBDOGECOIN_API void sha512_finalize(uint8_t[SHA512_DIGEST_LENGTH], sha512_context*);
+LIBDOGECOIN_API void sha512_finalize(sha512_context*, uint8_t[SHA512_DIGEST_LENGTH]);
 LIBDOGECOIN_API void sha512_raw(const uint8_t*, size_t, uint8_t[SHA512_DIGEST_LENGTH]);
 
 LIBDOGECOIN_API void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, const uint32_t msglen, uint8_t* hmac);
