@@ -91,17 +91,13 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
         memcpy(p2pkh_pubkey, p2pkh_pubkey_internal, sizeout);
     }
 
-    // printf("wif_privkey:  %s\n", wif_privkey);
-    // printf("p2pkh_pubkey: %s\n\n", p2pkh_pubkey);
-
     /* reset internal variables */
     memset(wif_privkey_internal, 0, strlen(wif_privkey_internal));
     memset(p2pkh_pubkey_internal, 0, strlen(p2pkh_pubkey_internal));
 
-    // TODO: evaluate how we're going to deal with key storage and cleansing memory
-    // /* cleanup memory */
-    // dogecoin_pubkey_cleanse(&pubkey);
-    // dogecoin_privkey_cleanse(&key);
+    /* cleanup memory */
+    dogecoin_pubkey_cleanse(&pubkey);
+    dogecoin_privkey_cleanse(&key);
     return true;
 }
 
@@ -141,20 +137,14 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     /* reset internal variables */
     memset(hd_privkey_master, 0, strlen(hd_privkey_master));
     memset(hd_privkey_master, 0, strlen(hd_privkey_master));
-
-    // printf("wif_privkey_master:   %s\n", wif_privkey_master);
-    // printf("p2pkh_pubkey_master:  %s\n", p2pkh_pubkey_master);
-
-    // TODO: evaluate how we're going to deal with key storage and cleansing memory
-    // memset(wif_privkey_master, 0, strlen(wif_privkey_master));
-    // memset(p2pkh_pubkey_master, 0, strlen(p2pkh_pubkey_master));
+    
     return true;
 }
 
-int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
+int generateDerivedHDPubkey(char* wif_privkey_master, char* p2pkh_pubkey)
 {
     /* require master key */
-    if (!wif_privkey_master) {
+    if (!wif_privkey_master || !p2pkh_pubkey) {
         return false;
     }
 
@@ -163,26 +153,8 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     memcpy(prefix, wif_privkey_master, 1);
     const dogecoin_chainparams* chain = memcmp(prefix, "d", 1) == 0 ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
-    size_t strsize = 128;
-    char str[strsize];
-
-    /* if nothing is passed in use internal variables */
-    if (p2pkh_pubkey) {
-        memcpy(str, p2pkh_pubkey, strsize);
-    }
-
-    dogecoin_hdnode node;
-    dogecoin_hdnode_deserialize(wif_privkey_master, chain, &node);
-
-    dogecoin_hdnode_get_p2pkh_address(&node, chain, str, strsize);
-
-    /* pass back to external variable if exists */
-    if (p2pkh_pubkey) {
-        memcpy(p2pkh_pubkey, str, strsize);
-    }
-
-    /* reset internal variables */
-    memset(str, 0, strlen(str));
+    /* generate p2pkh from private key */
+    generatePrivPubKeypair(wif_privkey_master, p2pkh_pubkey, memcmp(prefix, "d", 1) == 0 ? false : true);
 
     return true;
 }
@@ -197,6 +169,7 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
 
     /* verify private key */
     dogecoin_key key;
+    dogecoin_privkey_init(&key);
     dogecoin_privkey_decode_wif(wif_privkey, chain, &key);
     if (!dogecoin_privkey_is_valid(&key)) return false;
     char new_wif_privkey[sizeout];
@@ -213,6 +186,8 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     if (strcmp(p2pkh_pubkey, new_p2pkh_pubkey)) return false;
 
+    dogecoin_pubkey_cleanse(&pubkey);
+    dogecoin_privkey_cleanse(&key);
     return true;
 }
 
@@ -222,15 +197,6 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
 
     /* determine if mainnet or testnet/regtest */
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
-
-    /* validate private key */
-    // dogecoin_key key;
-    // dogecoin_privkey_init(&key);
-    // dogecoin_privkey_decode_wif(wif_privkey_master, chain, &key);
-    // if (!dogecoin_privkey_is_valid(&key)) {
-    //     printf("validate method does not apply to hd master\n");
-    //     return false;
-    // }
 
     /* calculate master pubkey from master privkey */
     dogecoin_hdnode node;
@@ -245,17 +211,21 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
     return true;
 }
 
-int verifyP2pkhAddress(char* p2pkh_pubkey, bool is_testnet) {
+int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len, bool is_testnet) {
+    if (!p2pkh_pubkey) return false;
     /* check length */
-    if (strlen(p2pkh_pubkey) != 34) return false;
-
+    if (len != 33) {
+        return false;
+    }
     /* check first character */
-    if (p2pkh_pubkey[0] != (is_testnet ? 'n' : 'D')) return false;
-
+    if (p2pkh_pubkey[0] != (is_testnet ? 110 : 68)) {
+        return false;
+    }
     /* check randomness */
     double entropy;
-    utils_calculate_shannon_entropy(p2pkh_pubkey, &entropy);
-    if (entropy < 0.12244) return false;
-
+    utils_calculate_shannon_entropy(p2pkh_pubkey, len + 1, &entropy);
+    if (entropy < 0.12244) {
+        return false;
+    }
     return true;
 }

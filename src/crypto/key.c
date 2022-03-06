@@ -102,7 +102,7 @@ dogecoin_bool dogecoin_privkey_decode_wif(const char* privkey_wif, const dogecoi
     if (!privkey_wif || strlen(privkey_wif) < 50)
         return false;
     const size_t privkey_len = strlen(privkey_wif);
-    uint8_t* privkey_data = (uint8_t*)dogecoin_malloc(privkey_len);
+    uint8_t* privkey_data = (uint8_t*)dogecoin_calloc(1, privkey_len);
     memset(privkey_data, 0, privkey_len);
     size_t outlen = 0;
     outlen = dogecoin_base58_decode_check(privkey_wif, privkey_data, privkey_len);

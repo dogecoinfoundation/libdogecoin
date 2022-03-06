@@ -271,13 +271,11 @@ dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str
 // check for validity of curve point in case of public data not performed
 dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node)
 {
-    const size_t ndlen = sizeof(uint8_t) * strlen(str);
-    uint8_t* node_data = (uint8_t*)dogecoin_malloc(ndlen);
+    if (!str || !chain || !node) return false;
+    const size_t ndlen = sizeof(uint8_t) * sizeof(dogecoin_hdnode);
+    uint8_t* node_data = (uint8_t*)dogecoin_calloc(1, ndlen);
     memset(node, 0, sizeof(dogecoin_hdnode));
-    size_t outlen = 0;
-
-    outlen = dogecoin_base58_decode_check(str, node_data, ndlen);
-    if (!outlen) {
+    if (!dogecoin_base58_decode_check(str, node_data, ndlen)) {
         dogecoin_free(node_data);
         return false;
     }
@@ -310,7 +308,7 @@ dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypat
     static char digits[] = "0123456789";
     uint64_t idx = 0;
     assert(strlens(keypath) < 1024);
-    char *pch, *kp = dogecoin_malloc(strlens(keypath) + 1);
+    char *pch, *kp = dogecoin_calloc(1, strlens(keypath) + 1);
 
     if (!kp) {
         return false;

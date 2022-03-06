@@ -173,7 +173,7 @@ char* utils_uint8_to_hex(const uint8_t* bin, size_t l)
 
 void utils_reverse_hex(char* h, int len)
 {
-    char* copy = dogecoin_malloc(len);
+    char* copy = dogecoin_calloc(1, len);
     int i;
     strncpy(copy, h, len);
     for (i = 0; i < len; i += 2) {
@@ -239,22 +239,21 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
     }
 }
 
-void utils_calculate_shannon_entropy(const char* str, double *metricEntropy) {
+void utils_calculate_shannon_entropy(const char* str, uint8_t strsz, double *metricEntropy) {
     int tableSize = 100;
     int freqTable[tableSize];
-    int len = (int) strlen(str);
     for (int i=0; i<tableSize; i++) freqTable[i] = 0; // all freqs start at 0
-    for (int i=0; i<len; i++) {
+    for (int i=0; i<strsz; i++) {
         char c = str[i];
         freqTable[c-48]++;  // increment the frequency upon occurrence
     }
     double sumTotal = 0;
     double frequency;
     for (int i=0; i<tableSize; i++) {
-        frequency = freqTable[i]/(double)len;
+        frequency = freqTable[i]/(double)strsz;
         if (frequency) sumTotal += frequency * (log(frequency)/log(2));
     }
-    *metricEntropy = (sumTotal * (-1))/(double)len;
+    *metricEntropy = (sumTotal * (-1))/(double)strsz;
 }
 
 void* safe_malloc(size_t size)
