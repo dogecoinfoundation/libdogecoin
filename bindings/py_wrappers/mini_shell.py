@@ -63,7 +63,7 @@ if __name__ == "__main__":
         elif cmd == "verify_keypair":
             if not args or args[0].isdigit():
                 print(cmd+": enter WIF-encoded private key")
-            elif len(args) < 2 or args[1].isdigit():
+            elif len(args) < 2 or not isinstance(args[1], str):
                 print(cmd+": enter p2pkh address")
             elif len(args) < 3 or not args[2].isdigit():
                 print(cmd+": enter valid chain code")
