@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
@@ -238,8 +239,30 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
     }
 }
 
+<<<<<<< HEAD
 void* safe_malloc(size_t size)
 {
+=======
+void utils_calculate_shannon_entropy(const char* str, double *metricEntropy) {
+    int tableSize = 100;
+    int freqTable[tableSize];
+    int len = (int) strlen(str);
+    for (int i=0; i<tableSize; i++) freqTable[i] = 0; // all freqs start at 0
+    for (int i=0; i<len; i++) {
+        char c = str[i];
+        freqTable[c-48]++;  // increment the frequency upon occurrence
+    }
+    double sumTotal = 0;
+    double frequency;
+    for (int i=0; i<tableSize; i++) {
+        frequency = freqTable[i]/(double)len;
+        if (frequency) sumTotal += frequency * (log(frequency)/log(2));
+    }
+    *metricEntropy = (sumTotal * (-1))/(double)len;
+}
+
+void* safe_malloc(size_t size) {
+>>>>>>> fa40b89... added address and keypair verification along with wrappers for them
     void* result;
 
     if ((result = malloc(size))) { /* assignment intentional */

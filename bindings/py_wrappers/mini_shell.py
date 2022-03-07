@@ -5,10 +5,21 @@ import wrappers as libdogecoin
 # MAIN METHOD
 if __name__ == "__main__":
 
+<<<<<<< HEAD
     # print option menu
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>"]
+=======
+    # start ECC context
+    libdogecoin.dogecoin_ecc_start()
+
+    # print option menu
+    cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
+               "gen_hdkeypair <which_chain | 0:main, 1:test>",
+               "derive_hdpubkey <master_privkey_wif>",
+               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>"]
+>>>>>>> fa40b89... added address and keypair verification along with wrappers for them
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -56,10 +67,37 @@ if __name__ == "__main__":
                 res = libdogecoin.generate_derived_hd_pub_key(args[0])
                 print("new derived child public key:", res)
 
+<<<<<<< HEAD
+=======
+        # verify private and p2pkh address pair
+        elif cmd == "verify_keypair":
+            if not args or not isinstance(args[0], str):
+                print(cmd+": enter WIF-encoded private key")
+            elif len(args) < 2 or not isinstance(args[1], str):
+                print(cmd+": enter p2pkh address")
+            elif len(args) < 3 or not args[2].isdigit():
+                print(cmd+": enter valid chain code")
+            else:
+                res = libdogecoin.verify_priv_pub_keypair(args[0], args[1], int(args[2]))
+                if res:
+                    print("Keypair is valid.")
+                else:
+                    print("Keypair is invalid")
+
+>>>>>>> fa40b89... added address and keypair verification along with wrappers for them
         # handle incorrect argument format
         else:
             print(cmd+": not a valid command")
 
+<<<<<<< HEAD
         #accept next command
         print()
         inp = input("$ ").split()
+=======
+        # accept next command
+        print()
+        inp = input("$ ").split()
+
+    # stop ECC context
+    libdogecoin.dogecoin_ecc_stop()
+>>>>>>> fa40b89... added address and keypair verification along with wrappers for them
