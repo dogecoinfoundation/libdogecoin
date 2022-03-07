@@ -53,17 +53,13 @@ class TestGeneratePrivPubKeyPair(unittest.TestCase):
 
     def test_p2pkh_addr_format_is_valid_mainnet(self):
         """Test function returns valid address for mainnet"""
-        # TODO: make rule changes later, for now simple verify
         res = w.generate_priv_pub_key_pair()
-        self.assertTrue(res[1][0] == "D")
-        self.assertTrue(len(res[1])==34)
+        self.assertTrue(w.verify_p2pkh_address(res[1], 0))
 
     def test_p2pkh_addr_format_is_valid_testnet(self):
         """Test function returns valid address for testnet"""
-        # TODO: make rule changes later, for now simple verify
         res = w.generate_priv_pub_key_pair(chain_code=1)
-        self.assertTrue(res[1][0] == "n")
-        self.assertTrue(len(res[1])==34)
+        self.assertTrue(w.verify_p2pkh_address(res[1], 1))
 
     def test_pubkey_is_valid(self):
         """Test that the pubkey is valid and does hash to returned address"""

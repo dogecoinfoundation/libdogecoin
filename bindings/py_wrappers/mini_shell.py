@@ -12,7 +12,6 @@ if __name__ == "__main__":
                "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1:test>",
                "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test",
                "verify_address <p2pkh address>"]
-
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
