@@ -257,8 +257,7 @@ void utils_calculate_shannon_entropy(const char* str, double *metricEntropy) {
     *metricEntropy = (sumTotal * (-1))/(double)len;
 }
 
-void* safe_malloc(size_t size)
-{
+void* safe_malloc(size_t size) {
     void* result;
 
     if ((result = malloc(size))) { /* assignment intentional */

@@ -61,6 +61,16 @@ class TestGeneratePrivPubKeyPair(unittest.TestCase):
         res = w.generate_priv_pub_key_pair(chain_code=1)
         self.assertTrue(w.verify_p2pkh_address(res[1], 1))
 
+    def test_pubkey_is_valid(self):
+        """Test that the pubkey is valid and does hash to returned address"""
+        res = w.generate_priv_pub_key_pair()
+        self.assertTrue(w.verify_p2pkh_address(res[1], 0))
+
+    def test_p2pkh_addr_format_is_valid_testnet(self):
+        """Test function returns valid address for testnet"""
+        res = w.generate_priv_pub_key_pair(chain_code=1)
+        self.assertTrue(w.verify_p2pkh_address(res[1], 1))
+
     def test_keypair_is_valid_mainnet(self):
         """Test that the private and public key for mainnet
         are valid and associated to each other"""
