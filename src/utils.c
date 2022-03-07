@@ -239,10 +239,6 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
     }
 }
 
-<<<<<<< HEAD
-void* safe_malloc(size_t size)
-{
-=======
 void utils_calculate_shannon_entropy(const char* str, double *metricEntropy) {
     int tableSize = 100;
     int freqTable[tableSize];
@@ -262,7 +258,6 @@ void utils_calculate_shannon_entropy(const char* str, double *metricEntropy) {
 }
 
 void* safe_malloc(size_t size) {
->>>>>>> fa40b89... added address and keypair verification along with wrappers for them
     void* result;
 
     if ((result = malloc(size))) { /* assignment intentional */
