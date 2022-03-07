@@ -148,6 +148,36 @@ def verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
     return res
 
 
+def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chain_code=0):
+    """Given a keypair from generate_hd_master_pub_key_pair, verify that the
+    keys are valid and are associated with each other.
+    Keyword arguments:
+    wif_privkey_master -- string containing wif-encoded private master key
+    p2pkh_pubkey_master -- string containing address derived from wif_privkey
+    chain_code -- 0 for mainnet, 1 for testnet
+    """
+    # verify arguments are valid
+    assert isinstance(wif_privkey_master, str) and isinstance(p2pkh_pubkey_master, str)
+    assert isinstance(chain_code, int)
+
+    # prepare arguments
+    wif_privkey_master_ptr = ct.c_char_p(wif_privkey_master.encode('utf-8'))
+    p2pkh_pubkey_master_ptr = ct.c_char_p(p2pkh_pubkey_master.encode('utf-8'))
+
+    # start context
+    lib.dogecoin_ecc_start()
+
+    # call c function
+    res = ct.c_bool()
+    res = lib.verifyHDMasterPubKeypair(wif_privkey_master_ptr, p2pkh_pubkey_master_ptr, ct.c_int(chain_code))
+
+    # stop context
+    lib.dogecoin_ecc_stop()
+
+    # return boolean result
+    return res
+
+
 def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
     """Given a p2pkh address, confirm address is in correct format and
     passes simple Shannon entropy threshold
@@ -169,7 +199,10 @@ def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
     res = lib.verifyP2pkhAddress(p2pkh_pubkey_ptr, ct.c_int(chain_code))
 
     # stop context
+<<<<<<< HEAD
     lib.dogecoin_ecc_stop()
+=======
+>>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
 
     # return boolean result
     return res
