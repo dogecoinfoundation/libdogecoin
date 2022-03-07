@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 68cee85... added address and keypair verification along with wrappers for them
 """Testing module for wrappers from address.c"""
 
 import unittest
@@ -53,6 +57,7 @@ class TestGeneratePrivPubKeyPair(unittest.TestCase):
 
     def test_p2pkh_addr_format_is_valid_mainnet(self):
         """Test function returns valid address for mainnet"""
+<<<<<<< HEAD
         # TODO: make rule changes later, for now simple verify
         res = w.generate_priv_pub_key_pair()
         self.assertTrue(res[1][0] == "D")
@@ -67,6 +72,27 @@ class TestGeneratePrivPubKeyPair(unittest.TestCase):
 
     def test_pubkey_is_valid(self):
         """Test that the pubkey is valid and does hash to returned address"""
+=======
+        res = w.generate_priv_pub_key_pair()
+        self.assertTrue(w.verify_p2pkh_address(res[1], 0))
+
+    def test_p2pkh_addr_format_is_valid_testnet(self):
+        """Test function returns valid address for testnet"""
+        res = w.generate_priv_pub_key_pair(chain_code=1)
+        self.assertTrue(w.verify_p2pkh_address(res[1], 1))
+
+    def test_keypair_is_valid_mainnet(self):
+        """Test that the private and public key for mainnet
+        are valid and associated to each other"""
+        res = w.generate_priv_pub_key_pair()
+        self.assertTrue(w.verify_priv_pub_keypair(res[0], res[1]))
+
+    def test_keypair_is_valid_testnet(self):
+        """Test that the private and public key for testnet
+        are valid and associated to each other"""
+        res = w.generate_priv_pub_key_pair(chain_code=1)
+        self.assertTrue(w.verify_priv_pub_keypair(res[0], res[1], chain_code=1))
+>>>>>>> 68cee85... added address and keypair verification along with wrappers for them
 
 
 class TestGenerateHDMasterPrivPubKeyPair(unittest.TestCase):
