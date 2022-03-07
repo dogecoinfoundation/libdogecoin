@@ -79,11 +79,6 @@ void test_address()
     u_assert_int_eq(verifyP2pkhAddress(child_key_main, false), true);
     u_assert_int_eq(generateDerivedHDPubkey(masterkey_test, child_key_test), true);
     //u_assert_int_eq(verifyP2pkhAddress(child_key_test, true), true);
-    
-    size_t strsize = 128;
-    char str[strsize];
-    u_assert_int_eq(generateDerivedHDPubkey("dgpv51eADS3spNJhA6LG5QycrFmQQtxg7ztFJQuamYiytZ4x4FUC7pG5B7fUTHBDB7g6oGaCVwuGF2i75r1DQKyFSauAHUGBAi89NaggpdUP3yK", str), true)
-    u_assert_str_eq("DEByFfUQ3AxcFFet9afr8wxxedQysRduWN", str);
 
     u_assert_int_eq(generateDerivedHDPubkey("tprv8ZgxMBicQKsPeM5HaRoH4AuGX2Jsf8rgQvcFGCvjQxvAn1Bv8SAx8cPQsnmKsB6WjvGWsNiNsrNS2d3quUkYpK2ofctFw87SXodGhBPHiUM", str), true)
     u_assert_str_eq("noBtVVtAvvh5oapFjHHyTSxxEUTykUZ3oR", str);
