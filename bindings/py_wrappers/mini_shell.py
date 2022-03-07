@@ -12,7 +12,13 @@ if __name__ == "__main__":
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
+<<<<<<< HEAD
                "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>"]
+=======
+               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
+               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test",
+               "verify_address <p2pkh address>"]
+>>>>>>> 3df4f17... added address verification to mini shell tool
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -75,6 +81,37 @@ if __name__ == "__main__":
                 else:
                     print("Keypair is invalid")
 
+<<<<<<< HEAD
+=======
+        # verify hd master private and p2pkh address pair
+        elif cmd == "verify_hdkeypair":
+            if not args or args[0].isdigit():
+                print(cmd+": enter WIF-encoded private master key")
+            elif len(args) < 2 or args[1].isdigit():
+                print(cmd+": enter p2pkh master pubkey")
+            elif len(args) < 3 or not args[2].isdigit():
+                print(cmd+": enter valid chain code")
+            else:
+                res = libdogecoin.verify_master_priv_pub_keypair(args[0], args[1], int(args[2]))
+                if res:
+                    print("Keypair is valid.")
+                else:
+                    print("Keypair is invalid")
+
+        # verify p2pkh address
+        elif cmd == "verify_address":
+            if not args or args[0].isdigit():
+                print(cmd+": enter p2pkh address")
+            elif len(args) < 2 or not args[1].isdigit():
+                print(cmd+": enter valid chain code")
+            else:
+                res = libdogecoin.verify_p2pkh_address(args[0], int(args[1]))
+                if res:
+                    print("Address is valid.")
+                else:
+                    print("Address is invalid")
+
+>>>>>>> 3df4f17... added address verification to mini shell tool
         # handle incorrect argument format
         else:
             print(cmd+": not a valid command")
