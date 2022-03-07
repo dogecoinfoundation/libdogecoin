@@ -20,9 +20,18 @@ void test_address()
     char p2pkh_pubkey_main[DOGECOIN_ECKEY_COMPRESSED_LENGTH];
     char p2pkh_pubkey_test[DOGECOIN_ECKEY_COMPRESSED_LENGTH];
 
+    // test verifyP2pkhAddress functionality
+    u_assert_int_eq(verifyP2pkhAddress("DMF7yHeKS1qfwTMtDrBQ6NikDqfWM6JS66", false), true);
+    u_assert_int_eq(verifyP2pkhAddress("DMF7yHeKS1qfwTMtDrBQ6NikDqfWM6JS68", false), false);
+    u_assert_int_eq(verifyP2pkhAddress("D8F7yH3KS1qfwTMtDrBQ6NikDqfWM6JS66", false), false);
+    u_assert_int_eq(verifyP2pkhAddress("nXUrjZo9WqY593qZsfEHBpiXtL3iQ76ae1", true), true);
+    u_assert_int_eq(verifyP2pkhAddress("nXUrjZo9WqY593qZsfEHBpiXtL3iQ76ae8", true), false);
+    u_assert_int_eq(verifyP2pkhAddress("n8UrjZo9WqY593qZsfEHBpiXtL3iQ76ae1", true), false);
+
     // test generation ability
     u_assert_int_eq(generatePrivPubKeypair(privkeywif_main, NULL, false), true)
     u_assert_int_eq(generatePrivPubKeypair(privkeywif_main, p2pkh_pubkey_main, false), true)
+    u_assert_int_eq(generatePrivPubKeypair(privkeywif_test, NULL, false), true)
     u_assert_int_eq(generatePrivPubKeypair(privkeywif_test, p2pkh_pubkey_test, true), true);
 
     // test keypair validity and association
@@ -30,15 +39,12 @@ void test_address()
     u_assert_int_eq(verifyPrivPubKeypair(privkeywif_test, p2pkh_pubkey_test, true), true);
     u_assert_int_eq(verifyPrivPubKeypair(privkeywif_main, p2pkh_pubkey_main, true), false);
     u_assert_int_eq(verifyPrivPubKeypair(privkeywif_test, p2pkh_pubkey_test, false), false);
+    u_assert_int_eq(verifyPrivPubKeypair(privkeywif_test, p2pkh_pubkey_main, true), false);
     u_assert_int_eq(verifyPrivPubKeypair(privkeywif_main, p2pkh_pubkey_test, false), false);
     u_assert_int_eq(verifyPrivPubKeypair("QWgNKvA5LPD1HpopRFghjz6jPipHRAUrLjqTt7paxYX8cTbu5eRs", "D7AM5jDQ7xRRK7bMCZ87e4BsFxHxCdDbXd", false), true);
     u_assert_int_eq(verifyPrivPubKeypair("QWgNKvA5LPD1HpopRFghjz6jPipHRAUrLjqTt7paxYX8cTbu5eRs", "DCncxpcZW3GEyqs17KrqAfs4cR844JkimG", false), false);
 
-    // test entropy check
-    u_assert_int_eq(verifyP2pkhAddress("Dasdfasdfasdfasdfasdfasdfasdfasdfx", false), false);
-    u_assert_int_eq(verifyP2pkhAddress("DP6xxxDJxxxJAaWucRfsPvXLPGRyF3DdeP", false), false);
-
-    // test address format correctness (0.3% false negative rate)
+    // test address format correctness
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_main, false), true);
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_test, true), true);
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_main, true), false);
@@ -78,8 +84,5 @@ void test_address()
     u_assert_int_eq(generateDerivedHDPubkey(masterkey_main, child_key_main), true);
     u_assert_int_eq(verifyP2pkhAddress(child_key_main, false), true);
     u_assert_int_eq(generateDerivedHDPubkey(masterkey_test, child_key_test), true);
-    //u_assert_int_eq(verifyP2pkhAddress(child_key_test, true), true);
-
-    u_assert_int_eq(generateDerivedHDPubkey("tprv8ZgxMBicQKsPeM5HaRoH4AuGX2Jsf8rgQvcFGCvjQxvAn1Bv8SAx8cPQsnmKsB6WjvGWsNiNsrNS2d3quUkYpK2ofctFw87SXodGhBPHiUM", str), true)
-    u_assert_str_eq("noBtVVtAvvh5oapFjHHyTSxxEUTykUZ3oR", str);
+    // u_assert_int_eq(verifyP2pkhAddress(child_key_test, true), true);
 }
