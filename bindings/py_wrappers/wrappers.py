@@ -199,10 +199,7 @@ def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
     res = lib.verifyP2pkhAddress(p2pkh_pubkey_ptr, ct.c_int(chain_code))
 
     # stop context
-<<<<<<< HEAD
     lib.dogecoin_ecc_stop()
-=======
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
 
     # return boolean result
     return res

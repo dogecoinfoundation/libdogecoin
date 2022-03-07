@@ -9,14 +9,10 @@ if __name__ == "__main__":
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
-<<<<<<< HEAD
                "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1:test>",
                "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test",
                "verify_address <p2pkh address>"]
-=======
-               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
-               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1, test"]
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
+
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -66,11 +62,7 @@ if __name__ == "__main__":
 
         # verify private and p2pkh address pair
         elif cmd == "verify_keypair":
-<<<<<<< HEAD
             if not args or args[0].isdigit():
-=======
-            if not args or not args[0].isdigit():
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
                 print(cmd+": enter WIF-encoded private key")
             elif len(args) < 2 or args[1].isdigit():
                 print(cmd+": enter p2pkh address")
@@ -98,7 +90,6 @@ if __name__ == "__main__":
                 else:
                     print("Keypair is invalid")
 
-<<<<<<< HEAD
         # verify p2pkh address
         elif cmd == "verify_address":
             if not args or args[0].isdigit():
@@ -112,8 +103,6 @@ if __name__ == "__main__":
                 else:
                     print("Address is invalid")
 
-=======
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
         # handle incorrect argument format
         else:
             print(cmd+": not a valid command")
