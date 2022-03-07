@@ -5,29 +5,14 @@ import wrappers as libdogecoin
 # MAIN METHOD
 if __name__ == "__main__":
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    # print option menu
-    cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
-               "gen_hdkeypair <which_chain | 0:main, 1:test>",
-               "derive_hdpubkey <master_privkey_wif>"]
-=======
     # start ECC context
     libdogecoin.dogecoin_ecc_start()
 
-=======
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
     # print option menu
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
-<<<<<<< HEAD
                "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>"]
->>>>>>> fa40b89... added address and keypair verification along with wrappers for them
-=======
-               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
-               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1, test"]
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -75,13 +60,11 @@ if __name__ == "__main__":
                 res = libdogecoin.generate_derived_hd_pub_key(args[0])
                 print("new derived child public key:", res)
 
-<<<<<<< HEAD
-=======
         # verify private and p2pkh address pair
         elif cmd == "verify_keypair":
-            if not args or not args[0].isdigit():
+            if not args or not isinstance(args[0], str):
                 print(cmd+": enter WIF-encoded private key")
-            elif len(args) < 2 or args[1].isdigit():
+            elif len(args) < 2 or not isinstance(args[1], str):
                 print(cmd+": enter p2pkh address")
             elif len(args) < 3 or not args[2].isdigit():
                 print(cmd+": enter valid chain code")
@@ -92,41 +75,13 @@ if __name__ == "__main__":
                 else:
                     print("Keypair is invalid")
 
-<<<<<<< HEAD
->>>>>>> fa40b89... added address and keypair verification along with wrappers for them
-=======
-        # verify hd master private and p2pkh address pair
-        elif cmd == "verify_hdkeypair":
-            if not args or args[0].isdigit():
-                print(cmd+": enter WIF-encoded private master key")
-            elif len(args) < 2 or args[1].isdigit():
-                print(cmd+": enter p2pkh master pubkey")
-            elif len(args) < 3 or not args[2].isdigit():
-                print(cmd+": enter valid chain code")
-            else:
-                res = libdogecoin.verify_master_priv_pub_keypair(args[0], args[1], int(args[2]))
-                if res:
-                    print("Keypair is valid.")
-                else:
-                    print("Keypair is invalid")
-
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
         # handle incorrect argument format
         else:
             print(cmd+": not a valid command")
 
-<<<<<<< HEAD
-        #accept next command
-        print()
-        inp = input("$ ").split()
-=======
         # accept next command
         print()
         inp = input("$ ").split()
-<<<<<<< HEAD
 
     # stop ECC context
     libdogecoin.dogecoin_ecc_stop()
->>>>>>> fa40b89... added address and keypair verification along with wrappers for them
-=======
->>>>>>> 5272c34... minor tweaks, added support for hd master keypair verification on the C side, added python wrappers for hd verification, included some extra unit tests
