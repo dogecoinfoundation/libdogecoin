@@ -109,5 +109,10 @@ test-suite.log
 *.db
 *.tar.gz
 *.pc
-*.py[cod]
 **/__pycache__/
+*.py[cod]
+<<<<<<< HEAD
+**/__pycache__/
+=======
+
+>>>>>>> 31d1e71... implemented new address.c functions, added support for hd master keypair verification, included basic unit tests for c and python, added wrappers for verifying keypairs and addresses
