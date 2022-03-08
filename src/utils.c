@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
 
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
@@ -237,23 +236,6 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
             p1++;
         }
     }
-}
-
-void utils_calculate_shannon_entropy(const char* str, uint8_t strsz, double *metricEntropy) {
-    int tableSize = 100;
-    int freqTable[tableSize];
-    for (int i=0; i<tableSize; i++) freqTable[i] = 0; // all freqs start at 0
-    for (int i=0; i<strsz; i++) {
-        char c = str[i];
-        freqTable[c-48]++;  // increment the frequency upon occurrence
-    }
-    double sumTotal = 0;
-    double frequency;
-    for (int i=0; i<tableSize; i++) {
-        frequency = freqTable[i]/(double)strsz;
-        if (frequency) sumTotal += frequency * (log(frequency)/log(2));
-    }
-    *metricEntropy = (sumTotal * (-1))/(double)strsz;
 }
 
 void* safe_malloc(size_t size)
