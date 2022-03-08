@@ -55,7 +55,6 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     size_t sizeout = 100;
     char wif_privkey_internal[sizeout];
     char p2pkh_pubkey_internal[sizeout];
-    bool is_testnet_internal = false;
 
     /* if nothing is passed in use internal variables */
     if (wif_privkey) {
@@ -64,12 +63,9 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     if (p2pkh_pubkey) {
         memcpy(p2pkh_pubkey_internal, p2pkh_pubkey, sizeout);
     }
-    if (is_testnet) {
-        is_testnet_internal = is_testnet;
-    }
 
     /* determine if mainnet or testnet/regtest */
-    const dogecoin_chainparams* chain = is_testnet_internal ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
 
     /* generate a new private key */
     dogecoin_key key;
@@ -108,7 +104,6 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     size_t strsize = 128;
     char hd_privkey_master[strsize];
     char hd_pubkey_master[strsize];
-    bool is_testnet_internal = false;
 
     /* if nothing is passed use internal variables */
     if (wif_privkey_master) {
@@ -116,9 +111,6 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     }
     if (p2pkh_pubkey_master) {
         memcpy(hd_pubkey_master, p2pkh_pubkey_master, strsize);
-    }
-    if (is_testnet) {
-        is_testnet_internal = is_testnet;
     }
 
     /* determine if mainnet or testnet/regtest */

@@ -64,7 +64,6 @@ void test_key()
     dogecoin_key_sign_recover_pubkey(sigcmp_rec, hash, recid, &pubkey_rec);
     u_assert_int_eq(dogecoin_pubkey_verify_sig(&pubkey, hash, sig, outlen), true);
     u_assert_int_eq(dogecoin_pubkey_verify_sig(&pubkey, hash, sig, outlen), true);
-    int test = sizeof(pubkey.pubkey);
     u_assert_mem_eq(pubkey.pubkey, pubkey_rec.pubkey, sizeof(pubkey.pubkey));
     size_t size = 66;
     char str[66];
@@ -84,7 +83,6 @@ void test_key()
     char wifstr[100];
     size_t wiflen = 100;
     dogecoin_privkey_encode_wif(&key_wif, &dogecoin_chainparams_main, wifstr, &wiflen);
-    char wif_decode_buf[100];
     wiflen = 100;
     dogecoin_key key_wif_decode;
     dogecoin_privkey_decode_wif(wifstr, &dogecoin_chainparams_main, &key_wif_decode);
