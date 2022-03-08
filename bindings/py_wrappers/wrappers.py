@@ -169,7 +169,7 @@ def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chai
 
     # call c function
     res = ct.c_bool()
-    res = lib.verifyHDMasterPubKeypair(wif_privkey_master_ptr, p2pkh_pubkey_master_ptr, ct.c_int(chain_code))
+    res = lib.verifyHDMasterPubKeypair(wif_privkey_master_ptr, p2pkh_pubkey_master_ptr, ct.c_bool(chain_code))
 
     # stop context
     lib.dogecoin_ecc_stop()
@@ -190,13 +190,14 @@ def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
 
     # prepare arguments
     p2pkh_pubkey_ptr = ct.c_char_p(p2pkh_pubkey.encode('utf-8'))
+    strlen = ct.c_ubyte(len(p2pkh_pubkey))
 
     # start context
     lib.dogecoin_ecc_start()
 
     # call c function
     res = ct.c_bool()
-    res = lib.verifyP2pkhAddress(p2pkh_pubkey_ptr, ct.c_int(chain_code))
+    res = lib.verifyP2pkhAddress(p2pkh_pubkey_ptr, strlen, ct.c_int(chain_code))
 
     # stop context
     lib.dogecoin_ecc_stop()

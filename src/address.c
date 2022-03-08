@@ -44,6 +44,8 @@
 #include <dogecoin/bip32.h>
 #include <dogecoin/crypto/key.h>
 #include <dogecoin/crypto/random.h>
+#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/crypto/base58.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/utils.h>
 
@@ -141,10 +143,10 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     return true;
 }
 
-int generateDerivedHDPubkey(char* wif_privkey_master, char* p2pkh_pubkey)
+int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
 {
     /* require master key */
-    if (!wif_privkey_master || !p2pkh_pubkey) {
+    if (!wif_privkey_master) {
         return false;
     }
 
@@ -153,8 +155,26 @@ int generateDerivedHDPubkey(char* wif_privkey_master, char* p2pkh_pubkey)
     memcpy(prefix, wif_privkey_master, 1);
     const dogecoin_chainparams* chain = memcmp(prefix, "d", 1) == 0 ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
-    /* generate p2pkh from private key */
-    generatePrivPubKeypair(wif_privkey_master, p2pkh_pubkey, memcmp(prefix, "d", 1) == 0 ? false : true);
+    size_t strsize = 128;
+    char str[strsize];
+
+    /* if nothing is passed in use internal variables */
+    if (p2pkh_pubkey) {
+        memcpy(str, p2pkh_pubkey, strsize);
+    }
+
+    dogecoin_hdnode node;
+    dogecoin_hdnode_deserialize(wif_privkey_master, chain, &node);
+
+    dogecoin_hdnode_get_p2pkh_address(&node, chain, str, strsize);
+
+    /* pass back to external variable if exists */
+    if (p2pkh_pubkey) {
+        memcpy(p2pkh_pubkey, str, strsize);
+    }
+
+    /* reset internal variables */
+    memset(str, 0, strlen(str));
 
     return true;
 }
@@ -211,20 +231,19 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
     return true;
 }
 
-int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len, bool is_testnet) {
-    if (!p2pkh_pubkey) return false;
+int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len) {
+    if (!p2pkh_pubkey || !len) return false;
     /* check length */
-    if (len != 33) {
+    unsigned char dec[len], d1[SHA256_DIGEST_LENGTH], d2[SHA256_DIGEST_LENGTH];
+    if (!dogecoin_base58_decode_check(p2pkh_pubkey, dec, len)) {
+        printf("address length is not valid!\n");
         return false;
     }
-    /* check first character */
-    if (p2pkh_pubkey[0] != (is_testnet ? 110 : 68)) {
-        return false;
-    }
-    /* check randomness */
-    double entropy;
-    utils_calculate_shannon_entropy(p2pkh_pubkey, len + 1, &entropy);
-    if (entropy < 0.12244) {
+    /* check validity */
+    sha256_raw(dec, 21, d1);
+    sha256_raw(d1, SHA256_DIGEST_LENGTH, d2);
+    if (memcmp(dec + 21, d2, 4) != 0) {
+        printf("checksums do not match!\n");
         return false;
     }
     return true;
