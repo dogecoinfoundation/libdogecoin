@@ -163,10 +163,10 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
         memcpy(str, p2pkh_pubkey, strsize);
     }
 
-    dogecoin_hdnode node;
-    dogecoin_hdnode_deserialize(wif_privkey_master, chain, &node);
+    dogecoin_hdnode* node = dogecoin_hdnode_new();
+    dogecoin_hdnode_deserialize(wif_privkey_master, chain, node);
 
-    dogecoin_hdnode_get_p2pkh_address(&node, chain, str, strsize);
+    dogecoin_hdnode_get_p2pkh_address(node, chain, str, strsize);
 
     /* pass back to external variable if exists */
     if (p2pkh_pubkey) {
@@ -174,6 +174,7 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     }
 
     /* reset internal variables */
+    dogecoin_hdnode_free(node);
     memset(str, 0, strlen(str));
 
     return true;
@@ -236,14 +237,12 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len) {
     /* check length */
     unsigned char dec[len], d1[SHA256_DIGEST_LENGTH], d2[SHA256_DIGEST_LENGTH];
     if (!dogecoin_base58_decode_check(p2pkh_pubkey, dec, len)) {
-        printf("address length is not valid!\n");
         return false;
     }
     /* check validity */
     sha256_raw(dec, 21, d1);
     sha256_raw(d1, SHA256_DIGEST_LENGTH, d2);
     if (memcmp(dec + 21, d2, 4) != 0) {
-        printf("checksums do not match!\n");
         return false;
     }
     return true;
