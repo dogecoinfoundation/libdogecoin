@@ -28,7 +28,10 @@
 #include <sys/types.h>
 
 #include <dogecoin/crypto/base58.h>
+#include <dogecoin/chainparams.h>
+#include <dogecoin/crypto/segwit_addr.h>
 #include <dogecoin/crypto/sha2.h>
+#include <dogecoin/crypto/hash.h>
 
 static const int8_t b58digits_map[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -41,75 +44,101 @@ static const int8_t b58digits_map[] = {
     47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, -1, -1, -1, -1, -1,
 };
 
-int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58)
+typedef uint64_t b58_maxint_t;
+typedef uint32_t b58_almostmaxint_t;
+#define b58_almostmaxint_bits (sizeof(b58_almostmaxint_t) * 8)
+static const b58_almostmaxint_t b58_almostmaxint_mask = ((((b58_maxint_t)1) << b58_almostmaxint_bits) - 1);
+
+int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b58sz)
 {
     size_t binsz = *binszp;
     if (binsz == 0)
         return false;
     const unsigned char* b58u = (const unsigned char*)b58;
     unsigned char* binu = bin;
-    size_t outisz = (binsz + 3) / 4, i, j = 0, b58sz = strlen(b58);
-    uint8_t bytesleft = binsz % 4;
-    uint32_t outi[outisz], c = 0, zeromask = bytesleft ? (0xffffffff << (bytesleft * 8)) : 0;
-    uint64_t t = 0;
+    size_t outisz = (binsz + sizeof(b58_almostmaxint_t) - 1) / sizeof(b58_almostmaxint_t);
+	b58_maxint_t t;
+	b58_almostmaxint_t c;
+    size_t i, j = 0;
+    uint8_t bytesleft = binsz % sizeof(b58_almostmaxint_t);
+    b58_almostmaxint_t outi[outisz];
+    uint32_t zeromask = bytesleft ? (b58_almostmaxint_mask << (bytesleft * 8)) : 0;
     unsigned zerocount = 0;
+
     memset(outi, 0, outisz * sizeof(*outi));
-    for (i = 0; i < b58sz && !b58digits_map[b58u[i]]; ++i)
+    for (i = 0; i < b58sz && b58u[i] == '1'; ++i) {
         ++zerocount; // leading zeros, just count
+    }
+
     for (; i < b58sz; ++i) {
-        if (b58u[i] & 0x80)
+        if (b58u[i] & 0x80) {
             return false; // high-bit set on invalid digit
-        if (b58digits_map[b58u[i]] == -1)
+        }
+        if (b58digits_map[b58u[i]] == -1) {
             return false; // invalid base58 digit
+        }
         c = (unsigned)b58digits_map[b58u[i]];
         for (j = outisz; --j;) {
-            t = ((uint64_t)outi[j]) * 58 + c;
-            c = (t & 0x3f00000000) >> 32;
-            outi[j] = t & 0xffffffff;
+            t = ((b58_maxint_t)outi[j]) * 58 + c;
+            c = t >> b58_almostmaxint_bits;
+            outi[j] = t & b58_almostmaxint_mask;
         }
-        if (c)
+        if (c) {
+            memset(outi, 0, outisz * sizeof(*outi));
             return false; // output number too big (carry to the next int32)
-        if (outi[0] & zeromask)
+        }
+        if (outi[0] & zeromask) {
+            memset(outi, 0, outisz * sizeof(*outi));
             return false; // output number too big (last int32 filled too far)
+        }
     }
     j = 0;
     if (bytesleft) {
-        for (i = bytesleft; i > 0; --i)
+        for (i = bytesleft; i > 0; --i) {
             *(binu++) = (outi[0] >> (8 * (i - 1))) & 0xff;
+        }
         ++j;
     }
     for (; j < outisz; ++j) {
-        for (i = sizeof(*outi); i > 0; --i)
+        for (i = sizeof(*outi); i > 0; --i) {
             *(binu++) = (outi[j] >> (8 * (i - 1))) & 0xff;
+        }
     }
+    // count canonical base58 byte count
     binu = bin; // locate the most significant byte
-    for (i = 0; i < binsz; ++i) {
-        if (binu[i])
-            break;
-    }
+	for (i = 0; i < binsz; ++i) {
+		if (binu[i]) break;
+		--*binszp;
+	}
     // prepend the correct number of null-bytes
-    if (zerocount > i)
+    if (zerocount > i) {
         return false; /* result too large */
-    *binszp = binsz - i + zerocount;
+    }
+	*binszp += zerocount;
+    memset(outi, 0, outisz * sizeof(*outi));
     return true;
 }
 
 int dogecoin_b58check(const void* bin, size_t binsz, const char* base58str)
 {
-    unsigned char buf[32] = {0};
+    uint256 buf[32] = {0};
     const uint8_t* binc = bin;
     unsigned i = 0;
-    if (binsz < 4)
+    if (binsz < 4) {
         return -4;
-    sha256_raw(bin, binsz - 4, buf);
-    sha256_raw(buf, 32, buf);
-    if (memcmp(&binc[binsz - 4], buf, 4))
+    }
+    if (!dogecoin_dblhash(bin, binsz - 4, (uint8_t *)buf)) {
+        return -2;
+    }
+    if (memcmp(&binc[binsz - 4], buf, 4)) {
         return -1;
+    }
     // check number of zeros is correct AFTER verifying checksum (to avoid possibility of accessing base58str beyond the end)
     for (i = 0; binc[i] == '\0' && base58str[i] == '1'; ++i) {
     } // just finding the end of zeros, nothing to do in loop
-    if (binc[i] == '\0' || base58str[i] == '1')
+    if (binc[i] == '\0' || base58str[i] == '1') {
         return -3;
+    }
     return binc[0];
 }
 
@@ -120,10 +149,11 @@ int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t bi
 {
     const uint8_t* bin = data;
     int carry = 0;
-    ssize_t i, j, high, zcount = 0;
+    ssize_t i = 0, j = 0, high = 0, zcount = 0;
     size_t size = 0;
-    while (zcount < (ssize_t)binsz && !bin[zcount])
+    while (zcount < (ssize_t)binsz && !bin[zcount]) {
         ++zcount;
+    }
     size = (binsz - zcount) * 138 / 100 + 1;
     uint8_t buf[size];
     memset(buf, 0, size);
@@ -132,7 +162,7 @@ int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t bi
             carry += 256 * buf[j];
             buf[j] = carry % 58;
             carry /= 58;
-            if (!j)
+            if (!j) // Otherwise j wraps to maxint which is > high
                 break;
         }
     }
@@ -140,39 +170,55 @@ int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t bi
         ;
     if (*b58sz <= zcount + size - j) {
         *b58sz = zcount + size - j + 1;
+        memset(buf, 0, size);
         return false;
     }
-    if (zcount)
+    if (zcount) {
         memset(b58, '1', zcount);
-    for (i = zcount; j < (ssize_t)size; ++i, ++j)
+    }
+    for (i = zcount; j < (ssize_t)size; ++i, ++j) {
         b58[i] = b58digits_ordered[buf[j]];
+    }
     b58[i] = '\0';
     *b58sz = i + 1;
+    memset(buf, 0, size);
     return true;
 }
 
 int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, int strsize)
 {
     int ret;
-    if (datalen > 128)
+    if (datalen > 128) {
         return 0;
-    uint8_t buf[datalen + 32];
-    memset(buf, 0, sizeof(buf));
+    }
+    uint8_t buf[1 + datalen + 0x20];
     uint8_t* hash = buf + datalen;
     memcpy(buf, data, datalen);
-    sha256_raw(data, datalen, hash);
-    sha256_raw(hash, 32, hash);
+    if (!dogecoin_dblhash(data, datalen, hash)) {
+        return false;
+    }
     size_t res = strsize;
-    bool success = dogecoin_base58_encode(str, &res, buf, datalen + 4);
+    if (dogecoin_base58_encode(str, &res, buf, datalen + 4) != true) {
+        ret = 0;
+    } else {
+        ret = res;
+    }
     memset(buf, 0, sizeof(buf));
-    return success ? res : 0;
+    return ret;
 }
 
 int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen)
 {
-    int ret;
-    size_t strl = strlen(str), binsize = strl;
-    if (dogecoin_base58_decode(data, &binsize, str) != true) {
+    int ret, i;
+    for (i = 0; str[i] && i < 1024; i++){};
+    size_t strl = i;
+    /* buffer needs to be at least the strsize, will be used
+       for the whole decoding */
+    if (strl > 128 || datalen < strl) {
+        return 0;
+    }
+    size_t binsize = strl;
+    if (dogecoin_base58_decode(data, &binsize, str, strl) != true) {
         ret = 0;
     }
     memmove(data, data + strl - binsize, binsize);
@@ -183,4 +229,26 @@ int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen)
         ret = binsize;
     }
     return ret;
+}
+
+dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout, int len) {
+    uint8_t hash160[sizeof(uint160)+1];
+    hash160[0] = chain->b58prefix_pubkey_address;
+    memcpy(hash160 + 1, hashin, sizeof(uint160));
+
+    return (dogecoin_base58_encode_check(hash160, sizeof(uint160)+1, addrout, len) > 0);
+}
+
+dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout,
+                                    int len)
+{
+    uint8_t hash160[sizeof(uint160) + 1];
+    hash160[0] = chain->b58prefix_script_address;
+    memcpy(hash160 + 1, hashin, sizeof(uint160));
+
+    return (dogecoin_base58_encode_check(hash160, sizeof(uint160) + 1, addrout, len) > 0);
+}
+
+dogecoin_bool dogecoin_p2wpkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout) {
+    return segwit_addr_encode(addrout, chain->bech32_hrp, 0, hashin, sizeof(uint160));
 }

@@ -46,8 +46,8 @@ LIBDOGECOIN_API int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, 
 /* verify private and public masters keys are valid and associated with each other */
 LIBDOGECOIN_API int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
-/* verify address based on appearance only */
-LIBDOGECOIN_API int verifyP2pkhAddress(char* p2pkh_pubkey, bool is_testnet);
+/* verify address based on length and checksum */
+LIBDOGECOIN_API int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len);
 
 LIBDOGECOIN_END_DECL
 

@@ -427,7 +427,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
             dogecoin_tx_in *tx_in_old, *tx_in_new;
 
             tx_in_old = vector_idx(src->vin, i);
-            tx_in_new = dogecoin_malloc(sizeof(*tx_in_new));
+            tx_in_new = dogecoin_calloc(1, sizeof(*tx_in_new));
             dogecoin_tx_in_copy(tx_in_new, tx_in_old);
             vector_add(dest->vin, tx_in_new);
         }
@@ -449,7 +449,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
             dogecoin_tx_out *tx_out_old, *tx_out_new;
 
             tx_out_old = vector_idx(src->vout, i);
-            tx_out_new = dogecoin_malloc(sizeof(*tx_out_new));
+            tx_out_new = dogecoin_calloc(1, sizeof(*tx_out_new));
             dogecoin_tx_out_copy(tx_out_new, tx_out_old);
             vector_add(dest->vout, tx_out_new);
         }
@@ -701,7 +701,7 @@ dogecoin_bool dogecoin_tx_add_puzzle_out(dogecoin_tx* tx, const int64_t amount, 
 dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainparams* chain, int64_t amount, const char* address)
 {
     const size_t buflen = sizeof(uint8_t) * strlen(address) * 2;
-    uint8_t* buf = (uint8_t*)dogecoin_malloc(buflen);
+    uint8_t* buf = (uint8_t*)dogecoin_calloc(1, buflen);
     int r = dogecoin_base58_decode_check(address, buf, buflen);
     if (r > 0 && buf[0] == chain->b58prefix_pubkey_address) {
         dogecoin_tx_add_p2pkh_hash160_out(tx, amount, &buf[1]);
@@ -712,17 +712,17 @@ dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainp
         int version = 0;
         unsigned char programm[40] = {0};
         size_t programmlen = 0;
-        // if(segwit_addr_decode(&version, programm, &programmlen, chain->bech32_hrp, address) == 1) {
-        //     if (programmlen == 20) {
-        //         dogecoin_tx_out* tx_out = dogecoin_tx_out_new();
-        //         tx_out->script_pubkey = cstr_new_sz(1024);
+        if(segwit_addr_decode(&version, programm, &programmlen, chain->bech32_hrp, address) == 1) {
+            if (programmlen == 20) {
+                dogecoin_tx_out* tx_out = dogecoin_tx_out_new();
+                tx_out->script_pubkey = cstr_new_sz(1024);
 
-        //         dogecoin_script_build_p2wpkh(tx_out->script_pubkey, (const uint8_t *)programm);
+                dogecoin_script_build_p2wpkh(tx_out->script_pubkey, (const uint8_t *)programm);
 
-        //         tx_out->value = amount;
-        //         vector_add(tx->vout, tx_out);
-        //     }
-        // }
+                tx_out->value = amount;
+                vector_add(tx->vout, tx_out);
+            }
+        }
         dogecoin_free(buf);
         return false;
     }

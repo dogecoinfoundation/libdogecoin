@@ -40,7 +40,7 @@ vector* vector_new(size_t res, void (*free_f)(void*))
         vec->alloc *= 2;
 
     vec->elem_free_f = free_f;
-    vec->data = dogecoin_malloc(vec->alloc * sizeof(void*));
+    vec->data = dogecoin_calloc(1, vec->alloc * sizeof(void*));
     if (!vec->data) {
         dogecoin_free(vec);
         return NULL;

@@ -32,12 +32,12 @@ void buffer_free(void* struct_buffer)
 struct buffer* buffer_copy(const void* data, size_t data_len)
 {
     struct buffer* buf;
-    buf = dogecoin_malloc(sizeof(*buf));
+    buf = dogecoin_calloc(1, sizeof(*buf));
     if (!buf) {
         goto err_out;
     }
 
-    buf->p = dogecoin_malloc(data_len);
+    buf->p = dogecoin_calloc(1, data_len);
     if (!buf->p) {
         goto err_out_free;
     }

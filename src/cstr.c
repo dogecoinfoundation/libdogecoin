@@ -1,6 +1,6 @@
 /* Copyright 2015 BitPay, Inc.
-/* Copyright 2022 bluezr
-/* Copyright 2022 The Dogecoin Foundation
+ * Copyright 2022 bluezr
+ * Copyright 2022 The Dogecoin Foundation
  * Distributed under the MIT/X11 software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */

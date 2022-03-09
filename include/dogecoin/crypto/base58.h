@@ -26,7 +26,10 @@
 #ifndef __LIBDOGECOIN_CRYPTO_BASE58_H__
 #define __LIBDOGECOIN_CRYPTO_BASE58_H__
 
+#include <stdint.h>
+
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/chainparams.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -34,7 +37,11 @@ LIBDOGECOIN_API int dogecoin_base58_encode_check(const uint8_t* data, int len, c
 LIBDOGECOIN_API int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen);
 
 LIBDOGECOIN_API int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t binsz);
-LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58);
+LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b58sz);
+
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout, int len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, int len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2wpkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout);
 
 LIBDOGECOIN_END_DECL
 
