@@ -612,7 +612,7 @@ void dogecoin_node_send_version(dogecoin_node* node)
 
     /* create a version message struct */
     dogecoin_p2p_version_msg version_msg;
-    memset(&version_msg, 0, sizeof(version_msg));
+    dogecoin_mem_zero(&version_msg, sizeof(version_msg));
 
     /* create a serialized version message */
     dogecoin_p2p_msg_version_init(&version_msg, &fromAddr, &toAddr, node->nodegroup->clientstr, true);
@@ -702,7 +702,7 @@ int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int
     char def_port[12] = {0};
     sprintf(def_port, "%d", port);
     struct evutil_addrinfo hints, *aiTrav = NULL, *aiRes = NULL;
-    memset(&hints, 0, sizeof(hints));
+    dogecoin_mem_zero(&hints, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -768,7 +768,7 @@ dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *g
     } else {
         // add comma seperated ips (nodes)
         char working_str[64];
-        memset(working_str, 0, sizeof(working_str));
+        dogecoin_mem_zero(working_str, sizeof(working_str));
         size_t offset = 0;
         for (unsigned int i = 0; i <= strlen(ips); i++) {
             if (i == strlen(ips) || ips[i] == ',') {
@@ -777,7 +777,7 @@ dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *g
                     dogecoin_node_group_add_node(group, node);
                 }
                 offset = 0;
-                memset(working_str, 0, sizeof(working_str));
+                dogecoin_mem_zero(working_str, sizeof(working_str));
             } else if (ips[i] != ' ' && offset < sizeof(working_str)) {
                 working_str[offset] = ips[i];
                 offset++;

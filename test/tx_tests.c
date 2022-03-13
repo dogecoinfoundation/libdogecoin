@@ -933,7 +933,7 @@ void test_tx_sighash()
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
         uint256 sighash;
-        memset(sighash, 0, sizeof(sighash));
+        dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, 0, SIGVERSION_BASE, sighash);
 
         vector* vec = vector_new(10, dogecoin_script_op_free_cb);

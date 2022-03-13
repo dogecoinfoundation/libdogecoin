@@ -180,7 +180,7 @@ void cstr_free(cstring* s, int free_buf)
         dogecoin_free(s->str);
     }
 
-    memset(s, 0, sizeof(*s));
+    dogecoin_mem_zero(s, sizeof(*s));
     dogecoin_free(s);
 }
 

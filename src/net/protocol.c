@@ -64,7 +64,7 @@ static inline dogecoin_bool is_ipv4_mapped(const unsigned char* ipaddr)
  */
 void dogecoin_p2p_address_init(dogecoin_p2p_address* addr)
 {
-    memset(addr, 0, sizeof(*addr));
+    dogecoin_mem_zero(addr, sizeof(*addr));
 }
 
 /**
@@ -86,7 +86,7 @@ cstring* dogecoin_p2p_message_new(const unsigned char netmagic[4], const char* c
 
     /* command string */
     char command_null[12];
-    memset(command_null, 0, 12);
+    dogecoin_mem_zero(command_null, 12);
     memcpy(command_null, command, strlen(command));
     //memset(command_null+strlen(command), 0, 12-strlen(command));
     cstr_append_buf(s, command_null, 12);
@@ -164,7 +164,7 @@ void dogecoin_addr_to_p2paddr(struct sockaddr* addr, dogecoin_p2p_address* addr_
         addr_out->port = ntohs(saddr->sin6_port);
     } else if (addr->sa_family == AF_INET) {
         struct sockaddr_in* saddr = (struct sockaddr_in*)addr;
-        memset(&addr_out->ip[0], 0, 10);
+        dogecoin_mem_zero(&addr_out->ip[0], 10);
         memset(&addr_out->ip[10], 0xff, 2);
         memcpy(&addr_out->ip[12], &saddr->sin_addr, 4);
         addr_out->port = ntohs(saddr->sin_port);
@@ -256,7 +256,7 @@ void dogecoin_p2p_msg_version_ser(dogecoin_p2p_version_msg* msg, cstring* buf)
  */
 dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_version_msg* msg, struct const_buffer* buf)
 {
-    memset(msg, 0, sizeof(*msg));
+    dogecoin_mem_zero(msg, sizeof(*msg));
     if (!deser_s32(&msg->version, buf))
         return false;
     if (!deser_u64(&msg->services, buf))
@@ -286,7 +286,7 @@ dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_version_msg* msg, stru
     char ua_str[1024];
     if (!deser_bytes(ua_str, buf, ua_len))
         return false;
-    memset(msg->useragent, 0, sizeof(msg->useragent));
+    dogecoin_mem_zero(msg->useragent, sizeof(msg->useragent));
     memcpy(&msg->useragent, ua_str, cpy_len);
 
     if (!deser_s32(&msg->start_height, buf))
@@ -333,7 +333,7 @@ void dogecoin_p2p_msg_inv_ser(dogecoin_p2p_inv_msg* msg, cstring* buf)
  */
 dogecoin_bool dogecoin_p2p_msg_inv_deser(dogecoin_p2p_inv_msg* msg, struct const_buffer* buf)
 {
-    memset(msg, 0, sizeof(*msg));
+    dogecoin_mem_zero(msg, sizeof(*msg));
     if (!deser_u32(&msg->type, buf))
         return false;
     if (!deser_u256(msg->hash, buf))

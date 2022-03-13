@@ -46,7 +46,7 @@
 
 void dogecoin_privkey_init(dogecoin_key* privkey)
 {
-    memset(&privkey->privkey, 0, DOGECOIN_ECKEY_PKEY_LENGTH);
+    dogecoin_mem_zero(&privkey->privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
 }
 
 dogecoin_bool dogecoin_privkey_is_valid(const dogecoin_key* privkey)
@@ -103,7 +103,7 @@ dogecoin_bool dogecoin_privkey_decode_wif(const char* privkey_wif, const dogecoi
         return false;
     const size_t privkey_len = strlen(privkey_wif);
     uint8_t* privkey_data = (uint8_t*)dogecoin_calloc(1, privkey_len);
-    memset(privkey_data, 0, privkey_len);
+    dogecoin_mem_zero(privkey_data, privkey_len);
     size_t outlen = 0;
     outlen = dogecoin_base58_decode_check(privkey_wif, privkey_data, privkey_len);
     if (!outlen) {
@@ -124,7 +124,7 @@ void dogecoin_pubkey_init(dogecoin_pubkey* pubkey)
 {
     if (pubkey == NULL)
         return;
-    memset(pubkey->pubkey, 0, DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH);
+    dogecoin_mem_zero(pubkey->pubkey, DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH);
     pubkey->compressed = false;
 }
 
@@ -195,7 +195,7 @@ dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const u
     size_t outlen = 128;
     if (!dogecoin_ecc_recover_pubkey(sig, hash, recid, pubkeybuf, &outlen) || outlen > DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH)
         return 0;
-    memset(pubkey->pubkey, 0, sizeof(pubkey->pubkey));
+    dogecoin_mem_zero(pubkey->pubkey, sizeof(pubkey->pubkey));
     memcpy(pubkey->pubkey, pubkeybuf, outlen);
     if (outlen == DOGECOIN_ECKEY_COMPRESSED_LENGTH)
         pubkey->compressed = true;

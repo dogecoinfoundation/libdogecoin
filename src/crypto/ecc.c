@@ -7,6 +7,7 @@
 
 #include <dogecoin/crypto/random.h>
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/utils.h>
 
 static secp256k1_context* secp256k1_ctx = NULL;
 
@@ -40,7 +41,7 @@ void dogecoin_ecc_get_pubkey(const uint8_t* private_key, uint8_t* public_key, si
     secp256k1_pubkey pubkey;
     assert(secp256k1_ctx);
     assert((int)*in_outlen == (compressed ? 33 : 65));
-    memset(public_key, 0, *in_outlen);
+    dogecoin_mem_zero(public_key, *in_outlen);
     if (!secp256k1_ec_pubkey_create(secp256k1_ctx, &pubkey, (const unsigned char*)private_key))
         return;
     if (!secp256k1_ec_pubkey_serialize(secp256k1_ctx, public_key, in_outlen, &pubkey, compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED))
@@ -79,10 +80,10 @@ dogecoin_bool dogecoin_ecc_verify_pubkey(const uint8_t* public_key, dogecoin_boo
     secp256k1_pubkey pubkey;
     assert(secp256k1_ctx);
     if (!secp256k1_ec_pubkey_parse(secp256k1_ctx, &pubkey, public_key, compressed ? 33 : 65)) {
-        memset(&pubkey, 0, sizeof(pubkey));
+        dogecoin_mem_zero(&pubkey, sizeof(pubkey));
         return false;
     }
-    memset(&pubkey, 0, sizeof(pubkey));
+    dogecoin_mem_zero(&pubkey, sizeof(pubkey));
     return true;
 }
 

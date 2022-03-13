@@ -28,7 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <errno.h>
 #include <dogecoin/mem.h>
 
 void* dogecoin_malloc_internal(size_t size);
@@ -206,17 +206,30 @@ void dogecoin_free_internal(void* ptr)
     free(ptr);
 }
 
-#ifdef HAVE_MEMSET_S
+errno_t memset_safe(volatile void *v, rsize_t smax, int c, rsize_t n) {
+  if (v == NULL) return EINVAL;
+  if (smax > RSIZE_MAX) return EINVAL;
+  if (n > smax) return EINVAL;
+ 
+  volatile unsigned char *p = v;
+  while (smax-- && n--) {
+    *p++ = c;
+  }
+ 
+  return 0;
+}
+
+/**
+ * "memset_safe() is a secure version of memset()."
+ * 
+ * The memset_safe() function is a secure version of memset() that fills the memory pointed to by dst with
+ * zeros
+ * 
+ * @param dst The destination buffer to be zeroed.
+ * @param len The length of the memory block to zero.
+ */
 volatile void* dogecoin_mem_zero(volatile void* dst, size_t len)
 {
-    memset_s(dst, len, 0, len);
+    memset_safe(dst, len, 0, len);
+    return 0;
 }
-#else
-volatile void* dogecoin_mem_zero(volatile void* dst, size_t len)
-{
-    volatile char* buf;
-    for (buf = (volatile char*)dst; len; buf[--len] = 0) {}
-        ;
-    return dst;
-}
-#endif

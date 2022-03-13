@@ -101,8 +101,8 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     }
 
     /* reset internal variables */
-    memset(wif_privkey_internal, 0, strlen(wif_privkey_internal));
-    memset(p2pkh_pubkey_internal, 0, strlen(p2pkh_pubkey_internal));
+    dogecoin_mem_zero(wif_privkey_internal, strlen(wif_privkey_internal));
+    dogecoin_mem_zero(p2pkh_pubkey_internal, strlen(p2pkh_pubkey_internal));
 
     /* cleanup memory */
     dogecoin_pubkey_cleanse(&pubkey);
@@ -152,8 +152,8 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     }
 
     /* reset internal variables */
-    memset(hd_privkey_master, 0, strlen(hd_privkey_master));
-    memset(hd_privkey_master, 0, strlen(hd_privkey_master));
+    dogecoin_mem_zero(hd_privkey_master, strlen(hd_privkey_master));
+    dogecoin_mem_zero(hd_privkey_master, strlen(hd_privkey_master));
     
     return true;
 }
@@ -199,7 +199,7 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
 
     /* reset internal variables */
     dogecoin_hdnode_free(node);
-    memset(str, 0, strlen(str));
+    dogecoin_mem_zero(str, strlen(str));
 
     return true;
 }

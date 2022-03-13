@@ -120,9 +120,9 @@ dogecoin_hdnode* dogecoin_hdnode_copy(const dogecoin_hdnode* hdnode)
  */
 void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
 {
-    memset(hdnode->chain_code, 0, sizeof(hdnode->chain_code));
-    memset(hdnode->private_key, 0, sizeof(hdnode->private_key));
-    memset(hdnode->public_key, 0, sizeof(hdnode->public_key));
+    dogecoin_mem_zero(hdnode->chain_code, sizeof(hdnode->chain_code));
+    dogecoin_mem_zero(hdnode->private_key, sizeof(hdnode->private_key));
+    dogecoin_mem_zero(hdnode->public_key, sizeof(hdnode->public_key));
     dogecoin_free(hdnode);
 }
 
@@ -142,7 +142,7 @@ void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
 dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogecoin_hdnode* out)
 {
     uint8_t I[DOGECOIN_ECKEY_PKEY_LENGTH + DOGECOIN_BIP32_CHAINCODE_SIZE];
-    memset(out, 0, sizeof(dogecoin_hdnode));
+    dogecoin_mem_zero(out, sizeof(dogecoin_hdnode));
     out->depth = 0;
     out->fingerprint = 0x00000000;
     out->child_num = 0;
@@ -150,13 +150,13 @@ dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogec
     memcpy(out->private_key, I, DOGECOIN_ECKEY_PKEY_LENGTH);
 
     if (!dogecoin_ecc_verify_privatekey(out->private_key)) {
-        memset(I, 0, sizeof(I));
+        dogecoin_mem_zero(I, sizeof(I));
         return false;
     }
 
     memcpy(out->chain_code, I + DOGECOIN_ECKEY_PKEY_LENGTH, DOGECOIN_BIP32_CHAINCODE_SIZE);
     dogecoin_hdnode_fill_public_key(out);
-    memset(I, 0, sizeof(I));
+    dogecoin_mem_zero(I, sizeof(I));
     return true;
 }
 
@@ -187,7 +187,7 @@ dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout, uint32_t i)
     rmd160(fingerprint, 32, fingerprint);
     inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) + (fingerprint[2] << 8) + fingerprint[3];
 
-    memset(inout->private_key, 0, 32);
+    dogecoin_mem_zero(inout->private_key, 32);
 
     int failed = 0;
     hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
@@ -203,9 +203,9 @@ dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout, uint32_t i)
     }
 
     // Wipe all stack data.
-    memset(data, 0, sizeof(data));
-    memset(I, 0, sizeof(I));
-    memset(fingerprint, 0, sizeof(fingerprint));
+    dogecoin_mem_zero(data, sizeof(data));
+    dogecoin_mem_zero(I, sizeof(I));
+    dogecoin_mem_zero(fingerprint, sizeof(fingerprint));
 
     return failed ? false : true;
 }
@@ -240,7 +240,7 @@ dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i)
     inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) +
                          (fingerprint[2] << 8) + fingerprint[3];
 
-    memset(fingerprint, 0, sizeof(fingerprint));
+    dogecoin_mem_zero(fingerprint, sizeof(fingerprint));
     memcpy(p, inout->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
 
     hmac_sha512(inout->chain_code, DOGECOIN_BIP32_CHAINCODE_SIZE, data, sizeof(data), I);
@@ -266,10 +266,9 @@ dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i)
         dogecoin_hdnode_fill_public_key(inout);
     }
 
-    memset(data, 0, sizeof(data));
-    memset(I, 0, sizeof(I));
-    memset(p, 0, sizeof(p));
-    memset(z, 0, sizeof(z));
+    dogecoin_mem_zero(data, sizeof(data));
+    dogecoin_mem_zero(I, sizeof(I));
+    dogecoin_mem_zero(z, sizeof(z));
     return true;
 }
 
@@ -430,7 +429,7 @@ dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainp
     if (!str || !chain || !node) return false;
     const size_t ndlen = sizeof(uint8_t) * sizeof(dogecoin_hdnode);
     uint8_t* node_data = (uint8_t*)dogecoin_calloc(1, ndlen);
-    memset(node, 0, sizeof(dogecoin_hdnode));
+    dogecoin_mem_zero(node, sizeof(dogecoin_hdnode));
     if (!dogecoin_base58_decode_check(str, node_data, ndlen)) {
         dogecoin_free(node_data);
         return false;
@@ -487,7 +486,7 @@ dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypat
         goto err;
     }
 
-    memset(kp, 0, strlens(keypath) + 1);
+    dogecoin_mem_zero(kp, strlens(keypath) + 1);
     memcpy(kp, keypath, strlens(keypath));
 
     if (kp[0] != 'm' || kp[1] != '/') {

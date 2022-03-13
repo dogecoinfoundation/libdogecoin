@@ -21,7 +21,7 @@
 void test_ecc()
 {
     unsigned char r_buf[32];
-    memset(r_buf, 0, 32);
+    dogecoin_mem_zero(r_buf, 32);
     dogecoin_random_init();
     while (dogecoin_ecc_verify_privatekey(r_buf) == 0)
         dogecoin_random_bytes(r_buf, 32, 0);

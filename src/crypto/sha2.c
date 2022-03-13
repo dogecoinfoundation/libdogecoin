@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include <dogecoin/crypto/sha2.h>
+#include <dogecoin/utils.h>
 
 /*
  * ASSERT NOTE:
@@ -137,7 +138,7 @@ typedef uint64_t sha2_word64; /* Exactly 8 bytes */
         }                           \
     }
 
-#define MEMSET_BZERO(p, l) memset((p), 0, (l))
+#define MEMSET_BZERO(p, l) dogecoin_mem_zero((p), (l))
 #define MEMCPY_BCOPY(d, s, l) memcpy((d), (s), (l))
 
 /*** THE SIX LOGICAL FUNCTIONS ****************************************/
@@ -943,7 +944,7 @@ void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
         i_key_pad[SHA256_BLOCK_LENGTH];
     sha256_context ctx;
 
-    memset(buf, 0, SHA256_BLOCK_LENGTH);
+    dogecoin_mem_zero(buf, SHA256_BLOCK_LENGTH);
     if (keylen > SHA256_BLOCK_LENGTH) {
         sha256_raw(key, keylen, buf);
     } else {
@@ -969,7 +970,7 @@ void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
     uint8_t buf[SHA512_BLOCK_LENGTH], o_key_pad[SHA512_BLOCK_LENGTH],
         i_key_pad[SHA512_BLOCK_LENGTH];
     sha512_context ctx;
-    memset(buf, 0, SHA512_BLOCK_LENGTH);
+    dogecoin_mem_zero(buf, SHA512_BLOCK_LENGTH);
     if (keylen > SHA512_BLOCK_LENGTH)
         sha512_raw(key, keylen, buf);
     else

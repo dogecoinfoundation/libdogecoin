@@ -145,9 +145,9 @@ dogecoin_bool hd_gen_master(const dogecoin_chainparams* chain, char* masterkeyhe
     uint8_t seed[32];
     dogecoin_random_bytes(seed, 32, true);
     dogecoin_hdnode_from_seed(seed, 32, &node);
-    memset(seed, 0, 32);
+    dogecoin_mem_zero(seed, 32);
     dogecoin_hdnode_serialize_private(&node, chain, masterkeyhex, strsize);
-    memset(&node, 0, sizeof(node));
+    dogecoin_mem_zero(&node, sizeof(node));
     return true;
 }
 

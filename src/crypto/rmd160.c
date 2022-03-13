@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <dogecoin/crypto/rmd160.h>
+#include <dogecoin/utils.h>
 
 #define ROL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
@@ -314,7 +315,7 @@ void rmd160(const uint8_t* msg, uint32_t msg_len, uint8_t* hash)
         chunk[(msg_len >> 2) & 15] ^= (uint32_t)1 << (8 * (msg_len & 3) + 7);
         if ((msg_len & 63) > 55) {
             compress(digest, chunk);
-            memset(chunk, 0, 64);
+            dogecoin_mem_zero(chunk, 64);
         }
         chunk[14] = msg_len << 3;
         chunk[15] = (msg_len >> 29);

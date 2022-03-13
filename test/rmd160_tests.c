@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <dogecoin/crypto/rmd160.h>
+#include <dogecoin/utils.h>
 
 #define TESTS 8
 
@@ -54,7 +55,7 @@ void test_rmd160()
 {
     unsigned char* output[20];
     unsigned int i;
-    memset(output, 0, sizeof output);
+    dogecoin_mem_zero(output, sizeof output);
     for (i = 0; i < TESTS; i++) {
         rmd160(ripemd160_test_str[i], ripemd160_test_strlen[i], (uint8_t*)output);
         assert(memcmp(output, ripemd160_test_md[i], 20) == 0);

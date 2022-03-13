@@ -51,7 +51,7 @@ void test_bip32()
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
     memcpy(&node3, &node, sizeof(dogecoin_hdnode));
-    memset(&node3.private_key, 0, 32);
+    dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
 
@@ -84,7 +84,7 @@ void test_bip32()
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
     memcpy(&node3, &node, sizeof(dogecoin_hdnode));
-    memset(&node3.private_key, 0, 32);
+    dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
 
@@ -115,7 +115,7 @@ void test_bip32()
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
     memcpy(&node3, &node, sizeof(dogecoin_hdnode));
-    memset(&node3.private_key, 0, 32);
+    dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
     /* [Chain m/0'/3/2'] */
@@ -145,7 +145,7 @@ void test_bip32()
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
     memcpy(&node3, &node, sizeof(dogecoin_hdnode));
-    memset(&node3.private_key, 0, 32);
+    dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
     /* [Chain m/0'/3/2'/2] */
@@ -175,7 +175,7 @@ void test_bip32()
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
     memcpy(&node3, &node, sizeof(dogecoin_hdnode));
-    memset(&node3.private_key, 0, 32);
+    dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
     /* [Chain m/0'/3/2'/2/1000000000] */
@@ -204,7 +204,7 @@ void test_bip32()
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
     memcpy(&node3, &node, sizeof(dogecoin_hdnode));
-    memset(&node3.private_key, 0, 32);
+    dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
 

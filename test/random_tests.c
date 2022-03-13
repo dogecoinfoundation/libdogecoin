@@ -15,6 +15,7 @@
 #include <test/utest.h>
 
 #include <dogecoin/crypto/random.h>
+#include <dogecoin/utils.h>
 
 void test_random_init_cb(void)
 {
@@ -31,7 +32,7 @@ dogecoin_bool test_random_bytes_cb(uint8_t* buf, uint32_t len, const uint8_t upd
 void test_random()
 {
     unsigned char r_buf[32];
-    memset(r_buf, 0, 32);
+    dogecoin_mem_zero(r_buf, 32);
     dogecoin_random_init();
     dogecoin_bool ret = dogecoin_random_bytes(r_buf, 32, 0);
     u_assert_int_eq(ret, true);
