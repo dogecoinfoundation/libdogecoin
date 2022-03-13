@@ -183,7 +183,7 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     return -1;
 #else
     (void)update_seed; //unused
-    FILE* frand = fopen(RANDOM_DEVICE, "r");
+    FILE* frand = fopen("/dev/urandom", "r"); // figure out why RANDOM_DEVICE is undeclared here
     if (!frand)
         return false;
     size_t len_read = fread(buf, 1, len, frand);

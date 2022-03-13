@@ -26,9 +26,6 @@
  */
 
 #include <assert.h>
-#ifndef _MSC_VER
-#include <getopt.h>
-#endif
 #ifdef HAVE_CONFIG_H
 #include <src/libdogecoin-config.h>
 #endif
@@ -38,6 +35,7 @@
 #include <string.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <getopt.h>
 #endif
 
 #include <dogecoin/address.h>

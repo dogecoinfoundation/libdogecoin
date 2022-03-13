@@ -852,7 +852,7 @@ void test_tx_serialization()
         utils_hex_to_bin(one_test->hextx, tx_data, strlen(one_test->hextx), &outlen);
 
         dogecoin_tx* tx = dogecoin_tx_new();
-        dogecoin_tx_deserialize(tx_data, outlen, tx, NULL, true);
+        dogecoin_tx_deserialize(tx_data, outlen, tx, NULL, false);
 
         dogecoin_tx* tx_copy = dogecoin_tx_new();
         dogecoin_tx_copy(tx_copy, tx);
@@ -891,7 +891,8 @@ void test_tx_serialization()
 void test_tx_sighash_ext()
 {
     //extended sighash tests
-    for (unsigned int i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
+    unsigned int i;
+    for (i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
         int outlen_sighash = 0;
         uint8_t tx_data_sighash[strlen(txvalid_sighash[i].sertx) / 2];
         utils_hex_to_bin(txvalid_sighash[i].sertx, tx_data_sighash, strlen(txvalid_sighash[i].sertx), &outlen_sighash);

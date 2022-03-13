@@ -296,9 +296,9 @@ void dogecoin_node_release_events(dogecoin_node* node)
 }
 
 /**
- * Mark the node as missbehaved
+ * Mark the node as misbehaved
  * 
- * @param node The node that is being marked as missbehaved.
+ * @param node The node that is being marked as misbehaved.
  * 
  * @return dogecoin_bool (uint8_t)
  */
@@ -755,7 +755,8 @@ dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *g
         }
         /* todo: make sure we have enough peers, eventually */
         dogecoin_get_peers_from_dns(seed.domain, ips_dns, group->chainparams->default_port, AF_INET);
-        for (unsigned int i = 0; i < ips_dns->len; i++) {
+        unsigned int i;
+        for (i = 0; i < ips_dns->len; i++) {
             char* ip = (char*)vector_idx(ips_dns, i);
 
             /* create a node */
@@ -771,7 +772,8 @@ dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *g
         char working_str[64];
         dogecoin_mem_zero(working_str, sizeof(working_str));
         size_t offset = 0;
-        for (unsigned int i = 0; i <= strlen(ips); i++) {
+        unsigned int i;
+        for (i = 0; i <= strlen(ips); i++) {
             if (i == strlen(ips) || ips[i] == ',') {
                 dogecoin_node* node = dogecoin_node_new();
                 if (dogecoin_node_set_ipport(node, working_str) > 0) {

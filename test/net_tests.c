@@ -198,8 +198,7 @@ void test_net_basics_plus_download_block()
     unsigned int i;
     for (i = 0; i < ips->len; i++)
     {
-        char *ip = (char *)vector_idx(ips, i);
-        debug_print("dns seed ip %d: %s\n", i, ip);
+        debug_print("dns seed ip %d: %s\n", i, (char *)vector_idx(ips, i));
     }
     vector_free(ips, true);
 

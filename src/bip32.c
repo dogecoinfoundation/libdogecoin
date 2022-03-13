@@ -252,7 +252,6 @@ dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i)
     int failed = 0;
     if (!dogecoin_ecc_verify_privatekey(z)) {
         failed = 1;
-        return false;
     }
 
     memcpy_safe(inout->private_key, p, DOGECOIN_ECKEY_PKEY_LENGTH);

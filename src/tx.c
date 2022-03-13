@@ -1083,8 +1083,8 @@ void dogecoin_tx_outputs_hash(const dogecoin_tx* tx, uint256 hash)
 {
     if (!tx->vout || !hash) return;
     cstring* s = cstr_new_sz(512);
-    size_t i;
-    for (i = 0; i < tx->vout->len; i++) {
+    size_t i, len = tx->vout->len;
+    for (i = 0; i < len; i++) {
         dogecoin_tx_out* tx_out = vector_idx(tx->vout, i);
         dogecoin_tx_out_serialize(s, tx_out);
     }

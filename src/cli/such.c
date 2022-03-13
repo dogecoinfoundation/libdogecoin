@@ -68,14 +68,12 @@ void broadcasting_menu(int txindex, int is_testnet) {
                 printf("2. no\n");
                 switch (atoi(getl("\ncommand"))) {
                         case 1:
-                            /* The above code is checking if the data is NULL, empty or larger than the maximum
-                            size of a p2p message. */
                             if (raw_hexadecimal_tx == NULL || strlen(raw_hexadecimal_tx) == 0 || strlen(raw_hexadecimal_tx) > DOGECOIN_MAX_P2P_MSG_SIZE) {
                                 printf("Transaction in invalid or to large.\n");
                                 }
-                            uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_tx) / 2 + 1);
+                            uint8_t* data_bin = dogecoin_malloc(sizeof(&raw_hexadecimal_tx) / 2 + 1);
                             int outlen = 0;
-                            utils_hex_to_bin(raw_hexadecimal_tx, data_bin, strlen(raw_hexadecimal_tx), &outlen);
+                            utils_hex_to_bin(raw_hexadecimal_tx, data_bin, sizeof(&raw_hexadecimal_tx), &outlen);
 
                             /* Deserializing the transaction and broadcasting it to the network. */
                             if (dogecoin_tx_deserialize(data_bin, outlen, tx->transaction, NULL, true)) {
@@ -811,7 +809,7 @@ int main(int argc, char* argv[])
                     end = i+1;
                     break;
                 } else if (!strchr(digits, derived_path[i])) {
-                    posbnum = -1; // value stored is never read
+                    // posbnum = -1; // value stored is never read
                     break;
                 }
             }
@@ -962,6 +960,18 @@ int main(int argc, char* argv[])
         utils_bin_to_hex(sigder, sigderlen, hexbuf);
         printf("DER: %s\n", hexbuf);
         }
+    else if (strcmp(cmd, "bip32maintotest") == 0) { /* Creating a bip32 master key from a private key. */
+        dogecoin_hdnode node;
+        if (!dogecoin_hdnode_deserialize(pkey, chain, &node))
+            return false;
+
+        char masterkeyhex[200];
+        int strsize = 200;
+        dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_test, masterkeyhex, strsize);
+        printf("xpriv: %s\n", masterkeyhex);
+        dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_test, masterkeyhex, strsize);
+        printf("xpub: %s\n", masterkeyhex);
+    }
     else if (strcmp(cmd, "transaction") == 0) {
         main_menu();
         }

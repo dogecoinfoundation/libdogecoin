@@ -219,8 +219,8 @@ int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen)
         return 0;
     }
     size_t binsize = strl;
-    if (dogecoin_base58_decode(data, &binsize, str, strl) != true) {
-        ret = 0;
+    if (!dogecoin_base58_decode(data, &binsize, str, strl)) {
+        return 0;
     }
     memmove(data, data + strl - binsize, binsize);
     dogecoin_mem_zero(data + binsize, datalen - binsize);
