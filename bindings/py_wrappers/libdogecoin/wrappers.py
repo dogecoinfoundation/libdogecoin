@@ -7,9 +7,7 @@ import os
 def load_libdogecoin():
     """Load the libdogecoin library from "libdogecoin.so"."""
     # TODO: change path to be more flexible
-    path = os.path.abspath(__file__+"../../../../.libs")
-    sys.path.insert(0, path)
-    path = os.path.join(path, "libdogecoin.so")
+    path = os.path.join(os.getcwd(), ".libs/libdogecoin.so")
 
     # all functions from libdogecoin accessed through lib variable
     ct.cdll.LoadLibrary(path)
@@ -403,3 +401,4 @@ def dogecoin_block_header_hash(header_ptr, hash_ptr):
     """Calculate and store the hash of a given block header."""
     lib.dogecoin_block_header_hash.restype = ct.c_byte
     lib.dogecoin_block_header_hash(header_ptr, hash_ptr)
+    
