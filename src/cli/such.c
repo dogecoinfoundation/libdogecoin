@@ -772,12 +772,77 @@ int main(int argc, char* argv[])
             return showError("no derivation path (-m)");
         size_t sizeout = 128;
         char newextkey[sizeout];
-        if (!hd_derive(chain, pkey, derived_path, newextkey, sizeout))
-            return showError("deriving child key failed\n");
-        else
-            hd_print_node(chain, newextkey);
+
+        //check if we derive a range of keys
+        unsigned int maxlen = 1024;
+        int posanum = -1;
+        int posbnum = -1;
+        int end = -1;
+        uint64_t from = 0;
+        uint64_t to = 0;
+
+        static char digits[] = "0123456789";
+        unsigned int i;
+        for (i = 0; i < strlen(derived_path); i++) {
+            if (i > maxlen) {
+                break;
+            }
+            if (posanum > -1 && posbnum == -1) {
+                if (derived_path[i] == '-') {
+                    if (i-posanum >= 9) {
+                        break;
+                    }
+                    posbnum = i+1;
+                    char buf[9] = {0};
+                    memcpy_safe(buf, &derived_path[posanum], i-posanum);
+                    from = strtoull(buf, NULL, 10);
+                } else if (!strchr(digits, derived_path[i])) {
+                    posanum = -1;
+                    break;
+                }
+            } else if (posanum > -1 && posbnum > -1) {
+                if (derived_path[i] == ']' || derived_path[i] == ')') {
+                    if (i-posbnum >= 9) {
+                        break;
+                    }
+                    char buf[9] = {0};
+                    memcpy_safe(buf, &derived_path[posbnum], i-posbnum);
+                    to = strtoull(buf, NULL, 10);
+                    end = i+1;
+                    break;
+                } else if (!strchr(digits, derived_path[i])) {
+                    posbnum = -1; // value stored is never read
+                    break;
+                }
+            }
+            if (derived_path[i] == '[' || derived_path[i] == '(') {
+                posanum = i+1;
+            }
         }
-    else if (strcmp(cmd, "sign") == 0) {
+
+        if (end > -1 && from <= to) {
+            for (i = from; i <= to; i++) {
+                char keypathnew[strlen(derived_path)+16];
+                memcpy_safe(keypathnew, derived_path, posanum-1);
+                char index[9] = {0};
+                sprintf(index, "%lld", (long long)i);
+                memcpy_safe(keypathnew+posanum-1, index, strlen(index));
+                memcpy_safe(keypathnew+posanum-1+strlen(index), &derived_path[end], strlen(derived_path)-end);
+
+
+                if (!hd_derive(chain, pkey, keypathnew, newextkey, sizeout))
+                    return showError("Deriving child key failed\n");
+                else
+                    hd_print_node(chain, newextkey);
+            }
+        }
+        else {
+            if (!hd_derive(chain, pkey, derived_path, newextkey, sizeout))
+                return showError("Deriving child key failed\n");
+            else
+                hd_print_node(chain, newextkey);
+        }
+    } else if (strcmp(cmd, "sign") == 0) {
         // ./such -c sign -x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -a <amount> -p <private key>
         if (!txhex || !scripthex) {
             return showError("Missing tx-hex or script-hex (use -x, -s)\n");

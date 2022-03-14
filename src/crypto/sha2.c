@@ -35,6 +35,7 @@
 
 #include <dogecoin/crypto/sha2.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/mem.h>
 
 /*
  * ASSERT NOTE:
@@ -139,7 +140,7 @@ typedef uint64_t sha2_word64; /* Exactly 8 bytes */
     }
 
 #define MEMSET_BZERO(p, l) dogecoin_mem_zero((p), (l))
-#define MEMCPY_BCOPY(d, s, l) memcpy((d), (s), (l))
+#define MEMCPY_BCOPY(d, s, l) memcpy_safe((d), (s), (l))
 
 /*** THE SIX LOGICAL FUNCTIONS ****************************************/
 /*
@@ -948,7 +949,7 @@ void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
     if (keylen > SHA256_BLOCK_LENGTH) {
         sha256_raw(key, keylen, buf);
     } else {
-        memcpy(buf, key, keylen);
+        memcpy_safe(buf, key, keylen);
     }
     for (i = 0; i < SHA256_BLOCK_LENGTH; i++) {
         o_key_pad[i] = buf[i] ^ 0x5c;
@@ -974,7 +975,7 @@ void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg, 
     if (keylen > SHA512_BLOCK_LENGTH)
         sha512_raw(key, keylen, buf);
     else
-        memcpy(buf, key, keylen);
+        memcpy_safe(buf, key, keylen);
     for (i = 0; i < SHA512_BLOCK_LENGTH; i++) {
         o_key_pad[i] = buf[i] ^ 0x5c;
         i_key_pad[i] = buf[i] ^ 0x36;

@@ -27,6 +27,7 @@
 
 */
 
+#include <time.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <math.h>
@@ -38,8 +39,9 @@
 #include <inttypes.h> 
 #include <string.h>
 #include <assert.h>
-#include <time.h>
 
+#include <errno.h>
+#include <dogecoin/cstr.h>
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
 
@@ -238,8 +240,8 @@ void utils_reverse_hex(char* h, int len)
     {
     char* copy = dogecoin_calloc(1, len);
     int i;
-    strncpy(copy, h, len);
-    for (i = 0; i < len; i += 2) {
+    memcpy_safe(copy, h, len);
+    for (i = 0; i < len - 1; i += 2) {
         h[i] = copy[len - i - 2];
         h[i + 1] = copy[len - i - 1];
         }
@@ -357,9 +359,9 @@ void* safe_malloc(size_t size)
  */
 void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len)
     {
-    srand(time(NULL));
+    srand(time(NULL)); // insecure
     for (uint32_t i = 0; i < len; i++) {
-        buf[i] = rand();
+        buf[i] = rand(); // weak non secure cryptographic rng
         }
     }
 

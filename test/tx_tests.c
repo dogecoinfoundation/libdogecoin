@@ -1057,7 +1057,7 @@ void test_script_parse()
 
     dogecoin_pubkey pubkeytx;
     dogecoin_pubkey_init(&pubkeytx);
-    memcpy(&pubkeytx.pubkey, pubkeydat, 33);
+    memcpy_safe(&pubkeytx.pubkey, pubkeydat, 33);
     pubkeytx.compressed = true;
 
     dogecoin_tx* tx = dogecoin_tx_new();
@@ -1139,7 +1139,7 @@ void test_script_parse()
     dogecoin_key key;
     dogecoin_privkey_init(&key);
 
-    memcpy(key.privkey, node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
+    memcpy_safe(key.privkey, node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     unsigned char sigcmp[64];
     size_t outlencmp = 64;
     dogecoin_key_sign_hash_compact(&key, sig_hash, sigcmp, &outlencmp);

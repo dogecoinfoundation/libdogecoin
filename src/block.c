@@ -111,8 +111,8 @@ void dogecoin_block_header_serialize(cstring* s, const dogecoin_block_header* he
  */
 void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_block_header* src) {
     dest->version = src->version;
-    memcpy(&dest->prev_block, &src->prev_block, sizeof(src->prev_block));
-    memcpy(&dest->merkle_root, &src->merkle_root, sizeof(src->merkle_root));
+    memcpy_safe(&dest->prev_block, &src->prev_block, sizeof(src->prev_block));
+    memcpy_safe(&dest->merkle_root, &src->merkle_root, sizeof(src->merkle_root));
     dest->timestamp = src->timestamp;
     dest->bits = src->bits;
     dest->nonce = src->nonce;

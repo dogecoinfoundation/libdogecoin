@@ -10,6 +10,7 @@
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/mem.h>
 
 void test_bip32()
 {
@@ -23,10 +24,10 @@ void test_bip32()
     dogecoin_hdnode_from_seed(utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f"), 16, &node);
 
     /* [Chain m] */
-    memcpy(private_key_master,
+    memcpy_safe(private_key_master,
            utils_hex_to_uint8("c6991eeda06c82a61001dd0bed02a1b2597997b684cab51550ad8c0ce75c0a6b"),
            32);
-    memcpy(chain_code_master,
+    memcpy_safe(chain_code_master,
            utils_hex_to_uint8("97c57681261f358eb33ae52625d79472e264acfa78c163e98c3db882c1317567"),
            32);
     u_assert_int_eq(node.fingerprint, 0x00000000);
@@ -50,7 +51,7 @@ void test_bip32()
                     "dgub8kXBZ7ymNWy2SHweJaXHYWGAbSEYsykXZiWLuGq7BNxSRcX3CLi4TbB5ZGHwUmjfRxcT6zsN88G4C85duZ13naXKyszHKhvrdPsVjRnCjX5");
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
-    memcpy(&node3, &node, sizeof(dogecoin_hdnode));
+    memcpy_safe(&node3, &node, sizeof(dogecoin_hdnode));
     dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
@@ -83,7 +84,7 @@ void test_bip32()
                     "dgub8ox2hMSJ96QjdZk3SngDxs9Aesjc4AH9asxw5Ft8pENEra4ju46U8iKD9EnNAvr5NLgNX847FoiNGrhHj1dXQyAaNTo8WXxk69U2kjojQvL");
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
-    memcpy(&node3, &node, sizeof(dogecoin_hdnode));
+    memcpy_safe(&node3, &node, sizeof(dogecoin_hdnode));
     dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
@@ -114,7 +115,7 @@ void test_bip32()
                     "dgub8q7qopS1ZkJD6YnL38FXT7VjuDrmDv5F4QGq5EA6E4yNmbXL6uDmdZxwHnaXSfTRxCgCfsnGA6io3fMp2VfoWjBj3i4qRf4HT8WeNjin6tp");
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
-    memcpy(&node3, &node, sizeof(dogecoin_hdnode));
+    memcpy_safe(&node3, &node, sizeof(dogecoin_hdnode));
     dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
@@ -144,7 +145,7 @@ void test_bip32()
                     "dgub8s6g72bytmP7aeac5dNxMUFdkanp4GbBU1FyGD7j6GiFdQrdev6QqqybYKprFq8t7qFsj8XNEptADqps6MXeHLBNraU5T3rMVmY1TNQQtka");
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
-    memcpy(&node3, &node, sizeof(dogecoin_hdnode));
+    memcpy_safe(&node3, &node, sizeof(dogecoin_hdnode));
     dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
@@ -174,7 +175,7 @@ void test_bip32()
                     "dgub8tiwKyPK4bpCJuppfDKX9tbtkzdGQufRqASCfunWszLpZceLf6SdMXq3byJSV4UevEfz2Edbz7HfdtahBg28xW68KLa1Bjm4cv9vFX5NVs5");
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
-    memcpy(&node3, &node, sizeof(dogecoin_hdnode));
+    memcpy_safe(&node3, &node, sizeof(dogecoin_hdnode));
     dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 
@@ -203,7 +204,7 @@ void test_bip32()
                     "dgub8vQjuGMAMTnKMaeU1qqhDyTzp6AqzhpEEPLu9J4LPDJxT65eQiw7merabasmbxvdiMJmWh9ppamwqY2Uy3z1prBKfVJAQmhBo2a9kdYGmuU");
     r = dogecoin_hdnode_deserialize(str, &dogecoin_chainparams_main, &node2);
     u_assert_int_eq(r, true);
-    memcpy(&node3, &node, sizeof(dogecoin_hdnode));
+    memcpy_safe(&node3, &node, sizeof(dogecoin_hdnode));
     dogecoin_mem_zero(&node3.private_key, 32);
     u_assert_mem_eq(&node2, &node3, sizeof(dogecoin_hdnode));
 

@@ -43,6 +43,7 @@
 #include <dogecoin/script.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/mem.h>
 
 void dogecoin_privkey_init(dogecoin_key* privkey)
 {
@@ -92,7 +93,7 @@ void dogecoin_privkey_encode_wif(const dogecoin_key* privkey, const dogecoin_cha
     uint8_t pkeybase58c[34];
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
-    memcpy(&pkeybase58c[1], privkey->privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
+    memcpy_safe(&pkeybase58c[1], privkey->privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, 34, privkey_wif, *strsize_inout) != 0);
     dogecoin_mem_zero(&pkeybase58c, 34);
 }
@@ -114,7 +115,7 @@ dogecoin_bool dogecoin_privkey_decode_wif(const char* privkey_wif, const dogecoi
         dogecoin_free(privkey_data);
         return false;
     }
-    memcpy(privkey->privkey, &privkey_data[1], DOGECOIN_ECKEY_PKEY_LENGTH);
+    memcpy_safe(privkey->privkey, &privkey_data[1], DOGECOIN_ECKEY_PKEY_LENGTH);
     dogecoin_mem_zero(privkey_data, sizeof(privkey_data));
     dogecoin_free(privkey_data);
     return true;
@@ -196,7 +197,7 @@ dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const u
     if (!dogecoin_ecc_recover_pubkey(sig, hash, recid, pubkeybuf, &outlen) || outlen > DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH)
         return 0;
     dogecoin_mem_zero(pubkey->pubkey, sizeof(pubkey->pubkey));
-    memcpy(pubkey->pubkey, pubkeybuf, outlen);
+    memcpy_safe(pubkey->pubkey, pubkeybuf, outlen);
     if (outlen == DOGECOIN_ECKEY_COMPRESSED_LENGTH)
         pubkey->compressed = true;
     return 1;

@@ -68,6 +68,7 @@
 #endif
 
 #include <dogecoin/crypto/aes.h>
+#include <dogecoin/mem.h>
 
 #if defined(HAVE_UINT_32T)
 //typedef unsigned long uint_32t;
@@ -215,8 +216,8 @@ uint_8t inv_affine(const uint_8t x)
 #endif
 
 #if defined(HAVE_MEMCPY)
-#define block_copy_nn(d, s, l) memcpy(d, s, l)
-#define block_copy(d, s) memcpy(d, s, N_BLOCK)
+#define block_copy_nn(d, s, l) memcpy_safe(d, s, l)
+#define block_copy(d, s) memcpy_safe(d, s, N_BLOCK)
 #else
 #define block_copy_nn(d, s, l) copy_block_nn(d, s, l)
 #define block_copy(d, s) copy_block(d, s)
@@ -540,7 +541,7 @@ return_type aes_cbc_encrypt(const unsigned char* in, unsigned char* out, int n_b
         if (aes_encrypt(iv, iv, ctx) != EXIT_SUCCESS) {
             return EXIT_FAILURE;
         }
-        memcpy(out, iv, N_BLOCK);
+        memcpy_safe(out, iv, N_BLOCK);
         in += N_BLOCK;
         out += N_BLOCK;
     }
@@ -587,12 +588,12 @@ return_type aes_cbc_decrypt(const unsigned char* in, unsigned char* out, int n_b
     while (n_block--) {
         uint_8t tmp[N_BLOCK];
 
-        memcpy(tmp, in, N_BLOCK);
+        memcpy_safe(tmp, in, N_BLOCK);
         if (aes_decrypt(in, out, ctx) != EXIT_SUCCESS) {
             return EXIT_FAILURE;
         }
         xor_block(out, iv);
-        memcpy(iv, tmp, N_BLOCK);
+        memcpy_safe(iv, tmp, N_BLOCK);
         in += N_BLOCK;
         out += N_BLOCK;
     }

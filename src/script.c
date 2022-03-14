@@ -212,7 +212,7 @@ dogecoin_bool dogecoin_script_get_ops(const cstring* script_in, vector* ops_out)
         }
 
         op->data = dogecoin_calloc(1, data_len);
-        memcpy(op->data, buf.p, data_len);
+        memcpy_safe(op->data, buf.p, data_len);
         op->datalen = data_len;
 
         vector_add(ops_out, op);
@@ -321,7 +321,7 @@ dogecoin_bool dogecoin_script_is_pubkey(const vector* ops, vector* data_out)
             //copy the full pubkey (33 or 65) in case of a non empty vector
             const dogecoin_script_op* op = vector_idx(ops, 0);
             uint8_t* buffer = dogecoin_calloc(1, op->datalen);
-            memcpy(buffer, op->data, op->datalen);
+            memcpy_safe(buffer, op->data, op->datalen);
             vector_add(data_out, buffer);
         }
         return true;
@@ -353,7 +353,7 @@ dogecoin_bool dogecoin_script_is_pubkeyhash(const vector* ops, vector* data_out)
             //copy the data (hash160) in case of a non empty vector
             const dogecoin_script_op* op = vector_idx(ops, 2);
             uint8_t* buffer = dogecoin_calloc(1, sizeof(uint160));
-            memcpy(buffer, op->data, sizeof(uint160));
+            memcpy_safe(buffer, op->data, sizeof(uint160));
             vector_add(data_out, buffer);
         }
         return true;
@@ -383,7 +383,7 @@ dogecoin_bool dogecoin_script_is_scripthash(const vector* ops, vector* data_out)
             //copy the data (hash160) in case of a non empty vector
             const dogecoin_script_op* op = vector_idx(ops, 1);
             uint8_t* buffer = dogecoin_calloc(1, sizeof(uint160));
-            memcpy(buffer, op->data, sizeof(uint160));
+            memcpy_safe(buffer, op->data, sizeof(uint160));
             vector_add(data_out, buffer);
         }
 
@@ -498,7 +498,7 @@ enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector
             tx_out_type = DOGECOIN_TX_WITNESS_V0_PUBKEYHASH;
             if (data_out) {
                 uint8_t* witness_program_cpy = dogecoin_calloc(1, witness_program_len);
-                memcpy(witness_program_cpy, witness_program, witness_program_len);
+                memcpy_safe(witness_program_cpy, witness_program, witness_program_len);
                 vector_add(data_out, witness_program_cpy);
             }
         }
@@ -506,7 +506,7 @@ enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector
             tx_out_type = DOGECOIN_TX_WITNESS_V0_SCRIPTHASH;
             if (data_out) {
                 uint8_t* witness_program_cpy = dogecoin_calloc(1, witness_program_len);
-                memcpy(witness_program_cpy, witness_program, witness_program_len);
+                memcpy_safe(witness_program_cpy, witness_program, witness_program_len);
                 vector_add(data_out, witness_program_cpy);
             }
         }
@@ -780,7 +780,7 @@ dogecoin_bool dogecoin_script_is_witnessprogram(const cstring* script, uint8_t* 
         *version_out = dogecoin_decode_op_n((enum opcodetype)script->str[0]);
         if (program_out) {
             assert(script->len - 2 <= 40);
-            memcpy(program_out, script->str + 2, script->len - 2);
+            memcpy_safe(program_out, script->str + 2, script->len - 2);
             *programm_len_out = script->len - 2;
         }
         return true;

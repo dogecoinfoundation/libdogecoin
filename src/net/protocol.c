@@ -87,7 +87,7 @@ cstring* dogecoin_p2p_message_new(const unsigned char netmagic[4], const char* c
     /* command string */
     char command_null[12];
     dogecoin_mem_zero(command_null, 12);
-    memcpy(command_null, command, strlen(command));
+    memcpy_safe(command_null, command, strlen(command));
     //memset(command_null+strlen(command), 0, 12-strlen(command));
     cstr_append_buf(s, command_null, 12);
 
@@ -160,13 +160,13 @@ void dogecoin_addr_to_p2paddr(struct sockaddr* addr, dogecoin_p2p_address* addr_
 {
     if (addr->sa_family == AF_INET6) {
         struct sockaddr_in6* saddr = (struct sockaddr_in6*)addr;
-        memcpy(&addr_out->ip, &saddr->sin6_addr, 16);
+        memcpy_safe(&addr_out->ip, &saddr->sin6_addr, 16);
         addr_out->port = ntohs(saddr->sin6_port);
     } else if (addr->sa_family == AF_INET) {
         struct sockaddr_in* saddr = (struct sockaddr_in*)addr;
         dogecoin_mem_zero(&addr_out->ip[0], 10);
         memset(&addr_out->ip[10], 0xff, 2);
-        memcpy(&addr_out->ip[12], &saddr->sin_addr, 4);
+        memcpy_safe(&addr_out->ip[12], &saddr->sin_addr, 4);
         addr_out->port = ntohs(saddr->sin_port);
     }
 }
@@ -187,11 +187,11 @@ void dogecoin_p2paddr_to_addr(dogecoin_p2p_address* p2p_addr, struct sockaddr* a
     if (!is_ipv4_mapped(p2p_addr->ip)) {
         /* ipv6 */
         struct sockaddr_in6* saddr = (struct sockaddr_in6*)addr_out;
-        memcpy(&saddr->sin6_addr, p2p_addr->ip, 16);
+        memcpy_safe(&saddr->sin6_addr, p2p_addr->ip, 16);
         saddr->sin6_port = htons(p2p_addr->port);
     } else {
         struct sockaddr_in* saddr = (struct sockaddr_in*)addr_out;
-        memcpy(&saddr->sin_addr, &p2p_addr->ip[12], 4);
+        memcpy_safe(&saddr->sin_addr, &p2p_addr->ip[12], 4);
         saddr->sin_port = htons(p2p_addr->port);
     }
 }
@@ -221,7 +221,7 @@ void dogecoin_p2p_msg_version_init(dogecoin_p2p_version_msg* msg, const dogecoin
         dogecoin_p2p_address_init(&msg->addr_from);
     dogecoin_cheap_random_bytes((uint8_t*)&msg->nonce, sizeof(msg->nonce));
     if (strSubVer && strlen(strSubVer) < 128)
-        memcpy(msg->useragent, strSubVer, strlen(strSubVer));
+        memcpy_safe(msg->useragent, strSubVer, strlen(strSubVer));
 
     msg->start_height = 0;
     msg->relay = relay;
@@ -287,7 +287,7 @@ dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_version_msg* msg, stru
     if (!deser_bytes(ua_str, buf, ua_len))
         return false;
     dogecoin_mem_zero(msg->useragent, sizeof(msg->useragent));
-    memcpy(&msg->useragent, ua_str, cpy_len);
+    memcpy_safe(&msg->useragent, ua_str, cpy_len);
 
     if (!deser_s32(&msg->start_height, buf))
         return false;
@@ -308,7 +308,7 @@ dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_version_msg* msg, stru
 void dogecoin_p2p_msg_inv_init(dogecoin_p2p_inv_msg* msg, uint32_t type, uint256 hash)
 {
     msg->type = type;
-    memcpy(&msg->hash, hash, DOGECOIN_HASH_LENGTH);
+    memcpy_safe(&msg->hash, hash, DOGECOIN_HASH_LENGTH);
 }
 
 /**

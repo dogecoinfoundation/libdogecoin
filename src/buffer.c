@@ -71,7 +71,7 @@ struct buffer* buffer_copy(const void* data, size_t data_len)
         goto err_out_free;
     }
 
-    memcpy(buf->p, data, data_len);
+    memcpy_safe(buf->p, data, data_len);
     buf->len = data_len;
 
     return buf;

@@ -120,7 +120,7 @@ dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wi
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     dogecoin_privkey_gen(&key);
-    memcpy(&pkeybase58c[1], key.privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
+    memcpy_safe(&pkeybase58c[1], key.privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, 34, privkey_wif, strsize_wif) != 0);
     // also export the hex privkey if use had passed in a valid pointer
     // will always export 32 bytes
@@ -180,7 +180,7 @@ dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodes
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     char privkey_wif[128];
-    memcpy(&pkeybase58c[1], node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
+    memcpy_safe(&pkeybase58c[1], node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), privkey_wif, sizeof(privkey_wif)) != 0);
     if (dogecoin_hdnode_has_privkey(&node)) {
         printf("privatekey WIF:      %s\n", privkey_wif);

@@ -54,7 +54,7 @@ LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_equal(uint256 hash_a, 
 
 LIBDOGECOIN_API static inline void dogecoin_hash_set(uint256 hash_dest, const uint256 hash_src)
 {
-    memcpy(hash_dest, hash_src, DOGECOIN_HASH_LENGTH);
+    memcpy_safe(hash_dest, hash_src, DOGECOIN_HASH_LENGTH);
 }
 
 LIBDOGECOIN_API static inline void dogecoin_hash(const unsigned char* datain, size_t length, uint256 hashout)

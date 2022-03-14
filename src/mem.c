@@ -206,6 +206,18 @@ void dogecoin_free_internal(void* ptr)
     free(ptr);
 }
 
+void* memcpy_safe(void* destination, const void* source, unsigned int count) {
+    char *pszDest = (char *)destination;
+    const char *pszSource =( const char*)source;
+    if((pszDest!= NULL) && (pszSource!= NULL)) {
+        while(count) {
+            *(pszDest++)= *(pszSource++);
+            --count;
+        }
+    }
+    return destination;
+}
+
 errno_t memset_safe(volatile void *v, rsize_t smax, int c, rsize_t n) {
   if (v == NULL) return EINVAL;
   if (smax > RSIZE_MAX) return EINVAL;

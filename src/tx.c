@@ -916,7 +916,7 @@ void dogecoin_tx_hash(const dogecoin_tx* tx, uint256 hashout)
  */
 void dogecoin_tx_in_copy(dogecoin_tx_in* dest, const dogecoin_tx_in* src)
 {
-    memcpy(&dest->prevout, &src->prevout, sizeof(dest->prevout));
+    memcpy_safe(&dest->prevout, &src->prevout, sizeof(dest->prevout));
     dest->sequence = src->sequence;
 
     if (!src->script_sig) {
@@ -1713,7 +1713,7 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
     dogecoin_key_sign_hash_compact(privkey, sighash, sig, &siglen);
     assert(siglen == sizeof(sig));
     if (sigcompact_out) {
-        memcpy(sigcompact_out, sig, siglen);
+        memcpy_safe(sigcompact_out, sig, siglen);
     }
 
     // form normalized DER signature & hashtype
@@ -1727,7 +1727,7 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
     sigderlen += 1; //+hashtype
     /* Copying the signature and hashtype into the sigder_out buffer. */
     if (sigcompact_out) {
-        memcpy(sigder_out, sigder_plus_hashtype, sigderlen);
+        memcpy_safe(sigder_out, sigder_plus_hashtype, sigderlen);
     }
     /* Checking if the sigder_len_out is not null, and if it is not null, it is setting the value of
     sigderlen to the value of sigder_len_out. */

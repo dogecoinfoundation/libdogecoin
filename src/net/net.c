@@ -12,6 +12,7 @@
 #include <dogecoin/net/protocol.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/mem.h>
 
 #ifdef _WIN32
 #include <getopt.h>
@@ -725,8 +726,8 @@ int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int
             evutil_inet_ntop(aiTrav->ai_family, &((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr, ipaddr, maxlen);
         }
 
-        memcpy(ipaddr + strlen(ipaddr), ":", 1);
-        memcpy(ipaddr + strlen(ipaddr), def_port, strlen(def_port));
+        memcpy_safe(ipaddr + strlen(ipaddr), ":", 1);
+        memcpy_safe(ipaddr + strlen(ipaddr), def_port, strlen(def_port));
 
         vector_add(ips_out, ipaddr);
 
