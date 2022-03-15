@@ -49,6 +49,16 @@
 #include <dogecoin/tool.h>
 #include <dogecoin/utils.h>
 
+/**
+ * @brief This function will populate provided private/public char* 
+ * variables with a freshly generated private/public key pair, 
+ * specifically for the network specified by the third parameter.
+ * 
+ * @param wif_privkey 
+ * @param p2pkh_pubkey 
+ * @param is_testnet 
+ * @return int 
+ */
 int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
 {
     /* internal variables */
@@ -99,6 +109,17 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     return true;
 }
 
+/**
+ * @brief This function will populate provided private/public char*
+ * variables with a freshly generated master key pair for a
+ * heirarchical deterministic wallet, specifically for the network
+ * specified by the third parameter.
+ * 
+ * @param wif_privkey_master 
+ * @param p2pkh_pubkey_master 
+ * @param is_testnet 
+ * @return int 
+ */
 int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
 {
     size_t strsize = 128;
@@ -135,6 +156,16 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     return true;
 }
 
+/**
+ * @brief This function will populate the provided public char*
+ * variable with a child key derived from the provided wif-
+ * encoded master private key string. This input should come
+ * from the result of generateHDMasterPubKeypair().
+ * 
+ * @param wif_privkey_master 
+ * @param p2pkh_pubkey 
+ * @return int 
+ */
 int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
 {
     /* require master key */
@@ -172,6 +203,17 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     return true;
 }
 
+/**
+ * @brief This function validates that a given private key
+ * matches a given public key. This could be useful prior
+ * to signing, or in some kind of wallet recovery tool to
+ * match keys.
+ * 
+ * @param wif_privkey 
+ * @param p2pkh_pubkey 
+ * @param is_testnet 
+ * @return int 
+ */
 int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet) {
     /* require both private and public key */
     if (!wif_privkey || !p2pkh_pubkey) return false;
@@ -204,6 +246,17 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
     return true;
 }
 
+/**
+ * @brief This function will populate provided private/public char*
+ * variables with a freshly generated master key pair for a
+ * heirarchical deterministic wallet, specifically for the network
+ * specified by the third parameter.
+ * 
+ * @param wif_privkey_master 
+ * @param p2pkh_pubkey_master 
+ * @param is_testnet 
+ * @return int 
+ */
 int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet) {
     /* require both private and public key */
     if (!wif_privkey_master || !p2pkh_pubkey_master) return false;
@@ -224,6 +277,16 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
     return true;
 }
 
+/**
+ * @brief This function accepts a public key and does some basic
+ * validation to determine if it looks like a valid Dogecoin Address.
+ * This is useful for wallets that want to check that a recipient
+ * address looks legitimate.
+ * 
+ * @param p2pkh_pubkey 
+ * @param len 
+ * @return int 
+ */
 int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len) {
     if (!p2pkh_pubkey || !len) return false;
     /* check length */
