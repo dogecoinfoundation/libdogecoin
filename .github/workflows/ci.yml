@@ -113,9 +113,3 @@ jobs:
         if: ${{ matrix.run-tests }}
         run: |
           make check -j"$(getconf _NPROCESSORS_ONLN)" VERBOSE=1 && python3 tooltests.py
-
-      - name: python unit testing
-        run: |
-          cd bindings/py_wrappers/pytest
-          python3 -m unittest address_test.py
-          cd ../../..
