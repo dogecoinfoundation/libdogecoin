@@ -111,3 +111,7 @@ test-suite.log
 *.pc
 **/__pycache__/
 *.py[cod]
+<<<<<<< HEAD
+=======
+**/__pycache__/
+>>>>>>> 2bb9890... fixed gitignore to ignore pycache
