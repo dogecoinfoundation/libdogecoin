@@ -114,14 +114,6 @@ jobs:
         run: |
           make check -j"$(getconf _NPROCESSORS_ONLN)" VERBOSE=1 && python3 tooltests.py
 
-<<<<<<< HEAD
-      - name: python unit testing
-        run: |
-          cd bindings/py_wrappers/pytest
-          python3 -m unittest address_test.py
-          cd ../../..
-=======
       - name: python unit tests
         run: |
           python3 -m unittest bindings/py_wrappers/pytest/address_test.py
->>>>>>> c27a21e... initiated python module
