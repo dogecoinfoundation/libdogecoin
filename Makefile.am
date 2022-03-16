@@ -35,6 +35,7 @@ include_HEADERS = \
     include/dogecoin/crypto/sha2.h \
     include/dogecoin/tool.h \
     include/dogecoin/tx.h \
+    contrib/uthash/uthash.h \
     include/dogecoin/utils.h \
     include/dogecoin/vector.h
 
