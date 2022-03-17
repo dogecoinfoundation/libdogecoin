@@ -1,8 +1,6 @@
 """This module provides a python API for libdogecoin."""
 
 import ctypes as ct
-from operator import index
-import sys
 import os
 
 def load_libdogecoin():
@@ -219,22 +217,40 @@ class DogecoinPubkey(ct.Structure):
     ]
 #===================================================TRANSACTION.C
 def start_tx():
-    pass
+    return lib.startTX()
 
-def add_utxo():
-    pass
+def add_utxo(tx_index, hex_utxo_txid, dogecoin_amount):
+    hex_utxo_txid_ptr = ct.c_char_p(hex_utxo_txid.encode('utf-8'))
+    return lib.addUtxo(ct.c_int(tx_index), hex_utxo_txid_ptr, ct.c_uint64(dogecoin_amount))
+    
 
-def create_tx():
-    pass
+def create_tx(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification):
+    destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
+    return lib.createTx(ct.c_int(tx_index), destination_address_ptr, ct.c_float(subtracted_fee), ct.byref(ct.c_uint64(out_dogeamount_for_verification)))
 
-def get_raw_tx():
-    pass
+def get_raw_tx(tx_index, as_bytes=0):
+    lib.getRawTx.restype = ct.c_char_p
+    res = lib.getRawTx(ct.c_int(tx_index))
+    if as_bytes:
+        return res.value
+    return res.value.decode('utf-8')
 
-def clear_tx():
-    pass
+def clear_tx(tx_index):
+    return lib.clearTx(ct.c_int(tx_index))
 
-def sign_indexed_tx():
-    pass
+def sign_indexed_tx(tx_index, privkey, as_bytes=0):
+    privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
+    lib.signIndexedTx.restype = ct.c_char_p
+    res = lib.signIndexedTx(ct.c_int(tx_index), privkey_ptr)
+    if as_bytes:
+        return res.value
+    return res.value.decode('utf-8')
 
-def sign_raw_tx():
-    pass
+def sign_raw_tx(incoming_raw_tx, privkey, as_bytes=0):
+    incoming_raw_tx_ptr = ct.c_char_p(incoming_raw_tx.encode('utf-8'))
+    privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
+    lib.signIndexedTx.restype = ct.c_char_p
+    res = lib.signIndexedTx(incoming_raw_tx_ptr, privkey_ptr)
+    if as_bytes:
+        return res.value
+    return res.value.decode('utf-8')
