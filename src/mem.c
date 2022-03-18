@@ -39,36 +39,98 @@ void dogecoin_free_internal(void* ptr);
 static const dogecoin_mem_mapper default_mem_mapper = {dogecoin_malloc_internal, dogecoin_calloc_internal, dogecoin_realloc_internal, dogecoin_free_internal};
 static dogecoin_mem_mapper current_mem_mapper = {dogecoin_malloc_internal, dogecoin_calloc_internal, dogecoin_realloc_internal, dogecoin_free_internal};
 
+
+/**
+ * @brief This function sets the current memory mapper
+ * to the default memory mapper.
+ * 
+ * @return Nothing.
+ */
 void dogecoin_mem_set_mapper_default()
 {
     current_mem_mapper = default_mem_mapper;
 }
 
+
+/**
+ * @brief This function sets the current memory mapper
+ * to the specified mapper.
+ * 
+ * @param mapper The mapper to be used.
+ * 
+ * @return Nothing.
+ */
 void dogecoin_mem_set_mapper(const dogecoin_mem_mapper mapper)
 {
     current_mem_mapper = mapper;
 }
 
+
+/**
+ * @brief This function calls dogecoin_malloc_internal() using 
+ * the current memory mapper.
+ * 
+ * @param size The size of the memory block to be allocated.
+ * 
+ * @return A pointer to the allocated memory. 
+ */
 void* dogecoin_malloc(size_t size)
 {
     return current_mem_mapper.dogecoin_malloc(size);
 }
 
+
+/**
+ * @brief This function calls dogecoin_calloc_internal() using
+ * the current memory mapper.
+ * 
+ * @param count The number of elements to allocate.
+ * @param size The size of each element.
+ * 
+ * @return A pointer to the allocated memory. 
+ */
 void* dogecoin_calloc(size_t count, size_t size)
 {
     return current_mem_mapper.dogecoin_calloc(count, size);
 }
 
+
+/**
+ * @brief This function calls dogecoin_realloc_internal() using
+ * the current memory mapper.
+ * 
+ * @param ptr The pointer to the old memory block.
+ * @param size The size of the new memory block to be reallocated.
+ * 
+ * @return A pointer to the reallocated memory.
+ */
 void* dogecoin_realloc(void* ptr, size_t size)
 {
     return current_mem_mapper.dogecoin_realloc(ptr, size);
 }
 
+
+/**
+ * @brief This function calls dogecoin_free_internal() using
+ * the current memory mapper.
+ * 
+ * @param ptr The pointer to the memory block to be freed.
+ * 
+ * @return Nothing.
+ */
 void dogecoin_free(void* ptr)
 {
     current_mem_mapper.dogecoin_free(ptr);
 }
 
+
+/**
+ * @brief This function allocates a memory block.
+ * 
+ * @param size The size of the memory block to be allocated.
+ * 
+ * @return A pointer to the allocated memory. 
+ */
 void* dogecoin_malloc_internal(size_t size)
 {
     void* result;
@@ -83,6 +145,16 @@ void* dogecoin_malloc_internal(size_t size)
     }
 }
 
+
+/**
+ * @brief This function allocates memory and initializes all
+ * bytes to zero.
+ * 
+ * @param count The number of elements to allocate.
+ * @param size The size of each element.
+ * 
+ * @return A pointer to the allocated memory. 
+ */
 void* dogecoin_calloc_internal(size_t count, size_t size)
 {
     void* result;
@@ -97,6 +169,16 @@ void* dogecoin_calloc_internal(size_t count, size_t size)
     }
 }
 
+
+/**
+ * @brief This function resizes the memory block pointed to
+ * by ptr which was previously allocated.
+ * 
+ * @param ptr The pointer to the old memory block.
+ * @param size The size of the new memory block to be reallocated.
+ * 
+ * @return A pointer to the reallocated memory.
+ */
 void* dogecoin_realloc_internal(void* ptr, size_t size)
 {
     void* result;
@@ -111,6 +193,14 @@ void* dogecoin_realloc_internal(void* ptr, size_t size)
     }
 }
 
+
+/**
+ * @brief This function frees previously allocated memory.
+ * 
+ * @param ptr The pointer to the memory block to be freed.
+ * 
+ * @return Nothing.
+ */
 void dogecoin_free_internal(void* ptr)
 {
     free(ptr);
