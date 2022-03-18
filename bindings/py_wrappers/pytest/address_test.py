@@ -3,7 +3,7 @@
 import unittest
 import ctypes as ct
 import sys
-sys.path.append("../")
+sys.path.append("./bindings/py_wrappers/libdogecoin/")
 import wrappers as w
 lib = w.load_libdogecoin()
 
