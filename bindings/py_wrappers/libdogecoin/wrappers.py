@@ -202,3 +202,17 @@ def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
 
     # return boolean result
     return res
+
+
+class DogecoinKey(ct.Structure):
+    """Class to mimic dogecoin_key struct from libdogecoin"""
+    _fields_ = [
+        ("privkey",                     ct.c_ubyte * 32),
+    ]
+
+class DogecoinPubkey(ct.Structure):
+    """Class to mimic dogecoin_pubkey struct from libdogecoin"""
+    _fields_ = [
+        ("compressed",                  ct.c_ubyte),
+        ("pubkey",                      ct.c_ubyte * 65),
+    ]
