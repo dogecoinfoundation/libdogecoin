@@ -8,44 +8,132 @@
 #include <dogecoin/cstr.h>
 #include <dogecoin/serialize.h>
 
+
+/**
+ * @brief This function appends a buffer of raw bytes
+ * to an existing cstring.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param p The buffer of raw bytes to be appended.
+ * @param len The length of the buffer to be appended.
+ * 
+ * @return Nothing.
+ */
 void ser_bytes(cstring* s, const void* p, size_t len)
 {
     cstr_append_buf(s, p, len);
 }
 
+
+/**
+ * @brief This function takes 2 unsigned bytes and
+ * appends them to an existing cstring by converting
+ * them to a little endian byte array.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param v_ The bytes to be appended as a uint16_t.
+ * 
+ * @return Nothing.
+ */
 void ser_u16(cstring* s, uint16_t v_)
 {
     uint16_t v = htole16(v_);
     cstr_append_buf(s, &v, sizeof(v));
 }
 
+
+/**
+ * @brief This function takes 4 unsigned bytes and
+ * appends them to an existing cstring by converting
+ * them to a little endian byte array.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param v_ The bytes to be appended as a uint32_t.
+ * 
+ * @return Nothing.
+ */
 void ser_u32(cstring* s, uint32_t v_)
 {
     uint32_t v = htole32(v_);
     cstr_append_buf(s, &v, sizeof(v));
 }
 
+
+/**
+ * @brief This function takes 4 bytes and appends them
+ * to an existing cstring by converting them to a 
+ * uint32_t and calling ser_u32().
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param v_ The bytes to be appended as an int32_t.
+ * 
+ * @return Nothing.
+ */
 void ser_s32(cstring* s, int32_t v_)
 {
     ser_u32(s, (uint32_t)v_);
 }
 
+
+/**
+ * @brief This function takes 8 unsigned bytes and
+ * appends them to an existing cstring by converting
+ * them to a little endian byte array.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param v_ The bytes to be appended as a uint64_t.
+ * 
+ * @return Nothing.
+ */
 void ser_u64(cstring* s, uint64_t v_)
 {
     uint64_t v = htole64(v_);
     cstr_append_buf(s, &v, sizeof(v));
 }
 
+
+/**
+ * @brief This function takes 8 bytes and appends them
+ * to an existing cstring by converting them to a
+ * uint64_t and calling ser_u64().
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param v_ The bytes to be appended as an int64_t.
+ * 
+ * @return Nothing.
+ */
 void ser_s64(cstring* s, int64_t v_)
 {
     ser_u64(s, (uint64_t)v_);
 }
 
+
+/**
+ * @brief This function takes 32 unsigned bytes and
+ * appends them to an existing cstring by converting
+ * them to a little endian byte array.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param v_ The bytes to be appended as an unsigned char array.
+ * 
+ * @return Nothing.
+ */
 void ser_u256(cstring* s, const unsigned char* v_)
 {
     ser_bytes(s, v_, 32);
 }
 
+
+/**
+ * @brief This function takes a variable length unsigned
+ * integer and appends the minimum number of bytes to
+ * the cstring in order to preserve the data.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param vlen The bytes to be appended as a uint32_t.
+ * 
+ * @return Nothing.
+ */
 void ser_varlen(cstring* s, uint32_t vlen)
 {
     unsigned char c;
@@ -70,6 +158,17 @@ void ser_varlen(cstring* s, uint32_t vlen)
     /* u64 case intentionally not implemented */
 }
 
+
+/**
+ * @brief This function takes a variable length string
+ * and appends up to maxlen bytes to an existing cstring.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param s_in The bytes to be appended as a string.
+ * @param maxlen The maximum number of bytes to be appended.
+ * 
+ * @return Nothing.
+ */
 void ser_str(cstring* s, const char* s_in, size_t maxlen)
 {
     size_t slen = strnlen(s_in, maxlen);
@@ -78,6 +177,16 @@ void ser_str(cstring* s, const char* s_in, size_t maxlen)
     ser_bytes(s, s_in, slen);
 }
 
+
+/**
+ * @brief This function takes a cstring and appends
+ * its contents an existing cstring.
+ * 
+ * @param s The pointer to the cstring to append to.
+ * @param s_in The pointer to the cstring to be appended.
+ * 
+ * @return Nothing.
+ */
 void ser_varstr(cstring* s, cstring* s_in)
 {
     if (!s_in || !s_in->len) {
@@ -89,6 +198,17 @@ void ser_varstr(cstring* s, cstring* s_in)
     ser_bytes(s, s_in->str, s_in->len);
 }
 
+
+/**
+ * @brief This function skips the next len bytes of a
+ * const_buffer by moving the pointer up by len bytes
+ * and subtracting that amount from its len attribute.
+ * 
+ * @param buf The pointer to the const_buffer whose bytes will be skipped.
+ * @param len The amount of bytes to be skipped.
+ * 
+ * @return 1 if the bytes were skipped successfully, 0 if too many bytes were specified.
+ */
 int deser_skip(struct const_buffer* buf, size_t len)
 {
     char* p;
@@ -104,6 +224,18 @@ int deser_skip(struct const_buffer* buf, size_t len)
     return true;
 }
 
+
+/**
+ * @brief This function takes a const_buffer and consumes
+ * the first len bytes, which are then placed into a void
+ * buffer.
+ * 
+ * @param po The pointer to the object to deserialize into.
+ * @param buf The pointer to the const_buffer to deserialize from.
+ * @param len The number of bytes to be deserialized.
+ * 
+ * @return 1 if the bytes were deserialized successfully, 0 if too many bytes were specified.
+ */
 int deser_bytes(void* po, struct const_buffer* buf, size_t len)
 {
     char* p;
@@ -120,6 +252,16 @@ int deser_bytes(void* po, struct const_buffer* buf, size_t len)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes 2 bytes from a 
+ * const_buffer into a uint16_t object.
+ * 
+ * @param vo The pointer to the uint16_t object to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if the bytes were deserialized successfully, 0 if too many bytes were specified.
+ */
 int deser_u16(uint16_t* vo, struct const_buffer* buf)
 {
     uint16_t v;
@@ -132,6 +274,16 @@ int deser_u16(uint16_t* vo, struct const_buffer* buf)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes 4 bytes from a
+ * const_buffer into an int32_t object.
+ * 
+ * @param vo The pointer to the int32_t object to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if bytes were deserialized correctly, 0 otherwise.
+ */
 int deser_s32(int32_t* vo, struct const_buffer* buf)
 {
     int32_t v;
@@ -143,6 +295,16 @@ int deser_s32(int32_t* vo, struct const_buffer* buf)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes 4 bytes from a
+ * const_buffer into a uint32_t object.
+ * 
+ * @param vo The pointer to the uint32_t object to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if the bytes were deserialized correctly, 0 otherwise.
+ */
 int deser_u32(uint32_t* vo, struct const_buffer* buf)
 {
     uint32_t v;
@@ -154,6 +316,16 @@ int deser_u32(uint32_t* vo, struct const_buffer* buf)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes 8 bytes from a
+ * const_buffer into a uint64_t object.
+ * 
+ * @param vo The pointer to the uint64_t object to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if the bytes were deserialized correctly, 0 otherwise.
+ */
 int deser_u64(uint64_t* vo, struct const_buffer* buf)
 {
     uint64_t v;
@@ -166,11 +338,33 @@ int deser_u64(uint64_t* vo, struct const_buffer* buf)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes 32 bytes from a
+ * const_buffer into an unsigned byte array.
+ * 
+ * @param vo The unsigned byte array to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if the bytes were deserialized correctly, 0 otherwise.
+ */
 int deser_u256(uint8_t* vo, struct const_buffer* buf)
 {
     return deser_bytes(vo, buf, 32);
 }
 
+
+/**
+ * @brief This function deserializes a variable number
+ * of bytes from a const_buffer into an variable length
+ * unsigned integer. Only the minimum bytes needed to 
+ * preserve its value are deserialized.
+ * 
+ * @param lo The pointer to the uint32_t object to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if bytes were deserialized successfully, 0 otherwise.
+ */
 int deser_varlen(uint32_t* lo, struct const_buffer* buf)
 {
     uint32_t len;
@@ -202,6 +396,23 @@ int deser_varlen(uint32_t* lo, struct const_buffer* buf)
     return true;
 }
 
+
+/**
+ * @brief This function reads the first byte of the file
+ * as an indicator of how many bytes to deserialize. If 
+ * it is 253, read a 16-bit unsigned integer from the file.
+ * If it is 254, read a 32-bit unsigned integer from the 
+ * file. If it is 255, read a 64-bit unsigned integer from
+ * the file. If it is not a special value, the length is 
+ * set to the value of this byte.
+ * 
+ * @param lo The length of the unsigned integer read from the file.
+ * @param file The file which contains the bytes to deserialize from.
+ * @param rawdata The buffer to be parsed.
+ * @param buflen_inout The number of total bytes read from the file, including the first byte.
+ * 
+ * @return 1 if file is read successfully, 0 otherwise. 
+ */
 int deser_varlen_file(uint32_t* lo, FILE* file, uint8_t* rawdata, size_t* buflen_inout)
 {
     uint32_t len;
@@ -258,6 +469,16 @@ int deser_varlen_file(uint32_t* lo, FILE* file, uint8_t* rawdata, size_t* buflen
 }
 
 
+/**
+ * @brief This function deserializes maxlen bytes from
+ * a const_buffer into a string object.
+ * 
+ * @param so The string to deserialize into.
+ * @param buf The pointer to the const_buffer to deserialize from.
+ * @param maxlen The maximum number of bytes to deserialize.
+ * 
+ * @return 1 if deserialized successfully, 0 otherwise.
+ */
 int deser_str(char* so, struct const_buffer* buf, size_t maxlen)
 {
     uint32_t len;
@@ -290,6 +511,16 @@ int deser_str(char* so, struct const_buffer* buf, size_t maxlen)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes a variable length
+ * string 
+ * 
+ * @param so The pointer to the pointer to the cstring to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if string deserialized successfully, 0 otherwise. 
+ */
 int deser_varstr(cstring** so, struct const_buffer* buf)
 {
     uint32_t len;
@@ -320,6 +551,16 @@ int deser_varstr(cstring** so, struct const_buffer* buf)
     return true;
 }
 
+
+/**
+ * @brief This function deserializes 8 bytes from a
+ * const_buffer into an int64_t object.
+ * 
+ * @param vo The pointer to the int64_t object to deserialize into.
+ * @param buf The const_buffer to deserialize from.
+ * 
+ * @return 1 if bytes were deserialized correctly, 0 otherwise.
+ */
 int deser_s64(int64_t* vo, struct const_buffer* buf)
 {
     return deser_u64((uint64_t*)vo, buf);
