@@ -27,6 +27,7 @@
 
 #include <assert.h>
 
+#include <dogecoin/crypto/base58.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/transaction.h>
 #include <dogecoin/utils.h>
@@ -108,7 +109,7 @@ char* add_output(int txindex, char* destinationaddress, uint64_t amount) {
     if (!dogecoin_tx_add_address_out(tx->transaction, chain, (uint64_t)amount, destinationaddress)) return false;
 }
 
-char* make_change(int txindex, char* prvkey_wif, char* destinationaddress, float subtractedfee, uint64_t amount) {
+char* make_change(int txindex, char* public_key_hex, char* destinationaddress, float subtractedfee, uint64_t amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -118,23 +119,20 @@ char* make_change(int txindex, char* prvkey_wif, char* destinationaddress, float
     // determine intended network by checking address prefix:
     const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
-    // instantiate private key
-    dogecoin_key key;
-
-    // initialize empty key
-    dogecoin_privkey_init(&key);
-
-    // decode privkey_wif into our empty private key object
-    dogecoin_privkey_decode_wif(prvkey_wif, chain, &key);
+    size_t sizeout = 33; // public hexadecimal keys are 66 characters long (divided by 2 for byte size)
 
     // generate pubkey for signing tx
     dogecoin_pubkey pubkeytx;
+
     // initalize public key object
     dogecoin_pubkey_init(&pubkeytx);
     pubkeytx.compressed = true;
 
-    // populate pubkey hash using private key with decoded wif
-    dogecoin_pubkey_from_key(&key, &pubkeytx);
+    // convert our public key hex to byte array:
+    uint8_t* pubkeydat = utils_hex_to_uint8(public_key_hex);
+
+    // copy byte array pubkeydat to dogecoin_pubkey.pubkey:
+    memcpy(&pubkeytx.pubkey, pubkeydat, sizeout);
 
     // calculate total minus fees
     uint64_t total_change_back = (uint64_t)amount - (uint64_t)subtractedfee;
@@ -151,6 +149,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
     // guard against null pointer exceptions
     if (tx == NULL) return false;
 
+    // determine intended network by checking address prefix:
+    const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
+
     // calculate total minus fees
     uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee; // - subtractedfee;
 
@@ -162,6 +163,8 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
         dogecoin_tx_out* tx_out;
         tx_out = vector_idx(tx->transaction->vout, i);
         tx_out_total += tx_out->value;
+        char* script_pubkey_hex = utils_uint8_to_hex(tx_out->script_pubkey->str, tx_out->script_pubkey->len);
+        printf("tx_out: %s\n", script_pubkey_hex);
     }
 
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:

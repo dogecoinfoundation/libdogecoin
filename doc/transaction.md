@@ -111,19 +111,29 @@ typedef struct dogecoin_tx_out_ {
 
 #### Essential APIs
 
-The High level 'essential' API provided by Libdogecoin for working with Simple 
-Transactions are found in `include/dogecoin/transactions.h` and are:
+The high level 'essential' API provided by libdogecoin for working with simple 
+transactions revolve around a structure defined as a `working_transaction` which is comprised of an index as an integer meant for retrieval, a dogecoin_tx 'transaction' structure as seen above and finally a UT_hash_handle which stores our working_transaction struct in a hash table (using Troy D. Hansons uthash library: see ./contrib/uthash/uthash.h and visit https://troydhanson.github.io/uthash/ for more information) to allow us to generate multiple transactions per "session":
+```
+typedef struct working_transaction {
+    int index;
+    dogecoin_tx* transaction;
+    UT_hash_handle hh;
+} working_transaction;
+```
+
+The functions that have been built around this `working_transaction` structure and flow of operation are comprised of 4 macros used to interact with uthash with the remaining 8 used to interact with a `working_transaction` structure and are found in `include/dogecoin/transactions.h` and `src/transactions.c`. Please look below for descriptions and use cases for each:
 
 **function:**
 
-`function()`
+`working_transaction* new_transaction()`
 
-This function will
+This function instantiates a new working_transaction structure for use. It allocates memory using dogecoin_calloc, auto increments the index, instantiates a new dogecoin_tx structure, adds the working_transaction and index to a hash table and finally returns the working_transaction structure itself to the caller.
 
+This function is designed to be 'under the hood' and obfuscated from the end user as you will see in the 'high level' functions later on.
 
 _C usage:_
 ```C
-
+working_transaction* transaction = new_transaction();
 ```
 
 _Python usage:_
@@ -133,15 +143,16 @@ _Python usage:_
 
 ---
 
-**function**
+**add_transaction**
 
-``
+`void add_transaction(int index, working_transaction *transaction)`
 
-This function...
+This function adds a working_transaction and unique index to a hash table for retrieval.
 
 _C usage:_
 ```C
-// TODO
+working_transaction* working_tx;
+add_transaction(working_tx->index, working_tx);
 ```
 
 _Python usage:_
@@ -152,8 +163,166 @@ _Python usage:_
 
 ---
 
+**find_transaction**
 
-#### The Details
+`working_transaction* find_transaction(int index)`
 
+This function adds a working_transaction and unique index to a hash table for retrieval.
 
-----
+_C usage:_
+```C
+working_transaction* working_tx = find_transaction(1);
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**remove_transaction**
+
+`void remove_transaction(working_transaction *transaction)`
+
+This function deletes a working_transaction from our hash table.
+
+_C usage:_
+```C
+working_transaction* working_tx = find_transaction(1);
+remove_transaction(working_tx);
+```
+
+_Python usage:_
+
+```py
+
+```
+
+### --- high level functions -------------------------------- 
+
+**start_transaction**
+
+`int start_transaction()`
+
+This function instantiates a new working_transaction structure using `new_transaction()` as seen above and returns its index for future retrieval as an integer.
+
+_C usage:_
+```C
+int index = start_transaction()
+working_transaction* working_tx = find_transaction(index);
+remove_transaction(working_tx);
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**add_utxo**
+
+`int add_utxo(int txindex, char* hex_utxo_txid, int vout)`
+
+This function takes in a working_transaction structures index as an integer (txindex), a raw hexadecimal transaction identifier as a char array (hex_utxo_txid) and an index representative of the previous transactions output index that will be spent as a transaction input (vout) and adds it to a working_transaction structure.
+
+_C usage:_
+```C
+int working_transaction_index = start_transaction();
+
+...
+
+char* previous_output_txid = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
+
+int previous_output_n = 1;
+
+if (!add_utxo(working_transaction_index, previous_output_txid, previous_output_n)) {
+  // handle failure, return false; or printf("failure\n"); etc...
+}
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**add_output**
+
+`char* add_output(int txindex, char* destinationaddress, uint64_t amount)`
+
+This function takes in a working_transaction structures index as an integer (txindex) for retrieval, the destination p2pkh address (destinationaddress) as a char array and the amount (amount) formatted as koinu (multiplied by 100 million) to send as a transaction output. This will be added to the working_transaction->transaction->vout parameter.
+
+_C usage:_
+```C
+int working_transaction_index = start_transaction();
+
+...
+
+char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+
+add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**make_change**
+
+`char* make_change(int txindex, char* public_key_hex, char* destinationaddress, float subtractedfee, uint64_t amount)`
+
+This function takes in a working_transaction structures index as an integer (txindex), the public key used to derive the destination address in hexadecimal format, the desired fee to send the transaction and the amount we want in change. The fee will automatically be subtracted from the amount provided. This will be added to the working_transaction->transaction->vout parameter.
+
+_C usage:_
+```C
+int working_transaction_index = start_transaction();
+
+...
+
+char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+
+add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**finalize_transaction**
+
+`char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification)`
+
+This function takes in a working_transaction structures index as an integer (txindex), the public key used to derive the destination address in hexadecimal format, the desired fee to send the transaction and the amount we want in change. The fee will automatically be subtracted from the amount provided. This will be added to the working_transaction->transaction->vout parameter.
+
+_C usage:_
+```C
+int working_transaction_index = start_transaction();
+
+...
+
+char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+
+add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---

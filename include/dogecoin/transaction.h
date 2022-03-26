@@ -41,8 +41,6 @@ typedef struct working_transaction {
     UT_hash_handle hh;
 } working_transaction;
 
-typedef struct working_transaction working_transactions[1000];
-
 // instantiates a new transaction
 LIBDOGECOIN_API working_transaction* new_transaction();
 
