@@ -333,3 +333,82 @@ _Python usage:_
 ```
 
 ---
+
+**get_raw_transaction**
+
+`char* get_raw_transaction(int txindex)`
+
+This function takes in a working_transaction structures index as an integer (txindex)and returns the current working_transaction in raw hexadecimal format.
+
+_C usage:_
+```C
+char* raw_hexadecimal_transaction;
+raw_hexadecimal_transaction = get_raw_transaction(1);
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**clear_transaction**
+
+`void clear_transaction(int txindex)`
+
+This function takes in a working_transaction structures index as an integer (txindex), retreives it and passes into a working_transaction structure, checks to see if working_transaction->transaction->vin and working_transaction->transaction->vout exist and if so, free them using vector_free, then free the working_transaction->transaction and finally removes the working_transaction itself from our hashmap.  
+
+_C usage:_
+```C
+int working_transaction_index = start_transaction();
+
+...
+
+clear_transaction(working_transaction_index);
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
+
+**sign_raw_transaction**
+
+`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)`
+
+This function takes in an inputs index which is representative of the previous transaction outputs index we are spending, the finalized raw hexadecimal transaction, the script hash in hexadecimal format, the signature hash type, the amount of the input we are spending and a private key in wif format and signs the transaction.
+
+_C usage:_
+```C
+char* private_key_wif = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy";
+
+...
+
+char* utxo_scriptpubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
+
+...
+
+int working_transaction_index = start_transaction();
+
+...
+
+raw_hexadecimal_transaction = get_raw_transaction(1);
+raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000);
+
+...
+
+sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 200000000, private_key_wif);
+```
+
+_Python usage:_
+
+```py
+
+```
+
+---
