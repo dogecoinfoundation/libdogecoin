@@ -129,7 +129,7 @@ void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
 
 /**
  * @brief This function generates a private and public
- * keypair along with chain_code for a heirarchical 
+ * keypair along with chain_code for a hierarchical 
  * deterministic wallet. This is derived from a seed 
  * which usually consists of 12 random mnemonic words.
  * 

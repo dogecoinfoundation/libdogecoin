@@ -695,7 +695,7 @@ void dogecoin_tx_sequence_hash(const dogecoin_tx* tx, uint256 hash)
 
 
 /**
- * @brief This function perforsm a double SHA256 hash
+ * @brief This function perform a double SHA256 hash
  * on the serialized outputs of a given transaction.
  * 
  * @param tx The pointer to the transaction whose outputs will be hashed.
@@ -1271,7 +1271,7 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
         // signal witness by emtpying script sig (may be already empty)
         cstr_resize(tx_in->script_sig, 0);
         if (witness_set_scriptsig) {
-            // apend the script sig in case of P2SH-P2WPKH
+            // append the script sig in case of P2SH-P2WPKH
             cstr_append_cstr(tx_in->script_sig, witness_set_scriptsig);
             cstr_free(witness_set_scriptsig, true);
         }

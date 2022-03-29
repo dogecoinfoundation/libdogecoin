@@ -112,7 +112,7 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
 /**
  * @brief This function will populate provided private/public char*
  * variables with a freshly generated master key pair for a
- * heirarchical deterministic wallet, specifically for the network
+ * hierarchical deterministic wallet, specifically for the network
  * specified by the third parameter.
  * 
  * @param wif_privkey_master 
@@ -249,7 +249,7 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
 /**
  * @brief This function will populate provided private/public char*
  * variables with a freshly generated master key pair for a
- * heirarchical deterministic wallet, specifically for the network
+ * hierarchical deterministic wallet, specifically for the network
  * specified by the third parameter.
  * 
  * @param wif_privkey_master 
