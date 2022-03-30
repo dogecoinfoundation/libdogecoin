@@ -104,6 +104,9 @@ int add_output(int txindex, char* destinationaddress, uint64_t amount) {
     if (tx == NULL) return false;
     // determine intended network by checking address prefix:
     const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
+
+    amount = coins_to_koinu(amount);
+
     // calculate total minus fees
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:
     if (!dogecoin_tx_add_address_out(tx->transaction, chain, (uint64_t)amount, destinationaddress)) return false;
@@ -152,6 +155,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
 
     // determine intended network by checking address prefix:
     int is_testnet = chain_from_b58_prefix_bool(destinationaddress);
+
+    subtractedfee = coins_to_koinu(subtractedfee);
+    out_dogeamount_for_verification = coins_to_koinu(out_dogeamount_for_verification);
 
     // calculate total minus desired fees
     uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee; // - subtractedfee;
@@ -276,6 +282,9 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
     uint256 sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
+    
+    amount = coins_to_koinu(amount);
+
     dogecoin_tx_sighash(txtmp, script, inputindex, sighashtype, amount, SIGVERSION_BASE, sighash);
 
     char *hex = utils_uint8_to_hex(sighash, 32);

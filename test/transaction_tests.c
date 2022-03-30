@@ -85,18 +85,18 @@ void test_transaction()
     add_utxo(1, utxo_txid_from_tx_worth_10_dogecoin, utxo_previous_output_index_from_tx_worth_10_dogecoin);
 
     // add output to transaction which is amount and address we are sending to:
-    add_output(working_transaction_index, external_p2pkh_address, 500000000);
+    add_output(working_transaction_index, external_p2pkh_address, 5);
 
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
-    raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000, public_key_hex);
+    raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, .00226, 12, public_key_hex);
 
     // assert complete raw hexadecimal transaction is equal to expected our_unsigned_hexadecimal_transaction
     u_assert_str_eq(raw_hexadecimal_transaction, our_unsigned_hexadecimal_transaction);
     
     // sign current working transaction input index 0 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 2 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    u_assert_int_eq(sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 200000000, private_key_wif), 1);
+    u_assert_int_eq(sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 2, private_key_wif), 1);
 
     // assert that our hexadecimal buffer (raw_hexadecimal_transaction) is equal to the expected transaction
     // with the first input signed:
@@ -104,7 +104,7 @@ void test_transaction()
 
     // sign current working transaction input index 1 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 10 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 1000000000, private_key_wif), 1);
+    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10, private_key_wif), 1);
 
     // assert that our hexadecimal bufer (raw_hexadecimal_transaction) is equal to the expected finalized
     // transaction with both inputs signed:
