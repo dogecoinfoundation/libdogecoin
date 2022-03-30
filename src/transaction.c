@@ -42,11 +42,11 @@ working_transaction* new_transaction() {
     working_tx = dogecoin_calloc(1, sizeof(*working_tx));
     working_tx->index++;
     working_tx->transaction = dogecoin_tx_new();
-    add_transaction(working_tx->index, working_tx);
+    add_transaction(working_tx);
     return working_tx;
 }
 
-void add_transaction(int index, working_transaction *transaction) {
+void add_transaction(working_transaction *transaction) {
     HASH_ADD_INT(transactions, index, transaction);
 }
 
@@ -65,7 +65,7 @@ void remove_transaction(working_transaction *transaction) {
 // #returns an index of a transaction to build in memory.  (1, 2, etc) .. 
 int start_transaction() {
     working_transaction* transaction = new_transaction();
-    add_transaction(transaction->index, transaction);
+    add_transaction(transaction);
     return transaction->index;
 }
 
@@ -97,7 +97,7 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     return flag + 1 == (int)tx->transaction->vin->len;
 }
 
-char* add_output(int txindex, char* destinationaddress, uint64_t amount) {
+int add_output(int txindex, char* destinationaddress, uint64_t amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
     // guard against null pointer exceptions
@@ -107,17 +107,15 @@ char* add_output(int txindex, char* destinationaddress, uint64_t amount) {
     // calculate total minus fees
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:
     if (!dogecoin_tx_add_address_out(tx->transaction, chain, (uint64_t)amount, destinationaddress)) return false;
+    return true;
 }
 
-char* make_change(int txindex, char* public_key_hex, char* destinationaddress, float subtractedfee, uint64_t amount) {
+int make_change(int txindex, char* public_key_hex, float subtractedfee, uint64_t amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
     // guard against null pointer exceptions
     if (tx == NULL) return false;
-
-    // determine intended network by checking address prefix:
-    const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
     size_t sizeout = 33; // public hexadecimal keys are 66 characters long (divided by 2 for byte size)
 
@@ -137,12 +135,15 @@ char* make_change(int txindex, char* public_key_hex, char* destinationaddress, f
     // calculate total minus fees
     uint64_t total_change_back = (uint64_t)amount - (uint64_t)subtractedfee;
 
-    dogecoin_tx_add_p2pkh_out(tx->transaction, total_change_back, &pubkeytx);
+    if (!dogecoin_tx_add_p2pkh_out(tx->transaction, total_change_back, &pubkeytx)) {
+        return false;
+    }
+    return true;
 }
 
 // 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
 // out_dogeamount == just an echoback of the total amount specified in the addutxos for verification
-char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification) {
+char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* public_key_hex) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -150,17 +151,16 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
     if (tx == NULL) return false;
 
     // determine intended network by checking address prefix:
-    const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
     int is_testnet = chain_from_b58_prefix_bool(destinationaddress);
 
-    // calculate total minus fees
+    // calculate total minus desired fees
     uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee; // - subtractedfee;
 
     int i, p2pkh_count = 0;
     uint64_t tx_out_total = 0;
 
     // iterate through transaction output values while adding each one to tx_out_total:
-    for (i = 0; i < tx->transaction->vout->len; i++) {
+    for (i = 0; i < (int)tx->transaction->vout->len; i++) {
         dogecoin_tx_out* tx_out;
         dogecoin_tx_out* copy = dogecoin_tx_out_new();
         tx_out = vector_idx(tx->transaction->vout, i);
@@ -168,11 +168,15 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
         tx_out_total += tx_out->value;
         size_t len = 128;
         char* p2pkh[len];
-        
         dogecoin_script_hash_to_p2pkh(vector_idx(tx->transaction->vout, i), p2pkh, is_testnet);
-        printf("p2pkh: %s\n", p2pkh);
-        printf("p2pkh: %s\n", destinationaddress);
         if (memcmp(p2pkh, destinationaddress, sizeof(destinationaddress)) == 0) p2pkh_count++;
+        if (i == (int)tx->transaction->vout->len - 1 && public_key_hex) {
+            // manually make change and send back to our public key address
+            make_change(txindex, public_key_hex, subtractedfee, out_dogeamount_for_verification - tx_out_total);
+            dogecoin_tx_out* tx_out = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
+            tx_out_total += tx_out->value;
+            break;
+        }
     }
 
     if (p2pkh_count != 1) {

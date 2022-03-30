@@ -116,7 +116,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_tx_has_witness(const dogecoin_tx* tx);
 enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_UNKNOWN = 0,
     DOGECOIN_SIGN_INVALID_KEY = -2,
-    DOGECOIN_SIGN_NO_KEY_MATCH = -3, //if the key found in the script doesn't match the given key, will sign anyways
+    DOGECOIN_SIGN_NO_KEY_MATCH = -3, // if the key found in the script doesn't match the given key, will sign anyways
     DOGECOIN_SIGN_SIGHASH_FAILED = -4,
     DOGECOIN_SIGN_UNKNOWN_SCRIPT_TYPE = -5,
     DOGECOIN_SIGN_INVALID_TX_OR_SCRIPT = -6,

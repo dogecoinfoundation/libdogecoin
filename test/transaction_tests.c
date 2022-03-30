@@ -86,18 +86,13 @@ void test_transaction()
 
     // add output to transaction which is amount and address we are sending to:
     add_output(working_transaction_index, external_p2pkh_address, 500000000);
-    // manually make change and send back to public key address
-    make_change(working_transaction_index, public_key_hex, external_p2pkh_address, 226000, 700000000);
-
-    // get updated raw hexadecimal transaction
-    raw_hexadecimal_transaction = get_raw_transaction(1);
-
-    // assert complete raw hexadecimal transaction is equal to expected our_unsigned_hexadecimal_transaction
-    u_assert_str_eq(raw_hexadecimal_transaction, our_unsigned_hexadecimal_transaction);
 
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
-    raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000);
+    raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000, public_key_hex);
+
+    // assert complete raw hexadecimal transaction is equal to expected our_unsigned_hexadecimal_transaction
+    u_assert_str_eq(raw_hexadecimal_transaction, our_unsigned_hexadecimal_transaction);
     
     // sign current working transaction input index 0 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 2 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format

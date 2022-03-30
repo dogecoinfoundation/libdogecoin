@@ -431,13 +431,12 @@ uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2)
     return returnedarray;
 }
 
-int koinu_to_decimal(uint64_t koinu) {
-    return !koinu ? 0 : koinu / 100000000;
+float koinu_to_coins(uint64_t koinu) {
+    return !koinu ? 0 : (float)koinu / (float)100000000;
 }
 
-// TODO: handle decimal points (.001 * 1 etc)
-uint64_t decimal_to_koinu(int decimal) {
-    return !decimal ? 0 : (decimal * 1000000000) / 10;
+uint64_t coins_to_koinu(float decimal) {
+    return !decimal ? 0 : decimal;
 }
 
 void print_bits(size_t const size, void const* ptr)

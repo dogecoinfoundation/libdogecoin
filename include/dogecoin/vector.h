@@ -41,6 +41,8 @@ typedef struct vector {
     void (*elem_free_f)(void*);
 } vector;
 
+#define vector_idx(vec, idx) vec->data[idx]
+
 LIBDOGECOIN_API vector* vector_new(size_t res, void (*free_f)(void*));
 LIBDOGECOIN_API void vector_free(vector* vec, dogecoin_bool free_array);
 
@@ -51,8 +53,6 @@ LIBDOGECOIN_API void vector_remove_range(vector* vec, size_t idx, size_t len);
 LIBDOGECOIN_API dogecoin_bool vector_resize(vector* vec, size_t newsz);
 
 LIBDOGECOIN_API ssize_t vector_find(vector* vec, void* data);
-
-#define vector_idx(vec, idx) ((vec)->data[(idx)])
 
 LIBDOGECOIN_END_DECL
 
