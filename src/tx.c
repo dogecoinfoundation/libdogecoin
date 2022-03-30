@@ -234,7 +234,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     uint8_t* stripped_array[copy->script_pubkey->len];
     // loop through 20 bytes of the script hash while stripping op codes
     // and copy from index 2 to 21 after prefixing with version
-    // from chainparams (TODO):
+    // from chainparams:
     for (; length < copy->script_pubkey->len - 4; length++) {
         switch (copy->script_pubkey->str[length]) {
             case OP_DUP:
