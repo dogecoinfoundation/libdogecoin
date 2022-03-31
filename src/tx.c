@@ -273,10 +273,10 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
         return false;
     }
     
-    printf("doublesha:         %s\n", utils_uint8_to_hex(d1, sizeof(d1)));
-    printf("checksum:          %s\n", utils_uint8_to_hex(checksum, sizeof(checksum)));
-    printf("unencoded_address: %s\n", utils_uint8_to_hex(unencoded_address, sizeof(unencoded_address)));
-    printf("scripthash2p2pkh:  %s\n", script_hash_to_p2pkh);
+    debug_print("doublesha:         %s\n", utils_uint8_to_hex(d1, sizeof(d1)));
+    debug_print("checksum:          %s\n", utils_uint8_to_hex(checksum, sizeof(checksum)));
+    debug_print("unencoded_address: %s\n", utils_uint8_to_hex(unencoded_address, sizeof(unencoded_address)));
+    debug_print("scripthash2p2pkh:  %s\n", script_hash_to_p2pkh);
     
     // copy to out variable p2pkh, free tx_out copy and return true:
     memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh));

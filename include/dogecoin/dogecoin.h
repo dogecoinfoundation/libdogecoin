@@ -72,6 +72,13 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 typedef SSIZE_T ssize_t;
 #endif
 
+#define DEBUG 0
+#ifdef DEBUG
+#define debug_print(fmt, ...) \
+        do { if (DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__); } while (0)
+#endif
+
 #define DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH 65
 #define DOGECOIN_ECKEY_COMPRESSED_LENGTH 33
 #define DOGECOIN_ECKEY_PKEY_LENGTH 32

@@ -290,11 +290,11 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     utils_reverse_hex(hex, 64);
 
     enum dogecoin_tx_out_type type = dogecoin_script_classify(script, NULL);
-    printf("script: %s\n", scripthex);
-    printf("script-type: %s\n", dogecoin_tx_out_type_to_str(type));
-    printf("inputindex: %d\n", inputindex);
-    printf("sighashtype: %d\n", sighashtype);
-    printf("hash: %s\n", hex);
+    debug_print("script: %s\n", scripthex);
+    debug_print("script-type: %s\n", dogecoin_tx_out_type_to_str(type));
+    debug_print("inputindex: %d\n", inputindex);
+    debug_print("sighashtype: %d\n", sighashtype);
+    debug_print("hash: %s\n", hex);
     // sign
     dogecoin_bool sign = false;
     dogecoin_key key;
@@ -328,9 +328,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         dogecoin_mem_zero(sigderhex, sizeof(sigderhex));
         utils_bin_to_hex((unsigned char *)sigder_plus_hashtype, sigderlen, sigderhex);
 
-        printf("\nSignature created:\n");
-        printf("signature compact: %s\n", sigcompacthex);
-        printf("signature DER (+hashtype): %s\n", sigderhex);
+        debug_print("\nSignature created:\nsignature compact: %s\n", sigcompacthex);
+        debug_print("signature DER (+hashtype): %s\n", sigderhex);
 
         cstring* signed_tx = cstr_new_sz(1024);
         dogecoin_tx_serialize(signed_tx, txtmp, false);
@@ -338,7 +337,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         char signed_tx_hex[signed_tx->len*2+1];
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
         memcpy(incomingrawtx, signed_tx_hex, sizeof(signed_tx_hex));
-        printf("signed TX: %s\n", incomingrawtx);
+        debug_print("signed TX: %s\n", incomingrawtx);
         cstr_free(signed_tx, true);
     }
     return true;
