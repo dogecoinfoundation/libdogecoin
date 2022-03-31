@@ -52,7 +52,7 @@ LIBDOGECOIN_API void* safe_malloc(size_t size);
 LIBDOGECOIN_API void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len);
 LIBDOGECOIN_API void dogecoin_get_default_datadir(cstring* path_out);
 LIBDOGECOIN_API void dogecoin_file_commit(FILE* file);
-LIBDOGECOIN_API float koinu_to_coins(uint64_t koinu);
+LIBDOGECOIN_API double koinu_to_coins(uint64_t koinu);
 LIBDOGECOIN_API uint64_t coins_to_koinu(float decimal);
 LIBDOGECOIN_API uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2);
 LIBDOGECOIN_API void print_bits(size_t const size, void const* ptr);

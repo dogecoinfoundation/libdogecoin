@@ -431,12 +431,12 @@ uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2)
     return returnedarray;
 }
 
-float koinu_to_coins(uint64_t koinu) {
-    return (float)koinu / (float)100000000;
+double koinu_to_coins(uint64_t koinu) {
+    return (double)koinu / (double)100000000;
 }
 
 uint64_t coins_to_koinu(float coins) {
-    return ((float)coins * (float)1000000000) / 10;
+    return ((float)coins * (float)100000000);
 }
 
 void print_bits(size_t const size, void const* ptr)

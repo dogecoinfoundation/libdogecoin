@@ -189,7 +189,9 @@ void test_transaction()
     //       "value": 227889.99548000,
     //       "n": 0,
             tx_out = vector_idx(tx_worth_10->vout, 0);
-            // u_assert_uint32_eq(koinu_to_coins(tx_out->value), 227889.99548000); // TODO fix rounding in koinu_to_coinbase
+            printf("koinu_to_coins: %f\n", koinu_to_coins(tx_out->value));
+            printf("koinu_to_coins: %f\n", 227889.99548000);
+            u_assert_uint32_eq(koinu_to_coins(tx_out->value), 227889.99548000);
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 1476c35e582eb198e1a28c455005a70c68695868 OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a9141476c35e582eb198e1a28c455005a70c6869586888ac",
