@@ -230,8 +230,8 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     dogecoin_tx_out* copy = dogecoin_tx_out_new();
     dogecoin_tx_out_copy(copy, txout);
     size_t length = 2;
-
-    uint8_t* stripped_array[copy->script_pubkey->len];
+    uint8_t* stripped_array[txout->script_pubkey->len];
+    dogecoin_mem_zero(stripped_array, sizeof(stripped_array));
     // loop through 20 bytes of the script hash while stripping op codes
     // and copy from index 2 to 21 after prefixing with version
     // from chainparams:
@@ -1105,7 +1105,7 @@ dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainp
 {
     const size_t buflen = sizeof(uint8_t) * strlen(address) * 2;
     /* Allocating memory for the buffer. */
-    uint8_t* buf = (uint8_t*)dogecoin_calloc(1, buflen);
+    uint8_t* buf = dogecoin_calloc(1, buflen);
     /* Decoding the address into a buffer. */
     int r = dogecoin_base58_decode_check(address, buf, buflen);
     if (r > 0 && buf[0] == chain->b58prefix_pubkey_address) {

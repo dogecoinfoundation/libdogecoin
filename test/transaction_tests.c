@@ -14,6 +14,7 @@
 
 #include <dogecoin/address.h>
 #include <dogecoin/buffer.h>
+#include <dogecoin/crypto/key.h>
 #include <dogecoin/transaction.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
@@ -49,8 +50,9 @@ void test_transaction()
     // convert raw_hexadecimal_transaction_from_tx_worth_2_dogecoin to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin, data_bin_2, strlen(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin), &outlength_2);
 
-    if (!dogecoin_tx_deserialize(data_bin_2, outlength_2, tx_worth_2, NULL, true)) {
+    if (!dogecoin_tx_deserialize(data_bin_2, outlength_2, tx_worth_2, NULL, false)) {
         // free dogecoin_tx
+        printf("deserializing tx_worth_2 failed\n");
         dogecoin_tx_free(tx_worth_2);
     }
     // free byte array
@@ -71,26 +73,25 @@ void test_transaction()
         u_assert_int_eq(1, tx_worth_2->version);
     //   "locktime": 3669654,
         u_assert_int_eq(3669654, tx_worth_2->locktime);
-        dogecoin_tx_in* tx_in = vector_idx(tx_worth_2->vin, 0);
+        dogecoin_tx_in* tx_in_2 = vector_idx(tx_worth_2->vin, 0);
     //   "vin": [
     //     {
-            char* reversed_txid = utils_uint8_to_hex(tx_in->prevout.hash, sizeof(tx_in->prevout.hash));
+            char* reversed_txid = utils_uint8_to_hex(tx_in_2->prevout.hash, sizeof(tx_in_2->prevout.hash));
             utils_reverse_hex(reversed_txid, 64);
     //       "txid": "dfba4a6b48e4c3bde946d67cf1ee6aa186a379cb340ba64e9c4826ea76a098e2",
             u_assert_str_eq("dfba4a6b48e4c3bde946d67cf1ee6aa186a379cb340ba64e9c4826ea76a098e2", reversed_txid);
     //       "vout": 1,
-            u_assert_int_eq(1, tx_in->prevout.n);
+            u_assert_int_eq(1, tx_in_2->prevout.n);
     //       "scriptSig": {
     //         "asm": "3042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0[ALL] 02ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14",
     //         "hex": "453042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0012102ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14"
-                u_assert_str_eq("453042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0012102ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14", utils_uint8_to_hex((const uint8_t *)tx_in->script_sig->str, tx_in->script_sig->len));
+                u_assert_str_eq("453042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0012102ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14", utils_uint8_to_hex((const uint8_t *)tx_in_2->script_sig->str, tx_in_2->script_sig->len));
     //       },
     //       "sequence": 4294967294
             uint8_t* sequence = (uint8_t *)4294967294;
-            u_assert_str_eq(utils_uint8_to_hex((const uint8_t *)&sequence, strlen((const char *)(const uint8_t *)&sequence)), utils_uint8_to_hex((const uint8_t *)&tx_in->sequence, strlen((const char *)(const uint8_t *)&tx_in->sequence)));
+            u_assert_str_eq(utils_uint8_to_hex((const uint8_t *)&sequence, strlen((const char *)(const uint8_t *)&sequence)), utils_uint8_to_hex((const uint8_t *)&tx_in_2->sequence, strlen((const char *)(const uint8_t *)&tx_in_2->sequence)));
     //     }
     //   ],
-        dogecoin_tx_in_free(tx_in);
     //   "vout": [
     //     {
     //       "value": 5885.98644000,
@@ -126,6 +127,7 @@ void test_transaction()
     //       }
     //     }
     //   ],
+        dogecoin_tx_free(tx_worth_2);
     //   "blockhash": "69960ffcd0194ee7578c9ad49d89aef1eb2074bbbceb201344c386462d53344f",
     //   "confirmations": 25192,
     //   "time": 1647548015,
@@ -139,12 +141,12 @@ void test_transaction()
     int utxo_previous_output_index_from_tx_worth_10_dogecoin = 1;
 
     dogecoin_tx* tx_worth_10 = dogecoin_tx_new();
-    uint8_t* data_bin_10 = dogecoin_malloc(strlen(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin) / 2 + 1);
+    uint8_t* data_bin_10 = dogecoin_malloc(strlen(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin));
     int outlength_10 = 0;
 
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin, data_bin_10, strlen(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin), &outlength_10);
-    if (!dogecoin_tx_deserialize(data_bin_10, outlength_10, tx_worth_10, NULL, true)) {
+    if (!dogecoin_tx_deserialize(data_bin_10, outlength_10, tx_worth_10, NULL, false)) {
         // free dogecoin_tx
         dogecoin_tx_free(tx_worth_10);
     }
@@ -165,35 +167,34 @@ void test_transaction()
     //   "locktime": 3669653,
         u_assert_int_eq(3669653, tx_worth_10->locktime);
     //   "vin": [
-        tx_in = vector_idx(tx_worth_10->vin, 0);
+        dogecoin_tx_in* tx_in_10 = vector_idx(tx_worth_10->vin, 0);
     //     {    
-            reversed_txid = utils_uint8_to_hex(tx_in->prevout.hash, sizeof(tx_in->prevout.hash));
+            reversed_txid = utils_uint8_to_hex(tx_in_10->prevout.hash, sizeof(tx_in_10->prevout.hash));
             utils_reverse_hex(reversed_txid, 64);
     //       "txid": "76c6c28a87a3b378c5b41dddd727f2ba7e586a1db9415608442223cae87b551b",
             u_assert_str_eq("76c6c28a87a3b378c5b41dddd727f2ba7e586a1db9415608442223cae87b551b", reversed_txid);
     //       "vout": 1,
-            u_assert_int_eq(1, tx_in->prevout.n);
+            u_assert_int_eq(1, tx_in_10->prevout.n);
     //       "scriptSig": {
     //         "asm": "30440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d7[ALL] 024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab",
     //         "hex": "4730440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d70121024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab"
-                u_assert_str_eq("4730440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d70121024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab", utils_uint8_to_hex((const uint8_t *)tx_in->script_sig->str, tx_in->script_sig->len));
+                u_assert_str_eq("4730440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d70121024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab", utils_uint8_to_hex((const uint8_t *)tx_in_10->script_sig->str, tx_in_10->script_sig->len));
     //       },
     //       "sequence": 4294967294
             sequence = (uint8_t *)4294967294;
-            u_assert_str_eq(utils_uint8_to_hex((const uint8_t *)&sequence, strlen((const char *)(const uint8_t *)&sequence)), utils_uint8_to_hex((const uint8_t *)&tx_in->sequence, strlen((const char *)(const uint8_t *)&tx_in->sequence)));
+            u_assert_str_eq(utils_uint8_to_hex((const uint8_t *)&sequence, strlen((const char *)(const uint8_t *)&sequence)), utils_uint8_to_hex((const uint8_t *)&tx_in_10->sequence, strlen((const char *)(const uint8_t *)&tx_in_10->sequence)));
     //     }
     //   ],
-        dogecoin_tx_in_free(tx_in);
     //   "vout": [
     //     {
     //       "value": 227889.99548000,
     //       "n": 0,
-            tx_out = vector_idx(tx_worth_10->vout, 0);
-            u_assert_double_eq(koinu_to_coins(tx_out->value), 227889.99548000);
+            dogecoin_tx_out* tx_out_10 = vector_idx(tx_worth_10->vout, 0);
+            u_assert_double_eq(koinu_to_coins(tx_out_10->value), 227889.99548000);
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 1476c35e582eb198e1a28c455005a70c68695868 OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a9141476c35e582eb198e1a28c455005a70c6869586888ac",
-                u_assert_str_eq("76a9141476c35e582eb198e1a28c455005a70c6869586888ac", utils_uint8_to_hex((const uint8_t *)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                u_assert_str_eq("76a9141476c35e582eb198e1a28c455005a70c6869586888ac", utils_uint8_to_hex((const uint8_t *)tx_out_10->script_pubkey->str, tx_out_10->script_pubkey->len));
     //         "reqSigs": 1,
     //         "type": "pubkeyhash",
     //         "addresses": [
@@ -204,12 +205,12 @@ void test_transaction()
     //     {
     //       "value": 10.00000000,
     //       "n": 1,
-            tx_out = vector_idx(tx_worth_10->vout, 1);
-            u_assert_double_eq(koinu_to_coins(tx_out->value), 10.00000000);
+            tx_out_10 = vector_idx(tx_worth_10->vout, 1);
+            u_assert_double_eq(koinu_to_coins(tx_out_10->value), 10.00000000);
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac",
-                u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utils_uint8_to_hex((const uint8_t *)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utils_uint8_to_hex((const uint8_t *)tx_out_10->script_pubkey->str, tx_out_10->script_pubkey->len));
     //         "reqSigs": 1,
     //         "type": "pubkeyhash",
     //         "addresses": [
@@ -218,6 +219,7 @@ void test_transaction()
     //       }
     //     }
     //   ],
+        dogecoin_tx_free(tx_worth_10);
     //   "blockhash": "69960ffcd0194ee7578c9ad49d89aef1eb2074bbbceb201344c386462d53344f",
     //   "confirmations": 25358,
     //   "time": 1647548015,
@@ -254,28 +256,29 @@ void test_transaction()
     // validate p2pkh we will send 5 dogecoin to:
     u_assert_int_eq(verifyP2pkhAddress(external_p2pkh_address, strlen(external_p2pkh_address)), 1);
 
-
+    dogecoin_pubkey_cleanse(&pubkeytx);
     // -------------------------------- transaction generation & validation --------------------------------
 
     // instantiate a new working_transaction object by calling start_transaction()
     // which passes back index and stores in index variable
     int working_transaction_index = start_transaction();
+
     // add 1st input worth 2 dogecoin:
-    if (!add_utxo(1, utxo_txid_from_tx_worth_2_dogecoin, utxo_previous_output_index_from_tx_worth_2_dogecoin)) return;
+    u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_2_dogecoin, utxo_previous_output_index_from_tx_worth_2_dogecoin), 1);
 
     // get raw hexadecimal transaction to sign in the next steps
-    char* raw_hexadecimal_transaction = get_raw_transaction(1);
+    char* raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
 
     u_assert_str_eq(our_unsigned_single_utxo_hexadecimal_transaction, raw_hexadecimal_transaction);
 
     // add 2nd input worth 10 dogecoin:
-    if (!add_utxo(1, utxo_txid_from_tx_worth_10_dogecoin, utxo_previous_output_index_from_tx_worth_10_dogecoin)) return;
+    u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_10_dogecoin, utxo_previous_output_index_from_tx_worth_10_dogecoin), 1);
 
-    raw_hexadecimal_transaction = get_raw_transaction(1);
+    raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
     u_assert_str_eq(our_unsigned_double_utxo_hexadecimal_transaction, raw_hexadecimal_transaction);
 
     // add output to transaction which is amount and address we are sending to:
-    if (!add_output(working_transaction_index, external_p2pkh_address, 5)) return;
+    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, 5), 1);
 
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
@@ -301,5 +304,5 @@ void test_transaction()
     u_assert_str_eq(raw_hexadecimal_transaction, our_expected_signed_raw_hexadecimal_transaction);
 
     // remove working transaction object from hashmap
-    clear_transaction(working_transaction_index);
+    remove_all();
 }

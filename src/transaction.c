@@ -38,35 +38,54 @@ working_transaction *transactions = NULL;
 
 // instantiates a new transaction
 working_transaction* new_transaction() {
-    working_transaction* working_tx;
-    working_tx = dogecoin_calloc(1, sizeof(*working_tx));
-    working_tx->index++;
+    working_transaction* working_tx = (struct working_transaction*)dogecoin_calloc(1, sizeof *working_tx);
     working_tx->transaction = dogecoin_tx_new();
-    add_transaction(working_tx);
+    working_tx->idx++;
     return working_tx;
 }
 
-void add_transaction(working_transaction *transaction) {
-    HASH_ADD_INT(transactions, index, transaction);
+void add_transaction(working_transaction *working_tx) {
+    working_transaction *tx;
+    HASH_FIND_INT(transactions, &working_tx->idx, tx);
+    debug_print("%d\n", tx == NULL);
+    if (tx == NULL) {
+        HASH_ADD_INT(transactions, idx, working_tx);
+    } else {
+        HASH_REPLACE_INT(transactions, idx, tx, working_tx);
+    }
+    dogecoin_free(tx);
 }
 
-working_transaction* find_transaction(int index) {
-    working_transaction *transaction;
-    HASH_FIND_INT(transactions, &index, transaction);
-    return transaction;
+working_transaction* find_transaction(int idx) {
+    working_transaction *working_tx;
+    HASH_FIND_INT(transactions, &idx, working_tx);
+    return working_tx;
 }
 
-void remove_transaction(working_transaction *transaction) {
-    HASH_DEL(transactions, transaction);
+void remove_transaction(working_transaction *working_tx) {
+    HASH_DEL(transactions, working_tx);
+    dogecoin_free(working_tx);
+}
+
+void remove_all() {
+    struct working_transaction *current_tx;
+    struct working_transaction *tmp;
+
+    HASH_ITER(hh, transactions, current_tx, tmp) {
+        HASH_DEL(transactions, current_tx); /* delete it (transactions advances to next) */
+        dogecoin_tx_free(current_tx->transaction);
+        free(current_tx);
+    }
 }
 
 /* cli functions ********************************/
 
-// #returns an index of a transaction to build in memory.  (1, 2, etc) .. 
+// #returns an index of a transaction to build in memory.  (1, 2, etc) ..
 int start_transaction() {
-    working_transaction* transaction = new_transaction();
-    add_transaction(transaction);
-    return transaction->index;
+    working_transaction* working_tx = new_transaction();
+    int index = working_tx->idx;
+    add_transaction(working_tx);
+    return index;
 }
 
 // #returns 1 if success.
@@ -109,8 +128,7 @@ int add_output(int txindex, char* destinationaddress, uint64_t amount) {
 
     // calculate total minus fees
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:
-    if (!dogecoin_tx_add_address_out(tx->transaction, chain, (uint64_t)amount, destinationaddress)) return false;
-    return true;
+    return dogecoin_tx_add_address_out(tx->transaction, chain, (uint64_t)amount, destinationaddress);
 }
 
 int make_change(int txindex, char* public_key_hex, float subtractedfee, uint64_t amount) {
@@ -138,10 +156,7 @@ int make_change(int txindex, char* public_key_hex, float subtractedfee, uint64_t
     // calculate total minus fees
     uint64_t total_change_back = (uint64_t)amount - (uint64_t)subtractedfee;
 
-    if (!dogecoin_tx_add_p2pkh_out(tx->transaction, total_change_back, &pubkeytx)) {
-        return false;
-    }
-    return true;
+    return dogecoin_tx_add_p2pkh_out(tx->transaction, total_change_back, &pubkeytx);
 }
 
 // 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
@@ -167,20 +182,18 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
 
     // iterate through transaction output values while adding each one to tx_out_total:
     for (i = 0; i < (int)tx->transaction->vout->len; i++) {
-        dogecoin_tx_out* tx_out;
-        dogecoin_tx_out* copy = dogecoin_tx_out_new();
-        tx_out = vector_idx(tx->transaction->vout, i);
-        dogecoin_tx_out_copy(copy, tx_out);
-        tx_out_total += tx_out->value;
+        dogecoin_tx_out* tx_out_tmp = vector_idx(tx->transaction->vout, i);
+        tx_out_total += tx_out_tmp->value;
         size_t len = 128;
         char p2pkh[len];
+        dogecoin_mem_zero(p2pkh, sizeof(p2pkh));
         dogecoin_script_hash_to_p2pkh(vector_idx(tx->transaction->vout, i), p2pkh, is_testnet);
         if (memcmp(p2pkh, destinationaddress, sizeof(&destinationaddress)) == 0) p2pkh_count++;
         if (i == (int)tx->transaction->vout->len - 1 && public_key_hex) {
             // manually make change and send back to our public key address
             make_change(txindex, public_key_hex, subtractedfee, out_dogeamount_for_verification - tx_out_total);
-            dogecoin_tx_out* tx_out = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
-            tx_out_total += tx_out->value;
+            tx_out_tmp = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
+            tx_out_total += tx_out_tmp->value;
             break;
         }
     }
@@ -203,17 +216,16 @@ char* get_raw_transaction(int txindex) {
     if (tx == NULL) return false;
 
     // new allocated cstring to store hexadeicmal buffer string:
-    cstring* txser = cstr_new_sz(1024);
+    cstring* serialized_transaction = cstr_new_sz(1024);
 
     // serialize transaction object to new cstring and ignore witness:
-    dogecoin_tx_serialize(txser, tx->transaction, false);
+    dogecoin_tx_serialize(serialized_transaction, tx->transaction, false);
 
-    char* hexbuf = malloc(txser->len * 2 + 1);
+    char* hexadecimal_buffer = utils_uint8_to_hex((unsigned char*)serialized_transaction->str, serialized_transaction->len);
 
-    // convert binary cstring to hexadecimal buffer string:
-    utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf);
+    cstr_free(serialized_transaction, true);
 
-    return hexbuf;
+    return hexadecimal_buffer;
 }
 
 // clears a tx in memory. (overwrites)
@@ -229,9 +241,9 @@ void clear_transaction(int txindex) {
 
     // free transaction outputs if they exist
     if (tx->transaction->vout) vector_free(tx->transaction->vout, true);
-
+    
     // free dogecoin_tx
-    dogecoin_free(tx->transaction);
+    // dogecoin_tx_free(tx->transaction);
 
     // remote from hashmap
     remove_transaction(tx);
@@ -250,7 +262,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
-    uint8_t* data_bin = dogecoin_malloc(strlen(incomingrawtx) / 2 + 1);
+    uint8_t* data_bin = dogecoin_malloc(strlen(incomingrawtx) / 2);
     int outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(incomingrawtx, data_bin, strlen(incomingrawtx), &outlength);
@@ -274,7 +286,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     }
 
     // initialize byte array with length equal to account for byte size 
-    uint8_t script_data[strlen(scripthex) / 2 + 1];
+    uint8_t script_data[strlen(scripthex) / 2];
     // convert hex string to byte array
     utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlength);
     cstring* script = cstr_new_buf(script_data, outlength);
@@ -339,6 +351,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         memcpy(incomingrawtx, signed_tx_hex, sizeof(signed_tx_hex));
         debug_print("signed TX: %s\n", incomingrawtx);
         cstr_free(signed_tx, true);
+        dogecoin_tx_free(txtmp);
     }
     return true;
 }

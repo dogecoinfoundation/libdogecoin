@@ -36,7 +36,7 @@ LIBDOGECOIN_BEGIN_DECL
 
 /* hashmap functions */
 typedef struct working_transaction {
-    int index;
+    int idx;
     dogecoin_tx* transaction;
     UT_hash_handle hh;
 } working_transaction;
@@ -44,15 +44,17 @@ typedef struct working_transaction {
 // instantiates a new transaction
 LIBDOGECOIN_API working_transaction* new_transaction();
 
-LIBDOGECOIN_API void add_transaction(working_transaction *transaction);
+LIBDOGECOIN_API void add_transaction(working_transaction *working_tx);
 
-LIBDOGECOIN_API working_transaction* find_transaction(int index);
+LIBDOGECOIN_API working_transaction* find_transaction(int idx);
 
-LIBDOGECOIN_API void remove_transaction(working_transaction *transaction);
+LIBDOGECOIN_API void remove_transaction(working_transaction *working_tx);
+
+LIBDOGECOIN_API void remove_all();
 
 /* cli functions */
 
-LIBDOGECOIN_API int start_transaction(); // #returns  an index of a transaction to build in memory.  (1, 2, etc) ..      
+LIBDOGECOIN_API int start_transaction(); // #returns  an index of a transaction to build in memory.  (1, 2, etc) ..   
 
 LIBDOGECOIN_API int add_utxo(int txindex, char* hex_utxo_txid, int vout); // #returns 1 if success.
 
@@ -68,7 +70,7 @@ LIBDOGECOIN_API char* get_raw_transaction(int txindex); // #returns 0 if not clo
 
 LIBDOGECOIN_API void clear_transaction(int txindex); // #clears a tx in memory. (overwrites)
 
-// #sign a given inputted transaction with a given private key, and return a hex signed transaction.
+// sign a given inputted transaction with a given private key, and return a hex signed transaction.
 // we may want to add such things to 'advanced' section:
 // locktime, possibilities for multiple outputs, data, sequence.
 LIBDOGECOIN_API int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey);
