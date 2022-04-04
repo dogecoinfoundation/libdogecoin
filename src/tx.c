@@ -266,7 +266,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     unencoded_address[23] = checksum[2];
     unencoded_address[24] = checksum[3];
 
-    size_t strsize = 128;
+    size_t strsize = 35;
     char script_hash_to_p2pkh[strsize];
     // base 58 encode check our unencoded_address into the script_hash_to_p2pkh:
     if (!dogecoin_base58_encode_check(unencoded_address, 21, script_hash_to_p2pkh, strsize)) {
@@ -280,9 +280,8 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     
     // copy to out variable p2pkh, free tx_out copy and return true:
     memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh));
-    
     dogecoin_tx_out_free(copy);
-    return true;
+    return memcmp(p2pkh, script_hash_to_p2pkh, strlen(script_hash_to_p2pkh)) == 0;
 }
 
 /**

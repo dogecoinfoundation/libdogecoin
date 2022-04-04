@@ -41,6 +41,8 @@ typedef struct working_transaction {
     UT_hash_handle hh;
 } working_transaction;
 
+static working_transaction *transactions = NULL;
+
 // instantiates a new transaction
 LIBDOGECOIN_API working_transaction* new_transaction();
 
@@ -52,7 +54,13 @@ LIBDOGECOIN_API void remove_transaction(working_transaction *working_tx);
 
 LIBDOGECOIN_API void remove_all();
 
-/* cli functions */
+LIBDOGECOIN_API void print_transactions();
+
+LIBDOGECOIN_API void count_transactions();
+
+LIBDOGECOIN_API int by_id();
+
+LIBDOGECOIN_API const char *getl(const char *prompt);
 
 LIBDOGECOIN_API int start_transaction(); // #returns  an index of a transaction to build in memory.  (1, 2, etc) ..   
 

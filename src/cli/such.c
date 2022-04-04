@@ -25,21 +25,22 @@
  OTHER DEALINGS IN THE SOFTWARE.
  
 */
-
 #include <assert.h>
 #include <getopt.h>
 #include <src/libdogecoin-config.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>   /* printf */
+#include <stdlib.h>  /* atoi, malloc */
+#include <string.h>  /* strcpy */
 #include <unistd.h>
+#include <contrib/uthash/uthash.h>
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/crypto/ecc.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/tool.h>
+#include <dogecoin/transaction.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
 
@@ -75,6 +76,160 @@ static bool showError(const char* er)
     printf("Error: %s\n", er);
     dogecoin_ecc_stop();
     return 1;
+}
+
+#define MAX_LEN 128
+
+void print_image(FILE *fptr);
+
+void print_header() {
+    char *filename = "src/cli/wow.txt";
+    FILE *fptr = NULL;
+
+    if((fptr = fopen(filename,"r")) == NULL)
+    {
+        fprintf(stderr,"error opening %s\n",filename);
+    }
+
+    print_image(fptr);
+
+    fclose(fptr);
+}
+
+void print_image(FILE *fptr)
+{
+    char read_string[MAX_LEN];
+
+    while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+        printf("%s",read_string);
+}
+
+void sub_menu(int txindex) {
+    int id = txindex;
+    int running = 1;
+    int temp;
+    int temp_vout_index;
+    char* temp_hex_utxo_txid;
+    const char* temp_ext_p2pkh;
+    uint64_t temp_amt;
+    char* output_address;
+    float desired_fee;
+    float total_amount_for_verification;
+    char* public_key;
+    int input_to_sign;
+    char* raw_hexadecimal_transaction;
+    char script_pubkey;
+    int signature_hash_type;
+    int input_amount;
+    char* private_key_wif;
+        while (running) {
+            printf("\n 1. add input\n");
+            printf(" 2. add output\n");
+            printf(" 3. finalize transaction\n");
+            printf(" 4. sign transaction\n");
+            printf(" 8. print transaction\n");
+            printf(" 9. main menu\n\n");
+            switch (atoi(getl("command"))) {
+                case 1:
+                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    temp_vout_index = atoi(getl("vout index")); // 1
+                    temp_hex_utxo_txid = getl("txid"); // b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074 & 42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2
+                    add_utxo(id, temp_hex_utxo_txid, temp_vout_index);
+                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    break;
+                case 2:
+                    temp_amt = atof(getl("amount to send")); // 5
+                    temp_ext_p2pkh = getl("destination address"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
+                    printf("destination: %s\n", temp_ext_p2pkh);
+                    printf("addout success: %d\n", add_output(id, (char *)temp_ext_p2pkh, temp_amt));
+                    char* str = get_raw_transaction(id);
+                    printf("raw_tx: %s\n", str);
+                    break;
+                case 3:
+                    output_address = getl("output address for validation"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
+                    desired_fee = atof(getl("desired fee")); // .00226
+                    total_amount_for_verification = atof(getl("total amount for validation")); // 12
+                    public_key = getl("public key for change"); // 031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075b
+                    raw_hexadecimal_transaction = finalize_transaction(id, output_address, desired_fee, total_amount_for_verification, public_key);
+                    printf("raw_tx: %s\n", raw_hexadecimal_transaction);
+                    break;
+                case 4:
+                    // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
+                    // 0
+                    // 2 & 10
+                    raw_hexadecimal_transaction =  get_raw_transaction(id);
+                     // 1
+                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
+                    sign_raw_transaction(atof(getl("input to sign")), raw_hexadecimal_transaction, getl("scriptpubkey"), atoi(getl("signature hash type")), atof(getl("input amount")), getl("private_key"));
+                    printf("raw tx real: %s\n", raw_hexadecimal_transaction);
+                    break;
+                case 8:
+                    // add_transaction(id++, getl("Name (20 char max)"));
+                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    break;
+                case 9:
+                    running = 0;
+                    // main_menu();
+                    // add_transaction(temp, getl("Name (20 char max)"));
+                    break;
+            }
+        }
+}
+
+void main_menu() {
+    int running = 1;
+    struct working_transaction *s;
+    int temp;
+    print_header();
+        while (running) {
+            printf("create transaction: \n");
+            printf(" 1. add transaction\n");
+            printf(" 2. edit transaction by id\n");
+            printf(" 3. find transaction\n");
+            printf(" 4. delete transaction\n");
+            printf(" 5. delete all transactions\n");
+            printf(" 6. sort items by id\n");
+            printf(" 7. print transactions\n");
+            printf(" 8. count transactions\n");
+            printf(" 9. quit\n");
+            switch (atoi(getl("command"))) {
+                case 1:
+                    sub_menu(start_transaction());
+                    break;
+                case 2:
+                    temp = atoi(getl("ID"));
+                    // add_transaction(temp, getl("Name (20 char max)"));
+                    break;
+                case 3:
+                    s = find_transaction(atoi(getl("ID to find")));
+                    printf("transaction: %s\n", s ? get_raw_transaction(s->idx) : "unknown");
+                    break;
+                case 4:
+                    s = find_transaction(atoi(getl("ID to delete")));
+                    if (s) {
+                        remove_transaction(s);
+                    } else {
+                        printf("id unknown\n");
+                    }
+                    break;
+                case 5:
+                    remove_all();
+                    break;
+                case 6:
+                    HASH_SORT(transactions, by_id);
+                    break;
+                case 7:
+                    print_transactions();
+                    break;
+                case 8:
+                    count_transactions();
+                    break;
+                case 9:
+                    running = 0;
+                    break;
+            }
+        }
+    remove_all();
 }
 
 int main(int argc, char* argv[])
@@ -212,8 +367,9 @@ int main(int argc, char* argv[])
             return showError("deriving child key failed\n");
         else
             hd_print_node(chain, newextkey);
+    } else if (strcmp(cmd, "create_transaction") == 0) {
+        main_menu();
     }
-
 
     dogecoin_ecc_stop();
 
