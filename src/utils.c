@@ -73,12 +73,31 @@
 static uint8_t buffer_hex_to_uint8[TO_UINT8_HEX_BUF_LEN];
 static char buffer_uint8_to_hex[TO_UINT8_HEX_BUF_LEN];
 
+
+/**
+ * @brief This function clears the buffers used for
+ * functions inside utils.c.
+ * 
+ * @return Nothing. 
+ */
 void utils_clear_buffers(void)
 {
     memset(buffer_hex_to_uint8, 0, TO_UINT8_HEX_BUF_LEN);
     memset(buffer_uint8_to_hex, 0, TO_UINT8_HEX_BUF_LEN);
 }
 
+
+/**
+ * @brief This function takes a hex-encoded string and
+ * loads a buffer with its binary representation.
+ * 
+ * @param str The hex string to convert.
+ * @param out The buffer for the raw data to be returned.
+ * @param inLen The number of characters in the hex string.
+ * @param outLen The number of raw bytes that were written to the out buffer.
+ * 
+ * @return Nothing.
+ */
 void utils_hex_to_bin(const char* str, unsigned char* out, int inLen, int* outLen)
 {
     int bLen = inLen / 2;
@@ -108,6 +127,15 @@ void utils_hex_to_bin(const char* str, unsigned char* out, int inLen, int* outLe
     *outLen = i;
 }
 
+
+/**
+ * @brief This function takes a hex-encoded string and 
+ * returns the binary representation as a uint8_t array.
+ * 
+ * @param str The hex string to convert.
+ * 
+ * @return The array of binary data.
+ */
 uint8_t* utils_hex_to_uint8(const char* str)
 {
     uint8_t c;
@@ -141,6 +169,17 @@ uint8_t* utils_hex_to_uint8(const char* str)
     return buffer_hex_to_uint8;
 }
 
+
+/**
+ * @brief This function takes an array of raw data and
+ * converts them to a hex-encoded string.
+ * 
+ * @param bin_in The array of raw data to convert.
+ * @param inlen The number of bytes in the array.
+ * @param hex_out The resulting hex string.
+ * 
+ * @return Nothing.
+ */
 void utils_bin_to_hex(unsigned char* bin_in, size_t inlen, char* hex_out)
 {
     static char digits[] = "0123456789abcdef";
@@ -152,6 +191,16 @@ void utils_bin_to_hex(unsigned char* bin_in, size_t inlen, char* hex_out)
     hex_out[inlen * 2] = '\0';
 }
 
+
+/**
+ * @brief This function takes an array of raw bytes and
+ * converts them to a hex-encoded string.
+ * 
+ * @param bin The array of raw bytes to convert.
+ * @param l The number of bytes to convert.
+ * 
+ * @return The hex-encoded string.
+ */
 char* utils_uint8_to_hex(const uint8_t* bin, size_t l)
 {
     static char digits[] = "0123456789abcdef";
@@ -168,6 +217,16 @@ char* utils_uint8_to_hex(const uint8_t* bin, size_t l)
     return buffer_uint8_to_hex;
 }
 
+
+/**
+ * @brief This function takes a hex-encoded string and
+ * reverses the order of its bytes.
+ * 
+ * @param h The hex string to reverse.
+ * @param len The length of the hex string.
+ * 
+ * @return Nothing.
+ */
 void utils_reverse_hex(char* h, int len)
 {
     char* copy = dogecoin_calloc(1, len);
@@ -200,11 +259,31 @@ const signed char p_util_hexdigit[256] =
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
+
+/**
+ * @brief This function takes a char from a hex string
+ * and returns the actual hex digit as a signed char.
+ * 
+ * @param c The character to convert to hex digit.
+ * 
+ * @return The equivalent hex digit.
+ */
 signed char utils_hex_digit(char c)
 {
     return p_util_hexdigit[(unsigned char)c];
 }
 
+
+/**
+ * @brief This function takes a hex-encoded string
+ * and sets a 256-bit array to the numerical value in
+ * little endian format.
+ * 
+ * @param psz The hex string to convert.
+ * @param out The resulting byte array.
+ * 
+ * @return Nothing.
+ */
 void utils_uint256_sethex(char* psz, uint8_t* out)
 {
     memset(out, 0, sizeof(uint256));
@@ -236,6 +315,15 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
     }
 }
 
+
+/**
+ * @brief This function executes malloc() but exits the
+ * program if unsuccessful. 
+ * 
+ * @param size The size of the memory to allocate. 
+ * 
+ * @return A pointer to the memory that was allocated.
+ */
 void* safe_malloc(size_t size)
 {
     void* result;
@@ -250,6 +338,15 @@ void* safe_malloc(size_t size)
     }
 }
 
+
+/**
+ * @brief This function generates a buffer of random bytes.
+ * 
+ * @param buf The buffer to store the random data.
+ * @param len The number of random bytes to generate.
+ * 
+ * @return Nothing.
+ */
 void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len)
 {
     srand(time(NULL));
@@ -258,6 +355,14 @@ void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len)
     }
 }
 
+
+/**
+ * @brief This function takes a path variable and appends
+ * the default data directory according to the user's
+ * operating system.
+ * 
+ * @param path_out The pointer to the cstring containing the path.
+ */
 void dogecoin_get_default_datadir(cstring* path_out)
 {
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
@@ -288,6 +393,15 @@ void dogecoin_get_default_datadir(cstring* path_out)
 #endif
 }
 
+
+/**
+ * @brief This function flushes all data left in the output
+ * stream into the specified file.
+ * 
+ * @param file The pointer to the file descriptor that will store the data.
+ * 
+ * @return Nothing.
+ */
 void dogecoin_file_commit(FILE* file)
 {
     fflush(file); // harmless if redundantly called

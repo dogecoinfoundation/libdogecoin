@@ -29,6 +29,16 @@
 #include <dogecoin/mem.h>
 #include <dogecoin/vector.h>
 
+
+/**
+ * @brief This function creates a new vector object
+ * and initializes it to 0.
+ * 
+ * @param res The size of memory to allocate for the vector's contents.
+ * @param free_f The function that will be called when a vector element is freed.
+ * 
+ * @return A pointer to the new vector object.
+ */
 vector* vector_new(size_t res, void (*free_f)(void*))
 {
     vector* vec = dogecoin_calloc(1, sizeof(vector));
@@ -49,6 +59,17 @@ vector* vector_new(size_t res, void (*free_f)(void*))
     return vec;
 }
 
+
+/**
+ * @brief This function frees all of a vector's elements,
+ * calling the function associated with its free operation
+ * set during vector creation. The vector object itself 
+ * is not freed.
+ * 
+ * @param vec The pointer to the vector to be freed.
+ * 
+ * @return Nothing.
+ */
 static void vector_free_data(vector* vec)
 {
     if (!vec->data)
@@ -69,6 +90,16 @@ static void vector_free_data(vector* vec)
     vec->len = 0;
 }
 
+
+/**
+ * @brief This function frees an entire vector 
+ * object and all of its elements if specified.
+ * 
+ * @param vec The pointer to the vector to be freed.
+ * @param free_array The flag denoting whether to free the vector's elements.
+ * 
+ * @return Nothing.
+ */
 void vector_free(vector* vec, dogecoin_bool free_array)
 {
     if (!vec) {
@@ -83,6 +114,16 @@ void vector_free(vector* vec, dogecoin_bool free_array)
     dogecoin_free(vec);
 }
 
+
+/**
+ * @brief This function grows the vector by doubling
+ * in size until it is larger than the size specified.
+ * 
+ * @param vec The pointer to the vector to be grown.
+ * @param min_sz The minimum size the vector must be grown to.
+ * 
+ * @return 1 if the vector is grown successfully, 0 if it reaches the max size allowed.
+ */
 static dogecoin_bool vector_grow(vector* vec, size_t min_sz)
 {
     size_t new_alloc = vec->alloc;
@@ -104,6 +145,16 @@ static dogecoin_bool vector_grow(vector* vec, size_t min_sz)
     return true;
 }
 
+
+/**
+ * @brief This function finds and returns the first element
+ * in the vector whose data matches the data specified.
+ * 
+ * @param vec The pointer to the vector to search.
+ * @param data The data to match.
+ * 
+ * @return The index of the data if it exists in the vector, -1 otherwise.
+ */
 ssize_t vector_find(vector* vec, void* data)
 {
     if (vec && vec->len) {
@@ -118,6 +169,16 @@ ssize_t vector_find(vector* vec, void* data)
     return -1;
 }
 
+
+/**
+ * @brief This function adds an element to an existing
+ * vector, growing it by one if necessary.
+ * 
+ * @param vec The pointer to the vector to add to.
+ * @param data The data to be added into the vector.
+ * 
+ * @return 1 if the element was added successfully, 0 otherwise.
+ */
 dogecoin_bool vector_add(vector* vec, void* data)
 {
     if (vec->len == vec->alloc) {
@@ -131,6 +192,17 @@ dogecoin_bool vector_add(vector* vec, void* data)
     return true;
 }
 
+
+/**
+ * @brief This function deletes a range of consecutive
+ * elements from the specified vector.
+ * 
+ * @param vec The pointer to the vector to edit.
+ * @param pos The index of the first item to remove.
+ * @param len The number of consecutive elements to remove.
+ * 
+ * @return Nothing.
+ */
 void vector_remove_range(vector* vec, size_t pos, size_t len)
 {
     if (!vec || ((pos + len) > vec->len)) {
@@ -148,11 +220,30 @@ void vector_remove_range(vector* vec, size_t pos, size_t len)
     vec->len -= len;
 }
 
+
+/**
+ * @brief This function removes a single element from
+ * the specified vector.
+ * 
+ * @param vec The pointer to the vector to edit.
+ * @param pos The index of the element to remove.
+ */
 void vector_remove_idx(vector* vec, size_t pos)
 {
     vector_remove_range(vec, pos, 1);
 }
 
+
+/**
+ * @brief This function finds an element whose data
+ * matches the data specified and removes it if it
+ * exists.
+ * 
+ * @param vec The pointer to the vector to edit.
+ * @param data The data to match.
+ * 
+ * @return 1 if the element was removed successfully, 0 if the data was not found.
+ */
 dogecoin_bool vector_remove(vector* vec, void* data)
 {
     ssize_t idx = vector_find(vec, data);
@@ -164,6 +255,19 @@ dogecoin_bool vector_remove(vector* vec, void* data)
     return true;
 }
 
+
+/**
+ * @brief This function resizes the vector to be newsz
+ * elements long. If the new size is bigger, the vector
+ * is grown and the new elements are left empty. If the
+ * new size is smaller, vector elements will be truncated.
+ * If the new size is the same, do nothing.
+ * 
+ * @param vec The pointer to the vector to resize.
+ * @param newsz The new desired size of the vector.
+ * 
+ * @return 1 if the vector was resized successfully, 0 otherwise.
+ */
 dogecoin_bool vector_resize(vector* vec, size_t newsz)
 {
     unsigned int i;
