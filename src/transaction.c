@@ -59,6 +59,7 @@ working_transaction* find_transaction(int idx) {
 
 void remove_transaction(working_transaction *working_tx) {
     HASH_DEL(transactions, working_tx);
+    dogecoin_tx_free(working_tx->transaction);
     dogecoin_free(working_tx);
 }
 
@@ -142,7 +143,7 @@ int start_transaction() {
     return index;
 }
 
-int save_raw_transaction(const char* hexadecimal_transaction) {
+int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     printf("raw_hexadecimal_transaction: %s\n", hexadecimal_transaction);
     if (strlen(hexadecimal_transaction) > 1024*100) { //don't accept tx larger then 100kb
         printf("tx too large (max 100kb)\n");
@@ -151,10 +152,10 @@ int save_raw_transaction(const char* hexadecimal_transaction) {
 
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
-    uint8_t* data_bin = dogecoin_malloc(strlen(hexadecimal_transaction) / 2);
+    uint8_t* data_bin = dogecoin_malloc(strlen(hexadecimal_transaction));
     int outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
-    utils_hex_to_bin(hexadecimal_transaction, data_bin, strlen(hexadecimal_transaction) / 2 + 1, &outlength);
+    utils_hex_to_bin(hexadecimal_transaction, data_bin, strlen(hexadecimal_transaction), &outlength);
     if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, true)) {
         // free byte array
         dogecoin_free(data_bin);
@@ -166,22 +167,17 @@ int save_raw_transaction(const char* hexadecimal_transaction) {
     // free byte array
     dogecoin_free(data_bin);
 
-    int txindex = 0;
     if (txtmp) {
-        txindex = start_transaction();
         working_transaction* tx_raw = find_transaction(txindex);
         dogecoin_tx_copy(tx_raw->transaction, txtmp);
+        for (size_t i = 0; i < tx_raw->transaction->vin->len - 1; i++) {
+            dogecoin_tx_in* tx_in_tmp = vector_idx(tx_raw->transaction->vin, i);
+            char tx_in_buffer[tx_in_tmp->script_sig->len * 2];
+            utils_bin_to_hex((unsigned char*)tx_in_tmp->script_sig->str, tx_in_tmp->script_sig->len, tx_in_buffer);
+            printf("\ntx_in: %s\n\n", tx_in_buffer);
+        }
         dogecoin_tx_free(txtmp);
-        // for (int i = 0; i < tx_raw->transaction->vin->len - 1; i++) {
-        //     dogecoin_tx_in* tx_in_tmp = vector_idx(tx_raw->transaction->vin, i);
-        //     char tx_in_buffer[tx_in_tmp->script_sig->len + 1];
-        //     dogecoin_tx_in* tx_in_copy = dogecoin_tx_in_new();
-        //     dogecoin_tx_in_copy(tx_in_copy, tx_in_tmp);
-        //     dogecoin_tx_in_free(tx_in_tmp);
-        //     utils_bin_to_hex((unsigned char*)tx_in_copy->script_sig->str, tx_in_copy->script_sig->len, tx_in_buffer);
-        //     printf("tx_in: %s\n", tx_in_buffer);
-            
-        // }
+        // remove_transaction(tx_raw);
     }
     return txindex;
 }

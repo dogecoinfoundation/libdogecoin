@@ -108,7 +108,7 @@ void signing_menu(int txindex) {
     int id = txindex;
     int running = 1;
     int input_to_sign;
-    const char* raw_hexadecimal_tx;
+    char* raw_hexadecimal_tx;
     char* script_pubkey;
     int signature_hash_type;
     float input_amount;
@@ -121,19 +121,25 @@ void signing_menu(int txindex) {
             printf(" 9. go back\n\n");
             switch (atoi(getl("command"))) {
                 case 1:
-                    private_key_wif = getl("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     input_amount = atoi(getl("input amount")); // 2 & 10
                     signature_hash_type = atoi(getl("sighash type")); // 1
                     input_to_sign = atoi(getl("input to sign")); // 0
+                    private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = getl("script pubkey");
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(id);
+                    printf("input_to_sign: %d\n", input_to_sign);
+                    printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                    printf("script_pubkey: %s\n", script_pubkey);
+                    printf("input_to_sign: %d\n", input_to_sign);
+                    printf("private_key: %s\n", private_key_wif);
+                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, signature_hash_type, input_amount, private_key_wif);
                     printf("raw tx real: %s\n", raw_hexadecimal_tx);
                     break;
                 case 2:
                     input_amount = atoi(getl("input amount")); // 2 & 10
-                    // signature_hash_type = atoi(getl("sighash type")); // 1
+                    signature_hash_type = atoi(getl("sighash type")); // 1
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = getl("script pubkey");
@@ -147,11 +153,10 @@ void signing_menu(int txindex) {
                     printf("private_key: %s\n", private_key_wif);
                     sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
                     printf("raw tx real: %s\n", raw_hexadecimal_tx);
-
                     break;
                 case 3:
                     printf("id: %d\n", id);
-                    id = save_raw_transaction(get_raw_tx("raw transaction"));
+                    id = save_raw_transaction(id, get_raw_tx("raw transaction"));
                     printf("id: %d\n", id);
                     break;
                 case 8:
