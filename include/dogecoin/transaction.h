@@ -62,7 +62,13 @@ LIBDOGECOIN_API int by_id();
 
 LIBDOGECOIN_API const char *getl(const char *prompt);
 
+LIBDOGECOIN_API const char *get_raw_tx(const char *prompt_tx);
+
+LIBDOGECOIN_API const char *get_private_key(const char *prompt_key);
+
 LIBDOGECOIN_API int start_transaction(); // #returns  an index of a transaction to build in memory.  (1, 2, etc) ..   
+
+LIBDOGECOIN_API int save_raw_transaction(const char* hexadecimal_transaction);
 
 LIBDOGECOIN_API int add_utxo(int txindex, char* hex_utxo_txid, int vout); // #returns 1 if success.
 

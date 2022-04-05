@@ -82,7 +82,7 @@ dogecoin_bool dogecoin_script_copy_without_op_codeseperator(const cstring* scrip
             if (!deser_u32(&v32, &buf))
                 goto err_out;
             cstr_append_buf(script_out, &opcode, 1);
-            cstr_append_buf(script_out, &v32, 5);
+            cstr_append_buf(script_out, &v32, 5); // todo: find out why this is 5 not 4
             data_len = v32;
         } else if (opcode == OP_CODESEPARATOR)
             continue;

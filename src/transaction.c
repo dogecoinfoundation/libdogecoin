@@ -94,16 +94,44 @@ int by_id(const struct working_transaction *a, const struct working_transaction 
 
 const char *getl(const char *prompt)
 {
-    static char buf[1024];
+    static char buf[100];
     char *p;
     printf("%s? ", prompt); fflush(stdout);
     p = fgets(buf, sizeof(buf), stdin);
     if (p == NULL || (p = strchr(buf, '\n')) == NULL) {
-        puts("Invalid input!");
+        puts("invalid input!");
         exit(EXIT_FAILURE);
     }
     *p = '\0';
     return buf;
+}
+
+const char *get_raw_tx(const char *prompt_tx)
+{
+    static char buf_tx[1000*100];
+    char *p_tx;
+    printf("%s? ", prompt_tx); fflush(stdout);
+    p_tx = fgets(buf_tx, sizeof(buf_tx), stdin);
+    if (p_tx == NULL || (p_tx = strchr(buf_tx, '\n')) == NULL) {
+        puts("invalid input!");
+        exit(EXIT_FAILURE);
+    }
+    *p_tx = '\0';
+    return buf_tx;
+}
+
+const char *get_private_key(const char *prompt_key)
+{
+    static char buf_key[100];
+    char *p_key;
+    printf("%s? ", prompt_key); fflush(stdout);
+    p_key = fgets(buf_key, sizeof(buf_key), stdin);
+    if (p_key == NULL || (p_key = strchr(buf_key, '\n')) == NULL) {
+        puts("invalid input!");
+        exit(EXIT_FAILURE);
+    }
+    *p_key = '\0';
+    return buf_key;
 }
 
 // #returns an index of a transaction to build in memory.  (1, 2, etc) ..
@@ -112,6 +140,50 @@ int start_transaction() {
     int index = working_tx->idx;
     add_transaction(working_tx);
     return index;
+}
+
+int save_raw_transaction(const char* hexadecimal_transaction) {
+    printf("raw_hexadecimal_transaction: %s\n", hexadecimal_transaction);
+    if (strlen(hexadecimal_transaction) > 1024*100) { //don't accept tx larger then 100kb
+        printf("tx too large (max 100kb)\n");
+        return false;
+    }
+
+    // deserialize transaction
+    dogecoin_tx* txtmp = dogecoin_tx_new();
+    uint8_t* data_bin = dogecoin_malloc(strlen(hexadecimal_transaction) / 2);
+    int outlength = 0;
+    // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
+    utils_hex_to_bin(hexadecimal_transaction, data_bin, strlen(hexadecimal_transaction) / 2 + 1, &outlength);
+    if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, true)) {
+        // free byte array
+        dogecoin_free(data_bin);
+        // free dogecoin_tx
+        dogecoin_tx_free(txtmp);
+        printf("invalid tx hex");
+        return false;
+    }
+    // free byte array
+    dogecoin_free(data_bin);
+
+    int txindex = 0;
+    if (txtmp) {
+        txindex = start_transaction();
+        working_transaction* tx_raw = find_transaction(txindex);
+        dogecoin_tx_copy(tx_raw->transaction, txtmp);
+        dogecoin_tx_free(txtmp);
+        // for (int i = 0; i < tx_raw->transaction->vin->len - 1; i++) {
+        //     dogecoin_tx_in* tx_in_tmp = vector_idx(tx_raw->transaction->vin, i);
+        //     char tx_in_buffer[tx_in_tmp->script_sig->len + 1];
+        //     dogecoin_tx_in* tx_in_copy = dogecoin_tx_in_new();
+        //     dogecoin_tx_in_copy(tx_in_copy, tx_in_tmp);
+        //     dogecoin_tx_in_free(tx_in_tmp);
+        //     utils_bin_to_hex((unsigned char*)tx_in_copy->script_sig->str, tx_in_copy->script_sig->len, tx_in_buffer);
+        //     printf("tx_in: %s\n", tx_in_buffer);
+            
+        // }
+    }
+    return txindex;
 }
 
 // #returns 1 if success.
@@ -147,27 +219,15 @@ int add_output(int txindex, char* destinationaddress, uint64_t amount) {
     working_transaction* tx = find_transaction(txindex);
     // guard against null pointer exceptions
     if (tx == NULL) {
-        printf("add_output failed! %d\n", tx);
         return false;
     }
     // determine intended network by checking address prefix:
     const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
     amount = coins_to_koinu(amount);
-    printf("chainparams: %s\n", chain->chainname);
-    printf("amount: %d\n", amount);
-    printf("tx->transactions: %d\n", tx->transaction->vout->len);
-    printf("tx->transactions: %d\n", tx->idx);
-    printf("tx->add: %s\n", destinationaddress);
     // calculate total minus fees
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:
-    int res = dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
-    if (!res) { 
-        printf("dogecoin_tx_add_address failed!\n");
-        printf("tx->transactions: %d\n", tx->transaction->vout->len);
-        printf("tx->transactions: %d\n", tx->idx);
-        return false;
-    } else return res;
+    return dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
 }
 
 int make_change(int txindex, char* public_key_hex, float subtractedfee, uint64_t amount) {
@@ -304,6 +364,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     int outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(incomingrawtx, data_bin, strlen(incomingrawtx), &outlength);
+
     if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, true)) {
         // free byte array
         dogecoin_free(data_bin);
@@ -319,12 +380,12 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     if ((size_t)inputindex >= txtmp->vin->len) {
         // free dogecoin_tx
         dogecoin_tx_free(txtmp);
-        printf("inputindex out of range");
+        printf("input index out of range");
         return false;
     }
 
     // initialize byte array with length equal to account for byte size 
-    uint8_t script_data[strlen(scripthex) / 2];
+    uint8_t script_data[strlen(scripthex)];
     // convert hex string to byte array
     utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlength);
     cstring* script = cstr_new_buf(script_data, outlength);

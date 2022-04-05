@@ -104,6 +104,67 @@ void print_image(FILE *fptr)
         printf("%s",read_string);
 }
 
+void signing_menu(int txindex) {
+    int id = txindex;
+    int running = 1;
+    int input_to_sign;
+    const char* raw_hexadecimal_tx;
+    char* script_pubkey;
+    int signature_hash_type;
+    float input_amount;
+    char* private_key_wif;
+        while (running) {
+            printf("\n 1. sign input (from current working transaction)\n");
+            printf(" 2. sign input (raw hexadecimal transaction)\n");
+            printf(" 3. save (raw hexadecimal transaction)\n");
+            printf(" 8. print signed transaction\n");
+            printf(" 9. go back\n\n");
+            switch (atoi(getl("command"))) {
+                case 1:
+                    private_key_wif = getl("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
+                    input_amount = atoi(getl("input amount")); // 2 & 10
+                    signature_hash_type = atoi(getl("sighash type")); // 1
+                    input_to_sign = atoi(getl("input to sign")); // 0
+                    script_pubkey = getl("script pubkey");
+                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
+                    raw_hexadecimal_tx = get_raw_transaction(id);
+                    sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, signature_hash_type, input_amount, private_key_wif);
+                    printf("raw tx real: %s\n", raw_hexadecimal_tx);
+                    break;
+                case 2:
+                    input_amount = atoi(getl("input amount")); // 2 & 10
+                    // signature_hash_type = atoi(getl("sighash type")); // 1
+                    input_to_sign = atoi(getl("input to sign")); // 0
+                    private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
+                    script_pubkey = getl("script pubkey");
+                    printf("previous signed transaction: %s\n", raw_hexadecimal_tx);
+                    raw_hexadecimal_tx = get_raw_tx("raw transaction");
+                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
+                    printf("input_to_sign: %d\n", input_to_sign);
+                    printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                    printf("script_pubkey: %s\n", script_pubkey);
+                    printf("input_to_sign: %d\n", input_to_sign);
+                    printf("private_key: %s\n", private_key_wif);
+                    sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
+                    printf("raw tx real: %s\n", raw_hexadecimal_tx);
+
+                    break;
+                case 3:
+                    printf("id: %d\n", id);
+                    id = save_raw_transaction(get_raw_tx("raw transaction"));
+                    printf("id: %d\n", id);
+                    break;
+                case 8:
+                    // add_transaction(id++, getl("Name (20 char max)"));
+                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    break;
+                case 9:
+                    running = 0;
+                    break;
+            }
+        }
+}
+
 void sub_menu(int txindex) {
     int id = txindex;
     int running = 1;
@@ -118,10 +179,6 @@ void sub_menu(int txindex) {
     char* public_key;
     int input_to_sign;
     char* raw_hexadecimal_transaction;
-    char script_pubkey;
-    int signature_hash_type;
-    int input_amount;
-    char* private_key_wif;
         while (running) {
             printf("\n 1. add input\n");
             printf(" 2. add output\n");
@@ -149,28 +206,19 @@ void sub_menu(int txindex) {
                     output_address = getl("output address for validation"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
                     desired_fee = atof(getl("desired fee")); // .00226
                     total_amount_for_verification = atof(getl("total amount for validation")); // 12
-                    public_key = getl("public key for change"); // 031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075b
+                    public_key = getl("public_key_hex");
+                    // 031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075b
                     raw_hexadecimal_transaction = finalize_transaction(id, output_address, desired_fee, total_amount_for_verification, public_key);
                     printf("raw_tx: %s\n", raw_hexadecimal_transaction);
                     break;
                 case 4:
-                    // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    // 0
-                    // 2 & 10
-                    raw_hexadecimal_transaction =  get_raw_transaction(id);
-                     // 1
-                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    sign_raw_transaction(atof(getl("input to sign")), raw_hexadecimal_transaction, getl("scriptpubkey"), atoi(getl("signature hash type")), atof(getl("input amount")), getl("private_key"));
-                    printf("raw tx real: %s\n", raw_hexadecimal_transaction);
+                    signing_menu(id);
                     break;
                 case 8:
-                    // add_transaction(id++, getl("Name (20 char max)"));
                     printf("raw_tx: %s\n", get_raw_transaction(id));
                     break;
                 case 9:
                     running = 0;
-                    // main_menu();
-                    // add_transaction(temp, getl("Name (20 char max)"));
                     break;
             }
         }
@@ -184,7 +232,7 @@ void main_menu() {
         while (running) {
             printf("create transaction: \n");
             printf(" 1. add transaction\n");
-            printf(" 2. edit transaction by id\n");
+            // printf(" 2. edit transaction by id\n");
             printf(" 3. find transaction\n");
             printf(" 4. delete transaction\n");
             printf(" 5. delete all transactions\n");
@@ -198,7 +246,6 @@ void main_menu() {
                     break;
                 case 2:
                     temp = atoi(getl("ID"));
-                    // add_transaction(temp, getl("Name (20 char max)"));
                     break;
                 case 3:
                     s = find_transaction(atoi(getl("ID to find")));
