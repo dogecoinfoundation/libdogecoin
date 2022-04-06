@@ -173,9 +173,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
         dogecoin_tx_out_copy(copy, tx_out);
         tx_out_total += tx_out->value;
         size_t len = 128;
-        char* p2pkh[len];
+        char p2pkh[len];
         dogecoin_script_hash_to_p2pkh(vector_idx(tx->transaction->vout, i), p2pkh, is_testnet);
-        if (memcmp(p2pkh, destinationaddress, sizeof(destinationaddress)) == 0) p2pkh_count++;
+        if (memcmp(p2pkh, destinationaddress, sizeof(&destinationaddress)) == 0) p2pkh_count++;
         if (i == (int)tx->transaction->vout->len - 1 && public_key_hex) {
             // manually make change and send back to our public key address
             make_change(txindex, public_key_hex, subtractedfee, out_dogeamount_for_verification - tx_out_total);
@@ -273,7 +273,6 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         return false;
     }
 
-    vector_idx(txtmp->vin, inputindex);
     // initialize byte array with length equal to account for byte size 
     uint8_t script_data[strlen(scripthex) / 2 + 1];
     // convert hex string to byte array

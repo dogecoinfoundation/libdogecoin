@@ -116,7 +116,7 @@ const dogecoin_checkpoint dogecoin_testnet_checkpoint_array[] = {
     {3286675, "07fef07a255d510297c9189dc96da5f4e41a8184bc979df8294487f07fee1cf3", 1628932841, 0x1e0fffff},
     {3445426, "70574db7856bd685abe7b0a8a3e79b29882620645bd763b01459176bceb58cd1", 1635884611, 0x1e0fffff}};
 
-dogecoin_chainparams* chain_from_b58_prefix(char* address) {
+const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
     /* determine address prefix for network chainparams */
     uint8_t prefix[1];
     memcpy(prefix, address, 1);
@@ -130,7 +130,7 @@ dogecoin_chainparams* chain_from_b58_prefix(char* address) {
             break;
     }
     return count ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
-};
+}
 
 int chain_from_b58_prefix_bool(char* address) {
     /* determine address prefix for network chainparams */
@@ -143,4 +143,4 @@ int chain_from_b58_prefix_bool(char* address) {
             return true;
     }
     return false;
-};
+}

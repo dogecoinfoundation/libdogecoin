@@ -419,18 +419,6 @@ void dogecoin_file_commit(FILE* file)
 #endif
 }
 
-uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2)
-{
-    size_t input1_size;
-    size_t input2_size;
-    input1_size= sizeof(input1)/sizeof(input1[0]);
-    input2_size= sizeof(input2)/sizeof(input2[0]);
-    uint8_t* returnedarray = realloc(input1, input1_size+input2_size);
-    memcpy(returnedarray+input1_size, input2, sizeof(returnedarray));
-    free(input2);
-    return returnedarray;
-}
-
 double koinu_to_coins(uint64_t koinu) {
     return (double)koinu / (double)100000000;
 }

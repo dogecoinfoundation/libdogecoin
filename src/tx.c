@@ -229,7 +229,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
 
     dogecoin_tx_out* copy = dogecoin_tx_out_new();
     dogecoin_tx_out_copy(copy, txout);
-    int length = 2;
+    size_t length = 2;
 
     uint8_t* stripped_array[copy->script_pubkey->len];
     // loop through 20 bytes of the script hash while stripping op codes
@@ -239,11 +239,11 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
         switch (copy->script_pubkey->str[length]) {
             case OP_DUP:
                 break;
-            case OP_HASH160:
+            case (char)OP_HASH160:
                 break;
-            case OP_EQUALVERIFY:
+            case (char)OP_EQUALVERIFY:
                 break;
-            case OP_CHECKSIG:
+            case (char)OP_CHECKSIG:
                 break;
             default:
                 copy->script_pubkey->str[2] = is_testnet ? 0x1e : 0x71;
@@ -252,9 +252,9 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
         }
     }
 
-    unsigned char d1[SHA256_DIGEST_LENGTH], d2[SHA256_DIGEST_LENGTH], checksum[4], unencoded_address[25];
+    unsigned char d1[SHA256_DIGEST_LENGTH], checksum[4], unencoded_address[25];
     // double sha256 stripped array into d1:
-    dogecoin_dblhash(stripped_array, strlen(stripped_array), d1);
+    dogecoin_dblhash((const unsigned char *)stripped_array, strlen((const char *)stripped_array), d1);
     // copy check sum (4 bytes) into checksum var:
     memcpy(checksum, d1, 4);
     // copy stripped array into final var before passing to out variable:
@@ -267,7 +267,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     unencoded_address[24] = checksum[3];
 
     size_t strsize = 128;
-    char* script_hash_to_p2pkh[strsize];
+    char script_hash_to_p2pkh[strsize];
     // base 58 encode check our unencoded_address into the script_hash_to_p2pkh:
     if (!dogecoin_base58_encode_check(unencoded_address, 21, script_hash_to_p2pkh, strsize)) {
         return false;

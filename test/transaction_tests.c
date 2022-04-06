@@ -83,11 +83,11 @@ void test_transaction()
     //       "scriptSig": {
     //         "asm": "3042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0[ALL] 02ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14",
     //         "hex": "453042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0012102ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14"
-                u_assert_str_eq("453042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0012102ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14", utils_uint8_to_hex(tx_in->script_sig->str, tx_in->script_sig->len));
+                u_assert_str_eq("453042021e623cf9ebc2e2736343827c2dda22a85c41347d5fe17e4a1dfa57ebb3eb0e022075baa343944021a24a8a99c5a90b3af2fd47b92bd1e1fe0f7dc1a5cb95086df0012102ac1447c59fd7b96cee31e4a22ec051cf393d76bc3f275bcd5aa7580377d32e14", utils_uint8_to_hex((const uint8_t *)tx_in->script_sig->str, tx_in->script_sig->len));
     //       },
     //       "sequence": 4294967294
-            uint8_t* sequence = 4294967294;
-            u_assert_str_eq(utils_uint8_to_hex(&sequence, strlen(&sequence)), utils_uint8_to_hex(&tx_in->sequence, strlen(&tx_in->sequence)));
+            uint8_t* sequence = (uint8_t *)4294967294;
+            u_assert_str_eq(utils_uint8_to_hex((const uint8_t *)&sequence, strlen((const char *)(const uint8_t *)&sequence)), utils_uint8_to_hex((const uint8_t *)&tx_in->sequence, strlen((const char *)(const uint8_t *)&tx_in->sequence)));
     //     }
     //   ],
         dogecoin_tx_in_free(tx_in);
@@ -95,12 +95,12 @@ void test_transaction()
     //     {
     //       "value": 5885.98644000,
             dogecoin_tx_out* tx_out = vector_idx(tx_worth_2->vout, 0);
-            u_assert_uint32_eq(koinu_to_coins(tx_out->value), 5885.98644000);
+            u_assert_double_eq(koinu_to_coins(tx_out->value), 5885.98644000);
     //       "n": 0,
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 a4a942c99c94522a025b2b8cfd2edd149fb49954 OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a914a4a942c99c94522a025b2b8cfd2edd149fb4995488ac",
-                u_assert_str_eq("76a914a4a942c99c94522a025b2b8cfd2edd149fb4995488ac", utils_uint8_to_hex(tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                u_assert_str_eq("76a914a4a942c99c94522a025b2b8cfd2edd149fb4995488ac", utils_uint8_to_hex((const uint8_t *)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
     //         "reqSigs": 1,
     //         "type": "pubkeyhash",
     //         "addresses": [
@@ -112,12 +112,12 @@ void test_transaction()
     //       "value": 2.00000000,
     //       "n": 1,
             tx_out = vector_idx(tx_worth_2->vout, 1);
-            u_assert_uint32_eq(koinu_to_coins(tx_out->value), 2.00000000);
+            u_assert_double_eq(koinu_to_coins(tx_out->value), 2.00000000);
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac",
                 u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utxo_scriptpubkey);
-                u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utils_uint8_to_hex(tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utils_uint8_to_hex((const uint8_t *)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
     //         "reqSigs": 1,
     //         "type": "pubkeyhash",
     //         "addresses": [
@@ -176,11 +176,11 @@ void test_transaction()
     //       "scriptSig": {
     //         "asm": "30440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d7[ALL] 024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab",
     //         "hex": "4730440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d70121024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab"
-                u_assert_str_eq("4730440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d70121024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab", utils_uint8_to_hex(tx_in->script_sig->str, tx_in->script_sig->len));
+                u_assert_str_eq("4730440220739ee157e98f60eda768fb473168fb6b25878572e9aaa9d2593ef1217291558e02206d0da7f862571f6826d5cacea408445b934c1191cde77c46e146ad8b867250d70121024b67a792594a459d525d50dd4d4fb21a792c0241596d522ed627cabf0ed3d4ab", utils_uint8_to_hex((const uint8_t *)tx_in->script_sig->str, tx_in->script_sig->len));
     //       },
     //       "sequence": 4294967294
-            sequence = 4294967294;
-            u_assert_str_eq(utils_uint8_to_hex(&sequence, strlen(&sequence)), utils_uint8_to_hex(&tx_in->sequence, strlen(&tx_in->sequence)));
+            sequence = (uint8_t *)4294967294;
+            u_assert_str_eq(utils_uint8_to_hex((const uint8_t *)&sequence, strlen((const char *)(const uint8_t *)&sequence)), utils_uint8_to_hex((const uint8_t *)&tx_in->sequence, strlen((const char *)(const uint8_t *)&tx_in->sequence)));
     //     }
     //   ],
         dogecoin_tx_in_free(tx_in);
@@ -189,13 +189,11 @@ void test_transaction()
     //       "value": 227889.99548000,
     //       "n": 0,
             tx_out = vector_idx(tx_worth_10->vout, 0);
-            printf("koinu_to_coins: %f\n", koinu_to_coins(tx_out->value));
-            printf("koinu_to_coins: %f\n", 227889.99548000);
-            u_assert_uint32_eq(koinu_to_coins(tx_out->value), 227889.99548000);
+            u_assert_double_eq(koinu_to_coins(tx_out->value), 227889.99548000);
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 1476c35e582eb198e1a28c455005a70c68695868 OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a9141476c35e582eb198e1a28c455005a70c6869586888ac",
-                u_assert_str_eq("76a9141476c35e582eb198e1a28c455005a70c6869586888ac", utils_uint8_to_hex(tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                u_assert_str_eq("76a9141476c35e582eb198e1a28c455005a70c6869586888ac", utils_uint8_to_hex((const uint8_t *)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
     //         "reqSigs": 1,
     //         "type": "pubkeyhash",
     //         "addresses": [
@@ -207,11 +205,11 @@ void test_transaction()
     //       "value": 10.00000000,
     //       "n": 1,
             tx_out = vector_idx(tx_worth_10->vout, 1);
-            u_assert_uint32_eq(koinu_to_coins(tx_out->value), 10.00000000);
+            u_assert_double_eq(koinu_to_coins(tx_out->value), 10.00000000);
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac",
-                u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utils_uint8_to_hex(tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                u_assert_str_eq("76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac", utils_uint8_to_hex((const uint8_t *)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
     //         "reqSigs": 1,
     //         "type": "pubkeyhash",
     //         "addresses": [
