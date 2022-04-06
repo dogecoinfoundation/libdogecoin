@@ -168,6 +168,8 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     dogecoin_free(data_bin);
 
     if (txtmp) {
+        char* rawtx = get_raw_transaction(txindex);
+        printf("rawtx: %s\n", rawtx);
         working_transaction* tx_raw = find_transaction(txindex);
         dogecoin_tx_copy(tx_raw->transaction, txtmp);
         for (size_t i = 0; i < tx_raw->transaction->vin->len - 1; i++) {
@@ -179,7 +181,7 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
         dogecoin_tx_free(txtmp);
         // remove_transaction(tx_raw);
     }
-    return txindex;
+    return true;
 }
 
 // #returns 1 if success.
@@ -226,37 +228,25 @@ int add_output(int txindex, char* destinationaddress, uint64_t amount) {
     return dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
 }
 
-int make_change(int txindex, char* public_key_hex, float subtractedfee, uint64_t amount) {
+int make_change(int txindex, char* public_key, float subtractedfee, uint64_t amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
     // guard against null pointer exceptions
     if (tx == NULL) return false;
 
-    size_t sizeout = 33; // public hexadecimal keys are 66 characters long (divided by 2 for byte size)
-
-    // generate pubkey for signing tx
-    dogecoin_pubkey pubkeytx;
-
-    // initalize public key object
-    dogecoin_pubkey_init(&pubkeytx);
-    pubkeytx.compressed = true;
-
-    // convert our public key hex to byte array:
-    uint8_t* pubkeydat = utils_hex_to_uint8(public_key_hex);
-
-    // copy byte array pubkeydat to dogecoin_pubkey.pubkey:
-    memcpy(&pubkeytx.pubkey, pubkeydat, sizeout);
+    // determine intended network by checking address prefix:
+    const dogecoin_chainparams* chain = (public_key[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
     // calculate total minus fees
     uint64_t total_change_back = (uint64_t)amount - (uint64_t)subtractedfee;
 
-    return dogecoin_tx_add_p2pkh_out(tx->transaction, total_change_back, &pubkeytx);
+    return dogecoin_tx_add_address_out(tx->transaction, chain, total_change_back, public_key);
 }
 
 // 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
 // out_dogeamount == just an echoback of the total amount specified in the addutxos for verification
-char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* public_key_hex) {
+char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -283,9 +273,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
         char* p2pkh[len];
         dogecoin_mem_zero(p2pkh, sizeof(p2pkh));
         p2pkh_count = dogecoin_script_hash_to_p2pkh(tx_out_tmp, (char *)p2pkh, is_testnet);
-        if (i == (int)tx->transaction->vout->len - 1 && public_key_hex) {
+        if (i == (int)tx->transaction->vout->len - 1 && sender_p2pkh) {
             // manually make change and send back to our public key address
-            p2pkh_count += make_change(txindex, public_key_hex, subtractedfee, out_dogeamount_for_verification - tx_out_total);
+            p2pkh_count += make_change(txindex, sender_p2pkh, subtractedfee, out_dogeamount_for_verification - tx_out_total);
             tx_out_tmp = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
             tx_out_total += tx_out_tmp->value;
             break;
