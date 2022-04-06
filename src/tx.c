@@ -302,12 +302,12 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     if (!p2pkh) return false;
     size_t len = 25;
     unsigned char dec[len];
-    if (!dogecoin_base58_decode_check(p2pkh, dec, 34)) {
+    if (!dogecoin_base58_decode_check(p2pkh, dec, 35)) {
         printf("failed base58 decode\n");
         return false;
     }
     char* b58_decode_hex = utils_uint8_to_hex(dec, len - 4);
-    char* tmp = dogecoin_malloc(50);
+    char* tmp = dogecoin_calloc(1, 51);
     for (size_t l = 0; l < 4; l += 2) {
         if (l == 2) {
             memccpy(tmp, &b58_decode_hex[l], 3, 48);

@@ -309,19 +309,19 @@ void test_transaction()
     // transaction with both inputs signed:
     u_assert_str_eq(raw_hexadecimal_transaction, our_expected_signed_raw_hexadecimal_transaction);
 
-    // TODO: put trash in garbage
-    // char* res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
-    // u_assert_str_eq(res, utxo_scriptpubkey);
+    char* res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
+    u_assert_str_eq(res, utxo_scriptpubkey);
+    dogecoin_free(res);
     
-    // res = dogecoin_p2pkh_to_script_hash(external_p2pkh_address);
-    // u_assert_str_not_eq(res, utxo_scriptpubkey);
+    res = dogecoin_p2pkh_to_script_hash(external_p2pkh_address);
+    u_assert_str_not_eq(res, utxo_scriptpubkey);
+    dogecoin_free(res);
 
-    // res = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
+    res = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
 
-    // u_assert_str_eq(res, utxo_scriptpubkey);
+    u_assert_str_eq(res, utxo_scriptpubkey);
 
-    // dogecoin_free(res);
-    // END TODO
+    dogecoin_free(res);
 
     // remove working transaction object from hashmap
     remove_all();
