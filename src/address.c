@@ -177,9 +177,7 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     }
 
     /* determine address prefix for network chainparams */
-    char prefix[1];
-    memcpy(prefix, wif_privkey_master, 1);
-    const dogecoin_chainparams* chain = memcmp(prefix, "d", 1) == 0 ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(wif_privkey_master);
 
     size_t strsize = 128;
     char str[strsize];

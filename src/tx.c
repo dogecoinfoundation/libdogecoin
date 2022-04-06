@@ -224,12 +224,11 @@ void dogecoin_tx_free(dogecoin_tx* tx)
  * 
  * @return int
  */
-int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh) {
+int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet) {
     if (!txout) return false;
 
     dogecoin_tx_out* copy = dogecoin_tx_out_new();
     dogecoin_tx_out_copy(copy, txout);
-
     int length = 2;
 
     uint8_t* stripped_array[copy->script_pubkey->len];
@@ -247,7 +246,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh) {
             case OP_CHECKSIG:
                 break;
             default:
-                copy->script_pubkey->str[2] = 0x71;
+                copy->script_pubkey->str[2] = is_testnet ? 0x1e : 0x71;
                 memccpy(stripped_array, &copy->script_pubkey->str[2], 2, 21);
                 break;
         }

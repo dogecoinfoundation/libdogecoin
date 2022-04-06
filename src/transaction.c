@@ -151,6 +151,7 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
 
     // determine intended network by checking address prefix:
     const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
+    int is_testnet = chain_from_b58_prefix_bool(destinationaddress);
 
     // calculate total minus fees
     uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee; // - subtractedfee;
@@ -167,7 +168,8 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
         tx_out_total += tx_out->value;
         size_t len = 128;
         char* p2pkh[len];
-        dogecoin_script_hash_to_p2pkh(vector_idx(tx->transaction->vout, i), p2pkh);
+        
+        dogecoin_script_hash_to_p2pkh(vector_idx(tx->transaction->vout, i), p2pkh, is_testnet);
         printf("p2pkh: %s\n", p2pkh);
         printf("p2pkh: %s\n", destinationaddress);
         if (memcmp(p2pkh, destinationaddress, sizeof(destinationaddress)) == 0) p2pkh_count++;
