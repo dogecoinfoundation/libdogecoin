@@ -124,7 +124,7 @@ void signing_menu(int txindex) {
                     input_amount = atoi(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    script_pubkey = getl("script pubkey");
+                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(id);
                     printf("input_to_sign: %d\n", input_to_sign);
@@ -143,7 +143,7 @@ void signing_menu(int txindex) {
                     input_amount = atoi(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    script_pubkey = getl("script pubkey");
+                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
                     raw_hexadecimal_tx = get_raw_tx("raw transaction");
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     printf("input_to_sign: %d\n", input_to_sign);

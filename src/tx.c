@@ -307,16 +307,46 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
         return false;
     }
     char* b58_decode_hex = utils_uint8_to_hex(dec, len - 4);
+    char* tmp = dogecoin_malloc(50);
     for (size_t l = 0; l < 4; l += 2) {
         if (l == 2) {
-            char* tmp = dogecoin_malloc(50);
             memccpy(tmp, &b58_decode_hex[l], 3, 48);
             prepend(tmp, "76a914");
             strcat(tmp, "88ac");
-            b58_decode_hex = tmp;
         }
     }
-    return b58_decode_hex;
+    return tmp;
+}
+
+char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_testnet) {
+    if (!private_key_wif) return false;
+
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+
+    size_t sizeout = 100;
+
+    /* private key */
+    dogecoin_key key;
+    dogecoin_privkey_init(&key);
+    dogecoin_privkey_decode_wif(private_key_wif, chain, &key);
+    if (!dogecoin_privkey_is_valid(&key)) return false;
+    char new_wif_privkey[sizeout];
+    dogecoin_privkey_encode_wif(&key, chain, new_wif_privkey, &sizeout);
+
+    /* public key */
+    dogecoin_pubkey pubkey;
+    dogecoin_pubkey_init(&pubkey);
+    dogecoin_pubkey_from_key(&key, &pubkey);
+    if (!dogecoin_pubkey_is_valid(&pubkey)) return false;
+
+    char new_p2pkh_pubkey[sizeout];
+    dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
+    char* script_hash = dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);
+    printf("p2pkh_pubkey: %s\n", new_p2pkh_pubkey);
+    printf("script_hash: %s\n", script_hash);
+    dogecoin_privkey_cleanse(&key);
+    dogecoin_pubkey_cleanse(&pubkey);
+    return script_hash;
 }
 
 /**

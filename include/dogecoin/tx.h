@@ -73,6 +73,7 @@ typedef struct dogecoin_tx_ {
 //!p2pkh utilities
 LIBDOGECOIN_API int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet);
 LIBDOGECOIN_API char* dogecoin_p2pkh_to_script_hash(char* p2pkh);
+LIBDOGECOIN_API char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_testnet);
 
 //!create a new tx input
 LIBDOGECOIN_API dogecoin_tx_in* dogecoin_tx_in_new();
