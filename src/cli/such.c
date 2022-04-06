@@ -122,7 +122,6 @@ void signing_menu(int txindex) {
             switch (atoi(getl("command"))) {
                 case 1:
                     input_amount = atoi(getl("input amount")); // 2 & 10
-                    signature_hash_type = atoi(getl("sighash type")); // 1
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = getl("script pubkey");
@@ -134,7 +133,7 @@ void signing_menu(int txindex) {
                     printf("input_to_sign: %d\n", input_to_sign);
                     printf("private_key: %s\n", private_key_wif);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, signature_hash_type, input_amount, private_key_wif);
+                    sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
                     if (!save_raw_transaction(id, raw_hexadecimal_tx)) {
                         printf("error saving transaction!\n");
                     }
@@ -142,7 +141,6 @@ void signing_menu(int txindex) {
                     break;
                 case 2:
                     input_amount = atoi(getl("input amount")); // 2 & 10
-                    signature_hash_type = atoi(getl("sighash type")); // 1
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = getl("script pubkey");
@@ -207,7 +205,7 @@ void sub_menu(int txindex) {
                     printf("raw_tx: %s\n", get_raw_transaction(id));
                     break;
                 case 2:
-                    temp_amt = atof(getl("amount to send")); // 5
+                    temp_amt = atof(getl("amount to send to destination address")); // 5
                     temp_ext_p2pkh = getl("destination address"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
                     printf("destination: %s\n", temp_ext_p2pkh);
                     printf("addout success: %d\n", add_output(id, (char *)temp_ext_p2pkh, temp_amt));
@@ -215,11 +213,11 @@ void sub_menu(int txindex) {
                     printf("raw_tx: %s\n", str);
                     break;
                 case 3:
-                    output_address = getl("output address for validation"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
+                    output_address = getl("re-enter destination address for verification"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
                     desired_fee = atof(getl("desired fee")); // .00226
-                    total_amount_for_verification = atof(getl("total amount for validation")); // 12
-                    public_key = getl("public_key_hex");
-                    // 031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075b
+                    total_amount_for_verification = atof(getl("total amount for verification")); // 12
+                    public_key = getl("senders address");
+                    // noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy
                     raw_hexadecimal_transaction = finalize_transaction(id, output_address, desired_fee, total_amount_for_verification, public_key);
                     printf("raw_tx: %s\n", raw_hexadecimal_transaction);
                     break;

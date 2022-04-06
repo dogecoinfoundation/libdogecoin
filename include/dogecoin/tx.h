@@ -70,13 +70,16 @@ typedef struct dogecoin_tx_ {
     uint32_t locktime;
 } dogecoin_tx;
 
+//!p2pkh utilities
+LIBDOGECOIN_API int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet);
+LIBDOGECOIN_API char* dogecoin_p2pkh_to_script_hash(char* p2pkh);
+
 //!create a new tx input
 LIBDOGECOIN_API dogecoin_tx_in* dogecoin_tx_in_new();
 LIBDOGECOIN_API void dogecoin_tx_in_free(dogecoin_tx_in* tx_in);
 LIBDOGECOIN_API void dogecoin_tx_in_copy(dogecoin_tx_in* dest, const dogecoin_tx_in* src);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_in_deserialize(dogecoin_tx_in* tx_in, struct const_buffer* buf);
 LIBDOGECOIN_API void dogecoin_tx_in_serialize(cstring* s, const dogecoin_tx_in* tx_in);
-LIBDOGECOIN_API int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet);
 
 //!create a new tx output
 LIBDOGECOIN_API dogecoin_tx_out* dogecoin_tx_out_new();

@@ -283,6 +283,41 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     dogecoin_tx_out_free(copy);
     return memcmp(p2pkh, script_hash_to_p2pkh, strlen(script_hash_to_p2pkh)) == 0;
 }
+void prepend(char* s, const char* t)
+{
+    size_t len = strlen(t);
+    memmove(s + len, s, strlen(s) + 1);
+    memcpy(s, t, len);
+}
+/**
+ * It takes a p2pkh address and converts it to a compressed public key in
+ * hexadecimal format. It then strips the network prefix and checksum and 
+ * prepends OP_DUP and OP_HASH160 and appends OP_EQUALVERIFY and OP_CHECKSIG.
+ * 
+ * @param p2pkh The variable out we want to contain the converted script hash in.
+ * 
+ * @return int
+ */
+char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
+    if (!p2pkh) return false;
+    size_t len = 25;
+    unsigned char dec[len];
+    if (!dogecoin_base58_decode_check(p2pkh, dec, 34)) {
+        printf("failed base58 decode\n");
+        return false;
+    }
+    char* b58_decode_hex = utils_uint8_to_hex(dec, len - 4);
+    for (size_t l = 0; l < 4; l += 2) {
+        if (l == 2) {
+            char* tmp = dogecoin_malloc(50);
+            memccpy(tmp, &b58_decode_hex[l], 3, 48);
+            prepend(tmp, "76a914");
+            strcat(tmp, "88ac");
+            b58_decode_hex = tmp;
+        }
+    }
+    return b58_decode_hex;
+}
 
 /**
  * @brief This function creates a new dogecoin transaction

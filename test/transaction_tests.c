@@ -303,13 +303,21 @@ void test_transaction()
 
     // sign current working transaction input index 1 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 10 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10.0, private_key_wif), 1);
+    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10, private_key_wif), 1);
 
     // assert that our hexadecimal bufer (raw_hexadecimal_transaction) is equal to the expected finalized
     // transaction with both inputs signed:
     u_assert_str_eq(raw_hexadecimal_transaction, our_expected_signed_raw_hexadecimal_transaction);
 
-    // remove working transaction object from hashmap
+    char* res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
+    u_assert_str_eq(res, utxo_scriptpubkey);
 
+    res = dogecoin_p2pkh_to_script_hash(external_p2pkh_address);
+    u_assert_str_not_eq(res, utxo_scriptpubkey);
+
+    dogecoin_free(res);
+
+    // remove working transaction object from hashmap
     remove_all();
+
 }
