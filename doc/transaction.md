@@ -306,17 +306,24 @@ _Python usage:_
 
 `char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification)`
 
-This function takes in a working_transaction structures index as an integer (txindex), the public key used to derive the destination address in hexadecimal format, the desired fee to send the transaction and the amount we want in change. The fee will automatically be subtracted from the amount provided. This will be added to the working_transaction->transaction->vout parameter.
+This function takes in a working_transaction structures index as an integer (txindex), the external destination address we are sending to, the desired fee to be substracted and the total amount of all utxos to be spent. It automatically calculates the total minus the fee and compares against whats found in the raw hexadecimal transaction. In addition it compares the external destination address to the script hash by converting to p2pkh and counting to check it's found. If either the amount or address are not found the function will return false and failure should be handled by the caller. 
 
 _C usage:_
 ```C
 int working_transaction_index = start_transaction();
 
-...
-
 char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
 
 add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+
+make_change(working_transaction_index, public_key_hex, external_p2pkh_address, 226000, 700000000);
+
+// get updated raw hexadecimal transaction
+raw_hexadecimal_transaction = get_raw_transaction(1);
+
+// confirm total output value equals total utxo input value minus transaction fee
+// validate external p2pkh address by converting script hash to p2pkh and asserting equal:
+raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000);
 ```
 
 _Python usage:_

@@ -1,5 +1,20 @@
 # Dogecoin Transactions
 
+tx describes a dogecoin transaction in reply to getdata. When a bloom filter is applied tx objects are sent automatically for matching transactions following the merkleblock.
+
+| Field Size      | Description | Data type | Comments |
+| ----------- | ----------- | - | - |
+| 4      | version       | uint32_t | Transaction data format version |
+| 0 or 2   | flag        | optional uint8_t[2] | If present, always 0001, and indicates the presence of witness data |
+| 1+      | tx_in count       | var_int | Number of Transaction inputs (never zero) |
+| 41+   | tx_in        | tx_in[] | A list of 1 or more transaction inputs or sources for coins |
+| 1+      | tx_out count | var_int | Number of Transaction outputs |
+| 9+   | tx_out        | tx_out[] | A list of 1 or more transaction outputs or destinations for coins |
+| 0+      | tx_witnesses | tx_witness[] |  	A list of witnesses, one for each input; omitted if flag is omitted above |
+| 4   | lock_time        | uint32_t | The block number or timestamp at which this transaction is unlocked: 0 == not locked, < 500000000 == Block number at which this transaction is unlocked, >= 500000000 == UNIX timestamp at which this transaction is unlocked. If all TxIn have final (0xffffffff) sequence numbers then lock_time is irrelevant. Otherwise, the transaction may not be added to a block until after lock_time (see NLockTime). |
+
+## Simple Transactions
+
 Below is an adapted tutorial of bitcoin developers transaction tutorial that will demonstrate how to generate a raw transaction with the goal of spending a dogecoin UTXO. It will describe how to use Dogecoin Core's RPC (remote procedure call) interface in addition to how that's been implemented within libdogecoin. Regardless of the application you use to interact with Dogecoin, the data described (variables, concepts, etc) should remain applicable and relevant.
 
 In order to get hands on experience while learning below you will need to setup a Dogecoin Core node and create a regtest (regression test mode) environment with 50 DOGE in your test wallet.

@@ -215,6 +215,78 @@ void dogecoin_tx_free(dogecoin_tx* tx)
 
 
 /**
+ * It takes a pointer to a dogecoin_tx_out, copies to a new dogecoin_tx_out
+ * converts dogecoin_tx_out->script_pubkey to a p2pkh address, and 
+ * frees the copy.
+ * 
+ * @param txout The data to be copied which contains the script hash we want.
+ * @param p2pkh The variable out we want to contain the converted script hash in.
+ * 
+ * @return int
+ */
+int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh) {
+    if (!txout) return false;
+
+    dogecoin_tx_out* copy = dogecoin_tx_out_new();
+    dogecoin_tx_out_copy(copy, txout);
+
+    int length = 2;
+
+    uint8_t* stripped_array[copy->script_pubkey->len];
+    // loop through 20 bytes of the script hash while stripping op codes
+    // and copy from index 2 to 21 after prefixing with version
+    // from chainparams (TODO):
+    for (; length < copy->script_pubkey->len - 4; length++) {
+        switch (copy->script_pubkey->str[length]) {
+            case OP_DUP:
+                break;
+            case OP_HASH160:
+                break;
+            case OP_EQUALVERIFY:
+                break;
+            case OP_CHECKSIG:
+                break;
+            default:
+                copy->script_pubkey->str[2] = 0x71;
+                memccpy(stripped_array, &copy->script_pubkey->str[2], 2, 21);
+                break;
+        }
+    }
+
+    unsigned char d1[SHA256_DIGEST_LENGTH], d2[SHA256_DIGEST_LENGTH], checksum[4], unencoded_address[25];
+    // double sha256 stripped array into d1:
+    dogecoin_dblhash(stripped_array, strlen(stripped_array), d1);
+    // copy check sum (4 bytes) into checksum var:
+    memcpy(checksum, d1, 4);
+    // copy stripped array into final var before passing to out variable:
+    memcpy(unencoded_address, stripped_array, 21);
+
+    // copy checksum to the last 4 bytes of our unencoded_address:
+    unencoded_address[21] = checksum[0];
+    unencoded_address[22] = checksum[1];
+    unencoded_address[23] = checksum[2];
+    unencoded_address[24] = checksum[3];
+
+    size_t strsize = 128;
+    char* script_hash_to_p2pkh[strsize];
+    // base 58 encode check our unencoded_address into the script_hash_to_p2pkh:
+    if (!dogecoin_base58_encode_check(unencoded_address, 21, script_hash_to_p2pkh, strsize)) {
+        return false;
+    }
+    
+    printf("doublesha:         %s\n", utils_uint8_to_hex(d1, sizeof(d1)));
+    printf("checksum:          %s\n", utils_uint8_to_hex(checksum, sizeof(checksum)));
+    printf("unencoded_address: %s\n", utils_uint8_to_hex(unencoded_address, sizeof(unencoded_address)));
+    printf("scripthash2p2pkh:  %s\n", script_hash_to_p2pkh);
+    
+    // copy to out variable p2pkh, free tx_out copy and return true:
+    memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh));
+    
+    dogecoin_tx_out_free(copy);
+    return true;
+}
+
+/**
  * @brief This function creates a new dogecoin transaction
  * object and initializes it to all zeroes except for the
  * version, which is set to 1.

@@ -155,16 +155,27 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
     // calculate total minus fees
     uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee; // - subtractedfee;
 
-    int i;
+    int i, p2pkh_count = 0;
     uint64_t tx_out_total = 0;
 
     // iterate through transaction output values while adding each one to tx_out_total:
     for (i = 0; i < tx->transaction->vout->len; i++) {
         dogecoin_tx_out* tx_out;
+        dogecoin_tx_out* copy = dogecoin_tx_out_new();
         tx_out = vector_idx(tx->transaction->vout, i);
+        dogecoin_tx_out_copy(copy, tx_out);
         tx_out_total += tx_out->value;
-        char* script_pubkey_hex = utils_uint8_to_hex(tx_out->script_pubkey->str, tx_out->script_pubkey->len);
-        printf("tx_out: %s\n", script_pubkey_hex);
+        size_t len = 128;
+        char* p2pkh[len];
+        dogecoin_script_hash_to_p2pkh(vector_idx(tx->transaction->vout, i), p2pkh);
+        printf("p2pkh: %s\n", p2pkh);
+        printf("p2pkh: %s\n", destinationaddress);
+        if (memcmp(p2pkh, destinationaddress, sizeof(destinationaddress)) == 0) p2pkh_count++;
+    }
+
+    if (p2pkh_count != 1) {
+        printf("p2pkh address not found from any output script hash!\n");
+        return false;
     }
 
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:

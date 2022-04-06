@@ -96,6 +96,7 @@ void test_transaction()
     u_assert_str_eq(raw_hexadecimal_transaction, our_unsigned_hexadecimal_transaction);
 
     // confirm total output value equals total utxo input value minus transaction fee
+    // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
     raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000);
     
     // sign current working transaction input index 0 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
