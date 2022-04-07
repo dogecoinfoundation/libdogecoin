@@ -172,13 +172,13 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
         printf("rawtx: %s\n", rawtx);
         working_transaction* tx_raw = find_transaction(txindex);
         dogecoin_tx_copy(tx_raw->transaction, txtmp);
-        for (size_t i = 0; i < tx_raw->transaction->vin->len - 1; i++) {
+        for (int i = 0; i < (int)tx_raw->transaction->vin->len; i++) {
             dogecoin_tx_in* tx_in_tmp = vector_idx(tx_raw->transaction->vin, i);
             char tx_in_buffer[tx_in_tmp->script_sig->len * 2];
             utils_bin_to_hex((unsigned char*)tx_in_tmp->script_sig->str, tx_in_tmp->script_sig->len, tx_in_buffer);
             printf("\ntx_in: %s\n\n", tx_in_buffer);
         }
-        dogecoin_tx_free(txtmp);
+        // dogecoin_tx_free(txtmp);
         // remove_transaction(tx_raw);
     }
     return true;
@@ -437,6 +437,21 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         debug_print("signed TX: %s\n", incomingrawtx);
         cstr_free(signed_tx, true);
         dogecoin_tx_free(txtmp);
+    }
+    return true;
+}
+
+// sign a given inputted transaction with a given private key, and return a hex signed transaction.
+// we may want to add such things to 'advanced' section:
+// locktime, possibilities for multiple outputs, data, sequence.
+int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+    if (!txindex) return false;
+    printf("before sign indexed raw transaction: %s\n", incomingrawtx);
+    sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey);
+    printf("after sign indexed raw transaction: %s\n", incomingrawtx);
+    printf("sign indexed raw transaction: %d\n", txindex);
+    if (!save_raw_transaction(txindex, incomingrawtx)) {
+        printf("error saving transaction!\n");
     }
     return true;
 }

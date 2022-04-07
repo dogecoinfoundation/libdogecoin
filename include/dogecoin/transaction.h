@@ -88,6 +88,7 @@ LIBDOGECOIN_API void clear_transaction(int txindex); // #clears a tx in memory. 
 // we may want to add such things to 'advanced' section:
 // locktime, possibilities for multiple outputs, data, sequence.
 LIBDOGECOIN_API int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey);
+LIBDOGECOIN_API int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey);
 
 LIBDOGECOIN_END_DECL
 

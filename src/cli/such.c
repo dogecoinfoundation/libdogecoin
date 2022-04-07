@@ -164,7 +164,7 @@ void sub_menu(int txindex, int is_testnet) {
     int input_to_sign;
     char* raw_hexadecimal_transaction;
         while (running) {
-            printf("\n1. add input\n");
+            printf("\n 1. add input\n");
             printf(" 2. add output\n");
             printf(" 3. finalize transaction\n");
             printf(" 4. sign transaction\n");
@@ -208,19 +208,209 @@ void sub_menu(int txindex, int is_testnet) {
         }
 }
 
+void transaction_input_menu(int txindex, int is_testnet) {
+    int id = txindex;
+    int running = 1;
+    working_transaction* tx = find_transaction(txindex);
+        while (running) {
+            int length = tx->transaction->vin->len;
+            int selected = -1;
+            char* hex_utxo_txid;
+            int vout;
+            char* raw_hexadecimal_tx;
+            char* script_pubkey;
+            int signature_hash_type;
+            float input_amount;
+            int input_to_sign;
+            char* private_key_wif;
+            for (int i = 0; i <= length; i++) {
+                printf("\n--------------------------------\n");
+                printf("input index:      %d\n", i);
+                dogecoin_tx_in* tx_in = vector_idx(tx->transaction->vin, i);
+                vout = tx_in->prevout.n;
+                printf("prevout.n:        %d\n", vout);
+                hex_utxo_txid = utils_uint8_to_hex(tx_in->prevout.hash, sizeof tx_in->prevout.hash);
+                printf("txid:             %s\n", hex_utxo_txid);
+                printf("script signature: %s\n", utils_uint8_to_hex((const uint8_t *)tx_in->script_sig->str, tx_in->script_sig->len));
+                printf("tx_in->sequence:  %x\n", tx_in->sequence);
+                selected == i ? printf("selected:         [X]\n") : "";
+
+                if (selected == i) {
+                    printf("\n\n");
+                    printf("1. select field to edit\n");
+                    printf("2. finish editing\n");
+                    switch (atoi(getl("\ncommand"))) {
+                        case 1:
+                            // tx_input submenu
+                            printf("1. prevout.n\n");
+                            printf("2. txid\n");
+                            printf("3. script signature\n");
+                            switch (atoi(getl("field to edit"))) {
+                                case 1:
+                                    printf("prevout.n\n");
+                                    vout = atoi(getl("new input index"));
+                                    tx_in->prevout.n = vout;
+                                    vector_add(tx->transaction->vin, tx_in);
+                                    break;
+                                case 2:
+                                    hex_utxo_txid = get_raw_tx("new txid");
+                                    utils_uint256_sethex((char *)hex_utxo_txid, (uint8_t *)tx_in->prevout.hash);
+                                    vector_add(tx->transaction->vin, tx_in);
+                                    printf("txid\n");
+                                    break;
+                                case 3:
+                                    printf("\nediting script signature:\n\n");
+                                    input_amount = atoi(getl("input amount")); // 2 & 10
+                                    input_to_sign = i;
+                                    private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
+                                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
+                                    cstr_erase(tx_in->script_sig, 0, tx_in->script_sig->len);
+                                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
+                                    raw_hexadecimal_tx = get_raw_transaction(txindex);
+                                    printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                                    // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
+                                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                                        printf("error saving transaction!\n");
+                                    }
+                                    break;
+                            }
+                            i = i - i - 1; // reset loop to start
+                            break;
+                        case 2:
+                            selected = -1; // set selected to number out of bounds for i
+                            i = i - i - 1; // reset loop to start
+                            break;
+                    }
+                }
+                // if on last iteration, jump into switch case pausing loop
+                // execution so user has ability to reset loop index in order
+                // to target desired input to edit. otherwise set loop index to 
+                // length thus finishing final iteration and set running to 0 to
+                // escape encompassing while loop so we return to previous menu
+                if (i == length - 1) {
+                    printf("\n\n");
+                    printf("1. select input to edit\n");
+                    printf("2. main menu\n");
+                    switch (atoi(getl("\ncommand"))) {
+                        case 1:
+                            // tx_input submenu
+                            selected = atoi(getl("vin index"));
+                            i = i - i - 1;
+                            break;
+                        case 2:
+                            i = length;
+                            running = 0;
+                            break;
+                    }
+                }
+            }
+        }
+    // TODO: clean up garbage
+}
+
+void transaction_output_menu(int txindex, int is_testnet) {
+    int id = txindex;
+    int running = 1;
+    char* script_pubkey;
+    char* destinationaddress;
+    double amount;
+    uint64_t tx_out_total = 0;
+    dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+    working_transaction* tx = find_transaction(txindex);
+        while (running) {
+            int length = tx->transaction->vout->len;
+            int selected = -1;
+            for (int i = 0; i <= length; i++) {
+                dogecoin_tx_out* tx_out = vector_idx(tx->transaction->vout, i);
+                tx_out_total += tx_out->value;
+                
+                printf("\n--------------------------------\n");
+                printf("output index:       %d\n", i);
+                printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                amount = koinu_to_coins(tx_out->value);
+                printf("amount:             %f\n", amount);
+                // selected should only equal anything other than -1 upon setting
+                // loop index in conditional targetting last iteration:
+                selected == i ? printf("selected:           [X]\n") : "";
+                if (selected == i) {
+                    printf("\n\n");
+                    printf("1. select field to edit\n");
+                    printf("2. finish editing\n");
+                    switch (atoi(getl("\ncommand"))) {
+                        case 1:
+                            // tx_input submenu
+                            printf("1. script public key\n");
+                            printf("2. amount\n");
+                            switch (atoi(getl("field to edit"))) {
+                                case 1:
+                                    destinationaddress = getl("new destination address");
+                                    script_pubkey = dogecoin_p2pkh_to_script_hash(destinationaddress);
+                                    printf("script pubkey: %s\n", script_pubkey);
+                                    printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                                    amount = coins_to_koinu(amount);
+                                    vector_remove_idx(tx->transaction->vout, i);
+                                    dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
+                                    tx_out = vector_idx(tx->transaction->vout, i);
+                                    break;
+                                case 2:
+                                    amount = atof(getl("new amount"));
+                                    printf("amount: %f\n", amount);
+                                    amount = coins_to_koinu(amount);
+                                    tx_out->value = amount;
+                                    printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
+                                    break;
+                            }
+                            tx_out_total = 0;
+                            i = i - i - 1; // reset loop to start
+                            break;
+                        case 2:
+                            selected = -1; // set selected to number out of bounds for i
+                            i = i - i - 1; // reset loop to start
+                            break;
+                    }
+                }
+                // if on last iteration, jump into switch case pausing loop
+                // execution so user has ability to reset loop index in order
+                // to target desired input to edit. otherwise set loop index to 
+                // length thus finishing final iteration and set running to 0 to
+                // escape encompassing while loop so we return to previous menu
+                if (i == length - 1) {
+                    printf("\n\n");
+                    // printf("subtotal - desired fee: %f\n", koinu_to_coins(tx_out_total)); // TODO: reset to 0, is currently appending to previous calculated total
+                    printf("\n");
+                    printf("1. select output to edit\n");
+                    printf("2. main menu\n");
+                    switch (atoi(getl("\ncommand"))) {
+                        case 1:
+                            // tx_input submenu
+                            selected = atoi(getl("vout index"));
+                            i = i - i - 1;
+                            break;
+                        case 2:
+                            i = length;
+                            running = 0;
+                            break;
+                    }
+                }
+            }
+        }
+    // TODO: clean up garbage
+}
+
 void edit_menu(int txindex, int is_testnet) {
     int id = txindex;
     int running = 1;
         while (running) {
-            printf("\n\n1. edit input\n");
+            printf("\n");
+            printf("1. edit input\n");
             printf("2. edit output\n");
             printf("3. main menu\n");
-            switch (atoi(getl("command"))) {
+            switch (atoi(getl("\ncommand"))) {
                 case 1:
-                    // tx_input submenu
+                    transaction_input_menu(txindex, is_testnet);
                     break;
                 case 2:
-                    // tx_output submenu
+                    transaction_output_menu(txindex, is_testnet);
                     break;
                 case 3:
                     running = 0;
@@ -250,6 +440,9 @@ void main_menu() {
     struct working_transaction *s;
     int temp;
     print_header("src/cli/wow.txt");
+
+    // load existing testnet transaction into memory for demonstration purposes.
+    save_raw_transaction(start_transaction(), "0100000002746007aed61e8531faba1af6610f10a5422c70a2a7eb6ffb51cb7a7b7b5e45b4010000006b48304502210090bddac300243d16dca5e38ab6c80d5848e0d710d77702223bacd6682654f6fe02201b5c2e8b1143d8a807d604dc18068b4278facce561c302b0c66a4f2a5a4aa66f0121031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075bffffffffe216461c60c629333ac6b40d29b5b0b6d0ce241aea5903cf4329fc65dc3b1142010000006a47304402200e19c2a66846109aaae4d29376040fc4f7af1a519156fe8da543dc6f03bb50a102203a27495aba9eead2f154e44c25b52ccbbedef084f0caf1deedaca87efd77e4e70121031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075bffffffff020065cd1d000000001976a9144da2f8202789567d402f7f717c01d98837e4325488ac30b4b529000000001976a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac00000000");
         while (running) {
             printf("\nsuch transaction: \n\n");
             printf(" 1. add transaction\n");
