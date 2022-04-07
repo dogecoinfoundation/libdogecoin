@@ -441,3 +441,42 @@ void print_bits(size_t const size, void const* ptr)
     }
     puts("");
 }
+
+/**
+ * @brief Allows prepending characters (char* t) to the beginning of a string (char* s).
+ * 
+ * @param s The string to prepend to.
+ * @param t The characters that will be prepended.
+ */
+void prepend(char* s, const char* t)
+{
+    /* get length of const char* t */
+    size_t length = strlen(t);
+
+    /* allocate enough length of both s and t
+    for s and move each char back one */
+    memmove(s + length, s, strlen(s) + 1);
+
+    /* prepend t to new empty space in s */
+    memcpy(s, t, length);
+}
+
+/**
+ * @brief Allows appending characters (char* t) to the end of a string (char* s).
+ * 
+ * @param s The string to append to.
+ * @param t The characters that will be appended.
+ */
+void append(char* s, char* t)
+{
+    int i = 0, length = 0;
+    /* get length of char* s */
+    for(; memcmp(&s[i], "\0", 1) != 0; i++) length++;
+
+    /*  append char* t to char* s */
+    for(i = 0; memcmp(&t[i], "\0", 1) != 0; i++) {
+        s[length + i] = t[i];
+    }
+
+    memcpy(&s[length + i], "\0", 1);
+}

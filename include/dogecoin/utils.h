@@ -56,6 +56,8 @@ LIBDOGECOIN_API double koinu_to_coins(uint64_t koinu);
 LIBDOGECOIN_API uint64_t coins_to_koinu(float decimal);
 LIBDOGECOIN_API uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2);
 LIBDOGECOIN_API void print_bits(size_t const size, void const* ptr);
+LIBDOGECOIN_API void prepend(char* s, const char* t);
+LIBDOGECOIN_API void append(char* s, char* t);
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */

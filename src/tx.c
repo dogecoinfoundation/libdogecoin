@@ -283,12 +283,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     dogecoin_tx_out_free(copy);
     return memcmp(p2pkh, script_hash_to_p2pkh, strlen(script_hash_to_p2pkh)) == 0;
 }
-void prepend(char* s, const char* t)
-{
-    size_t len = strlen(t);
-    memmove(s + len, s, strlen(s) + 1);
-    memcpy(s, t, len);
-}
+
 /**
  * It takes a p2pkh address and converts it to a compressed public key in
  * hexadecimal format. It then strips the network prefix and checksum and 
@@ -312,12 +307,24 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
         if (l == 2) {
             memccpy(tmp, &b58_decode_hex[l], 3, 48);
             prepend(tmp, "76a914");
-            strcat(tmp, "88ac");
+            append(tmp, "88ac");
         }
     }
     return tmp;
 }
 
+/**
+ * It takes in a private key (WIF encoded) and a flag to indicate the correct network
+ * needed in order to select the correct base58 prefix from chainparams and then decodes
+ * the private key into a dogecoin_key struct which is then encoded. Then it derives the
+ * public hexadecimal key and generates the corresponding p2pkh address. Finally it converts
+ * the p2pkh to a script pubkey hash, frees the previous structs from memory and returns the
+ * script pubkey hash.
+ * 
+ * @param p2pkh The variable out we want to contain the converted script hash in.
+ * 
+ * @return char* The script public key hash.
+ */
 char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_testnet) {
     if (!private_key_wif) return false;
 
