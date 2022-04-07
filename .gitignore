@@ -113,4 +113,3 @@ test-suite.log
 *.py[cod]
 libdogecoin.egg-info/
 dist/
-
