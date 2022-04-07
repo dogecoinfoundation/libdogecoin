@@ -17,8 +17,8 @@ void test_address()
     size_t privkeywiflen = 53;  
     char privkeywif_main[privkeywiflen];
     char privkeywif_test[privkeywiflen];
-    char p2pkh_pubkey_main[33];
-    char p2pkh_pubkey_test[33];
+    char p2pkh_pubkey_main[35];
+    char p2pkh_pubkey_test[35];
     memset(privkeywif_main, 0, privkeywiflen);
     memset(privkeywif_test, 0, privkeywiflen);
     // test generation ability
