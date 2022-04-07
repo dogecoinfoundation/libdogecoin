@@ -79,7 +79,7 @@ void print_transactions()
     struct working_transaction *s;
 
     for (s = transactions; s != NULL; s = (struct working_transaction*)(s->hh.next)) {
-        printf("transaction id %d: hash \n", s->idx);
+        printf("\nworking transaction id: %d\nraw transaction (hexadecimal): %s\n", s->idx, get_raw_transaction(s->idx));
     }
 }
 
