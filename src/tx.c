@@ -303,11 +303,14 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     }
     char* b58_decode_hex = utils_uint8_to_hex(dec, len - 4);
     char* tmp = dogecoin_calloc(1, 51);
+    char opcodes_and_pubkey_length_to_prepend[7], opcodes_to_append[5];
+    sprintf(opcodes_and_pubkey_length_to_prepend, "%x%x%x", OP_DUP, OP_HASH160, 20);
+    sprintf(opcodes_to_append, "%x%x", OP_EQUALVERIFY, OP_CHECKSIG);
     for (size_t l = 0; l < 4; l += 2) {
         if (l == 2) {
             memccpy(tmp, &b58_decode_hex[l], 3, 48);
-            prepend(tmp, "76a914");
-            append(tmp, "88ac");
+            prepend(tmp, opcodes_and_pubkey_length_to_prepend);
+            append(tmp, opcodes_to_append);
         }
     }
     return tmp;
