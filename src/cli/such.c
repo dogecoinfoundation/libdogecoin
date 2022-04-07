@@ -78,7 +78,7 @@ static bool showError(const char* er)
     return 1;
 }
 
-void signing_menu(int txindex) {
+void signing_menu(int txindex, int is_testnet) {
     int id = txindex;
     int running = 1;
     int input_to_sign;
@@ -149,7 +149,7 @@ void signing_menu(int txindex) {
         }
 }
 
-void sub_menu(int txindex) {
+void sub_menu(int txindex, int is_testnet) {
     int id = txindex;
     int running = 1;
     int temp;
@@ -164,7 +164,7 @@ void sub_menu(int txindex) {
     int input_to_sign;
     char* raw_hexadecimal_transaction;
         while (running) {
-            printf("\n 1. add input\n");
+            printf("\n1. add input\n");
             printf(" 2. add output\n");
             printf(" 3. finalize transaction\n");
             printf(" 4. sign transaction\n");
@@ -196,7 +196,7 @@ void sub_menu(int txindex) {
                     printf("raw_tx: %s\n", raw_hexadecimal_transaction);
                     break;
                 case 4:
-                    signing_menu(id);
+                    signing_menu(id, is_testnet);
                     break;
                 case 8:
                     printf("raw_tx: %s\n", get_raw_transaction(id));
@@ -208,13 +208,50 @@ void sub_menu(int txindex) {
         }
 }
 
+void edit_menu(int txindex, int is_testnet) {
+    int id = txindex;
+    int running = 1;
+        while (running) {
+            printf("\n\n1. edit input\n");
+            printf("2. edit output\n");
+            printf("3. main menu\n");
+            switch (atoi(getl("command"))) {
+                case 1:
+                    // tx_input submenu
+                    break;
+                case 2:
+                    // tx_output submenu
+                    break;
+                case 3:
+                    running = 0;
+                    break;
+            }
+        }
+}
+
+int chainparams_menu(int is_testnet) {
+    printf("\n1. mainnet\n");
+    printf("2. testnet\n\n");
+    switch (atoi(getl("command"))) {
+        case 1:
+            is_testnet = false;
+            break;
+        case 2:
+            is_testnet = true;
+            break;
+    }
+    return is_testnet;
+}
+
+int is_testnet = true;
+
 void main_menu() {
     int running = 1;
     struct working_transaction *s;
     int temp;
     print_header("src/cli/wow.txt");
         while (running) {
-            printf("create transaction: \n");
+            printf("\nsuch transaction: \n\n");
             printf(" 1. add transaction\n");
             printf(" 2. edit transaction by id\n");
             printf(" 3. find transaction\n");
@@ -223,24 +260,31 @@ void main_menu() {
             printf(" 6. sort items by id\n");
             printf(" 7. print transactions\n");
             printf(" 8. count transactions\n");
-            printf(" 9. quit\n");
-            switch (atoi(getl("command"))) {
+            printf(" 9. change network (current: %s)\n", is_testnet ? "testnet" : "mainnet");
+            printf(" 10. quit\n");
+            switch (atoi(getl("\ncommand"))) {
                 case 1:
-                    sub_menu(start_transaction());
+                    sub_menu(start_transaction(), is_testnet);
                     break;
                 case 2:
-                    temp = atoi(getl("ID"));
+                    temp = atoi(getl("ID of transaction to edit"));
+                    s = find_transaction(temp);
+                    if (s) {
+                        edit_menu(temp, is_testnet);
+                    } else {
+                        printf("\nno transaction found with that id. please try again!\n");
+                    }
                     break;
                 case 3:
                     s = find_transaction(atoi(getl("ID to find")));
-                    printf("transaction: %s\n", s ? get_raw_transaction(s->idx) : "unknown");
+                    printf(s ? "transaction: %s\n", get_raw_transaction(s->idx) : "\nno transaction found with that id. please try again!\n");
                     break;
                 case 4:
                     s = find_transaction(atoi(getl("ID to delete")));
                     if (s) {
                         remove_transaction(s);
                     } else {
-                        printf("id unknown\n");
+                        printf("\nno transaction found with that id. please try again!\n");
                     }
                     break;
                 case 5:
@@ -256,6 +300,9 @@ void main_menu() {
                     count_transactions();
                     break;
                 case 9:
+                    is_testnet = chainparams_menu(is_testnet);
+                    break;
+                case 10:
                     running = 0;
                     break;
             }
