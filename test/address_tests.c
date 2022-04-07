@@ -16,7 +16,7 @@ void test_address()
 {
     /* initialize testing variables for simple keypair gen */
     size_t privkeywiflen = 53;
-    size_t p2pkhpubkeylen = 33;
+    size_t p2pkhpubkeylen = 35;
     char privkeywif_main[privkeywiflen];
     char privkeywif_test[privkeywiflen];
     char p2pkh_pubkey_main[p2pkhpubkeylen];
