@@ -70,6 +70,8 @@
 
 #endif
 
+#define MAX_LEN 128
+
 static uint8_t buffer_hex_to_uint8[TO_UINT8_HEX_BUF_LEN];
 static char buffer_uint8_to_hex[TO_UINT8_HEX_BUF_LEN];
 
@@ -417,6 +419,29 @@ void dogecoin_file_commit(FILE* file)
     fsync(fileno(file));
 #endif
 #endif
+}
+
+void print_header(char *filepath) {
+    if (!filepath) return;
+    char *filename = filepath;
+    FILE *fptr = NULL;
+
+    if((fptr = fopen(filename,"r")) == NULL)
+    {
+        fprintf(stderr,"error opening %s\n",filename);
+    }
+
+    print_image(fptr);
+
+    fclose(fptr);
+}
+
+void print_image(FILE *fptr)
+{
+    char read_string[MAX_LEN];
+
+    while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+        printf("%s",read_string);
 }
 
 double koinu_to_coins(uint64_t koinu) {

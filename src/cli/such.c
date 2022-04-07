@@ -78,32 +78,6 @@ static bool showError(const char* er)
     return 1;
 }
 
-#define MAX_LEN 128
-
-void print_image(FILE *fptr);
-
-void print_header() {
-    char *filename = "src/cli/wow.txt";
-    FILE *fptr = NULL;
-
-    if((fptr = fopen(filename,"r")) == NULL)
-    {
-        fprintf(stderr,"error opening %s\n",filename);
-    }
-
-    print_image(fptr);
-
-    fclose(fptr);
-}
-
-void print_image(FILE *fptr)
-{
-    char read_string[MAX_LEN];
-
-    while(fgets(read_string,sizeof(read_string),fptr) != NULL)
-        printf("%s",read_string);
-}
-
 void signing_menu(int txindex) {
     int id = txindex;
     int running = 1;
@@ -238,11 +212,11 @@ void main_menu() {
     int running = 1;
     struct working_transaction *s;
     int temp;
-    print_header();
+    print_header("src/cli/wow.txt");
         while (running) {
             printf("create transaction: \n");
             printf(" 1. add transaction\n");
-            // printf(" 2. edit transaction by id\n");
+            printf(" 2. edit transaction by id\n");
             printf(" 3. find transaction\n");
             printf(" 4. delete transaction\n");
             printf(" 5. delete all transactions\n");
