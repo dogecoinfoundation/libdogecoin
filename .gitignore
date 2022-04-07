@@ -111,5 +111,8 @@ test-suite.log
 *.pc
 **/__pycache__/
 *.py[cod]
+<<<<<<< HEAD
 libdogecoin.egg-info/
 dist/
+=======
+>>>>>>> 2e19369... fixed gitignore to ignore pycache
