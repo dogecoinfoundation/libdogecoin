@@ -40,9 +40,10 @@ typedef struct working_transaction {
     dogecoin_tx* transaction;
     UT_hash_handle hh;
 } working_transaction;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static working_transaction *transactions = NULL;
-
+#pragma GCC diagnostic pop
 // instantiates a new transaction
 LIBDOGECOIN_API working_transaction* new_transaction();
 

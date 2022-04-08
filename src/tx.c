@@ -352,8 +352,8 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_test
     char new_p2pkh_pubkey[sizeout];
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     char* script_hash = dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);
-    printf("p2pkh_pubkey: %s\n", new_p2pkh_pubkey);
-    printf("script_hash: %s\n", script_hash);
+    debug_print("p2pkh_pubkey: %s\n", new_p2pkh_pubkey);
+    debug_print("script_hash: %s\n", script_hash);
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_cleanse(&pubkey);
     return script_hash;
@@ -742,7 +742,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
     } else {
         unsigned int i;
 
-        if (dest->vin) {
+        if (dest->vin != NULL) {
             vector_free(dest->vin, true);
         }
 
@@ -751,7 +751,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
         for (i = 0; i < src->vin->len; i++) {
             dogecoin_tx_in *tx_in_old, *tx_in_new;
             tx_in_old = vector_idx(src->vin, i);
-            tx_in_new = dogecoin_calloc(1, sizeof(*tx_in_new));
+            tx_in_new = dogecoin_calloc(1, sizeof(*tx_in_old));
             dogecoin_tx_in_copy(tx_in_new, tx_in_old);
             vector_add(dest->vin, tx_in_new);
         }

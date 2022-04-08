@@ -144,7 +144,7 @@ int start_transaction() {
 }
 
 int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
-    printf("raw_hexadecimal_transaction: %s\n", hexadecimal_transaction);
+    debug_print("raw_hexadecimal_transaction: %s\n", hexadecimal_transaction);
     if (strlen(hexadecimal_transaction) > 1024*100) { //don't accept tx larger then 100kb
         printf("tx too large (max 100kb)\n");
         return false;
@@ -166,8 +166,6 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     }
     // free byte array
     dogecoin_free(data_bin);
-    char* rawtx = get_raw_transaction(txindex);
-    printf("rawtx: %s\n", rawtx);
     working_transaction* tx_raw = find_transaction(txindex);
     dogecoin_tx_copy(tx_raw->transaction, txtmp);
     dogecoin_tx_free(txtmp);
@@ -415,7 +413,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         dogecoin_mem_zero(sigderhex, sizeof(sigderhex));
         utils_bin_to_hex((unsigned char *)sigder_plus_hashtype, sigderlen, sigderhex);
 
-        debug_print("\nSignature created:\nsignature compact: %s\n", sigcompacthex);
+        debug_print("\nsignature created:\nsignature compact: %s\n", sigcompacthex);
         debug_print("signature DER (+hashtype): %s\n", sigderhex);
 
         cstring* signed_tx = cstr_new_sz(1024);
@@ -436,10 +434,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 // locktime, possibilities for multiple outputs, data, sequence.
 int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if (!txindex) return false;
-    printf("before sign indexed raw transaction: %s\n", incomingrawtx);
     sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey);
-    printf("after sign indexed raw transaction: %s\n", incomingrawtx);
-    printf("sign indexed raw transaction: %d\n", txindex);
+    debug_print("sign indexed raw transaction: %d\n", txindex);
     if (!save_raw_transaction(txindex, incomingrawtx)) {
         printf("error saving transaction!\n");
     }

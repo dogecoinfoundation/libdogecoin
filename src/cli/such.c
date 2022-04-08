@@ -78,13 +78,16 @@ static bool showError(const char* er)
     return 1;
 }
 
+// keeping is_testnet for integration with validation functions
+// can remove #pragma once that's completed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void signing_menu(int txindex, int is_testnet) {
-    int id = txindex;
+#pragma GCC diagnostic pop
     int running = 1;
     int input_to_sign;
     char* raw_hexadecimal_tx;
     char* script_pubkey;
-    int signature_hash_type;
     float input_amount;
     char* private_key_wif;
         while (running) {
@@ -97,50 +100,48 @@ void signing_menu(int txindex, int is_testnet) {
                 case 1:
                     input_amount = atoi(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
-                    private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
+                    private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    raw_hexadecimal_tx = get_raw_transaction(id);
-                    printf("input_to_sign: %d\n", input_to_sign);
-                    printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                    printf("script_pubkey: %s\n", script_pubkey);
-                    printf("input_to_sign: %d\n", input_to_sign);
-                    printf("private_key: %s\n", private_key_wif);
+                    raw_hexadecimal_tx = get_raw_transaction(txindex);
+                    debug_print("input_to_sign: %d\n", input_to_sign);
+                    debug_print("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                    debug_print("script_pubkey: %s\n", script_pubkey);
+                    debug_print("input_to_sign: %d\n", input_to_sign);
+                    debug_print("private_key: %s\n", private_key_wif);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
-                    if (!save_raw_transaction(id, raw_hexadecimal_tx)) {
+                    if (!save_raw_transaction(txindex, raw_hexadecimal_tx)) {
                         printf("error saving transaction!\n");
                     }
-                    printf("raw tx real: %s\n", get_raw_transaction(id));
                     break;
                 case 2:
                     input_amount = atoi(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
-                    private_key_wif = get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
+                    private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
-                    raw_hexadecimal_tx = get_raw_tx("raw transaction");
+                    raw_hexadecimal_tx = (char*)get_raw_tx("raw transaction");
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    printf("input_to_sign: %d\n", input_to_sign);
-                    printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                    printf("script_pubkey: %s\n", script_pubkey);
-                    printf("input_to_sign: %d\n", input_to_sign);
-                    printf("private_key: %s\n", private_key_wif);
+                    debug_print("input_to_sign: %d\n", input_to_sign);
+                    debug_print("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                    debug_print("script_pubkey: %s\n", script_pubkey);
+                    debug_print("input_to_sign: %d\n", input_to_sign);
+                    debug_print("private_key: %s\n", private_key_wif);
                     sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
-                    if (!save_raw_transaction(id, raw_hexadecimal_tx)) {
+                    if (!save_raw_transaction(txindex, raw_hexadecimal_tx)) {
                         printf("error saving transaction!\n");
                     }
-                    printf("raw tx: %s\n", get_raw_transaction(id));
                     break;
                 case 3:
-                    printf("id: %d\n", id);
-                    id = save_raw_transaction(id, get_raw_tx("raw transaction"));
-                    if (!id) {
+                    txindex = save_raw_transaction(txindex, get_raw_tx("raw transaction"));
+                    if (!txindex) {
                         printf("error saving transaction!\n");
+                    } else {
+                        printf("successfully saved raw transaction to memory for the session!\n");
                     }
-                    printf("id: %d\n", id);
                     break;
                 case 8:
-                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    printf("raw_tx: %s\n", get_raw_transaction(txindex));
                     break;
                 case 9:
                     running = 0;
@@ -150,9 +151,7 @@ void signing_menu(int txindex, int is_testnet) {
 }
 
 void sub_menu(int txindex, int is_testnet) {
-    int id = txindex;
     int running = 1;
-    int temp;
     int temp_vout_index;
     char* temp_hex_utxo_txid;
     const char* temp_ext_p2pkh;
@@ -161,7 +160,6 @@ void sub_menu(int txindex, int is_testnet) {
     float desired_fee;
     float total_amount_for_verification;
     char* public_key;
-    int input_to_sign;
     char* raw_hexadecimal_transaction;
         while (running) {
             printf("\n 1. add input\n");
@@ -172,34 +170,34 @@ void sub_menu(int txindex, int is_testnet) {
             printf(" 9. main menu\n\n");
             switch (atoi(getl("command"))) {
                 case 1:
-                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    printf("raw_tx: %s\n", get_raw_transaction(txindex));
                     temp_vout_index = atoi(getl("vout index")); // 1
-                    temp_hex_utxo_txid = getl("txid"); // b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074 & 42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2
-                    add_utxo(id, temp_hex_utxo_txid, temp_vout_index);
-                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    temp_hex_utxo_txid = (char*)getl("txid"); // b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074 & 42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2
+                    add_utxo(txindex, temp_hex_utxo_txid, temp_vout_index);
+                    printf("raw_tx: %s\n", get_raw_transaction(txindex));
                     break;
                 case 2:
                     temp_amt = atof(getl("amount to send to destination address")); // 5
                     temp_ext_p2pkh = getl("destination address"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
                     printf("destination: %s\n", temp_ext_p2pkh);
-                    printf("addout success: %d\n", add_output(id, (char *)temp_ext_p2pkh, temp_amt));
-                    char* str = get_raw_transaction(id);
+                    printf("addout success: %d\n", add_output(txindex, (char *)temp_ext_p2pkh, temp_amt));
+                    char* str = get_raw_transaction(txindex);
                     printf("raw_tx: %s\n", str);
                     break;
                 case 3:
-                    output_address = getl("re-enter destination address for verification"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
+                    output_address = (char*)getl("re-enter destination address for verification"); // nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde
                     desired_fee = atof(getl("desired fee")); // .00226
                     total_amount_for_verification = atof(getl("total amount for verification")); // 12
-                    public_key = getl("senders address");
+                    public_key = (char*)getl("senders address");
                     // noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy
-                    raw_hexadecimal_transaction = finalize_transaction(id, output_address, desired_fee, total_amount_for_verification, public_key);
+                    raw_hexadecimal_transaction = finalize_transaction(txindex, output_address, desired_fee, total_amount_for_verification, public_key);
                     printf("raw_tx: %s\n", raw_hexadecimal_transaction);
                     break;
                 case 4:
-                    signing_menu(id, is_testnet);
+                    signing_menu(txindex, is_testnet);
                     break;
                 case 8:
-                    printf("raw_tx: %s\n", get_raw_transaction(id));
+                    printf("raw_tx: %s\n", get_raw_transaction(txindex));
                     break;
                 case 9:
                     running = 0;
@@ -208,8 +206,10 @@ void sub_menu(int txindex, int is_testnet) {
         }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void transaction_input_menu(int txindex, int is_testnet) {
-    int id = txindex;
+#pragma GCC diagnostic pop
     int running = 1;
     working_transaction* tx = find_transaction(txindex);
         while (running) {
@@ -219,7 +219,6 @@ void transaction_input_menu(int txindex, int is_testnet) {
             int vout;
             char* raw_hexadecimal_tx;
             char* script_pubkey;
-            int signature_hash_type;
             float input_amount;
             int input_to_sign;
             char* private_key_wif;
@@ -233,7 +232,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                 printf("txid:             %s\n", hex_utxo_txid);
                 printf("script signature: %s\n", utils_uint8_to_hex((const uint8_t *)tx_in->script_sig->str, tx_in->script_sig->len));
                 printf("tx_in->sequence:  %x\n", tx_in->sequence);
-                selected == i ? printf("selected:         [X]\n") : "";
+                selected == i ? printf("selected:         [X]\n") : 0;
 
                 if (selected == i) {
                     printf("\n\n");
@@ -250,10 +249,9 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                     printf("prevout.n\n");
                                     vout = atoi(getl("new input index"));
                                     tx_in->prevout.n = vout;
-                                    vector_add(tx->transaction->vin, tx_in);
                                     break;
                                 case 2:
-                                    hex_utxo_txid = get_raw_tx("new txid");
+                                    hex_utxo_txid = (char*)get_raw_tx("new txid");
                                     utils_uint256_sethex((char *)hex_utxo_txid, (uint8_t *)tx_in->prevout.hash);
                                     tx_in->prevout.n = vout;
                                     break;
@@ -309,13 +307,12 @@ void transaction_input_menu(int txindex, int is_testnet) {
 }
 
 void transaction_output_menu(int txindex, int is_testnet) {
-    int id = txindex;
     int running = 1;
     char* script_pubkey;
     char* destinationaddress;
     double amount;
     uint64_t tx_out_total = 0;
-    dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
     working_transaction* tx = find_transaction(txindex);
         while (running) {
             int length = tx->transaction->vout->len;
@@ -331,7 +328,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                 printf("amount:             %f\n", amount);
                 // selected should only equal anything other than -1 upon setting
                 // loop index in conditional targetting last iteration:
-                selected == i ? printf("selected:           [X]\n") : "";
+                selected == i ? printf("selected:           [X]\n") : 0;
                 if (selected == i) {
                     printf("\n\n");
                     printf("1. select field to edit\n");
@@ -343,7 +340,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                             printf("2. amount\n");
                             switch (atoi(getl("field to edit"))) {
                                 case 1:
-                                    destinationaddress = getl("new destination address");
+                                    destinationaddress = (char*)getl("new destination address");
                                     script_pubkey = dogecoin_p2pkh_to_script_hash(destinationaddress);
                                     printf("script pubkey: %s\n", script_pubkey);
                                     printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
@@ -398,7 +395,6 @@ void transaction_output_menu(int txindex, int is_testnet) {
 }
 
 void edit_menu(int txindex, int is_testnet) {
-    int id = txindex;
     int running = 1;
         while (running) {
             printf("\n");
@@ -470,7 +466,7 @@ void main_menu() {
                     break;
                 case 3:
                     s = find_transaction(atoi(getl("ID to find")));
-                    printf(s ? "transaction: %s\n", get_raw_transaction(s->idx) : "\nno transaction found with that id. please try again!\n");
+                    s ? printf("transaction: %s\n", get_raw_transaction(s->idx)) : printf("\nno transaction found with that id. please try again!\n");
                     break;
                 case 4:
                     s = find_transaction(atoi(getl("ID to delete")));
