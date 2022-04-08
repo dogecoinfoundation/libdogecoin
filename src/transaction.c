@@ -172,12 +172,6 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
         printf("rawtx: %s\n", rawtx);
         working_transaction* tx_raw = find_transaction(txindex);
         dogecoin_tx_copy(tx_raw->transaction, txtmp);
-        for (int i = 0; i < (int)tx_raw->transaction->vin->len; i++) {
-            dogecoin_tx_in* tx_in_tmp = vector_idx(tx_raw->transaction->vin, i);
-            char tx_in_buffer[tx_in_tmp->script_sig->len * 2];
-            utils_bin_to_hex((unsigned char*)tx_in_tmp->script_sig->str, tx_in_tmp->script_sig->len, tx_in_buffer);
-            printf("\ntx_in: %s\n\n", tx_in_buffer);
-        }
     }
     dogecoin_tx_free(txtmp);
     return true;

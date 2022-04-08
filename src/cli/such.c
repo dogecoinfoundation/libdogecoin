@@ -255,8 +255,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                 case 2:
                                     hex_utxo_txid = get_raw_tx("new txid");
                                     utils_uint256_sethex((char *)hex_utxo_txid, (uint8_t *)tx_in->prevout.hash);
-                                    vector_add(tx->transaction->vin, tx_in);
-                                    printf("txid\n");
+                                    tx_in->prevout.n = vout;
                                     break;
                                 case 3:
                                     printf("\nediting script signature:\n\n");
