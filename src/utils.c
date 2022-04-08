@@ -418,3 +418,39 @@ void dogecoin_file_commit(FILE* file)
 #endif
 #endif
 }
+
+uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2)
+{
+    size_t input1_size;
+    size_t input2_size;
+    input1_size= sizeof(input1)/sizeof(input1[0]);
+    input2_size= sizeof(input2)/sizeof(input2[0]);
+    uint8_t* returnedarray = realloc(input1, input1_size+input2_size);
+    memcpy(returnedarray+input1_size, input2, sizeof(returnedarray));
+    free(input2);
+    return returnedarray;
+}
+
+int koinu_to_decimal(uint64_t koinu) {
+    return !koinu ? 0 : koinu / 100000000;
+}
+
+// TODO: handle decimal points (.001 * 1 etc)
+uint64_t decimal_to_koinu(int decimal) {
+    return !decimal ? 0 : (decimal * 1000000000) / 10;
+}
+
+void print_bits(size_t const size, void const* ptr)
+{
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+    
+    for (i = size-1; i >= 0; i--) {
+        for (j = 7; j >= 0; j--) {
+            byte = (b[i] >> j) & 1;
+            printf("%u", byte);
+        }
+    }
+    puts("");
+}

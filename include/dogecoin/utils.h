@@ -52,6 +52,10 @@ LIBDOGECOIN_API void* safe_malloc(size_t size);
 LIBDOGECOIN_API void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len);
 LIBDOGECOIN_API void dogecoin_get_default_datadir(cstring* path_out);
 LIBDOGECOIN_API void dogecoin_file_commit(FILE* file);
+LIBDOGECOIN_API int koinu_to_decimal(uint64_t koinu); // TODO
+LIBDOGECOIN_API uint64_t decimal_to_koinu(int decimal); // TODO
+LIBDOGECOIN_API uint8_t* bytearray_concatenate(uint8_t* input1, uint8_t* input2);
+LIBDOGECOIN_API void print_bits(size_t const size, void const* ptr);
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */

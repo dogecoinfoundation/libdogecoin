@@ -30,6 +30,7 @@
 #ifndef __LIBDOGECOIN_TX_H__
 #define __LIBDOGECOIN_TX_H__
 
+#include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/crypto/hash.h>
 #include <dogecoin/cstr.h>
@@ -73,11 +74,15 @@ typedef struct dogecoin_tx_ {
 LIBDOGECOIN_API dogecoin_tx_in* dogecoin_tx_in_new();
 LIBDOGECOIN_API void dogecoin_tx_in_free(dogecoin_tx_in* tx_in);
 LIBDOGECOIN_API void dogecoin_tx_in_copy(dogecoin_tx_in* dest, const dogecoin_tx_in* src);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_in_deserialize(dogecoin_tx_in* tx_in, struct const_buffer* buf);
+LIBDOGECOIN_API void dogecoin_tx_in_serialize(cstring* s, const dogecoin_tx_in* tx_in);
 
 //!create a new tx output
 LIBDOGECOIN_API dogecoin_tx_out* dogecoin_tx_out_new();
 LIBDOGECOIN_API void dogecoin_tx_out_free(dogecoin_tx_out* tx_out);
 LIBDOGECOIN_API void dogecoin_tx_out_copy(dogecoin_tx_out* dest, const dogecoin_tx_out* src);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_out_deserialize(dogecoin_tx_out* tx_out, struct const_buffer* buf);
+LIBDOGECOIN_API void dogecoin_tx_out_serialize(cstring* s, const dogecoin_tx_out* tx_out);
 
 //!create a new tx input
 LIBDOGECOIN_API dogecoin_tx* dogecoin_tx_new();
@@ -87,7 +92,7 @@ LIBDOGECOIN_API void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
 //!deserialize/parse a p2p serialized dogecoin transaction
 LIBDOGECOIN_API int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, dogecoin_tx* tx, size_t* consumed_length, dogecoin_bool allow_witness);
 
-//!serialize a lbc dogecoin data structure into a p2p serialized buffer
+//!serialize a dogecoin data structure into a p2p serialized buffer
 LIBDOGECOIN_API void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx, dogecoin_bool allow_witness);
 
 LIBDOGECOIN_API void dogecoin_tx_hash(const dogecoin_tx* tx, uint8_t* hashout);

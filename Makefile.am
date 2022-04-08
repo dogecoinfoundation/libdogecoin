@@ -34,6 +34,7 @@ include_HEADERS = \
     include/dogecoin/serialize.h \
     include/dogecoin/crypto/sha2.h \
     include/dogecoin/tool.h \
+    include/dogecoin/transaction.h \
     include/dogecoin/tx.h \
     contrib/uthash/uthash.h \
     include/dogecoin/utils.h \
@@ -61,6 +62,7 @@ libdogecoin_la_SOURCES = \
     src/crypto/sha2.c \
     src/cli/such.c \
     src/cli/tool.c \
+    src/transaction.c \
     src/tx.c \
     src/utils.c \
     src/vector.c
@@ -87,6 +89,7 @@ tests_SOURCES = \
     test/serialize_tests.c \
     test/sha2_tests.c \
     test/tool_tests.c \
+    test/transaction_tests.c \
     test/tx_tests.c \
     test/utest.h \
     test/unittester.c \

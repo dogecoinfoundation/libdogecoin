@@ -52,6 +52,7 @@ extern void test_sha_256();
 extern void test_sha_512();
 extern void test_sha_hmac();
 extern void test_tool();
+extern void test_transaction();
 extern void test_tx_serialization();
 extern void test_tx_sighash();
 extern void test_tx_sighash_ext();
@@ -91,6 +92,7 @@ int main()
     u_run_test(test_sha_512);
     u_run_test(test_sha_hmac);
     u_run_test(test_tool);
+    u_run_test(test_transaction);
     u_run_test(test_tx_serialization);
     u_run_test(test_invalid_tx_deser);
     u_run_test(test_tx_sign);
