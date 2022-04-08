@@ -54,7 +54,7 @@ def generate_priv_pub_key_pair(chain_code=0, as_bytes=False):
 
 def generate_hd_master_pub_key_pair(chain_code=0, as_bytes=False):
     """Generate a master private and public key pair for use in
-    heirarchical deterministic wallets. Public key can be used for
+    hierarchical deterministic wallets. Public key can be used for
     child key derivation using generate_derived_hd_pub_key().
     Keyword arguments:
     chain_code -- 0 for mainnet pair, 1 for testnet pair
@@ -216,41 +216,144 @@ class DogecoinPubkey(ct.Structure):
         ("pubkey",                      ct.c_ubyte * 65),
     ]
 #===================================================TRANSACTION.C
-def start_tx():
-    return lib.startTX()
+def start_transaction():
+    # set return type
+    lib.start_transaction.restype = ct.c_int
 
-def add_utxo(tx_index, hex_utxo_txid, dogecoin_amount):
+    # call c function
+    res = lib.start_transaction()
+
+    # return result
+    return int(res)
+
+def add_utxo(tx_index, hex_utxo_txid, vout):
+    # convert string to be c-compatible
     hex_utxo_txid_ptr = ct.c_char_p(hex_utxo_txid.encode('utf-8'))
-    return lib.addUtxo(ct.c_int(tx_index), hex_utxo_txid_ptr, ct.c_uint64(dogecoin_amount))
+
+    # set types for parameters and return
+    lib.add_utxo.argtypes = [ct.c_int, ct.c_char_p, ct.c_int]
+    lib.add_utxo.restype = ct.c_int
+
+    # call c function and return result
+    res = ct.c_int()
+    res = lib.add_utxo(tx_index, hex_utxo_txid_ptr, vout)
+
+    # return result
+    return int(res)
     
-
-def create_tx(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification):
+def add_output(tx_index, destination_address, amount):
+    # convert string to be c-compatible
     destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
-    return lib.createTx(ct.c_int(tx_index), destination_address_ptr, ct.c_float(subtracted_fee), ct.byref(ct.c_uint64(out_dogeamount_for_verification)))
 
-def get_raw_tx(tx_index, as_bytes=0):
-    lib.getRawTx.restype = ct.c_char_p
-    res = lib.getRawTx(ct.c_int(tx_index))
-    if as_bytes:
-        return res.value
-    return res.value.decode('utf-8')
+    # set types for parameters and return
+    lib.add_output.argtypes = [ct.c_int, ct.c_char_p, ct.c_int]
+    lib.add_output.restype = ct.c_int
 
-def clear_tx(tx_index):
-    return lib.clearTx(ct.c_int(tx_index))
+    # call c function
+    res = lib.add_output(tx_index, destination_address_ptr, amount)
 
-def sign_indexed_tx(tx_index, privkey, as_bytes=0):
+    # return result
+    return int(res)
+
+def make_change(tx_index, prvkey_wif, destination_address, subtracted_fee, amount):
+    # convert strings to be c-compatible
+    prvkey_wif_ptr = ct.c_char_p(prvkey_wif.encode('utf-8'))
+    destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
+
+    # set types for parameters and return
+    lib.make_change.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_float, ct.c_uint64]
+    lib.make_change.restype = ct.c_void_p
+    
+    # call c function
+    lib.dogecoin_ecc_start()
+    res = lib.make_change(tx_index, prvkey_wif_ptr, destination_address_ptr, subtracted_fee, amount)
+    lib.dogecoin_ecc_stop()
+
+    # return result
+    try:
+        res = ct.c_char_p(res)
+        return res.value.decode("utf-8")
+    except:
+        return 0
+
+def finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh):
+    # convert strings to be c-compatible
+    destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
+    sender_p2pkh_ptr = ct.c_char_p(sender_p2pkh.encode('utf-8'))
+
+    # set types for parameters and return
+    lib.finalize_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_float, ct.c_uint64, ct.c_char_p]
+    lib.finalize_transaction.restype = ct.c_void_p
+    
+    # call c function
+    res = lib.finalize_transaction(tx_index, destination_address_ptr, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh_ptr)
+    
+    # return result
+    try:
+        res = ct.c_char_p(res)
+        return res.value.decode("utf-8")
+    except:
+        return 0
+
+def get_raw_transaction(tx_index):
+    # set types for parameters and return
+    lib.get_raw_transaction.argtypes = [ct.c_int]
+    lib.get_raw_transaction.restype = ct.c_void_p
+
+    # call c function
+    res = lib.get_raw_transaction(tx_index)
+
+    # return result
+    try:
+        res = ct.c_char_p(res)
+        return res.value.decode("utf-8")
+    except:
+        return 0
+
+def clear_transaction(tx_index):
+    # set parameter types
+    lib.get_raw_transaction.argtypes = [ct.c_int]
+
+    # call c function (void return)
+    lib.clear_transaction(tx_index)
+
+def sign_indexed_transaction(tx_index, privkey):
+    # convert string to be c-compatible
     privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
-    lib.signIndexedTx.restype = ct.c_char_p
-    res = lib.signIndexedTx(ct.c_int(tx_index), privkey_ptr)
-    if as_bytes:
-        return res.value
-    return res.value.decode('utf-8')
 
-def sign_raw_tx(incoming_raw_tx, privkey, as_bytes=0):
+    # set types for parameters and return
+    lib.sign_indexed_transaction.argtypes = [ct.c_int, ct.c_char_p]
+    lib.sign_indexed_transaction.restype = ct.c_void_p
+
+    # call c function and return result
+    res = lib.sign_indexed_transaction(tx_index, privkey_ptr)
+
+    # return result
+    try:
+        res = ct.c_char_p(res)
+        return res.value.decode("utf-8")
+    except:
+        return 0
+
+def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    # convert strings to be c-compatible
     incoming_raw_tx_ptr = ct.c_char_p(incoming_raw_tx.encode('utf-8'))
+    script_hex_ptr = ct.c_char_p(script_hex.encode('utf-8'))
     privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
-    lib.signIndexedTx.restype = ct.c_char_p
-    res = lib.signIndexedTx(incoming_raw_tx_ptr, privkey_ptr)
-    if as_bytes:
-        return res.value
-    return res.value.decode('utf-8')
+
+    # set types for parameters and return
+    lib.sign_raw_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
+    lib.sign_raw_transaction.restype = ct.c_int
+
+    # call c function and return result
+    lib.dogecoin_ecc_start()
+    res = ct.c_int()
+    res = lib.sign_raw_transaction(input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
+    lib.dogecoin_ecc_stop()
+
+    # return signed transaction hex if successful, 0 otherwise
+    if res==1:
+        return incoming_raw_tx_ptr.value.decode("utf-8")
+    else:
+        return int(res)
+    
