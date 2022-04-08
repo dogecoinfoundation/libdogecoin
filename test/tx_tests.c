@@ -893,12 +893,12 @@ void test_tx_sighash_ext()
     //extended sighash tests
     for (unsigned int i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
         int outlen_sighash = 0;
-        uint8_t tx_data_sighash[sizeof(txvalid_sighash[i].sertx) / 2];
+        uint8_t tx_data_sighash[strlen(txvalid_sighash[i].sertx) / 2];
         utils_hex_to_bin(txvalid_sighash[i].sertx, tx_data_sighash, strlen(txvalid_sighash[i].sertx), &outlen_sighash);
         dogecoin_tx* tx_sighash = dogecoin_tx_new();
         dogecoin_tx_deserialize(tx_data_sighash, outlen_sighash, tx_sighash, NULL, true);
 
-        uint8_t script_data[strlen(txvalid_sighash[i].script)];
+        uint8_t script_data[strlen(txvalid_sighash[i].script) / 2];
         utils_hex_to_bin(txvalid_sighash[i].script, script_data, strlen(txvalid_sighash[i].script), &outlen_sighash);
         cstring* str = cstr_new_buf(script_data, outlen_sighash);
         uint256 hash;
@@ -906,12 +906,13 @@ void test_tx_sighash_ext()
 
         dogecoin_tx_free(tx_sighash);
         cstr_free(str, true);
-
-        char sighash_hex[65];
+ 
+        char sighash_hex[64];
+        memset(sighash_hex, 0, sizeof(sighash_hex));
         utils_bin_to_hex(hash, sizeof(hash), sighash_hex);
         utils_reverse_hex(sighash_hex, strlen(sighash_hex));
 
-        assert(memcmp(txvalid_sighash[i].sighash, sighash_hex, 64) == 0);
+        assert(memcmp(txvalid_sighash[i].sighash, sighash_hex, sizeof(sighash_hex)) == 0);
     }
 }
 
@@ -949,7 +950,7 @@ void test_tx_sighash()
         utils_bin_to_hex(sighash, sizeof(sighash), hexbuf);
         utils_reverse_hex(hexbuf, sizeof(hexbuf));
 
-        assert(strcmp(hexbuf, test->hashhex) == 0);
+        assert(memcmp(hexbuf, test->hashhex, sizeof(test->hashhex) - 1) == 0);
 
         dogecoin_tx_free(tx);
     }

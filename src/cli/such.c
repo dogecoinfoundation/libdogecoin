@@ -303,12 +303,10 @@ void transaction_input_menu(int txindex, int is_testnet) {
                 }
             }
         }
-    // TODO: clean up garbage
 }
 
 void transaction_output_menu(int txindex, int is_testnet) {
     int running = 1;
-    char* script_pubkey;
     char* destinationaddress;
     double amount;
     uint64_t tx_out_total = 0;
@@ -341,20 +339,14 @@ void transaction_output_menu(int txindex, int is_testnet) {
                             switch (atoi(getl("field to edit"))) {
                                 case 1:
                                     destinationaddress = (char*)getl("new destination address");
-                                    script_pubkey = dogecoin_p2pkh_to_script_hash(destinationaddress);
-                                    printf("script pubkey: %s\n", script_pubkey);
-                                    printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
                                     amount = coins_to_koinu(amount);
                                     vector_remove_idx(tx->transaction->vout, i);
                                     dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
-                                    tx_out = vector_idx(tx->transaction->vout, i);
                                     break;
                                 case 2:
                                     amount = atof(getl("new amount"));
-                                    printf("amount: %f\n", amount);
                                     amount = coins_to_koinu(amount);
                                     tx_out->value = amount;
-                                    printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
                                     break;
                             }
                             tx_out_total = 0;
@@ -362,6 +354,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                             break;
                         case 2:
                             selected = -1; // set selected to number out of bounds for i
+                            tx_out_total = 0;
                             i = i - i - 1; // reset loop to start
                             break;
                     }
@@ -373,7 +366,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                 // escape encompassing while loop so we return to previous menu
                 if (i == length - 1) {
                     printf("\n\n");
-                    // printf("subtotal - desired fee: %f\n", koinu_to_coins(tx_out_total)); // TODO: reset to 0, is currently appending to previous calculated total
+                    printf("subtotal - desired fee: %f\n", koinu_to_coins(tx_out_total));
                     printf("\n");
                     printf("1. select output to edit\n");
                     printf("2. main menu\n");
@@ -381,6 +374,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                         case 1:
                             // tx_input submenu
                             selected = atoi(getl("vout index"));
+                            tx_out_total = 0;
                             i = i - i - 1;
                             break;
                         case 2:
@@ -391,7 +385,6 @@ void transaction_output_menu(int txindex, int is_testnet) {
                 }
             }
         }
-    // TODO: clean up garbage
 }
 
 void edit_menu(int txindex, int is_testnet) {
