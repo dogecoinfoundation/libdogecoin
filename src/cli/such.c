@@ -271,6 +271,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                     if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
                                         printf("error saving transaction!\n");
                                     }
+                                    dogecoin_free(script_pubkey);
                                     break;
                             }
                             i = i - i - 1; // reset loop to start

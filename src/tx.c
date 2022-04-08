@@ -773,7 +773,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
             dogecoin_tx_out *tx_out_old, *tx_out_new;
 
             tx_out_old = vector_idx(src->vout, i);
-            tx_out_new = dogecoin_calloc(1, sizeof(*tx_out_new));
+            tx_out_new = dogecoin_calloc(1, sizeof(dogecoin_tx_out*) * 2 + 1);
             dogecoin_tx_out_copy(tx_out_new, tx_out_old);
             vector_add(dest->vout, tx_out_new);
         }

@@ -166,13 +166,10 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     }
     // free byte array
     dogecoin_free(data_bin);
-
-    if (txtmp) {
-        char* rawtx = get_raw_transaction(txindex);
-        printf("rawtx: %s\n", rawtx);
-        working_transaction* tx_raw = find_transaction(txindex);
-        dogecoin_tx_copy(tx_raw->transaction, txtmp);
-    }
+    char* rawtx = get_raw_transaction(txindex);
+    printf("rawtx: %s\n", rawtx);
+    working_transaction* tx_raw = find_transaction(txindex);
+    dogecoin_tx_copy(tx_raw->transaction, txtmp);
     dogecoin_tx_free(txtmp);
     return true;
 }
