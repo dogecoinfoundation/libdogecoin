@@ -178,9 +178,8 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
             utils_bin_to_hex((unsigned char*)tx_in_tmp->script_sig->str, tx_in_tmp->script_sig->len, tx_in_buffer);
             printf("\ntx_in: %s\n\n", tx_in_buffer);
         }
-        // dogecoin_tx_free(txtmp);
-        // remove_transaction(tx_raw);
     }
+    dogecoin_tx_free(txtmp);
     return true;
 }
 
