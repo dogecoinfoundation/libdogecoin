@@ -11,12 +11,13 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 lib_LTLIBRARIES = libdogecoin.la
-includedir = $(includedir)/dogecoin
-include_HEADERS = \
+libdogecoinincludedir = $(includedir)/dogecoin
+libdogecoininclude_HEADERS = \
     include/dogecoin/address.h \
     include/dogecoin/crypto/aes.h \
     include/dogecoin/crypto/base58.h \
     include/dogecoin/bip32.h \
+    include/dogecoin/block.h \
     include/dogecoin/buffer.h \
     include/dogecoin/compat/byteswap.h \
     include/dogecoin/chainparams.h \
@@ -48,6 +49,7 @@ libdogecoin_la_SOURCES = \
     src/crypto/aes.c \
     src/crypto/base58.c \
     src/bip32.c \
+    src/block.c \
     src/buffer.c \
     src/chainparams.c \
     src/cstr.c \
@@ -78,6 +80,7 @@ tests_SOURCES = \
     test/aes_tests.c \
     test/base58_tests.c \
     test/bip32_tests.c \
+    test/block_tests.c \
     test/buffer_tests.c \
     test/cstr_tests.c \
     test/ecc_tests.c \
@@ -88,7 +91,6 @@ tests_SOURCES = \
     test/rmd160_tests.c \
     test/serialize_tests.c \
     test/sha2_tests.c \
-    test/tool_tests.c \
     test/transaction_tests.c \
     test/tx_tests.c \
     test/utest.h \
@@ -102,6 +104,31 @@ tests_LDFLAGS = -static
 TESTS = tests
 endif
 
+if WITH_NET
+libdogecoininclude_HEADERS += \
+    include/dogecoin/net/protocol.h \
+    include/dogecoin/net/net.h
+
+libdogecoin_la_SOURCES += \
+    src/net/net.c \
+    src/net/protocol.c
+
+libdogecoin_la_LIBADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+libdogecoin_la_CFLAGS += $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+
+if USE_TESTS
+tests_SOURCES += \
+    test/net_tests.c \
+    test/protocol_tests.c
+tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+endif
+endif
+
+if WITH_TOOLS
+if USE_TESTS
+tests_SOURCES += \
+    test/tool_tests.c
+endif
 instdir=$(prefix)/bin
 inst_PROGRAMS = such
 such_LDADD = libdogecoin.la
@@ -110,6 +137,7 @@ such_SOURCES = \
 such_CFLAGS = $(libdogecoin_la_CFLAGS)
 such_CPPFLAGS = -I$(top_srcdir)/src
 such_LDFLAGS = -static
+endif
 
 clean-local:
 	-$(MAKE) -C src/secp256k1 clean

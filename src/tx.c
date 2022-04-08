@@ -882,12 +882,6 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
     cstring* s = NULL;
 
     // segwit
-    /* The code below is checking if the signature version is witness version 0. If it is, then it will
-    check if the witness program is a pay to public key hash. If it is, then it will check if the
-    scriptPubKey is a pay to public key hash. If it is, then it will check if the scriptSig is
-    empty. If it is, then it will check if the witness program is empty. If it is, then it will
-    check if the scriptPubKey is a pay to script hash. If it is, then it will check if the scriptSig
-    is */
     if (sigversion == SIGVERSION_WITNESS_V0) {
         uint256 hash_prevouts;
         /* This code is clearing the hash_prevouts array. */
@@ -1024,8 +1018,6 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
 
                 /* Checking if the transaction has a certain output. */
                 tx_out = vector_idx(tx_tmp->vout, i);
-                /* The code below is checking if the transaction is a coinbase transaction. If it is,
-                then it sets the value to -1. */
                 tx_out->value = -1;
                 if (tx_out->script_pubkey) {
                     /* Freeing the memory allocated to the script_pubkey field of the transaction
@@ -1051,8 +1043,6 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
 
         /* Blank out other inputs completely;
          not recommended for open transactions */
-        /* This code is checking if the hashtype is set to SIGHASH_ANYONECANPAY. If it is, then it will
-        set the input to be the only input. */
         if (hashtype & SIGHASH_ANYONECANPAY) {
             if (in_num > 0) {
                 /* The code below is removing the first in_num elements from the vector tx_tmp->vin. */

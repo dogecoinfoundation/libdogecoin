@@ -399,12 +399,7 @@ int deser_varlen(uint32_t* lo, struct const_buffer* buf)
 
 /**
  * @brief This function reads the first byte of the file
- * as an indicator of how many bytes to deserialize. If 
- * it is 253, read a 16-bit unsigned integer from the file.
- * If it is 254, read a 32-bit unsigned integer from the 
- * file. If it is 255, read a 64-bit unsigned integer from
- * the file. If it is not a special value, the length is 
- * set to the value of this byte.
+ * as an indicator of how many bytes to deserialize. 
  * 
  * @param lo The length of the unsigned integer read from the file.
  * @param file The file which contains the bytes to deserialize from.
