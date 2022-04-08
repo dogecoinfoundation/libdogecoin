@@ -1,6 +1,7 @@
 """This module provides a python API for libdogecoin."""
 
 import ctypes as ct
+from operator import index
 import sys
 import os
 
@@ -216,3 +217,24 @@ class DogecoinPubkey(ct.Structure):
         ("compressed",                  ct.c_ubyte),
         ("pubkey",                      ct.c_ubyte * 65),
     ]
+#===================================================TRANSACTION.C
+def start_tx():
+    pass
+
+def add_utxo():
+    pass
+
+def create_tx():
+    pass
+
+def get_raw_tx():
+    pass
+
+def clear_tx():
+    pass
+
+def sign_indexed_tx():
+    pass
+
+def sign_raw_tx():
+    pass
