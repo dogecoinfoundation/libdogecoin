@@ -62,16 +62,17 @@
 int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
 {
     /* internal variables */
-    size_t sizeout = 100;
-    char wif_privkey_internal[sizeout];
-    char p2pkh_pubkey_internal[sizeout];
+    size_t privkey_len = 53;
+    size_t pubkey_len = 35;
+    char wif_privkey_internal[privkey_len];
+    char p2pkh_pubkey_internal[pubkey_len];
 
     /* if nothing is passed in use internal variables */
     if (wif_privkey) {
-        memcpy(wif_privkey_internal, wif_privkey, sizeout);
+        memcpy(wif_privkey_internal, wif_privkey, privkey_len);
     }
     if (p2pkh_pubkey) {
-        memcpy(p2pkh_pubkey_internal, p2pkh_pubkey, sizeout);
+        memcpy(p2pkh_pubkey_internal, p2pkh_pubkey, pubkey_len);
     }
 
     /* determine if mainnet or testnet/regtest */
@@ -81,7 +82,7 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     dogecoin_privkey_gen(&key);
-    dogecoin_privkey_encode_wif(&key, chain, wif_privkey_internal, &sizeout);
+    dogecoin_privkey_encode_wif(&key, chain, wif_privkey_internal, &privkey_len);
 
     /* generate a new public key and export hex */
     dogecoin_pubkey pubkey;
@@ -93,10 +94,10 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_pubkey_internal);
 
     if (wif_privkey) {
-        memcpy(wif_privkey, wif_privkey_internal, sizeout);
+        memcpy(wif_privkey, wif_privkey_internal, privkey_len);
     }
     if (p2pkh_pubkey) {
-        memcpy(p2pkh_pubkey, p2pkh_pubkey_internal, sizeout);
+        memcpy(p2pkh_pubkey, p2pkh_pubkey_internal, pubkey_len);
     }
 
     /* reset internal variables */
@@ -123,15 +124,16 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
 int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
 {
     size_t strsize = 128;
+    size_t hd_pubkey_master_len = 35;
     char hd_privkey_master[strsize];
-    char hd_pubkey_master[strsize];
+    char hd_pubkey_master[hd_pubkey_master_len];
 
     /* if nothing is passed use internal variables */
     if (wif_privkey_master) {
         memcpy(hd_privkey_master, wif_privkey_master, strsize);
     }
     if (p2pkh_pubkey_master) {
-        memcpy(hd_pubkey_master, p2pkh_pubkey_master, strsize);
+        memcpy(hd_pubkey_master, p2pkh_pubkey_master, hd_pubkey_master_len);
     }
 
     /* determine if mainnet or testnet/regtest */
