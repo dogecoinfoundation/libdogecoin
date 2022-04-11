@@ -30,12 +30,14 @@ def generate_priv_pub_key_pair(chain_code=0, as_bytes=False):
     chain_code -- 0 for mainnet pair, 1 for testnet pair
     as_bytes -- flag to return key pair as bytes object
     """
+    # verify arguments are valid
+    assert int(chain_code)==0 or int(chain_code)==1
+
     # prepare arguments
     size = 100
     wif_privkey = (ct.c_char * size)()
     p2pkh_pubkey = (ct.c_char * size)()
-    assert(chain_code==0 or chain_code==1)
-    is_testnet = ct.c_bool(chain_code)
+    is_testnet = ct.c_bool(int(chain_code))
 
     # start context
     lib.dogecoin_ecc_start()
@@ -60,11 +62,13 @@ def generate_hd_master_pub_key_pair(chain_code=0, as_bytes=False):
     chain_code -- 0 for mainnet pair, 1 for testnet pair
     as_bytes -- flag to return key pair as bytes object
     """
+    # verify arguments are valid
+    assert int(chain_code)==0 or int(chain_code)==1
+
     # prepare arguments
     size = 111
     wif_privkey_master = (ct.c_char * size)()
     p2pkh_pubkey_master = (ct.c_char * size)()
-    assert(int(chain_code)==0 or int(chain_code)==1)
     is_testnet = ct.c_bool(int(chain_code))
 
     # start context
@@ -90,11 +94,11 @@ def generate_derived_hd_pub_key(wif_privkey_master, as_bytes=False):
     """
     # verify arguments are valid
     assert(isinstance(wif_privkey_master, (str, bytes)))
-    if not isinstance(wif_privkey_master, bytes):
-        wif_privkey_master = wif_privkey_master.encode('utf-8')
 
     # prepare arguments
     size = 100
+    if not isinstance(wif_privkey_master, bytes):
+        wif_privkey_master = wif_privkey_master.encode('utf-8')
     wif_privkey_master_ptr = ct.c_char_p(wif_privkey_master)
     child_p2pkh_pubkey = (ct.c_char * size)()
 
@@ -124,8 +128,9 @@ def verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
     chain_code -- 0 for mainnet, 1 for testnet
     """
     # verify arguments are valid
-    assert isinstance(wif_privkey, str) and isinstance(p2pkh_pubkey, str)
-    assert isinstance(chain_code, int)
+    assert isinstance(wif_privkey, str)
+    assert isinstance(p2pkh_pubkey, str)
+    assert int(chain_code)==0 or int(chain_code)==1
 
     # prepare arguments
     wif_privkey_ptr = ct.c_char_p(wif_privkey.encode('utf-8'))
@@ -154,8 +159,9 @@ def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chai
     chain_code -- 0 for mainnet, 1 for testnet
     """
     # verify arguments are valid
-    assert isinstance(wif_privkey_master, str) and isinstance(p2pkh_pubkey_master, str)
-    assert isinstance(chain_code, int)
+    assert isinstance(wif_privkey_master, str) 
+    assert isinstance(p2pkh_pubkey_master, str)
+    assert int(chain_code)==0 or int(chain_code)==1
 
     # prepare arguments
     wif_privkey_master_ptr = ct.c_char_p(wif_privkey_master.encode('utf-8'))
@@ -183,7 +189,8 @@ def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
     chain_code -- 0 for mainnet, 1 for testnet
     """
     # verify arguments are valid
-    assert isinstance(p2pkh_pubkey, str) and isinstance(chain_code, int)
+    assert isinstance(p2pkh_pubkey, str)
+    assert int(chain_code)==0 or int(chain_code)==1
 
     # prepare arguments
     p2pkh_pubkey_ptr = ct.c_char_p(p2pkh_pubkey.encode('utf-8'))
@@ -227,6 +234,11 @@ def start_transaction():
     return int(res)
 
 def add_utxo(tx_index, hex_utxo_txid, vout):
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(vout, int) or vout.isnumeric()
+    assert isinstance(hex_utxo_txid, str)
+
     # convert string to be c-compatible
     hex_utxo_txid_ptr = ct.c_char_p(hex_utxo_txid.encode('utf-8'))
 
@@ -236,29 +248,45 @@ def add_utxo(tx_index, hex_utxo_txid, vout):
 
     # call c function and return result
     res = ct.c_int()
-    res = lib.add_utxo(tx_index, hex_utxo_txid_ptr, vout)
+    res = lib.add_utxo(int(tx_index), hex_utxo_txid_ptr, int(vout))
 
     # return result
     return int(res)
     
 def add_output(tx_index, destination_address, amount):
-    # convert string to be c-compatible
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(destination_address, str)
+    assert isinstance(amount, (float, int))
+
+    # convert args to be c-compatible
     destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
+    if isinstance(amount, float):
+        amount = int(amount) # TODO: will truncate! is this preferred?
 
     # set types for parameters and return
-    lib.add_output.argtypes = [ct.c_int, ct.c_char_p, ct.c_int]
+    lib.add_output.argtypes = [ct.c_int, ct.c_char_p, ct.c_uint64]
     lib.add_output.restype = ct.c_int
 
     # call c function
-    res = lib.add_output(tx_index, destination_address_ptr, amount)
+    res = lib.add_output(int(tx_index), destination_address_ptr, amount)
 
     # return result
     return int(res)
 
 def make_change(tx_index, prvkey_wif, destination_address, subtracted_fee, amount):
-    # convert strings to be c-compatible
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(prvkey_wif, str)
+    assert isinstance(destination_address, str)
+    assert isinstance(subtracted_fee, (int, float))
+    assert isinstance(amount, (int, float))
+
+    # convert args to be c-compatible
     prvkey_wif_ptr = ct.c_char_p(prvkey_wif.encode('utf-8'))
     destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
+    if isinstance(amount, float):
+        amount = int(amount) # TODO: will truncate! is this preferred?
 
     # set types for parameters and return
     lib.make_change.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_float, ct.c_uint64]
@@ -266,7 +294,7 @@ def make_change(tx_index, prvkey_wif, destination_address, subtracted_fee, amoun
     
     # call c function
     lib.dogecoin_ecc_start()
-    res = lib.make_change(tx_index, prvkey_wif_ptr, destination_address_ptr, subtracted_fee, amount)
+    res = lib.make_change(int(tx_index), prvkey_wif_ptr, destination_address_ptr, subtracted_fee, amount)
     lib.dogecoin_ecc_stop()
 
     # return result
@@ -277,16 +305,25 @@ def make_change(tx_index, prvkey_wif, destination_address, subtracted_fee, amoun
         return 0
 
 def finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh):
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(destination_address, str)
+    assert isinstance(subtracted_fee, (int, float))
+    assert isinstance(out_dogeamount_for_verification, (int, float))
+    assert isinstance(sender_p2pkh, str)
+    
     # convert strings to be c-compatible
     destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
     sender_p2pkh_ptr = ct.c_char_p(sender_p2pkh.encode('utf-8'))
+    if isinstance(out_dogeamount_for_verification, float):
+        out_dogeamount_for_verification = int(out_dogeamount_for_verification) # TODO: will truncate! is this preferred?
 
     # set types for parameters and return
     lib.finalize_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_float, ct.c_uint64, ct.c_char_p]
     lib.finalize_transaction.restype = ct.c_void_p
     
     # call c function
-    res = lib.finalize_transaction(tx_index, destination_address_ptr, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh_ptr)
+    res = lib.finalize_transaction(int(tx_index), destination_address_ptr, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh_ptr)
     
     # return result
     try:
@@ -296,6 +333,9 @@ def finalize_transaction(tx_index, destination_address, subtracted_fee, out_doge
         return 0
 
 def get_raw_transaction(tx_index):
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+
     # set types for parameters and return
     lib.get_raw_transaction.argtypes = [ct.c_int]
     lib.get_raw_transaction.restype = ct.c_void_p
@@ -311,6 +351,9 @@ def get_raw_transaction(tx_index):
         return 0
 
 def clear_transaction(tx_index):
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+
     # set parameter types
     lib.get_raw_transaction.argtypes = [ct.c_int]
 
@@ -318,6 +361,10 @@ def clear_transaction(tx_index):
     lib.clear_transaction(tx_index)
 
 def sign_indexed_transaction(tx_index, privkey):
+    # verify arguments are valid
+    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(privkey, str)
+    
     # convert string to be c-compatible
     privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
 
@@ -336,6 +383,13 @@ def sign_indexed_transaction(tx_index, privkey):
         return 0
 
 def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    # verify arguments are valid
+    assert isinstance(input_index, int) or input_index.isnumeric()
+    assert isinstance(incoming_raw_tx, str)
+    assert isinstance(script_hex, str)
+    assert isinstance(sig_hash_type, int) or sig_hash_type.isnumeric()
+    assert isinstance(amount, (int, float))
+
     # convert strings to be c-compatible
     incoming_raw_tx_ptr = ct.c_char_p(incoming_raw_tx.encode('utf-8'))
     script_hex_ptr = ct.c_char_p(script_hex.encode('utf-8'))

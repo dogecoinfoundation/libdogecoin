@@ -36,6 +36,7 @@ total_utxo_input = 12
 fee = .00226
 
 class TestTransactionFunctions(unittest.TestCase):
+# TODO: make sure send amounts can be float too-- can wrappers handle?
     def test_start_transaction(self):
         res = w.start_transaction()
         self.assertTrue(type(res)==int and res>=0)
@@ -97,6 +98,7 @@ class TestTransactionFunctions(unittest.TestCase):
         # rawhex = w.get_raw_transaction(idx)
         # self.assertFalse(rawhex)
 
+# TODO: only works when hashtable is empty
     # def test_sign_raw_transaction(self):
     #     checks = []
     #     idx = w.start_transaction()
