@@ -29,6 +29,7 @@
 
 #include <ctype.h>
 #include <inttypes.h>
+#include <math.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -449,7 +450,16 @@ double koinu_to_coins(uint64_t koinu) {
 }
 
 uint64_t coins_to_koinu(float coins) {
-    return ((float)coins * (float)100000000);
+    //convert integer part to koinu
+    uint64_t integer_part_coins = (uint64_t)floor(coins);
+    uint64_t integer_part_koinu = integer_part_coins * 100000000;
+
+    //convert decimal part to koinu
+    float decimal_part_coins = coins - (float)integer_part_coins;
+    uint64_t decimal_part_koinu = (uint64_t)floor(decimal_part_coins * 100000000);
+
+    //return sum of converted integer and decimal part
+    return (integer_part_koinu + decimal_part_koinu);
 }
 
 void print_bits(size_t const size, void const* ptr)
