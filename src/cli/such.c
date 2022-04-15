@@ -729,7 +729,7 @@ int main(int argc, char* argv[])
         else
             hd_print_node(chain, newextkey);
         }
-    else if (strcmp(cmd, "create_transaction") == 0) {
+    else if (strcmp(cmd, "transaction") == 0) {
         main_menu();
         }
 
