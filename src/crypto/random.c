@@ -34,8 +34,8 @@
 #include <string.h>
 #include <time.h>
 #ifdef WIN32
-#include <wincrypt.h>
 #include <windows.h>
+#include <wincrypt.h>
 #endif
 
 #include <dogecoin/crypto/random.h>
