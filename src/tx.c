@@ -275,7 +275,7 @@ dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx*
         }
     else if (ctx.found_on_non_inved_peers == 0)
         {
-        printf("\nError: The transaction was not relayed back. Your transaction is very likely invalid (or was already broadcased and picked up by an invalid node)\n");
+        printf("\nError: The transaction was not relayed back. Your transaction is very likely invalid (or was already broadcasted and picked up by an invalid node)\n");
         }
     return 1;
     }
