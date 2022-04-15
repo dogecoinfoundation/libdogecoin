@@ -137,6 +137,16 @@ such_SOURCES = \
 such_CFLAGS = $(libdogecoin_la_CFLAGS)
 such_CPPFLAGS = -I$(top_srcdir)/src
 such_LDFLAGS = -static
+
+if WITH_NET
+inst_PROGRAMS += sendtx
+sendtx_LDADD = libdogecoin.la $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+sendtx_SOURCES = \
+    src/cli/sendtx.c
+sendtx_CFLAGS = $(libdogecoin_la_CFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+sendtx_CPPFLAGS = -I$(top_srcdir)/src
+sendtx_LDFLAGS = -static
+endif
 endif
 
 clean-local:
