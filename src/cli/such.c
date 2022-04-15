@@ -78,12 +78,8 @@ static bool showError(const char* er)
     return 1;
     }
 
-// keeping is_testnet for integration with validation functions
-// can remove #pragma once that's completed
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#ifdef WITH_NET
 void broadcasting_menu(int txindex, int is_testnet) {
-#pragma GCC diagnostic pop
     int running = 1;
     int selected = -1;
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
@@ -155,6 +151,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
             }
         }
     }
+#endif
 
 // keeping is_testnet for integration with validation functions
 // can remove #pragma once that's completed
@@ -245,7 +242,9 @@ void sub_menu(int txindex, int is_testnet) {
         printf(" 2. add output\n");
         printf(" 3. finalize transaction\n");
         printf(" 4. sign transaction\n");
+#ifdef WITH_NET
         printf(" 5. broadcast transaction\n");
+#endif
         printf(" 8. print transaction\n");
         printf(" 9. main menu\n\n");
         switch (atoi(getl("command"))) {
@@ -276,9 +275,11 @@ void sub_menu(int txindex, int is_testnet) {
                 case 4:
                     signing_menu(txindex, is_testnet);
                     break;
+#ifdef WITH_NET
                 case 5:
                     broadcasting_menu(txindex, is_testnet);
                     break;
+#endif
                 case 8:
                     printf("raw_tx: %s\n", get_raw_transaction(txindex));
                     break;
@@ -525,9 +526,14 @@ void main_menu() {
         printf(" 6. sort items by id\n");
         printf(" 7. print transactions\n");
         printf(" 8. count transactions\n");
+#ifdef WITH_NET
         printf(" 9. broadcast transaction\n");
         printf(" 10. change network (current: %s)\n", is_testnet ? "testnet" : "mainnet");
         printf(" 11. quit\n");
+#else
+        printf(" 9. change network (current: %s)\n", is_testnet ? "testnet" : "mainnet");
+        printf(" 10. quit\n");
+#endif
         switch (atoi(getl("\ncommand"))) {
                 case 1:
                     sub_menu(start_transaction(), is_testnet);
@@ -567,6 +573,7 @@ void main_menu() {
                 case 8:
                     count_transactions();
                     break;
+#ifdef WITH_NET
                 case 9:
                     temp = atoi(getl("ID of transaction to edit"));
                     s = find_transaction(temp);
@@ -583,6 +590,14 @@ void main_menu() {
                 case 11:
                     running = 0;
                     break;
+#else
+                case 9:
+                    is_testnet = chainparams_menu(is_testnet);
+                    break;
+                case 10:
+                    running = 0;
+                    break;
+#endif
             }
         }
     remove_all();
