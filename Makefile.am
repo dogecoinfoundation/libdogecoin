@@ -85,7 +85,6 @@ tests_SOURCES = \
     test/rmd160_tests.c \
     test/serialize_tests.c \
     test/sha2_tests.c \
-    test/tool_tests.c \
     test/tx_tests.c \
     test/utest.h \
     test/unittester.c \
@@ -98,6 +97,11 @@ tests_LDFLAGS = -static
 TESTS = tests
 endif
 
+if WITH_TOOLS
+if USE_TESTS
+tests_SOURCES += \
+    test/tool_tests.c
+endif
 instdir=$(prefix)/bin
 inst_PROGRAMS = such
 such_LDADD = libdogecoin.la
@@ -106,6 +110,7 @@ such_SOURCES = \
 such_CFLAGS = $(libdogecoin_la_CFLAGS)
 such_CPPFLAGS = -I$(top_srcdir)/src
 such_LDFLAGS = -static
+endif
 
 clean-local:
 	-$(MAKE) -C src/secp256k1 clean

@@ -39,6 +39,12 @@ AC_ARG_ENABLE([debug],
   [enable_debug=$enableval],
   [enable_debug=no])
 
+AC_ARG_ENABLE([tools],
+  [AS_HELP_STRING([--disable-tools],
+  [disable dogecoin tool cli application])],
+  [with_tools=$enableval],
+  [with_tools=yes])
+
 case $host in
   *mingw*)
      TARGET_OS=windows
@@ -50,6 +56,10 @@ case $host in
      TARGET_OS=linux
      ;;
 esac
+
+if test "x$with_tools" = xyes; then
+AC_DEFINE_UNQUOTED([WITH_TOOLS],[1],[Define to 1 to enable wallet compilation])
+fi
 
 if test "x$enable_debug" = xyes; then
   CFLAGS="$CFLAGS -g3 -O0 -DDEBUG"
@@ -89,6 +99,7 @@ AC_CONFIG_FILES([Makefile libdogecoin.pc])
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(BUILD_EXEEXT)
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
+AM_CONDITIONAL([WITH_TOOLS], [test "x$with_tools" = "xyes"])
 
 ac_configure_args="${ac_configure_args} --enable-module-recovery"
 AC_CONFIG_SUBDIRS([src/secp256k1])
@@ -102,6 +113,7 @@ AC_OUTPUT
 
 echo 
 echo "Options used to compile and link:"
+echo "  with tools    = $with_tools"
 echo
 echo "  target os     = $TARGET_OS"
 echo
