@@ -571,7 +571,7 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_test
 
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
 
-    size_t sizeout = 100;
+    size_t sizeout = 53;
 
     /* private key */
     dogecoin_key key;

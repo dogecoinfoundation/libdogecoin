@@ -53,7 +53,7 @@ jobs:
             os: ubuntu-20.04
             run-tests: true
             dep-opts: "DEBUG=1"
-            config-opts: "--enable-glibc-back-compat --enable-static --disable-shared"
+            config-opts: "--enable-static --disable-shared"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin11
