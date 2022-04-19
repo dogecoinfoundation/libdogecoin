@@ -39,7 +39,8 @@ libdogecoininclude_HEADERS = \
     include/dogecoin/tx.h \
     contrib/uthash/uthash.h \
     include/dogecoin/utils.h \
-    include/dogecoin/vector.h
+    include/dogecoin/vector.h \
+    include/dogecoin/wow.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdogecoin.pc
