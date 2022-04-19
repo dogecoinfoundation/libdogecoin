@@ -172,6 +172,7 @@ jobs:
           else
               mv libdogecoin.la such sendtx tests ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
           fi
+          chmod +x ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/*
 
       - name: test libdogecoin
         if: ${{ matrix.run-tests }}
