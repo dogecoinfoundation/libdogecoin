@@ -986,7 +986,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
         for (i = 0; i < src->vin->len; i++) {
             dogecoin_tx_in *tx_in_old, *tx_in_new;
             tx_in_old = vector_idx(src->vin, i);
-            tx_in_new = dogecoin_calloc(1, sizeof(*tx_in_old));
+            tx_in_new = dogecoin_malloc(sizeof(*tx_in_new));
             dogecoin_tx_in_copy(tx_in_new, tx_in_old);
             vector_add(dest->vin, tx_in_new);
         }
@@ -1006,9 +1006,8 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
         /* Copying the tx_out from the source transaction to the destination transaction. */
         for (i = 0; i < src->vout->len; i++) {
             dogecoin_tx_out *tx_out_old, *tx_out_new;
-
             tx_out_old = vector_idx(src->vout, i);
-            tx_out_new = dogecoin_calloc(1, sizeof(dogecoin_tx_out*) * 2 + 1);
+            tx_out_new = dogecoin_malloc(sizeof(*tx_out_new));
             dogecoin_tx_out_copy(tx_out_new, tx_out_old);
             vector_add(dest->vout, tx_out_new);
         }
@@ -1301,11 +1300,9 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
     /* Hashing the string s using the dogecoin_hash function. */
     dogecoin_hash((const uint8_t*)s->str, s->len, hash);
 
-    /* Freeing the memory allocated to the string s. */
     cstr_free(s, true);
 
 out:
-    /* Freeing the memory allocated to the transaction. */
     dogecoin_tx_free(tx_tmp);
 
     return ret;
