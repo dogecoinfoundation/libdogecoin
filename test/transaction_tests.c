@@ -320,10 +320,8 @@ void test_transaction()
     res = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
 
     u_assert_str_eq(res, utxo_scriptpubkey);
-
     dogecoin_free(res);
 
     // remove working transaction object from hashmap
     remove_all();
-
 }

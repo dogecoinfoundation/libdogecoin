@@ -32,7 +32,11 @@
 #include <dogecoin/transaction.h>
 #include <dogecoin/utils.h>
 
-// instantiates a new transaction
+/**
+ * @brief instantiates a new transaction
+ * 
+ * @return working_transaction* 
+ */
 working_transaction* new_transaction() {
     working_transaction* working_tx = (struct working_transaction*)dogecoin_calloc(1, sizeof *working_tx);
     working_tx->transaction = dogecoin_tx_new();
@@ -40,6 +44,11 @@ working_transaction* new_transaction() {
     return working_tx;
 }
 
+/**
+ * @brief adds a transaction to memory per session.
+ * 
+ * @param working_tx 
+ */
 void add_transaction(working_transaction *working_tx) {
     working_transaction *tx;
     HASH_FIND_INT(transactions, &working_tx->idx, tx);
@@ -51,29 +60,48 @@ void add_transaction(working_transaction *working_tx) {
     dogecoin_free(tx);
 }
 
+/**
+ * @brief finds a working_transaction in memory by providing the working_transactions
+ * index.
+ * 
+ * @param idx 
+ * @return working_transaction* 
+ */
 working_transaction* find_transaction(int idx) {
     working_transaction *working_tx;
     HASH_FIND_INT(transactions, &idx, working_tx);
     return working_tx;
 }
 
+/**
+ * @brief removes a single transaction from memory by providing the working_transaction
+ * to delete.
+ * 
+ * @param working_tx 
+ */
 void remove_transaction(working_transaction *working_tx) {
-    HASH_DEL(transactions, working_tx);
+    HASH_DEL(transactions, working_tx); /* delete it (transactions advances to next) */
     dogecoin_tx_free(working_tx->transaction);
     dogecoin_free(working_tx);
 }
 
+/**
+ * @brief removes all transactions from memory for the current session.
+ * 
+ */
 void remove_all() {
     struct working_transaction *current_tx;
     struct working_transaction *tmp;
 
     HASH_ITER(hh, transactions, current_tx, tmp) {
-        HASH_DEL(transactions, current_tx); /* delete it (transactions advances to next) */
-        dogecoin_tx_free(current_tx->transaction);
-        free(current_tx);
+        remove_transaction(current_tx);
     }
 }
 
+/**
+ * @brief prints all transactions in memory per session.
+ * 
+ */
 void print_transactions()
 {
     struct working_transaction *s;
@@ -83,16 +111,33 @@ void print_transactions()
     }
 }
 
+/**
+ * @brief counts working_transactions in memory per session.
+ * 
+ */
 void count_transactions() {
     int temp = HASH_COUNT(transactions);
     printf("there are %d transactions\n", temp);
 }
 
+/**
+ * @brief sorts working_transactions by id.
+ * 
+ * @param a 
+ * @param b 
+ * @return int 
+ */
 int by_id(const struct working_transaction *a, const struct working_transaction *b)
 {
     return (a->idx - b->idx);
 }
 
+/**
+ * @brief command line argument parser for the such command line tool.
+ * 
+ * @param prompt 
+ * @return const char* 
+ */
 const char *getl(const char *prompt)
 {
     static char buf[100];
@@ -107,6 +152,12 @@ const char *getl(const char *prompt)
     return buf;
 }
 
+/**
+ * @brief get the raw tx object as command line argument for the such command line tool.
+ * 
+ * @param prompt_tx 
+ * @return const char* 
+ */
 const char *get_raw_tx(const char *prompt_tx)
 {
     static char buf_tx[1000*100];
@@ -121,6 +172,12 @@ const char *get_raw_tx(const char *prompt_tx)
     return buf_tx;
 }
 
+/**
+ * @brief get the private key object as command line argument for such command line tool.
+ * 
+ * @param prompt_key 
+ * @return const char* 
+ */
 const char *get_private_key(const char *prompt_key)
 {
     static char buf_key[100];
@@ -135,7 +192,11 @@ const char *get_private_key(const char *prompt_key)
     return buf_key;
 }
 
-// #returns an index of a transaction to build in memory.  (1, 2, etc) ..
+/**
+ * @brief returns an index of a transaction to build in memory.  (1, 2, etc) ..
+ * 
+ * @return int 
+ */
 int start_transaction() {
     working_transaction* working_tx = new_transaction();
     int index = working_tx->idx;
@@ -143,6 +204,13 @@ int start_transaction() {
     return index;
 }
 
+/**
+ * @brief inputs a raw hexadecimal transaction and index and then saves to memory.
+ * 
+ * @param txindex 
+ * @param hexadecimal_transaction 
+ * @return int 
+ */
 int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     debug_print("raw_hexadecimal_transaction: %s\n", hexadecimal_transaction);
     if (strlen(hexadecimal_transaction) > 1024*100) { //don't accept tx larger then 100kb
@@ -172,7 +240,14 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     return true;
 }
 
-// #returns 1 if success.
+/**
+ * @brief adds an unspent output as an input to a working_transaction object.
+ * 
+ * @param txindex 
+ * @param hex_utxo_txid 
+ * @param vout 
+ * @return int 
+ */
 int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
@@ -200,6 +275,14 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     return flag + 1 == (int)tx->transaction->vin->len;
 }
 
+/**
+ * @brief adds an output to a working_transaction object.
+ * 
+ * @param txindex 
+ * @param destinationaddress 
+ * @param amount 
+ * @return int 
+ */
 int add_output(int txindex, char* destinationaddress, uint64_t amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
@@ -216,7 +299,16 @@ int add_output(int txindex, char* destinationaddress, uint64_t amount) {
     return dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
 }
 
-int make_change(int txindex, char* public_key, float subtractedfee, uint64_t amount) {
+/**
+ * @brief internal function used to calculate amount of change to send to sender address
+ * 
+ * @param txindex 
+ * @param public_key 
+ * @param subtractedfee 
+ * @param amount 
+ * @return int 
+ */
+static int make_change(int txindex, char* public_key, float subtractedfee, uint64_t amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -232,8 +324,18 @@ int make_change(int txindex, char* public_key, float subtractedfee, uint64_t amo
     return dogecoin_tx_add_address_out(tx->transaction, chain, total_change_back, public_key);
 }
 
-// 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
-// out_dogeamount == just an echoback of the total amount specified in the addutxos for verification
+/**
+ * @brief 'closes the inputs', specifies the recipient, specifies the amount to subtract as 
+ * subtractedfee, and returns the raw hexadecimal transaction. out_dogeamount == just an echoback
+ * of the total amount specified in the addutxos for verification purposes.
+ * 
+ * @param txindex 
+ * @param destinationaddress 
+ * @param subtractedfee 
+ * @param out_dogeamount_for_verification 
+ * @param sender_p2pkh 
+ * @return char* 
+ */
 char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
@@ -279,7 +381,12 @@ char* finalize_transaction(int txindex, char* destinationaddress, float subtract
     return tx_out_total == total ? get_raw_transaction(txindex) : false;
 }
 
-// returns 0 if not closed, returns rawtx again if closed/created.
+/**
+ * @brief Get the raw transaction object
+ * 
+ * @param txindex 
+ * @return char* 
+ */
 char* get_raw_transaction(int txindex) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
@@ -300,30 +407,30 @@ char* get_raw_transaction(int txindex) {
     return hexadecimal_buffer;
 }
 
-// clears a tx in memory. (overwrites)
+/**
+ * @brief removes a single working_transaction from memory by providing its transaction index.
+ * 
+ * @param txindex 
+ */
 void clear_transaction(int txindex) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
-
-    // guard against null pointer exceptions
-    if (!tx->transaction) return;
-
-    // free transaction input if they exist
-    if (tx->transaction->vin) vector_free(tx->transaction->vin, true);
-
-    // free transaction outputs if they exist
-    if (tx->transaction->vout) vector_free(tx->transaction->vout, true);
-    
-    // free dogecoin_tx
-    dogecoin_tx_free(tx->transaction);
-
-    // remote from hashmap
+    // remove from hashmap
     remove_transaction(tx);
 }
 
-// sign a given inputted transaction with a given private key, and return a hex signed transaction.
-// we may want to add such things to 'advanced' section:
-// locktime, possibilities for multiple outputs, data, sequence.
+/**
+ * @brief sign a given inputted transaction with a given private key, and return a hex signed transaction.
+ * we may want to add such things to 'advanced' section: locktime, possibilities for multiple outputs, data, sequence.
+ * 
+ * @param inputindex 
+ * @param incomingrawtx 
+ * @param scripthex 
+ * @param sighashtype 
+ * @param amount 
+ * @param privkey 
+ * @return int 
+ */
 int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if(!incomingrawtx && !scripthex) return false;
 
@@ -429,9 +536,18 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     return true;
 }
 
-// sign a given inputted transaction with a given private key, and return a hex signed transaction.
-// we may want to add such things to 'advanced' section:
-// locktime, possibilities for multiple outputs, data, sequence.
+/**
+ * @brief same as above but retrieves raw transaction by index and then signs the transaction.
+ * 
+ * @param txindex 
+ * @param inputindex 
+ * @param incomingrawtx 
+ * @param scripthex 
+ * @param sighashtype 
+ * @param amount 
+ * @param privkey 
+ * @return int 
+ */
 int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if (!txindex) return false;
     sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey);
