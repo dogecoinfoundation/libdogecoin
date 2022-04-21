@@ -45,40 +45,7 @@
 #include <dogecoin/utils.h>
 #include <dogecoin/wow.h>
 
-static struct option long_options[] =
-    {
-        {"privkey", required_argument, NULL, 'p'},
-        {"pubkey", required_argument, NULL, 'k'},
-        {"derived_path", required_argument, NULL, 'm'},
-        {"command", required_argument, NULL, 'c'},
-        {"testnet", no_argument, NULL, 't'},
-        {"regtest", no_argument, NULL, 'r'},
-        {"version", no_argument, NULL, 'v'},
-        {NULL, 0, NULL, 0} };
-
-static void print_version()
-    {
-    printf("Version: %s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
-    }
-
-static void print_usage()
-    {
-    print_version();
-    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
-    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
-    printf("\nExamples: \n");
-    printf("Generate a testnet private ec keypair wif/hex:\n");
-    printf("> such -c generate_private_key\n\n");
-    printf("> such -c generate_public_key -p QRYZwxVxBFKgKP4bWPEwWBJpN3C3cTN6fads8SgJTgaPTJhEWgLH\n\n");
-    }
-
-static bool showError(const char* er)
-    {
-    printf("Error: %s\n", er);
-    dogecoin_ecc_stop();
-    return 1;
-    }
-
+// ******************************** SUCH -C TRANSACTION MENU ********************************
 #ifdef WITH_NET
 void broadcasting_menu(int txindex, int is_testnet) {
     int running = 1;
@@ -174,7 +141,7 @@ void signing_menu(int txindex, int is_testnet) {
         printf(" 9. go back\n\n");
         switch (atoi(getl("command"))) {
                 case 1:
-                    input_amount = atoi(getl("input amount")); // 2 & 10
+                    input_amount = atol(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
@@ -192,7 +159,7 @@ void signing_menu(int txindex, int is_testnet) {
                         }
                     break;
                 case 2:
-                    input_amount = atoi(getl("input amount")); // 2 & 10
+                    input_amount = atol(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
@@ -604,6 +571,43 @@ void main_menu() {
     remove_all();
     }
 
+// ******************************** END TRANSACTION MENU ********************************
+
+// ******************************** CLI INTERFACE ********************************
+static struct option long_options[] =
+    {
+        {"privkey", required_argument, NULL, 'p'},
+        {"pubkey", required_argument, NULL, 'k'},
+        {"derived_path", required_argument, NULL, 'm'},
+        {"command", required_argument, NULL, 'c'},
+        {"testnet", no_argument, NULL, 't'},
+        {"regtest", no_argument, NULL, 'r'},
+        {"version", no_argument, NULL, 'v'},
+        {NULL, 0, NULL, 0} };
+
+static void print_version()
+    {
+    printf("Version: %s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
+    }
+
+static void print_usage()
+    {
+    print_version();
+    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
+    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
+    printf("\nExamples: \n");
+    printf("Generate a testnet private ec keypair wif/hex:\n");
+    printf("> such -c generate_private_key\n\n");
+    printf("> such -c generate_public_key -p QRYZwxVxBFKgKP4bWPEwWBJpN3C3cTN6fads8SgJTgaPTJhEWgLH\n\n");
+    }
+
+static bool showError(const char* er)
+    {
+    printf("Error: %s\n", er);
+    dogecoin_ecc_stop();
+    return 1;
+    }
+
 int main(int argc, char* argv[])
     {
     int long_index = 0;
@@ -612,10 +616,16 @@ int main(int argc, char* argv[])
     char* pubkey = 0;
     char* cmd = 0;
     char* derived_path = 0;
+    char* txhex     = 0;
+    char* scripthex = 0;
+    int inputindex  = 0;
+    int sighashtype = 1;
+    uint64_t amount = 0;
+    dogecoin_mem_zero(&pkey, sizeof(pkey));
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "p:k:m:c:trv", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:a:m:c:trv", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'p':
                     pkey = optarg;
@@ -640,6 +650,21 @@ int main(int argc, char* argv[])
                 case 'v':
                     print_version();
                     exit(EXIT_SUCCESS);
+                    break;
+                case 'x':
+                    txhex = optarg;
+                    break;
+                case 's':
+                    scripthex = optarg;
+                    break;
+                case 'i':
+                    inputindex = (int)strtol(optarg, (char**)NULL, 10);
+                    break;
+                case 'h':
+                    sighashtype = (int)strtol(optarg, (char**)NULL, 10);
+                    break;
+                case 'a':
+                    amount = (int)strtoll(optarg, (char**)NULL, 10);
                     break;
                 default:
                     print_usage();
@@ -744,7 +769,106 @@ int main(int argc, char* argv[])
             return showError("deriving child key failed\n");
         else
             hd_print_node(chain, newextkey);
+        }  
+    else if (strcmp(cmd, "sign") == 0) {
+        // ./such -c sign -x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -a <amount> -p <private key>
+        if(!txhex || !scripthex) {
+            return showError("Missing tx-hex or script-hex (use -x, -s)\n");
         }
+
+        if (strlen(txhex) > 1024*100) { //don't accept tx larger then 100kb
+            return showError("tx too large (max 100kb)\n");
+        }
+
+        //deserialize transaction
+        dogecoin_tx* tx = dogecoin_tx_new();
+        uint8_t* data_bin = dogecoin_malloc(strlen(txhex) / 2 + 1);
+        int outlen = 0;
+        utils_hex_to_bin(txhex, data_bin, strlen(txhex), &outlen);
+        if (!dogecoin_tx_deserialize(data_bin, outlen, tx, NULL, true)) {
+            dogecoin_free(data_bin);
+            dogecoin_tx_free(tx);
+            return showError("Invalid tx hex");
+        }
+        dogecoin_free(data_bin);
+
+        if ((size_t)inputindex >= tx->vin->len) {
+            dogecoin_tx_free(tx);
+            return showError("Inputindex out of range");
+        }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
+        vector_idx(tx->vin, inputindex);
+#pragma GCC diagnostic pop
+
+        uint8_t script_data[strlen(scripthex) / 2 + 1];
+        utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlen);
+        cstring* script = cstr_new_buf(script_data, outlen);
+
+        uint256 sighash;
+        dogecoin_mem_zero(sighash, sizeof(sighash));
+        dogecoin_tx_sighash(tx, script, inputindex, sighashtype, 0, SIGVERSION_BASE, sighash);
+
+        char *hex = utils_uint8_to_hex(sighash, 32);
+        utils_reverse_hex(hex, 64);
+
+        enum dogecoin_tx_out_type type = dogecoin_script_classify(script, NULL);
+        printf("script: %s\n", scripthex);
+        printf("script-type: %s\n", dogecoin_tx_out_type_to_str(type));
+        printf("inputindex: %d\n", inputindex);
+        printf("sighashtype: %d\n", sighashtype);
+        printf("hash: %s\n", hex);
+
+        // sign
+        dogecoin_bool sign = false;
+        dogecoin_key key;
+        dogecoin_privkey_init(&key);
+        if (dogecoin_privkey_decode_wif(pkey, chain, &key)) {
+            sign = true;
+        } else {
+            if (pkey) {
+                if (strlen(pkey) > 50) {
+                    dogecoin_tx_free(tx);
+                    cstr_free(script, true);
+                    return showError("Invalid wif privkey\n");
+                }
+            } else {
+                printf("No private key provided, signing will not happen\n");
+            }
+        }
+        if (sign) {
+            uint8_t sigcompact[64] = {0};
+            int sigderlen = 74+1; //&hashtype
+            uint8_t sigder_plus_hashtype[75] = {0};
+            enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script, amount, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
+            cstr_free(script, true);
+
+            if (res != DOGECOIN_SIGN_OK) {
+                printf("!!!Sign error:%s\n", dogecoin_tx_sign_result_to_str(res));
+            }
+
+            char sigcompacthex[64*2+1] = {0};
+            utils_bin_to_hex((unsigned char *)sigcompact, 64, sigcompacthex);
+
+            char sigderhex[74*2+2+1]; //74 der, 2 hashtype, 1 nullbyte
+            dogecoin_mem_zero(sigderhex, sizeof(sigderhex));
+            utils_bin_to_hex((unsigned char *)sigder_plus_hashtype, sigderlen, sigderhex);
+
+            printf("\nSignature created:\n");
+            printf("signature compact: %s\n", sigcompacthex);
+            printf("signature DER (+hashtype): %s\n", sigderhex);
+
+            cstring* signed_tx = cstr_new_sz(1024);
+            dogecoin_tx_serialize(signed_tx, tx, true);
+
+            char signed_tx_hex[signed_tx->len*2+1];
+            utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
+            printf("signed TX: %s\n", signed_tx_hex);
+            cstr_free(signed_tx, true);
+        }
+        dogecoin_tx_free(tx);
+    }
     else if (strcmp(cmd, "transaction") == 0) {
         main_menu();
         }
