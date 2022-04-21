@@ -72,7 +72,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                             size of a p2p message. */
                             if (raw_hexadecimal_tx == NULL || strlen(raw_hexadecimal_tx) == 0 || strlen(raw_hexadecimal_tx) > DOGECOIN_MAX_P2P_MSG_SIZE) {
                                 printf("Transaction in invalid or to large.\n");
-                            }
+                                }
                             uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_tx) / 2 + 1);
                             int outlen = 0;
                             utils_hex_to_bin(raw_hexadecimal_tx, data_bin, strlen(raw_hexadecimal_tx), &outlen);
@@ -83,7 +83,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                                 }
                             else {
                                 printf("Transaction is invalid\n");
-                            }
+                                }
                             dogecoin_free(data_bin);
                             selected = -1; // set selected to number out of bounds for i
                             i = length; // reset loop to start
@@ -106,7 +106,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                 switch (atoi(getl("\ncommand"))) {
                         case 1:
                             // tx_input submenu
-                            
+
                             selected = i;
                             i = i - i - 1;
                             break;
@@ -616,9 +616,9 @@ int main(int argc, char* argv[])
     char* pubkey = 0;
     char* cmd = 0;
     char* derived_path = 0;
-    char* txhex     = 0;
+    char* txhex = 0;
     char* scripthex = 0;
-    int inputindex  = 0;
+    int inputindex = 0;
     int sighashtype = 1;
     uint64_t amount = 0;
     dogecoin_mem_zero(&pkey, sizeof(pkey));
@@ -769,16 +769,16 @@ int main(int argc, char* argv[])
             return showError("deriving child key failed\n");
         else
             hd_print_node(chain, newextkey);
-        }  
+        }
     else if (strcmp(cmd, "sign") == 0) {
         // ./such -c sign -x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -a <amount> -p <private key>
-        if(!txhex || !scripthex) {
+        if (!txhex || !scripthex) {
             return showError("Missing tx-hex or script-hex (use -x, -s)\n");
-        }
+            }
 
-        if (strlen(txhex) > 1024*100) { //don't accept tx larger then 100kb
+        if (strlen(txhex) > 1024 * 100) { //don't accept tx larger then 100kb
             return showError("tx too large (max 100kb)\n");
-        }
+            }
 
         //deserialize transaction
         dogecoin_tx* tx = dogecoin_tx_new();
@@ -789,13 +789,13 @@ int main(int argc, char* argv[])
             dogecoin_free(data_bin);
             dogecoin_tx_free(tx);
             return showError("Invalid tx hex");
-        }
+            }
         dogecoin_free(data_bin);
 
         if ((size_t)inputindex >= tx->vin->len) {
             dogecoin_tx_free(tx);
             return showError("Inputindex out of range");
-        }
+            }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-value"
@@ -810,7 +810,7 @@ int main(int argc, char* argv[])
         dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, inputindex, sighashtype, 0, SIGVERSION_BASE, sighash);
 
-        char *hex = utils_uint8_to_hex(sighash, 32);
+        char* hex = utils_uint8_to_hex(sighash, 32);
         utils_reverse_hex(hex, 64);
 
         enum dogecoin_tx_out_type type = dogecoin_script_classify(script, NULL);
@@ -826,34 +826,36 @@ int main(int argc, char* argv[])
         dogecoin_privkey_init(&key);
         if (dogecoin_privkey_decode_wif(pkey, chain, &key)) {
             sign = true;
-        } else {
+            }
+        else {
             if (pkey) {
                 if (strlen(pkey) > 50) {
                     dogecoin_tx_free(tx);
                     cstr_free(script, true);
                     return showError("Invalid wif privkey\n");
+                    }
                 }
-            } else {
+            else {
                 printf("No private key provided, signing will not happen\n");
+                }
             }
-        }
         if (sign) {
-            uint8_t sigcompact[64] = {0};
-            int sigderlen = 74+1; //&hashtype
-            uint8_t sigder_plus_hashtype[75] = {0};
+            uint8_t sigcompact[64] = { 0 };
+            int sigderlen = 74 + 1; //&hashtype
+            uint8_t sigder_plus_hashtype[75] = { 0 };
             enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script, amount, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
             cstr_free(script, true);
 
             if (res != DOGECOIN_SIGN_OK) {
                 printf("!!!Sign error:%s\n", dogecoin_tx_sign_result_to_str(res));
-            }
+                }
 
-            char sigcompacthex[64*2+1] = {0};
-            utils_bin_to_hex((unsigned char *)sigcompact, 64, sigcompacthex);
+            char sigcompacthex[64 * 2 + 1] = { 0 };
+            utils_bin_to_hex((unsigned char*)sigcompact, 64, sigcompacthex);
 
-            char sigderhex[74*2+2+1]; //74 der, 2 hashtype, 1 nullbyte
+            char sigderhex[74 * 2 + 2 + 1]; //74 der, 2 hashtype, 1 nullbyte
             dogecoin_mem_zero(sigderhex, sizeof(sigderhex));
-            utils_bin_to_hex((unsigned char *)sigder_plus_hashtype, sigderlen, sigderhex);
+            utils_bin_to_hex((unsigned char*)sigder_plus_hashtype, sigderlen, sigderhex);
 
             printf("\nSignature created:\n");
             printf("signature compact: %s\n", sigcompacthex);
@@ -862,13 +864,32 @@ int main(int argc, char* argv[])
             cstring* signed_tx = cstr_new_sz(1024);
             dogecoin_tx_serialize(signed_tx, tx, true);
 
-            char signed_tx_hex[signed_tx->len*2+1];
-            utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
+            char signed_tx_hex[signed_tx->len * 2 + 1];
+            utils_bin_to_hex((unsigned char*)signed_tx->str, signed_tx->len, signed_tx_hex);
             printf("signed TX: %s\n", signed_tx_hex);
             cstr_free(signed_tx, true);
-        }
+            }
         dogecoin_tx_free(tx);
-    }
+        }
+    else if (strcmp(cmd, "comp2der") == 0) {
+        // ./such -c comp2der -s <compact signature>
+        if (!scripthex || strlen(scripthex) != 128) {
+            return showError("Missing signature or invalid length (use hex, 128 chars == 64 bytes)\n");
+            }
+
+        int outlen = 0;
+        uint8_t sig_comp[strlen(scripthex) / 2 + 1];
+        printf("%s\n", scripthex);
+        utils_hex_to_bin(scripthex, sig_comp, strlen(scripthex), &outlen);
+
+        unsigned char sigder[74];
+        size_t sigderlen = 74;
+
+        dogecoin_ecc_compact_to_der_normalized(sig_comp, sigder, &sigderlen);
+        char hexbuf[sigderlen * 2 + 1];
+        utils_bin_to_hex(sigder, sigderlen, hexbuf);
+        printf("DER: %s\n", hexbuf);
+        }
     else if (strcmp(cmd, "transaction") == 0) {
         main_menu();
         }
