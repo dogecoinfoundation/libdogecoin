@@ -88,6 +88,7 @@ tests_SOURCES = \
     test/hash_tests.c \
     test/key_tests.c \
     test/mem_tests.c \
+    test/opreturn_tests.c \
     test/random_tests.c \
     test/rmd160_tests.c \
     test/serialize_tests.c \

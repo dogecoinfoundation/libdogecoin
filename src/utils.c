@@ -505,3 +505,21 @@ void append(char* s, char* t)
 
     memcpy(&s[length + i], "\0", 1);
 }
+
+/**
+ * @brief function to convert ascii text to hexadecimal string
+ * 
+ * @param in 
+ * @param output 
+ */
+void text_to_hex(char* in, char* out) {
+    int length = 0;
+    int i = 0;
+    
+    while(in[length] != '\0') {
+        sprintf((char*)(out + i),"%02X", in[length]);
+        length += 1;
+        i += 2;
+    }
+    out[i++] = '\0';
+}
