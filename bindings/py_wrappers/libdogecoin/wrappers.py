@@ -4,7 +4,6 @@ import ctypes as ct
 import os
 
 def load_libdogecoin():
-    """Load the libdogecoin library from "libdogecoin.so"."""
     # TODO: change path to be more flexible
     path = os.path.join(os.getcwd(), ".libs/libdogecoin.so")
 
@@ -13,11 +12,9 @@ def load_libdogecoin():
     return ct.CDLL(path)
 
 def dogecoin_ecc_start():
-    """Starts ecc context (required for running any key function)."""
     lib.dogecoin_ecc_start()
 
 def dogecoin_ecc_stop():
-    """Stops currently running ecc context."""
     lib.dogecoin_ecc_stop()
 
 lib = load_libdogecoin()
@@ -87,7 +84,7 @@ def generate_hd_master_pub_key_pair(chain_code=0, as_bytes=False):
 
 
 def generate_derived_hd_pub_key(wif_privkey_master, as_bytes=False):
-    """Given a HD master public key, derive a child key from it.
+    """Given a HD master private key, derive a new child key from it.
     Keyword arguments:
     wif_privkey_master -- HD master public key as wif-encoded string
     as_bytes -- flag to return key pair as bytes object
@@ -183,7 +180,7 @@ def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chai
 
 def verify_p2pkh_address(p2pkh_pubkey, chain_code=0):
     """Given a p2pkh address, confirm address is in correct format and
-    passes simple Shannon entropy threshold
+    is a valid Dogecoin address.
     Keyword arguments:
     p2pkh_pubkey -- string containing basic p2pkh address
     chain_code -- 0 for mainnet, 1 for testnet
@@ -224,6 +221,7 @@ class DogecoinPubkey(ct.Structure):
     ]
 #===================================================TRANSACTION.C
 def start_transaction():
+    """Create a new, empty dogecoin transaction."""
     # set return type
     lib.start_transaction.restype = ct.c_int
 
@@ -234,6 +232,8 @@ def start_transaction():
     return int(res)
 
 def add_utxo(tx_index, hex_utxo_txid, vout):
+    """Given the index of a working transaction, add another
+    input to it."""
     # verify arguments are valid
     assert isinstance(tx_index, int) or tx_index.isnumeric()
     assert isinstance(vout, int) or vout.isnumeric()
