@@ -479,7 +479,7 @@ int is_testnet = true;
 void main_menu() {
     int running = 1;
     struct working_transaction* s;
-    int temp;
+    int temp, txindex;
     wow();
 
     // load existing testnet transaction into memory for demonstration purposes.
@@ -489,11 +489,11 @@ void main_menu() {
         printf(" 1. add transaction\n");
         printf(" 2. edit transaction by id\n");
         printf(" 3. find transaction\n");
-        printf(" 4. delete transaction\n");
-        printf(" 5. delete all transactions\n");
-        printf(" 6. sort items by id\n");
+        printf(" 4. sign transaction\n");
+        printf(" 5. delete transaction\n");
+        printf(" 6. delete all transactions\n");
         printf(" 7. print transactions\n");
-        printf(" 8. count transactions\n");
+        printf(" 8. import raw transaction (memory)\n");
 #ifdef WITH_NET
         printf(" 9. broadcast transaction\n");
         printf(" 10. change network (current: %s)\n", is_testnet ? "testnet" : "mainnet");
@@ -521,6 +521,16 @@ void main_menu() {
                     s ? printf("transaction: %s\n", get_raw_transaction(s->idx)) : printf("\nno transaction found with that id. please try again!\n");
                     break;
                 case 4:
+                    temp = atoi(getl("ID of transaction to sign"));
+                    s = find_transaction(temp);
+                    if (s) {
+                        signing_menu(temp, is_testnet);
+                        }
+                    else {
+                        printf("\nno transaction found with that id. please try again!\n");
+                        }
+                    break;
+                case 5:
                     s = find_transaction(atoi(getl("ID to delete")));
                     if (s) {
                         remove_transaction(s);
@@ -529,17 +539,22 @@ void main_menu() {
                         printf("\nno transaction found with that id. please try again!\n");
                         }
                     break;
-                case 5:
+                case 6:
                     remove_all();
                     break;
-                case 6:
-                    HASH_SORT(transactions, by_id);
-                    break;
                 case 7:
+                    count_transactions();
                     print_transactions();
                     break;
                 case 8:
-                    count_transactions();
+                    txindex = save_raw_transaction(start_transaction(), get_raw_tx("raw transaction"));
+                    if (!txindex) {
+                        printf("error saving transaction!\n");
+                        }
+                    else {
+                        printf("successfully saved raw transaction to memory for the session!\n");
+                        printf("working transaction id is: %d\n", txindex + 1);
+                        }
                     break;
 #ifdef WITH_NET
                 case 9:
