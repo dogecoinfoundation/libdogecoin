@@ -336,7 +336,7 @@ static int make_change(int txindex, char* public_key, float subtractedfee, uint6
  * @param sender_p2pkh 
  * @return char* 
  */
-char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
+char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 

@@ -28,8 +28,7 @@
 */
 
 #include <ctype.h>
-#include <inttypes.h>
-#include <math.h> 
+#include <inttypes.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -445,14 +444,55 @@ void print_image(FILE *fptr)
         printf("%s",read_string);
 }
 
-double koinu_to_coins(uint64_t koinu) {
-    return (double)koinu / (double)1e8;
+long double koinu_to_coins(uint64_t koinu) {
+    return (long double)koinu / (long double)1e8;
 }
 
-uint64_t coins_to_koinu(double coins) {
-    double result = (coins * 1.0e8);
-    //printf("result: %.8f... after uint64_t cast: %lu\n", result, (uint64_t)result);
-    return (uint64_t)result;
+uint64_t coins_to_koinu(long double coins) {
+    char coins_string[32];
+    char koinu_string[32];
+    sprintf(coins_string, "%.9Lf", coins);
+    char* c_ptr = coins_string;
+    char* k_ptr = koinu_string;
+
+    //copy all digits until end of string or decimal point is reached
+    while (*c_ptr != '\0') {
+        if (*c_ptr =='.') {
+            c_ptr++;
+            break;
+        }
+        memcpy(k_ptr, c_ptr, 1);
+        c_ptr++;
+        k_ptr++;
+    }
+    //copy remaining 8 or less decimal places
+    for (int i=1; i<=8; i++) {
+        if (*c_ptr=='\0') {
+            memset(k_ptr, 0, 8-i); //fill with zeroes if less than 8 decimal places
+            k_ptr+=(8-i);
+            memset(k_ptr, '\0', 1);
+            break;
+        }
+        if (i==8) {
+            //assessing the 9th decimal place
+            if (c_ptr[1] >= '5') {
+                char curr_val = *c_ptr;
+                memset(k_ptr, curr_val+1, 1);
+                k_ptr++;
+            }
+            else {
+                memcpy(k_ptr, c_ptr, 1);
+                k_ptr++;
+            }
+            memset(k_ptr, '\0', 1);
+            break;
+        }
+        memcpy(k_ptr, c_ptr, 1);
+        c_ptr++;
+        k_ptr++;
+    }
+    uint64_t result = (uint64_t)strtoul(koinu_string, &k_ptr, 10);
+    return result;
 }
 
 void print_bits(size_t const size, void const* ptr)
