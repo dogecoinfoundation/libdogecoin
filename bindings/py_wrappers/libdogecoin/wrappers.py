@@ -233,10 +233,15 @@ def start_transaction():
 
 def add_utxo(tx_index, hex_utxo_txid, vout):
     """Given the index of a working transaction, add another
-    input to it."""
+    input to it.
+    Keyword arguments:
+    tx_index -- the index of the working transaction to update
+    hex_utxo_txid -- the transaction id of the utxo to be spent
+    vout -- the number of outputs associated with the specified utxo
+    """
     # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
-    assert isinstance(vout, int) or vout.isnumeric()
+    assert isinstance(tx_index, int)
+    assert isinstance(vout, int)
     assert isinstance(hex_utxo_txid, str)
 
     # convert string to be c-compatible
@@ -254,8 +259,15 @@ def add_utxo(tx_index, hex_utxo_txid, vout):
     return int(res)
     
 def add_output(tx_index, destination_address, amount):
+    """Given the index of a working transaction, add another
+    output to it.
+    Keyword arguments:
+    tx_index -- the index of the working transaction to update
+    destination_address -- the address of the output being added
+    amount -- the amount of dogecoin to send to the specified address
+    """
     # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(tx_index, int)
     assert isinstance(destination_address, str)
     assert isinstance(amount, (float, int))
 
@@ -274,39 +286,19 @@ def add_output(tx_index, destination_address, amount):
     # return result
     return int(res)
 
-def make_change(tx_index, prvkey_wif, destination_address, subtracted_fee, amount):
-    # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
-    assert isinstance(prvkey_wif, str)
-    assert isinstance(destination_address, str)
-    assert isinstance(subtracted_fee, (int, float))
-    assert isinstance(amount, (int, float))
-
-    # convert args to be c-compatible
-    prvkey_wif_ptr = ct.c_char_p(prvkey_wif.encode('utf-8'))
-    destination_address_ptr = ct.c_char_p(destination_address.encode('utf-8'))
-    if isinstance(amount, float):
-        amount = int(amount) # TODO: will truncate! is this preferred?
-
-    # set types for parameters and return
-    lib.make_change.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_double, ct.c_uint64]
-    lib.make_change.restype = ct.c_void_p
-    
-    # call c function
-    lib.dogecoin_ecc_start()
-    res = lib.make_change(int(tx_index), prvkey_wif_ptr, destination_address_ptr, subtracted_fee, amount)
-    lib.dogecoin_ecc_stop()
-
-    # return result
-    try:
-        res = ct.c_char_p(res)
-        return res.value.decode("utf-8")
-    except:
-        return 0
-
 def finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh):
+    """Given the index of a working transaction, prepares it
+    for signing by specifying the recipient and fee to subtract,
+    directing extra change back to the sender.
+    Keyword arguments:
+    tx_index -- the index of the working transaction
+    destination address -- the address to send coins to
+    subtracted_fee -- the amount of dogecoin to assign as a fee
+    out_dogeamount_for_verification -- the total amount of dogecoin being sent (fee included)
+    sender_p2pkh -- the address of the sender to receive their change
+    """
     # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(tx_index, int)
     assert isinstance(destination_address, str)
     assert isinstance(subtracted_fee, (int, float))
     assert isinstance(out_dogeamount_for_verification, (int, float))
@@ -333,8 +325,13 @@ def finalize_transaction(tx_index, destination_address, subtracted_fee, out_doge
         return 0
 
 def get_raw_transaction(tx_index):
+    """Given the index of a working transaction, returns
+    the serialized object in hex format.
+    Keyword arguments:
+    tx_index -- the index of the working transaction
+    """
     # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(tx_index, int)
 
     # set types for parameters and return
     lib.get_raw_transaction.argtypes = [ct.c_int]
@@ -351,8 +348,12 @@ def get_raw_transaction(tx_index):
         return 0
 
 def clear_transaction(tx_index):
+    """Discard a working transaction.
+    Keyword arguments:
+    tx_index -- the index of the working transaction
+    """
     # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(tx_index, int)
 
     # set parameter types
     lib.get_raw_transaction.argtypes = [ct.c_int]
@@ -360,20 +361,38 @@ def clear_transaction(tx_index):
     # call c function (void return)
     lib.clear_transaction(tx_index)
 
-def sign_indexed_transaction(tx_index, privkey):
+def sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    """Sign a finalized raw transaction using the specified
+    private key and save it to a new working transaction with
+    the specified index.
+    Keyword arguments:
+    tx_index -- the index where the signed transaction will be saved
+    input_index -- the index of the working transaction to sign
+    incoming_raw_tx -- the serialized string of the transaction to sign
+    script_hex -- the hex of the script to be signed
+    sig_hash_type -- the type of signature hash to be used
+    amount -- the amount of dogecoin in the transaction being signed
+    privkey -- the private key to sign with
+    """
     # verify arguments are valid
-    assert isinstance(tx_index, int) or tx_index.isnumeric()
+    assert isinstance(tx_index, int)
+    assert isinstance(input_index, int)
+    assert isinstance(incoming_raw_tx, str)
+    assert isinstance(script_hex, str)
+    assert isinstance(sig_hash_type, int)
     assert isinstance(privkey, str)
     
-    # convert string to be c-compatible
+    # convert strings to be c-compatible
+    incoming_raw_tx_ptr = ct.c_char_p(incoming_raw_tx.encode('utf-8'))
+    script_hex_ptr = ct.c_char_p(script_hex.encode('utf-8'))
     privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
 
     # set types for parameters and return
-    lib.sign_indexed_transaction.argtypes = [ct.c_int, ct.c_char_p]
-    lib.sign_indexed_transaction.restype = ct.c_void_p
+    lib.sign_indexed_transaction.argtypes = [ct.c_int, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
+    lib.sign_indexed_transaction.restype = ct.c_int
 
-    # call c function and return result
-    res = lib.sign_indexed_transaction(tx_index, privkey_ptr)
+    # call c function
+    res = lib.sign_indexed_transaction(tx_index, input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
 
     # return result
     try:
@@ -383,6 +402,16 @@ def sign_indexed_transaction(tx_index, privkey):
         return 0
 
 def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    """Sign a finalized raw transaction using the specified
+    private key.
+    Keyword arguments:
+    input_index -- the index of the working transaction to sign
+    incoming_raw_tx -- the serialized string of the transaction to sign
+    script_hex -- the hex of the script to be signed
+    sig_hash_type -- the type of signature hash to be used
+    amount -- the amount of dogecoin in the transaction being signed
+    privkey -- the private key to sign with
+    """
     # verify arguments are valid
     assert isinstance(input_index, int) or input_index.isnumeric()
     assert isinstance(incoming_raw_tx, str)
@@ -399,7 +428,7 @@ def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type
     lib.sign_raw_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
     lib.sign_raw_transaction.restype = ct.c_int
 
-    # call c function and return result
+    # call c function
     lib.dogecoin_ecc_start()
     res = ct.c_int()
     res = lib.sign_raw_transaction(input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
@@ -411,3 +440,26 @@ def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type
     else:
         return int(res)
     
+def save_raw_transaction(tx_index, hex_transaction):
+    """Given a serialized transaction string, saves the transaction
+    as a working transaction with the specified index.
+    Keyword arguments:
+    tx_index -- the index to where the transaction will be saved
+    hex_transaction -- the serialized string of the transaction to save
+    """
+    # verify arguments are valid
+    assert isinstance(tx_index, int)
+    assert isinstance(hex_transaction, str)
+
+    # convert string to be c-compatible
+    hex_transaction = ct.c_char_p(hex_transaction.encode('utf-8'))
+
+    # set types for parameters and return
+    lib.save_raw_transaction.argtypes = [ct.c_int, ct.c_char_p]
+    lib.save_raw_transaction.restype = ct.c_int
+
+    # call c function
+    res = lib.save_raw_transaction()
+
+    # return result
+    return int(res)
