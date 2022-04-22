@@ -64,7 +64,6 @@ void test_op_return() {
     
     /* adding a new output to the transaction. */
     vector_add(tx->transaction->vout, tx_out);
-    print_transactions();
     remove_all();
 }
     

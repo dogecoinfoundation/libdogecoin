@@ -439,6 +439,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         return false;
     }
 
+    const dogecoin_chainparams* chain = (privkey[0] == 'c') ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
     uint8_t* data_bin = dogecoin_malloc(strlen(incomingrawtx) / 2);
@@ -451,7 +453,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         dogecoin_free(data_bin);
         // free dogecoin_tx
         dogecoin_tx_free(txtmp);
-        printf("invalid tx hex");
+        printf("invalid tx hex\n");
         return false;
     }
     // free byte array
@@ -491,7 +493,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     dogecoin_bool sign = false;
     dogecoin_key key;
     dogecoin_privkey_init(&key);
-    if (dogecoin_privkey_decode_wif(privkey, &dogecoin_chainparams_test, &key)) {
+    if (dogecoin_privkey_decode_wif(privkey, chain, &key)) {
         sign = true;
     } else {
         if (privkey) {
@@ -520,8 +522,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         dogecoin_mem_zero(sigderhex, sizeof(sigderhex));
         utils_bin_to_hex((unsigned char *)sigder_plus_hashtype, sigderlen, sigderhex);
 
-        debug_print("\nsignature created:\nsignature compact: %s\n", sigcompacthex);
-        debug_print("signature DER (+hashtype): %s\n", sigderhex);
+        printf("\nsignature created:\nsignature compact: %s\n", sigcompacthex);
+        printf("signature DER (+hashtype): %s\n", sigderhex);
 
         cstring* signed_tx = cstr_new_sz(1024);
         dogecoin_tx_serialize(signed_tx, txtmp, false);
@@ -529,7 +531,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         char signed_tx_hex[signed_tx->len*2+1];
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
         memcpy(incomingrawtx, signed_tx_hex, sizeof(signed_tx_hex));
-        debug_print("signed TX: %s\n", incomingrawtx);
+        printf("signed TX: %s\n", incomingrawtx);
         cstr_free(signed_tx, true);
         dogecoin_tx_free(txtmp);
     }

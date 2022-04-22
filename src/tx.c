@@ -566,18 +566,22 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
  * 
  * @return char* The script public key hash.
  */
-char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_testnet) {
-    if (!private_key_wif) return false;
+char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
+    if (!private_key_wif) {
+        return false;
+    }
 
-    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+    const dogecoin_chainparams* chain = (private_key_wif[0] == 'c') ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
 
     size_t sizeout = 53;
-
     /* private key */
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     dogecoin_privkey_decode_wif(private_key_wif, chain, &key);
-    if (!dogecoin_privkey_is_valid(&key)) return false;
+    if (!dogecoin_privkey_is_valid(&key)) {
+        debug_print("private key is not valid!\nchain: %s\n", chain->chainname);
+        return false;
+    }
     char new_wif_privkey[sizeout];
     dogecoin_privkey_encode_wif(&key, chain, new_wif_privkey, &sizeout);
 
@@ -585,7 +589,10 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif, int is_test
     dogecoin_pubkey pubkey;
     dogecoin_pubkey_init(&pubkey);
     dogecoin_pubkey_from_key(&key, &pubkey);
-    if (!dogecoin_pubkey_is_valid(&pubkey)) return false;
+    if (!dogecoin_pubkey_is_valid(&pubkey)) {
+        debug_print("pubkey is not valid!\nchain: %s\n", chain->chainname);
+        return false;
+    }
 
     char new_p2pkh_pubkey[sizeout];
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);

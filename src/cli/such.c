@@ -131,38 +131,36 @@ void signing_menu(int txindex, int is_testnet) {
     int input_to_sign;
     char* raw_hexadecimal_tx;
     char* script_pubkey;
-    float input_amount;
+    long double input_amount;
     char* private_key_wif;
     while (running) {
         printf("\n 1. sign input (from current working transaction)\n");
         printf(" 2. sign input (raw hexadecimal transaction)\n");
-        printf(" 3. save (raw hexadecimal transaction)\n");
-        printf(" 8. print signed transaction\n");
-        printf(" 9. go back\n\n");
+        printf(" 3. print signed transaction\n");
+        printf(" 4. go back\n\n");
         switch (atoi(getl("command"))) {
                 case 1:
-                    input_amount = atol(getl("input amount")); // 2 & 10
+                    input_amount = atoll(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
+                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(txindex);
-                    debug_print("input_to_sign: %d\n", input_to_sign);
-                    debug_print("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                    debug_print("script_pubkey: %s\n", script_pubkey);
-                    debug_print("input_to_sign: %d\n", input_to_sign);
-                    debug_print("private_key: %s\n", private_key_wif);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
-                    if (!save_raw_transaction(txindex, raw_hexadecimal_tx)) {
-                        printf("error saving transaction!\n");
-                        }
+                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                        printf("1) sign_indexed_raw_transaction failed! please try again!\n");
+                        printf("input_amount: %Lf\n", input_amount);
+                        printf("input_to_sign: %d\n", input_to_sign);
+                        printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                        printf("script_pubkey: %s\n", script_pubkey);
+                        printf("private_key: %s\n", private_key_wif);
+                    }
                     break;
                 case 2:
                     input_amount = atol(getl("input amount")); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
+                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
                     raw_hexadecimal_tx = (char*)get_raw_tx("raw transaction");
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     debug_print("input_to_sign: %d\n", input_to_sign);
@@ -170,24 +168,19 @@ void signing_menu(int txindex, int is_testnet) {
                     debug_print("script_pubkey: %s\n", script_pubkey);
                     debug_print("input_to_sign: %d\n", input_to_sign);
                     debug_print("private_key: %s\n", private_key_wif);
-                    sign_raw_transaction(input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
-                    if (!save_raw_transaction(txindex, raw_hexadecimal_tx)) {
-                        printf("error saving transaction!\n");
-                        }
+                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                        printf("2) sign_indexed_raw_transaction failed! please try again!\n");
+                        printf("input_amount: %Lf\n", input_amount);
+                        printf("input_to_sign: %d\n", input_to_sign);
+                        printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
+                        printf("script_pubkey: %s\n", script_pubkey);
+                        printf("private_key: %s\n", private_key_wif);
+                    }
                     break;
                 case 3:
-                    txindex = save_raw_transaction(txindex, get_raw_tx("raw transaction"));
-                    if (!txindex) {
-                        printf("error saving transaction!\n");
-                        }
-                    else {
-                        printf("successfully saved raw transaction to memory for the session!\n");
-                        }
-                    break;
-                case 8:
                     printf("raw_tx: %s\n", get_raw_transaction(txindex));
                     break;
-                case 9:
+                case 4:
                     running = 0;
                     break;
             }
@@ -312,7 +305,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                         input_amount = atoi(getl("input amount")); // 2 & 10
                                         input_to_sign = i;
                                         private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                                        script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
+                                        script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
                                         cstr_erase(tx_in->script_sig, 0, tx_in->script_sig->len);
                                         // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                                         raw_hexadecimal_tx = get_raw_transaction(txindex);

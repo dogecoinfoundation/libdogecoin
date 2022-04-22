@@ -317,7 +317,7 @@ void test_transaction()
     u_assert_str_not_eq(res, utxo_scriptpubkey);
     dogecoin_free(res);
 
-    res = dogecoin_private_key_wif_to_script_hash(private_key_wif, 1);
+    res = dogecoin_private_key_wif_to_script_hash(private_key_wif);
 
     u_assert_str_eq(res, utxo_scriptpubkey);
     dogecoin_free(res);
