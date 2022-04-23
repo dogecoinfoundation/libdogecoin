@@ -151,10 +151,8 @@ void test_block_header()
     buf.p = blockheader_ser->str;
     buf.len = blockheader_ser->len;
     dogecoin_block_header_deserialize(&bheadercheck, &buf);
-    u_assert_mem_eq(&bheader, &bheadercheck, sizeof(bheadercheck));
+    u_assert_str_eq(utils_uint8_to_hex(bheader.prev_block, sizeof(bheader.prev_block)), utils_uint8_to_hex(bheadercheck.prev_block, sizeof(bheadercheck.prev_block)));
     cstr_free(blockheader_ser, true);
-
-
     dogecoin_block_header_hash(&bheaderprev, (uint8_t *)&checkhash);
-    u_assert_mem_eq(&checkhash, &bheader.prev_block, sizeof(checkhash));
+    u_assert_str_eq(utils_uint8_to_hex(bheader.prev_block, sizeof(bheader.prev_block)), utils_uint8_to_hex(checkhash, sizeof(checkhash)));
 }

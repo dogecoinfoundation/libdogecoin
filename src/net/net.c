@@ -1,9 +1,5 @@
 #include <dogecoin/net/net.h>
 
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
-#include <event2/event.h>
-
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/cstr.h>
@@ -12,7 +8,7 @@
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <getopt.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -201,7 +197,7 @@ void write_cb(struct bufferevent* ev, void* ctx)
  * 
  * @return dogecoin_bool (uint8_t)
  */
-void node_periodical_timer(int fd, short event, void* ctx)
+void node_periodical_timer(long long int fd, short event, void* ctx)
 {
     UNUSED(fd);
     UNUSED(event);
@@ -422,28 +418,28 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
     dogecoin_node_group* node_group;
     node_group = dogecoin_calloc(1, sizeof(*node_group));
     node_group->event_base = event_base_new();
-    if (!node_group->event_base) {
-        dogecoin_free(node_group);
-        return NULL;
-    };
+    // if (!node_group->event_base) {
+    //     dogecoin_free(node_group);
+    //     return NULL;
+    // };
 
-    /* Creating a new vector of nodes. */
-    node_group->nodes = vector_new(1, dogecoin_node_free_cb);
-    /* Setting the chainparams to either the main dogecoin_chainparams_main or the testnet
-    dogecoin_chainparams_test. */
-    node_group->chainparams = (chainparams ? chainparams : &dogecoin_chainparams_main);
-    node_group->parse_cmd_cb = NULL;
-    strcpy(node_group->clientstr, "libdogecoin 0.1");
+    // /* Creating a new vector of nodes. */
+    // node_group->nodes = vector_new(1, dogecoin_node_free_cb);
+    // /* Setting the chainparams to either the main dogecoin_chainparams_main or the testnet
+    // dogecoin_chainparams_test. */
+    // node_group->chainparams = (chainparams ? chainparams : &dogecoin_chainparams_main);
+    // node_group->parse_cmd_cb = NULL;
+    // strcpy(node_group->clientstr, "libdogecoin 0.1");
 
-    /* nullify callbacks */
-    node_group->postcmd_cb = NULL;
-    node_group->node_connection_state_changed_cb = NULL;
-    node_group->should_connect_to_more_nodes_cb = NULL;
-    node_group->handshake_done_cb = NULL;
-    node_group->log_write_cb = net_write_log_null;
-    node_group->desired_amount_connected_nodes = 3;
+    // /* nullify callbacks */
+    // node_group->postcmd_cb = NULL;
+    // node_group->node_connection_state_changed_cb = NULL;
+    // node_group->should_connect_to_more_nodes_cb = NULL;
+    // node_group->handshake_done_cb = NULL;
+    // node_group->log_write_cb = net_write_log_null;
+    // node_group->desired_amount_connected_nodes = 3;
 
-    return node_group;
+    // return node_group;
 }
 
 /**
@@ -763,7 +759,7 @@ int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int
     if (!seed || !ips_out || (family != AF_INET && family != AF_INET6) || port > 99999) {
         return 0;
     }
-    char def_port[12] = {0};
+    char def_port[6] = {0};
     sprintf(def_port, "%d", port);
     struct evutil_addrinfo hints, *aiTrav = NULL, *aiRes = NULL;
     memset(&hints, 0, sizeof(hints));

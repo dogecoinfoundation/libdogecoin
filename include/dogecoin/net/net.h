@@ -31,15 +31,17 @@
 
 #include <dogecoin/dogecoin.h>
 
-LIBDOGECOIN_BEGIN_DECL
-
 #include <event2/event.h>
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/net/protocol.h>
 #include <dogecoin/vector.h>
+
+LIBDOGECOIN_BEGIN_DECL
 
 static const unsigned int DOGECOIN_P2P_MESSAGE_CHUNK_SIZE = 4000;
 
