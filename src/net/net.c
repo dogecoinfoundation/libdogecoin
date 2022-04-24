@@ -1,17 +1,13 @@
-#include <dogecoin/net/net.h>
+#include <event2/event.h>
+#include <event2/util.h>
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
 
-#include <dogecoin/buffer.h>
-#include <dogecoin/chainparams.h>
-#include <dogecoin/cstr.h>
-#include <dogecoin/crypto/hash.h>
-#include <dogecoin/net/protocol.h>
-#include <dogecoin/serialize.h>
-#include <dogecoin/utils.h>
-
-#ifdef WIN32
+#ifdef _WIN32
 #include <getopt.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 #else
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -22,8 +18,20 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
+#include <errno.h>
+#include <pthread.h>
 #include <time.h>
+
+#include <dogecoin/net/net.h>
+
+#include <dogecoin/buffer.h>
+#include <dogecoin/chainparams.h>
+#include <dogecoin/cstr.h>
+#include <dogecoin/crypto/hash.h>
+#include <dogecoin/net/protocol.h>
+#include <dogecoin/serialize.h>
+#include <dogecoin/utils.h>
 
 /* The code below is a macro that is used to suppress compiler warnings. */
 #define UNUSED(x) (void)(x)
@@ -197,7 +205,7 @@ void write_cb(struct bufferevent* ev, void* ctx)
  * 
  * @return dogecoin_bool (uint8_t)
  */
-void node_periodical_timer(long long int fd, short event, void* ctx)
+void node_periodical_timer(int fd, short event, void* ctx)
 {
     UNUSED(fd);
     UNUSED(event);
@@ -417,29 +425,61 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
 {
     dogecoin_node_group* node_group;
     node_group = dogecoin_calloc(1, sizeof(*node_group));
-    node_group->event_base = event_base_new();
-    // if (!node_group->event_base) {
-    //     dogecoin_free(node_group);
-    //     return NULL;
-    // };
+#ifdef _WIN32
+    WSADATA wsaData;
+    WORD wVersionRequested;
+    int err;
+    /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+    wVersionRequested = MAKEWORD(2, 2);
+    err = WSAStartup(wVersionRequested, &wsaData);
+	printf("\ninitializing winsock...");
+	if (err != 0) {
+        /* Tell the user that we could not find a usable */
+        /* Winsock DLL.                                  */
+        printf("WSAStartup failed. error code : %d", err);
+	}
+	
+	printf("initialized.\n");
+    /* Confirm that the WinSock DLL supports 2.2.*/
+    /* Note that if the DLL supports versions greater    */
+    /* than 2.2 in addition to 2.2, it will still return */
+    /* 2.2 in wVersion since that is the version we      */
+    /* requested.                                        */
 
-    // /* Creating a new vector of nodes. */
-    // node_group->nodes = vector_new(1, dogecoin_node_free_cb);
-    // /* Setting the chainparams to either the main dogecoin_chainparams_main or the testnet
-    // dogecoin_chainparams_test. */
-    // node_group->chainparams = (chainparams ? chainparams : &dogecoin_chainparams_main);
-    // node_group->parse_cmd_cb = NULL;
-    // strcpy(node_group->clientstr, "libdogecoin 0.1");
+    if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+        /* Tell the user that we could not find a usable */
+        /* WinSock DLL.                                  */
+        printf("Could not find a usable version of Winsock.dll\n");
+        WSACleanup();
+    }
+    else
+        printf("winsock 2.2 dll was found okay\n");
+#endif
+    struct event_base *base = event_base_new();
+    node_group->event_base = base;
+    if (!base) {
+        dogecoin_free(node_group);
+        printf("node_group->event_base not created\n");
+        return NULL;
+    };
 
-    // /* nullify callbacks */
-    // node_group->postcmd_cb = NULL;
-    // node_group->node_connection_state_changed_cb = NULL;
-    // node_group->should_connect_to_more_nodes_cb = NULL;
-    // node_group->handshake_done_cb = NULL;
-    // node_group->log_write_cb = net_write_log_null;
-    // node_group->desired_amount_connected_nodes = 3;
+    /* Creating a new vector of nodes. */
+    node_group->nodes = vector_new(1, dogecoin_node_free_cb);
+    /* Setting the chainparams to either the main dogecoin_chainparams_main or the testnet
+    dogecoin_chainparams_test. */
+    node_group->chainparams = (chainparams ? chainparams : &dogecoin_chainparams_main);
+    node_group->parse_cmd_cb = NULL;
+    strcpy(node_group->clientstr, "libdogecoin 0.1");
 
-    // return node_group;
+    /* nullify callbacks */
+    node_group->postcmd_cb = NULL;
+    node_group->node_connection_state_changed_cb = NULL;
+    node_group->should_connect_to_more_nodes_cb = NULL;
+    node_group->handshake_done_cb = NULL;
+    node_group->log_write_cb = net_write_log_null;
+    node_group->desired_amount_connected_nodes = 25;
+
+    return node_group;
 }
 
 /**
@@ -557,7 +597,7 @@ dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
             /* Enabling the bufferevent for reading and writing. */
             bufferevent_enable(node->event_bev, EV_READ | EV_WRITE);
             /* Resolve the hostname 'hostname' and connect to it as with
-   bufferevent_socket_connect(). */
+            bufferevent_socket_connect(). */
             if (bufferevent_socket_connect(node->event_bev, (struct sockaddr*)&node->addr, sizeof(node->addr)) < 0) {
                 if (node->event_bev) {
                     /* Freeing the bufferevent. */
@@ -759,7 +799,7 @@ int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int
     if (!seed || !ips_out || (family != AF_INET && family != AF_INET6) || port > 99999) {
         return 0;
     }
-    char def_port[6] = {0};
+    char def_port[12] = {0};
     sprintf(def_port, "%d", port);
     struct evutil_addrinfo hints, *aiTrav = NULL, *aiRes = NULL;
     memset(&hints, 0, sizeof(hints));

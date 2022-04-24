@@ -102,7 +102,7 @@ fi
 if test "$host" = "mingw"; then
   # -static is interpreted by libtool, where it has a different meaning.
   # In libtool-speak, it's -all-static.
-  AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
+  AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static -no-undefined"])
 fi
 
 if test x$with_net = "xyes"; then
