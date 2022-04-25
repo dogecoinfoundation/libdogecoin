@@ -103,8 +103,6 @@ def generate_derived_hd_pub_key(wif_privkey_master, as_bytes=False):
     lib.dogecoin_ecc_start()
 
     # call c function
-    # TODO derived key is the same each time, most likely because of context start
-    # should ecc_start/stop be wrapped too?
     lib.generateDerivedHDPubkey(wif_privkey_master_ptr, child_p2pkh_pubkey)
 
     # stop context
@@ -227,6 +225,30 @@ def start_transaction():
 
     # call c function
     res = lib.start_transaction()
+
+    # return result
+    return int(res)
+
+def save_raw_transaction(tx_index, hex_transaction):
+    """Given a serialized transaction string, saves the transaction
+    as a working transaction with the specified index.
+    Keyword arguments:
+    tx_index -- the index to where the transaction will be saved
+    hex_transaction -- the serialized string of the transaction to save
+    """
+    # verify arguments are valid
+    assert isinstance(tx_index, int)
+    assert isinstance(hex_transaction, str)
+
+    # convert string to be c-compatible
+    hex_transaction_ptr = ct.c_char_p(hex_transaction.encode('utf-8'))
+
+    # set types for parameters and return
+    lib.save_raw_transaction.argtypes = [ct.c_int, ct.c_char_p]
+    lib.save_raw_transaction.restype = ct.c_int
+
+    # call c function
+    res = lib.save_raw_transaction(tx_index, hex_transaction_ptr)
 
     # return result
     return int(res)
@@ -361,46 +383,6 @@ def clear_transaction(tx_index):
     # call c function (void return)
     lib.clear_transaction(tx_index)
 
-def sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
-    """Sign a finalized raw transaction using the specified
-    private key and save it to a new working transaction with
-    the specified index.
-    Keyword arguments:
-    tx_index -- the index where the signed transaction will be saved
-    input_index -- the index of the working transaction to sign
-    incoming_raw_tx -- the serialized string of the transaction to sign
-    script_hex -- the hex of the script to be signed
-    sig_hash_type -- the type of signature hash to be used
-    amount -- the amount of dogecoin in the transaction being signed
-    privkey -- the private key to sign with
-    """
-    # verify arguments are valid
-    assert isinstance(tx_index, int)
-    assert isinstance(input_index, int)
-    assert isinstance(incoming_raw_tx, str)
-    assert isinstance(script_hex, str)
-    assert isinstance(sig_hash_type, int)
-    assert isinstance(privkey, str)
-    
-    # convert strings to be c-compatible
-    incoming_raw_tx_ptr = ct.c_char_p(incoming_raw_tx.encode('utf-8'))
-    script_hex_ptr = ct.c_char_p(script_hex.encode('utf-8'))
-    privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
-
-    # set types for parameters and return
-    lib.sign_indexed_transaction.argtypes = [ct.c_int, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
-    lib.sign_indexed_transaction.restype = ct.c_int
-
-    # call c function
-    res = lib.sign_indexed_transaction(tx_index, input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
-
-    # return result
-    try:
-        res = ct.c_char_p(res)
-        return res.value.decode("utf-8")
-    except:
-        return 0
-
 def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
     """Sign a finalized raw transaction using the specified
     private key.
@@ -439,27 +421,44 @@ def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type
         return incoming_raw_tx_ptr.value.decode("utf-8")
     else:
         return int(res)
-    
-def save_raw_transaction(tx_index, hex_transaction):
-    """Given a serialized transaction string, saves the transaction
-    as a working transaction with the specified index.
+
+def sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    """Sign a finalized raw transaction using the specified
+    private key and save it to a new working transaction with
+    the specified index.
     Keyword arguments:
-    tx_index -- the index to where the transaction will be saved
-    hex_transaction -- the serialized string of the transaction to save
+    tx_index -- the index where the signed transaction will be saved
+    input_index -- the index of the working transaction to sign
+    incoming_raw_tx -- the serialized string of the transaction to sign
+    script_hex -- the hex of the script to be signed
+    sig_hash_type -- the type of signature hash to be used
+    amount -- the amount of dogecoin in the transaction being signed
+    privkey -- the private key to sign with
     """
     # verify arguments are valid
     assert isinstance(tx_index, int)
-    assert isinstance(hex_transaction, str)
-
-    # convert string to be c-compatible
-    hex_transaction = ct.c_char_p(hex_transaction.encode('utf-8'))
+    assert isinstance(input_index, int)
+    assert isinstance(incoming_raw_tx, str)
+    assert isinstance(script_hex, str)
+    assert isinstance(sig_hash_type, int)
+    assert isinstance(privkey, str)
+    
+    # convert strings to be c-compatible
+    incoming_raw_tx_ptr = ct.c_char_p(incoming_raw_tx.encode('utf-8'))
+    script_hex_ptr = ct.c_char_p(script_hex.encode('utf-8'))
+    privkey_ptr = ct.c_char_p(privkey.encode('utf-8'))
 
     # set types for parameters and return
-    lib.save_raw_transaction.argtypes = [ct.c_int, ct.c_char_p]
-    lib.save_raw_transaction.restype = ct.c_int
+    lib.sign_indexed_raw_transaction.argtypes = [ct.c_int, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
+    lib.sign_indexed_raw_transaction.restype = ct.c_int
 
     # call c function
-    res = lib.save_raw_transaction()
+    lib.dogecoin_ecc_start()
+    res = lib.sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
+    lib.dogecoin_ecc_stop()
 
     # return result
-    return int(res)
+    try:
+        return incoming_raw_tx_ptr.value.decode("utf-8")
+    except:
+        return 0

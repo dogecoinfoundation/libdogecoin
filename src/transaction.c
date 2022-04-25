@@ -531,8 +531,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         char signed_tx_hex[signed_tx->len*2+1];
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
         memcpy(incomingrawtx, signed_tx_hex, sizeof(signed_tx_hex));
-        printf("signed TX: %s\n", incomingrawtx);
-        cstr_free(signed_tx, true);
+        debug_print("signed TX: %s\n", incomingrawtx);
+        cstr_free((cstring*)signed_tx, false);
         dogecoin_tx_free(txtmp);
     }
     return true;

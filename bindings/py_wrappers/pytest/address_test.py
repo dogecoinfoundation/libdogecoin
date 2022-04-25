@@ -1,5 +1,6 @@
 """Testing module for wrappers from address.c"""
 
+import inspect
 import unittest
 import ctypes as ct
 import sys
@@ -8,7 +9,7 @@ import wrappers as w
 lib = w.load_libdogecoin()
 
 
-class TestGeneratePrivPubKeyPair(unittest.TestCase):
+class TestAddressFunctions(unittest.TestCase):
     """Test class for function generate_priv_pub_key_pair()"""
 
     def test_privkey_gen_mainnet(self):
@@ -53,10 +54,6 @@ class TestGeneratePrivPubKeyPair(unittest.TestCase):
         res = w.generate_priv_pub_key_pair(chain_code=1)
         self.assertTrue(w.verify_priv_pub_keypair(res[0], res[1], chain_code=1))
 
-
-class TestGenerateHDMasterPrivPubKeyPair(unittest.TestCase):
-    """Test class for function generate_hd_master_pub_key_pair"""
-
     def test_master_privkey_gen_mainnet(self):
         """Test function returns master private key for mainnet"""
         res = w.generate_hd_master_pub_key_pair()
@@ -100,4 +97,8 @@ class TestGenerateHDMasterPrivPubKeyPair(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    test_src = inspect.getsource(TestAddressFunctions)
+    unittest.TestLoader.sortTestMethodsUsing = lambda _, x, y: (
+        test_src.index(f"def {x}") - test_src.index(f"def {y}")
+    )
     unittest.main()

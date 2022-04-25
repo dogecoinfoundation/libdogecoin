@@ -1,5 +1,6 @@
 """Testing module for wrappers from transaction.c"""
 
+import inspect
 import unittest
 import sys
 sys.path.append("./bindings/py_wrappers/libdogecoin/")
@@ -10,7 +11,7 @@ lib = w.load_libdogecoin()
 privkey_wif =       "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
 pubkey_hex =        "031dc1e49cfa6ae15edd6fa871a91b1f768e6f6cab06bf7a87ac0d8beb9229075b"
 p2pkh_addr =        "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
-utxo_sciptpubkey =  "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
+utxo_scriptpubkey =  "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
 
 # external keys
 external_p2pkh_addr = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
@@ -27,7 +28,7 @@ expected_signed_raw_tx_hex =                            "0100000002746007aed61e8
 # existing transactions
 hash2doge =  "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074" # 2 DOGE
 hash10doge = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" # 10 DOGE
-vout2doge =  1
+vout2doge =  1 #vout is the spendable output index from the existing transaction
 vout10doge = 1
 
 # new transaction parameters
@@ -39,6 +40,15 @@ class TestTransactionFunctions(unittest.TestCase):
     def test_start_transaction(self):
         res = w.start_transaction()
         self.assertTrue(type(res)==int and res>=0)
+
+    def test_save_raw_transaction(self):
+        idx = w.start_transaction()
+        w.add_utxo(idx, hash2doge, vout2doge)
+        rawhex = w.get_raw_transaction(idx)
+        idx2 = w.start_transaction()
+        w.save_raw_transaction(idx2, rawhex)
+        rawhex2 = w.get_raw_transaction(idx2)
+        self.assertTrue(rawhex==rawhex2)
 
     def test_get_raw_transaction(self):
         idx = w.start_transaction()
@@ -75,8 +85,6 @@ class TestTransactionFunctions(unittest.TestCase):
         rawhex = w.get_raw_transaction(idx)
         self.assertTrue(rawhex==expected_unsigned_double_utxo_single_output_tx_hex)
 
-# TODO: do we need a test for make_change()?
-
     def test_finalize_transaction(self):
         checks = []
         idx = w.start_transaction()
@@ -88,30 +96,41 @@ class TestTransactionFunctions(unittest.TestCase):
         rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
 
-# TODO: clear_transaction() results in double free err, needs to be fixed in transaction.c
     def test_clear_transaction(self):
         idx = w.start_transaction()
         rawhex = w.get_raw_transaction(idx)
         self.assertTrue(rawhex==expected_empty_tx_hex)
-        # w.clear_transaction(idx)
-        # rawhex = w.get_raw_transaction(idx)
-        # self.assertFalse(rawhex)
+        w.clear_transaction(idx)
+        rawhex = w.get_raw_transaction(idx)
+        self.assertFalse(rawhex)
 
-# TODO: only works when hashtable is empty
-    # def test_sign_raw_transaction(self):
-    #     checks = []
-    #     idx = w.start_transaction()
-    #     checks.append(w.add_utxo(idx, hash2doge, vout2doge))
-    #     checks.append(w.add_utxo(idx, hash10doge, vout10doge))
-    #     checks.append(w.add_output(idx, external_p2pkh_addr, send_amt))
-    #     for x in checks:
-    #         self.assertTrue(x==1)
-    #     rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
-    #     self.assertTrue(rawhex==expected_unsigned_tx_hex)
-    #     # TODO: make the index here not equal zero
-    #     rawhex = w.sign_raw_transaction(0, rawhex, utxo_sciptpubkey, 1, send_amt, privkey_wif)
-    #     print(rawhex)
-    #     self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
+    def test_sign_raw_transaction(self):
+        idx = w.start_transaction()
+        w.add_utxo(idx, hash2doge, vout2doge)
+        w.add_utxo(idx, hash10doge, vout10doge)
+        w.add_output(idx, external_p2pkh_addr, send_amt)
+        rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        self.assertTrue(rawhex==expected_unsigned_tx_hex)
+        rawhex = w.sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
+        rawhex = w.sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        self.assertTrue(rawhex==expected_signed_raw_tx_hex)
+
+    def test_sign_indexed_raw_transaction(self):
+        idx = w.start_transaction()
+        w.add_utxo(idx, hash2doge, vout2doge)
+        w.add_utxo(idx, hash10doge, vout10doge)
+        w.add_output(idx, external_p2pkh_addr, send_amt)
+        rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        self.assertTrue(rawhex==expected_unsigned_tx_hex)
+        rawhex = w.sign_indexed_raw_transaction(idx, 0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
+        rawhex = w.sign_indexed_raw_transaction(idx, 1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        self.assertTrue(rawhex==expected_signed_raw_tx_hex)
         
 if __name__ == "__main__":
+    test_src = inspect.getsource(TestTransactionFunctions)
+    unittest.TestLoader.sortTestMethodsUsing = lambda _, x, y: (
+        test_src.index(f"def {x}") - test_src.index(f"def {y}")
+    )
     unittest.main()
