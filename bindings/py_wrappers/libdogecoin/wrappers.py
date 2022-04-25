@@ -289,7 +289,7 @@ def make_change(tx_index, prvkey_wif, destination_address, subtracted_fee, amoun
         amount = int(amount) # TODO: will truncate! is this preferred?
 
     # set types for parameters and return
-    lib.make_change.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_float, ct.c_uint64]
+    lib.make_change.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_double, ct.c_uint64]
     lib.make_change.restype = ct.c_void_p
     
     # call c function
@@ -319,7 +319,7 @@ def finalize_transaction(tx_index, destination_address, subtracted_fee, out_doge
         out_dogeamount_for_verification = int(out_dogeamount_for_verification) # TODO: will truncate! is this preferred?
 
     # set types for parameters and return
-    lib.finalize_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_float, ct.c_uint64, ct.c_char_p]
+    lib.finalize_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_double, ct.c_uint64, ct.c_char_p]
     lib.finalize_transaction.restype = ct.c_void_p
     
     # call c function

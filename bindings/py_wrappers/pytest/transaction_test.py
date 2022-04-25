@@ -36,7 +36,6 @@ total_utxo_input = 12
 fee = .00226
 
 class TestTransactionFunctions(unittest.TestCase):
-# TODO: make sure send amounts can be float too-- can wrappers handle?
     def test_start_transaction(self):
         res = w.start_transaction()
         self.assertTrue(type(res)==int and res>=0)

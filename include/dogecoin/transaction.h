@@ -77,7 +77,7 @@ LIBDOGECOIN_API int add_output(int txindex, char* destinationaddress, uint64_t a
 
 // 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
 // out_dogeamount == just an echoback of the total amount specified in the addutxos for verification
-LIBDOGECOIN_API char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* public_key);
+LIBDOGECOIN_API char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification, char* public_key);
 
 LIBDOGECOIN_API char* get_raw_transaction(int txindex); // #returns 0 if not closed, returns rawtx again if closed/created.
 

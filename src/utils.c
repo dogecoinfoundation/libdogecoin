@@ -446,20 +446,13 @@ void print_image(FILE *fptr)
 }
 
 double koinu_to_coins(uint64_t koinu) {
-    return (double)koinu / (double)100000000;
+    return (double)koinu / (double)1e8;
 }
 
-uint64_t coins_to_koinu(float coins) {
-    //convert integer part to koinu
-    uint64_t integer_part_coins = (uint64_t)floor(coins);
-    uint64_t integer_part_koinu = integer_part_coins * 100000000;
-
-    //convert decimal part to koinu
-    float decimal_part_coins = coins - (float)integer_part_coins;
-    uint64_t decimal_part_koinu = (uint64_t)floor(decimal_part_coins * 100000000);
-
-    //return sum of converted integer and decimal part
-    return (integer_part_koinu + decimal_part_koinu);
+uint64_t coins_to_koinu(double coins) {
+    double result = (coins * 1.0e8);
+    //printf("result: %.8f... after uint64_t cast: %lu\n", result, (uint64_t)result);
+    return (uint64_t)result;
 }
 
 void print_bits(size_t const size, void const* ptr)

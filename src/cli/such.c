@@ -194,8 +194,8 @@ void sub_menu(int txindex, int is_testnet) {
     const char* temp_ext_p2pkh;
     uint64_t temp_amt;
     char* output_address;
-    float desired_fee;
-    float total_amount_for_verification;
+    double desired_fee;
+    double total_amount_for_verification;
     char* public_key;
     char* raw_hexadecimal_transaction;
     while (running) {
