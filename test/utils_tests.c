@@ -40,12 +40,12 @@ void test_utils()
     utils_hex_to_bin(hex, data2, strlen(hex), &outlen);
     assert(outlen == 8);
     assert(memcmp(data, data2, outlen) == 0);
-    hash_bin = utils_hex_to_uint8(hash_buffer_exc);
+    utils_hex_to_uint8(hash_buffer_exc);
 
     /* test upper and lowercase A / F */
     utils_hex_to_bin(hex2, data3, strlen(hex2), &outlen);
-    hash_bin = utils_hex_to_uint8(hex2);
-    utils_clear_buffers();
+    utils_hex_to_uint8(hex2);
+    // utils_clear_buffers();
 
     /* stress test conversion between coins and koinu, round values */
     long double coin_amounts[] =   {1.0e-9, 1.0e-8, 
@@ -74,7 +74,7 @@ void test_utils()
     uint64_t diff;
     for (int i=0; i<20; i++) {
         actual_answer = coins_to_koinu(coin_amounts[i]);
-        debug_print("T%d\n\tcoin_amt: %f\n\texpected: %lu\n\tactual: %lu\n\n", i, coin_amounts[i], exp_answers[i], actual_answer);
+        debug_print("T%d\n\tcoin_amt: %.8Lf\n\texpected: %lu\n\tactual: %lu\n\n", i, coin_amounts[i], exp_answers[i], actual_answer);
         diff = exp_answers[i] - actual_answer;
         u_assert_int_eq((int)diff, 0);
     }

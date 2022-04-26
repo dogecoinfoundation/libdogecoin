@@ -147,14 +147,8 @@ void signing_menu(int txindex, int is_testnet) {
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(txindex);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
-                        printf("1) sign_indexed_raw_transaction failed! please try again!\n");
-                        printf("input_amount: %Lf\n", input_amount);
-                        printf("input_to_sign: %d\n", input_to_sign);
-                        printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                        printf("script_pubkey: %s\n", script_pubkey);
-                        printf("private_key: %s\n", private_key_wif);
-                    }
+                    sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
+                    printf("transaction input successfully signed!\n");
                     break;
                 case 2:
                     input_amount = atol(getl("input amount")); // 2 & 10
@@ -168,14 +162,8 @@ void signing_menu(int txindex, int is_testnet) {
                     debug_print("script_pubkey: %s\n", script_pubkey);
                     debug_print("input_to_sign: %d\n", input_to_sign);
                     debug_print("private_key: %s\n", private_key_wif);
-                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
-                        printf("2) sign_indexed_raw_transaction failed! please try again!\n");
-                        printf("input_amount: %Lf\n", input_amount);
-                        printf("input_to_sign: %d\n", input_to_sign);
-                        printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                        printf("script_pubkey: %s\n", script_pubkey);
-                        printf("private_key: %s\n", private_key_wif);
-                    }
+                    sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
+                    printf("transaction input successfully signed!\n");
                     break;
                 case 3:
                     printf("raw_tx: %s\n", get_raw_transaction(txindex));

@@ -105,28 +105,34 @@ class TestTransactionFunctions(unittest.TestCase):
         self.assertFalse(rawhex)
 
     def test_sign_raw_transaction(self):
+        w.dogecoin_ecc_start()
         idx = w.start_transaction()
         w.add_utxo(idx, hash2doge, vout2doge)
         w.add_utxo(idx, hash10doge, vout10doge)
         w.add_output(idx, external_p2pkh_addr, send_amt)
         rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
-        rawhex = w.sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+        rawhex = w.sign_raw_transaction(0, w.get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
         self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
-        rawhex = w.sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        w.save_raw_transaction(idx, rawhex)
+        rawhex = w.sign_raw_transaction(1, w.get_raw_transaction(idx), utxo_scriptpubkey, 1, 10, privkey_wif)
         self.assertTrue(rawhex==expected_signed_raw_tx_hex)
+        w.dogecoin_ecc_stop()
 
     def test_sign_indexed_raw_transaction(self):
+        w.dogecoin_ecc_start()
         idx = w.start_transaction()
         w.add_utxo(idx, hash2doge, vout2doge)
         w.add_utxo(idx, hash10doge, vout10doge)
         w.add_output(idx, external_p2pkh_addr, send_amt)
         rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
-        rawhex = w.sign_indexed_raw_transaction(idx, 0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
-        self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
+        w.save_raw_transaction(idx, rawhex)
+        rawhex = w.sign_indexed_raw_transaction(idx, 0, w.get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(w.get_raw_transaction(idx)==expected_signed_single_input_tx_hex)
         rawhex = w.sign_indexed_raw_transaction(idx, 1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
         self.assertTrue(rawhex==expected_signed_raw_tx_hex)
+        w.dogecoin_ecc_stop()
         
 if __name__ == "__main__":
     test_src = inspect.getsource(TestTransactionFunctions)

@@ -408,19 +408,14 @@ def sign_raw_transaction(input_index, incoming_raw_tx, script_hex, sig_hash_type
 
     # set types for parameters and return
     lib.sign_raw_transaction.argtypes = [ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
-    lib.sign_raw_transaction.restype = ct.c_int
+    lib.sign_raw_transaction.restype = ct.c_char_p
 
     # call c function
-    lib.dogecoin_ecc_start()
-    res = ct.c_int()
-    res = lib.sign_raw_transaction(input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
-    lib.dogecoin_ecc_stop()
-
-    # return signed transaction hex if successful, 0 otherwise
-    if res==1:
-        return incoming_raw_tx_ptr.value.decode("utf-8")
-    else:
-        return int(res)
+    try:
+        incoming_raw_tx_ptr = lib.sign_raw_transaction(input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr).decode("utf-8")
+        return incoming_raw_tx_ptr
+    except:
+        return 0
 
 def sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
     """Sign a finalized raw transaction using the specified
@@ -450,15 +445,10 @@ def sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx, script_
 
     # set types for parameters and return
     lib.sign_indexed_raw_transaction.argtypes = [ct.c_int, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_int, ct.c_int, ct.c_char_p]
-    lib.sign_indexed_raw_transaction.restype = ct.c_int
+    lib.sign_indexed_raw_transaction.restype = ct.c_char_p
 
     # call c function
-    lib.dogecoin_ecc_start()
-    res = lib.sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr)
-    lib.dogecoin_ecc_stop()
+    incoming_raw_tx_ptr = lib.sign_indexed_raw_transaction(tx_index, input_index, incoming_raw_tx_ptr, script_hex_ptr, sig_hash_type, amount, privkey_ptr).decode("utf-8")
 
     # return result
-    try:
-        return incoming_raw_tx_ptr.value.decode("utf-8")
-    except:
-        return 0
+    return incoming_raw_tx_ptr

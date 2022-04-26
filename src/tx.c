@@ -598,7 +598,7 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_cleanse(&pubkey);
-    return dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);;
+    return dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);
 }
 
 /**
