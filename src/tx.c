@@ -598,7 +598,7 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_cleanse(&pubkey);
-    return dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);;
+    return dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);
 }
 
 /**
@@ -1123,8 +1123,6 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
     /* Copying the transaction to a temporary variable. */
     dogecoin_tx_copy(tx_tmp, tx_to);
 
-    cstring* s = NULL;
-
     // segwit
     if (sigversion == SIGVERSION_WITNESS_V0) {
         uint256 hash_prevouts;
@@ -1161,8 +1159,7 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
             /* Freeing the memory allocated to the string s1. */
             cstr_free(s1, true);
         }
-
-        s = cstr_new_sz(512);
+        cstring* s = cstr_new_sz(512);
         /* Serializing the transaction version. */
         ser_u32(s, tx_tmp->version); // Version
 
@@ -1196,6 +1193,10 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
         ser_u32(s, tx_tmp->locktime); // Locktime
         /* Writing the hashtype to the stream. */
         ser_s32(s, hashtype);         // Sighash type
+        /* Hashing the string s using the dogecoin_hash function. */
+        dogecoin_hash((const uint8_t*)s->str, s->len, hash);
+        /* Free the transaction string */
+        cstr_free(s, true);
     } else {
         // standard (non witness) sighash (SIGVERSION_BASE)
         cstring* new_script = cstr_new_sz(fromPubKey->len);
@@ -1297,21 +1298,19 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
         }
 
         /* Creating a string of 512 bytes. */
-        s = cstr_new_sz(512);
+        cstring* s = cstr_new_sz(512);
         /* Serializing the transaction into a string. */
         dogecoin_tx_serialize(s, tx_tmp, false);
         /* Writing the hashtype to the stream. */
         ser_s32(s, hashtype);
+        /* Hashing the string s using the dogecoin_hash function. */
+        dogecoin_hash((const uint8_t*)s->str, s->len, hash);
+        /* Free the transaction string. */
+        cstr_free(s, true);
     }
-
-    /* Hashing the string s using the dogecoin_hash function. */
-    dogecoin_hash((const uint8_t*)s->str, s->len, hash);
-
-    cstr_free(s, true);
 
 out:
     dogecoin_tx_free(tx_tmp);
-
     return ret;
 }
 

@@ -279,7 +279,7 @@ _Python usage:_
 
 **make_change**
 
-`char* make_change(int txindex, char* public_key_hex, char* destinationaddress, float subtractedfee, uint64_t amount)`
+`char* make_change(int txindex, char* public_key_hex, char* destinationaddress, double subtractedfee, uint64_t amount)`
 
 This function takes in a working_transaction structures index as an integer (txindex), the public key used to derive the destination address in hexadecimal format, the desired fee to send the transaction and the amount we want in change. The fee will automatically be subtracted from the amount provided. This will be added to the working_transaction->transaction->vout parameter.
 
@@ -304,7 +304,7 @@ _Python usage:_
 
 **finalize_transaction**
 
-`char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification)`
+`char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification)`
 
 This function takes in a working_transaction structures index as an integer (txindex), the external destination address we are sending to, the desired fee to be substracted and the total amount of all utxos to be spent. It automatically calculates the total minus the fee and compares against whats found in the raw hexadecimal transaction. In addition it compares the external destination address to the script hash by converting to p2pkh and counting to check it's found. If either the amount or address are not found the function will return false and failure should be handled by the caller. 
 

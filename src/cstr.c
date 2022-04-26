@@ -79,7 +79,7 @@ int cstr_alloc_minsize(cstring* s, size_t new_sz)
     }
 
     /* contents of string tail undefined */
-    //s->len = new_sz;
+    // s->len = new_sz;
     s->str[s->len] = 0;
 
     return 1;

@@ -147,14 +147,8 @@ void signing_menu(int txindex, int is_testnet) {
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(txindex);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
-                        printf("1) sign_indexed_raw_transaction failed! please try again!\n");
-                        printf("input_amount: %Lf\n", input_amount);
-                        printf("input_to_sign: %d\n", input_to_sign);
-                        printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                        printf("script_pubkey: %s\n", script_pubkey);
-                        printf("private_key: %s\n", private_key_wif);
-                    }
+                    sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
+                    printf("transaction input successfully signed!\n");
                     break;
                 case 2:
                     input_amount = atol(getl("input amount")); // 2 & 10
@@ -168,14 +162,8 @@ void signing_menu(int txindex, int is_testnet) {
                     debug_print("script_pubkey: %s\n", script_pubkey);
                     debug_print("input_to_sign: %d\n", input_to_sign);
                     debug_print("private_key: %s\n", private_key_wif);
-                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
-                        printf("2) sign_indexed_raw_transaction failed! please try again!\n");
-                        printf("input_amount: %Lf\n", input_amount);
-                        printf("input_to_sign: %d\n", input_to_sign);
-                        printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
-                        printf("script_pubkey: %s\n", script_pubkey);
-                        printf("private_key: %s\n", private_key_wif);
-                    }
+                    sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
+                    printf("transaction input successfully signed!\n");
                     break;
                 case 3:
                     printf("raw_tx: %s\n", get_raw_transaction(txindex));
@@ -194,8 +182,8 @@ void sub_menu(int txindex, int is_testnet) {
     const char* temp_ext_p2pkh;
     uint64_t temp_amt;
     char* output_address;
-    float desired_fee;
-    float total_amount_for_verification;
+    double desired_fee;
+    double total_amount_for_verification;
     char* public_key;
     char* raw_hexadecimal_transaction;
     while (running) {
@@ -353,7 +341,8 @@ void transaction_input_menu(int txindex, int is_testnet) {
 void transaction_output_menu(int txindex, int is_testnet) {
     int running = 1;
     char* destinationaddress;
-    double amount;
+    long double coin_amount;
+    uint64_t koinu_amount;
     uint64_t tx_out_total = 0;
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
     working_transaction* tx = find_transaction(txindex);
@@ -367,8 +356,8 @@ void transaction_output_menu(int txindex, int is_testnet) {
             printf("\n--------------------------------\n");
             printf("output index:       %d\n", i);
             printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
-            amount = koinu_to_coins(tx_out->value);
-            printf("amount:             %f\n", amount);
+            coin_amount = koinu_to_coins(tx_out->value);
+            printf("amount:             %Lf\n", coin_amount);
             // selected should only equal anything other than -1 upon setting
             // loop index in conditional targetting last iteration:
             selected == i ? printf("selected:           [X]\n") : 0;
@@ -384,14 +373,14 @@ void transaction_output_menu(int txindex, int is_testnet) {
                             switch (atoi(getl("field to edit"))) {
                                     case 1:
                                         destinationaddress = (char*)getl("new destination address");
-                                        amount = coins_to_koinu(amount);
+                                        koinu_amount = coins_to_koinu(coin_amount);
                                         vector_remove_idx(tx->transaction->vout, i);
-                                        dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
+                                        dogecoin_tx_add_address_out(tx->transaction, chain, koinu_amount, destinationaddress);
                                         break;
                                     case 2:
-                                        amount = atof(getl("new amount"));
-                                        amount = coins_to_koinu(amount);
-                                        tx_out->value = amount;
+                                        coin_amount = atof(getl("new amount"));
+                                        koinu_amount = coins_to_koinu(coin_amount);
+                                        tx_out->value = koinu_amount;
                                         break;
                                 }
                             tx_out_total = 0;
@@ -411,7 +400,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
             // escape encompassing while loop so we return to previous menu
             if (i == length - 1) {
                 printf("\n\n");
-                printf("subtotal - desired fee: %f\n", koinu_to_coins(tx_out_total));
+                printf("subtotal - desired fee: %Lf\n", koinu_to_coins(tx_out_total));
                 printf("\n");
                 printf("1. select output to edit\n");
                 printf("2. main menu\n");

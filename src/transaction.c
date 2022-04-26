@@ -336,7 +336,7 @@ static int make_change(int txindex, char* public_key, float subtractedfee, uint6
  * @param sender_p2pkh 
  * @return char* 
  */
-char* finalize_transaction(int txindex, char* destinationaddress, float subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
+char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -429,9 +429,9 @@ void clear_transaction(int txindex) {
  * @param sighashtype 
  * @param amount 
  * @param privkey 
- * @return int 
+ * @return char*  
  */
-int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+char* sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if(!incomingrawtx && !scripthex) return false;
 
     if (strlen(incomingrawtx) > 1024*100) { //don't accept tx larger then 100kb
@@ -448,7 +448,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(incomingrawtx, data_bin, strlen(incomingrawtx), &outlength);
 
-    if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, true)) {
+    if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, false)) {
         // free byte array
         dogecoin_free(data_bin);
         // free dogecoin_tx
@@ -532,10 +532,10 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
         memcpy(incomingrawtx, signed_tx_hex, sizeof(signed_tx_hex));
         printf("signed TX: %s\n", incomingrawtx);
-        cstr_free(signed_tx, true);
+        cstr_free((cstring*)signed_tx, true);
         dogecoin_tx_free(txtmp);
     }
-    return true;
+    return incomingrawtx;
 }
 
 /**
@@ -550,12 +550,10 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
  * @param privkey 
  * @return int 
  */
-int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+char* sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if (!txindex) return false;
-    sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey);
-    debug_print("sign indexed raw transaction: %d\n", txindex);
-    if (!save_raw_transaction(txindex, incomingrawtx)) {
+    if (!save_raw_transaction(txindex, sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey))) {
         printf("error saving transaction!\n");
     }
-    return true;
+    return incomingrawtx;
 }

@@ -3,10 +3,8 @@
 name: CI
 
 on:
-  push:
-    branches: [ main, "*-dev*" ]
   pull_request:
-    branches: [ main, "*-dev*" ]
+    branches: [ "*" ]
 
 jobs:
   build:
@@ -181,6 +179,7 @@ jobs:
             python3 tooltests.py
             if ([ "${{ matrix.name }}" == "" ]); then
                 python3 -m unittest bindings/py_wrappers/pytest/address_test.py
+                python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
             fi
 
       - name: Upload artifacts
