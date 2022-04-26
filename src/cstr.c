@@ -35,11 +35,8 @@ static int cstr_alloc_min_sz(cstring* s, size_t sz)
     while ((al_sz = (1 << shift)) < sz) {
         shift++;
     }
-    if (s->str) {
-        new_s = dogecoin_realloc(s->str, al_sz);
-    }
-    else new_s = dogecoin_malloc(al_sz);
-    
+
+    new_s = dogecoin_realloc(s->str, al_sz);
     if (!new_s) {
         return 0;
     }
@@ -82,7 +79,7 @@ int cstr_alloc_minsize(cstring* s, size_t new_sz)
     }
 
     /* contents of string tail undefined */
-    s->len = new_sz;
+    // s->len = new_sz;
     s->str[s->len] = 0;
 
     return 1;
