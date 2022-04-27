@@ -47,11 +47,11 @@ jobs:
             run-tests: false
             goal: install
           - name: x86_64-linux-dbg
-            host: x86_64-unknown-linux-gnu
+            host: x86_64-pc-linux-gnu
             os: ubuntu-20.04
             run-tests: true
             dep-opts: "DEBUG=1"
-            config-opts: "--enable-static --disable-shared"
+            config-opts: "--enable-static"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin11
@@ -176,8 +176,8 @@ jobs:
         if: ${{ matrix.run-tests }}
         run: |
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-            # python3 tooltests.py
-            if ([ "${{ matrix.name }}" == "" ]); then
+            python3 tooltests.py
+            if ([ "${{ matrix.name }}" == "x86_64-linux-dbg" ]); then
                 python3 -m unittest bindings/py_wrappers/pytest/address_test.py
                 python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
             fi
