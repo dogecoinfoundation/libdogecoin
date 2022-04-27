@@ -444,17 +444,14 @@ void print_image(FILE *fptr)
         printf("%s",read_string);
 }
 
-long double koinu_to_coins(uint64_t koinu) {
-    return (long double)koinu / (long double)1e8;
-}
-
-uint64_t coins_to_koinu(long double coins) {
+long long unsigned remove_decimal(long double coins) {
+    debug_print("coins %.9Lf\n", coins);
+    // coin_amounts2[i]//   
     char coins_string[32];
-    char koinu_string[32];
-    sprintf(coins_string, "%.9Lf", coins);
+    char koinu_string[32];  
+    sprintf(coins_string, "%.9f", coins);
     char* c_ptr = coins_string;
     char* k_ptr = koinu_string;
-
     //copy all digits until end of string or decimal point is reached
     while (*c_ptr != '\0') {
         if (*c_ptr =='.') {
@@ -474,16 +471,8 @@ uint64_t coins_to_koinu(long double coins) {
             break;
         }
         if (i==8) {
-            //assessing the 9th decimal place
-            if (c_ptr[1] >= '5') {
-                char curr_val = *c_ptr;
-                memset(k_ptr, curr_val+1, 1);
-                k_ptr++;
-            }
-            else {
-                memcpy(k_ptr, c_ptr, 1);
-                k_ptr++;
-            }
+            memcpy(k_ptr, c_ptr, 1);
+            k_ptr++;
             memset(k_ptr, '\0', 1);
             break;
         }
@@ -491,8 +480,18 @@ uint64_t coins_to_koinu(long double coins) {
         c_ptr++;
         k_ptr++;
     }
-    uint64_t result = (uint64_t)strtoul(koinu_string, &k_ptr, 10);
-    return result;
+    uint64_t out;
+    sscanf(koinu_string, "%" PRId64, &out);
+    return out;
+}
+
+long double koinu_to_coins(uint64_t koinu) {
+    long double out =  (long double)koinu / (long double)1e8;
+    return out;
+}
+
+uint64_t coins_to_koinu(long double coins) {
+    return remove_decimal(coins);
 }
 
 void print_bits(size_t const size, void const* ptr)
@@ -565,4 +564,18 @@ void text_to_hex(char* in, char* out) {
         i += 2;
     }
     out[i++] = '\0';
+}
+
+const char* get_build() {
+    #if defined(__x86_64__) || defined(_M_X64)
+    return "x86_64";
+    #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+    return "x86_32";
+    #elif defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7S__)
+    return "ARM7";
+    #elif defined(__aarch64__) || defined(_M_ARM64)
+    return "ARM64";
+    #else
+    return "UNKNOWN";
+    #endif
 }

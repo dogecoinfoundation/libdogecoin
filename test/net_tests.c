@@ -1,5 +1,4 @@
 #include "utest.h"
-#include <stdarg.h>
 #include <dogecoin/block.h>
 #include <dogecoin/net/net.h>
 #include <dogecoin/utils.h>
@@ -7,7 +6,7 @@
 #include <dogecoin/tx.h>
 
 /**
- * The timer_cb function is called every 300 seconds (5 minutes) to check if the node has been
+ * The timer_cb function is called every 60 seconds to check if the node has been
  * connected for more than 5 minutes. 
  * If it has, the node is disconnected
  * 
@@ -18,7 +17,7 @@
  */
 static dogecoin_bool timer_cb(dogecoin_node *node, uint64_t *now)
 {
-    if (node->time_started_con + 300 < *now)
+    if (node->time_started_con + 60 < *now)
         dogecoin_node_disconnect(node);
 
     /* return true = run internal timer logic (ping, disconnect-timeout, etc.) */
@@ -221,31 +220,31 @@ void test_net_basics_plus_download_block()
     u_assert_int_eq(dogecoin_node_set_ipport(node, "138.201.55.219:44556"), true);
 
     /* create a node group */
-    // dogecoin_node_group* group = dogecoin_node_group_new(NULL);
-    // group->desired_amount_connected_nodes = 1;
+    dogecoin_node_group* group = dogecoin_node_group_new(NULL);
+    group->desired_amount_connected_nodes = 1;
 
-    // /* add the node to the group */
-    // dogecoin_node_group_add_node(group, node_wrong);
-    // dogecoin_node_group_add_node(group, node_timeout_direct);
-    // dogecoin_node_group_add_node(group, node_timeout_indirect);
-    // dogecoin_node_group_add_node(group, node);
+    /* add the node to the group */
+    dogecoin_node_group_add_node(group, node_wrong);
+    dogecoin_node_group_add_node(group, node_timeout_direct);
+    dogecoin_node_group_add_node(group, node_timeout_indirect);
+    dogecoin_node_group_add_node(group, node);
 
-    // /* set the timeout callback */
-    // group->periodic_timer_cb = timer_cb;
+    /* set the timeout callback */
+    group->periodic_timer_cb = timer_cb;
 
-    // /* set a individual log print function */
-    // group->log_write_cb = net_write_log_null;
-    // group->parse_cmd_cb = parse_cmd;
-    // group->postcmd_cb = postcmd;
-    // group->node_connection_state_changed_cb = node_connection_state_changed;
-    // group->handshake_done_cb = handshake_done;
+    /* set a individual log print function */
+    group->log_write_cb = net_write_log_null;
+    group->parse_cmd_cb = parse_cmd;
+    group->postcmd_cb = postcmd;
+    group->node_connection_state_changed_cb = node_connection_state_changed;
+    group->handshake_done_cb = handshake_done;
     
-    // /* connect to the next node */
-    // dogecoin_node_group_connect_next_nodes(group);
+    /* connect to the next node */
+    dogecoin_node_group_connect_next_nodes(group);
 
-    // /* start the event loop */
-    // dogecoin_node_group_event_loop(group);
+    /* start the event loop */
+    dogecoin_node_group_event_loop(group);
 
-    // /* cleanup */
-    // dogecoin_node_group_free(group); //will also free the nodes structures from the heap
+    /* cleanup */
+    dogecoin_node_group_free(group); //will also free the nodes structures from the heap
 }

@@ -61,6 +61,7 @@ LIBDOGECOIN_API void print_bits(size_t const size, void const* ptr);
 LIBDOGECOIN_API void prepend(char* s, const char* t);
 LIBDOGECOIN_API void append(char* s, char* t);
 LIBDOGECOIN_API void text_to_hex(char* in, char* out);
+LIBDOGECOIN_API const char* get_build();
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */

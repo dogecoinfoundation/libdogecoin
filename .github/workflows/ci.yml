@@ -33,16 +33,16 @@ jobs:
           - name: armhf-linux
             host: arm-linux-gnueabihf
             os: ubuntu-20.04
-            packages: g++-arm-linux-gnueabihf qemu qemu-system qemu-user-static qemu-user
-            dep-opts: "CROSS_COMPILE='yes'"
+            packages: g++-arm-linux-gnueabihf qemu-user-static qemu-user
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
             config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++  --enable-static --disable-shared"
             run-tests: true
             goal: install
           - name: aarch64-linux
             host: aarch64-linux-gnu
             os: ubuntu-20.04
-            packages: g++-aarch64-linux-gnu qemu qemu-system qemu-user-static qemu-user
-            dep-opts: "CROSS_COMPILE='yes'"
+            packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
             config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++ --enable-static --disable-shared"
             run-tests: true
             goal: install
@@ -50,8 +50,8 @@ jobs:
             host: x86_64-pc-linux-gnu
             os: ubuntu-20.04
             run-tests: true
-            dep-opts: "DEBUG=1"
-            config-opts: "--enable-static"
+            dep-opts: "DEBUG=1 SPEED=slow V=1"
+            config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig LIBS='-levent -levent_core -levent_pthreads'"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin11
@@ -71,7 +71,7 @@ jobs:
               sudo update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
               sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
               sudo update-binfmts --import /usr/share/binfmts/wine
-            dep-opts: "CROSS_COMPILE='yes' CFLAGS='-s -static --static -fPIC' LIBTOOL_APP_LDFLAGS='-all-static' LDFLAGS='-static-libgcc -static-libstdc++'"
+            dep-opts: "CROSS_COMPILE='yes' CFLAGS='-s -static --static -fPIC' LIBTOOL_APP_LDFLAGS='-all-static' LDFLAGS='-static-libgcc -static-libstdc++' SPEED=slow V=1"
             config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-w64-mingw32/lib/' CFLAGS='-I`pwd`/depends/x86_64-w64-mingw32/include/ -s -static --static -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-w64-mingw32/lib/' PKG_CONFIG_PATH=`pwd`/depends/x86_64-w64-mingw32/lib/pkgconfig --enable-static --disable-shared"
             run-tests: true
             goal: install
@@ -191,9 +191,9 @@ jobs:
               ;;
               "x86_64-linux-dbg") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-              python3 tooltests.py
-              python3 -m unittest bindings/py_wrappers/pytest/address_test.py
-              python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
+              # python3 tooltests.py
+              # python3 -m unittest bindings/py_wrappers/pytest/address_test.py
+              # python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
               ;;
               "i686-linux") 
               ;;
