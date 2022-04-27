@@ -41,10 +41,10 @@ jobs:
           - name: aarch64-linux
             host: aarch64-linux-gnu
             os: ubuntu-20.04
-            packages: g++-aarch64-linux-gnu
+            packages: g++-aarch64-linux-gnu qemu qemu-system qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes'"
-            config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS='-static' --enable-static --disable-shared"
-            run-tests: false
+            config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++ --enable-static --disable-shared"
+            run-tests: true
             goal: install
           - name: x86_64-linux-dbg
             host: x86_64-pc-linux-gnu
@@ -180,6 +180,7 @@ jobs:
               qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
               ;;
               "aarch64-linux") 
+              qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
               ;;
               "x86_64-win")
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
@@ -195,7 +196,6 @@ jobs:
               python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
               ;;
               "i686-linux") 
-              qemu-i386 -E LD_LIBRARY_PATH=/usr/i386-linux-gnu/lib/ /usr/i386-linux-gnu/lib/ld-linux-i386.so.3 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
               ;;
             esac
 
