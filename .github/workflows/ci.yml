@@ -33,10 +33,10 @@ jobs:
           - name: armhf-linux
             host: arm-linux-gnueabihf
             os: ubuntu-20.04
-            packages: g++-arm-linux-gnueabihf
+            packages: g++-arm-linux-gnueabihf qemu qemu-system qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes'"
             config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++  --enable-static --disable-shared"
-            run-tests: false
+            run-tests: true
             goal: install
           - name: aarch64-linux
             host: aarch64-linux-gnu
@@ -175,12 +175,29 @@ jobs:
       - name: test libdogecoin
         if: ${{ matrix.run-tests }}
         run: |
-            make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-            python3 tooltests.py
-            if ([ "${{ matrix.name }}" == "x86_64-linux-dbg" ]); then
-                python3 -m unittest bindings/py_wrappers/pytest/address_test.py
-                python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
-            fi
+            case "${{ matrix.name }}" in
+              "armhf-linux") 
+              qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
+              ;;
+              "aarch64-linux") 
+              ;;
+              "x86_64-win")
+              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
+              ;;
+              "i686-win") 
+              ;;
+              "x86_64-macos") 
+              ;;
+              "x86_64-linux-dbg") 
+              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
+              python3 tooltests.py
+              python3 -m unittest bindings/py_wrappers/pytest/address_test.py
+              python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
+              ;;
+              "i686-linux") 
+              qemu-i386 -E LD_LIBRARY_PATH=/usr/i386-linux-gnu/lib/ /usr/i386-linux-gnu/lib/ld-linux-i386.so.3 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
+              ;;
+            esac
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
