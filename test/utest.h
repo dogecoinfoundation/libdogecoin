@@ -121,6 +121,21 @@
         } while (0);                                                     \
     }
 
+#define u_assert_long_double_eq(R, E)                                    \
+    {                                                                    \
+        long double r_ = (R);                                            \
+        long double e_ = (E);                                            \
+        do {                                                             \
+            if (r_ != e_ ) {                       \
+                printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
+                printf("\tExpect: \t%.8Lf\n", e_);                       \
+                printf("\tReceive:\t%.8Lf\n", r_);                       \
+                U_TESTS_FAIL++;                                          \
+                return;                                                  \
+            };                                                           \
+        } while (0);                                                     \
+    }
+    
 #define u_assert_double_eq(R, E)                                         \
     {                                                                    \
         double r_ = (R);                                               \
@@ -128,8 +143,8 @@
         do {                                                             \
             if (r_ != e_) {                                              \
                 printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
-                printf("\tExpect: \t%lf\n", e_);                 \
-                printf("\tReceive:\t%lf\n", r_);                 \
+                printf("\tExpect: \t%.80lf\n", e_);                 \
+                printf("\tReceive:\t%.80lf\n", r_);                 \
                 U_TESTS_FAIL++;                                          \
                 return;                                                  \
             };                                                           \
