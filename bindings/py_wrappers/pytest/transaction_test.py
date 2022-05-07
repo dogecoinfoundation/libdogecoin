@@ -2,10 +2,7 @@
 
 import inspect
 import unittest
-import sys
-sys.path.append("./bindings/py_wrappers/libdogecoin/")
-import wrappers as w
-lib = w.load_libdogecoin()
+import libdogecoin as l
 
 # internal keys
 privkey_wif =       "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
@@ -38,101 +35,101 @@ fee = .00226
 
 class TestTransactionFunctions(unittest.TestCase):
     def test_start_transaction(self):
-        res = w.start_transaction()
+        res = l.start_transaction()
         self.assertTrue(type(res)==int and res>=0)
 
     def test_save_raw_transaction(self):
-        idx = w.start_transaction()
-        w.add_utxo(idx, hash2doge, vout2doge)
-        rawhex = w.get_raw_transaction(idx)
-        idx2 = w.start_transaction()
-        w.save_raw_transaction(idx2, rawhex)
-        rawhex2 = w.get_raw_transaction(idx2)
+        idx = l.start_transaction()
+        l.add_utxo(idx, hash2doge, vout2doge)
+        rawhex = l.get_raw_transaction(idx)
+        idx2 = l.start_transaction()
+        l.save_raw_transaction(idx2, rawhex)
+        rawhex2 = l.get_raw_transaction(idx2)
         self.assertTrue(rawhex==rawhex2)
 
     def test_get_raw_transaction(self):
-        idx = w.start_transaction()
-        valid_idx_res = w.get_raw_transaction(idx)
-        invalid_idx_res = w.get_raw_transaction(idx+1)
+        idx = l.start_transaction()
+        valid_idx_res = l.get_raw_transaction(idx)
+        invalid_idx_res = l.get_raw_transaction(idx+1)
         self.assertTrue(valid_idx_res==expected_empty_tx_hex)
         self.assertFalse(invalid_idx_res)
 
     def test_single_utxo(self):
-        idx = w.start_transaction()
-        check = w.add_utxo(idx, hash2doge, vout2doge)
+        idx = l.start_transaction()
+        check = l.add_utxo(idx, hash2doge, vout2doge)
         self.assertTrue(check==1)
-        rawhex = w.get_raw_transaction(idx)
+        rawhex = l.get_raw_transaction(idx)
         self.assertTrue(rawhex==expected_unsigned_single_utxo_tx_hex)
 
     def test_double_utxo(self):
         checks = []
-        idx = w.start_transaction()
-        checks.append(w.add_utxo(idx, hash2doge, vout2doge))
-        checks.append(w.add_utxo(idx, hash10doge, vout10doge))
+        idx = l.start_transaction()
+        checks.append(l.add_utxo(idx, hash2doge, vout2doge))
+        checks.append(l.add_utxo(idx, hash10doge, vout10doge))
         for x in checks:
             self.assertTrue(x==1)
-        rawhex = w.get_raw_transaction(idx)
+        rawhex = l.get_raw_transaction(idx)
         self.assertTrue(rawhex==expected_unsigned_double_utxo_tx_hex)
 
     def test_add_output(self):
         checks = []
-        idx = w.start_transaction()
-        checks.append(w.add_utxo(idx, hash2doge, vout2doge))
-        checks.append(w.add_utxo(idx, hash10doge, vout10doge))
-        checks.append(w.add_output(idx, external_p2pkh_addr, send_amt))
+        idx = l.start_transaction()
+        checks.append(l.add_utxo(idx, hash2doge, vout2doge))
+        checks.append(l.add_utxo(idx, hash10doge, vout10doge))
+        checks.append(l.add_output(idx, external_p2pkh_addr, send_amt))
         for x in checks:
             self.assertTrue(x==1)
-        rawhex = w.get_raw_transaction(idx)
+        rawhex = l.get_raw_transaction(idx)
         self.assertTrue(rawhex==expected_unsigned_double_utxo_single_output_tx_hex)
 
     def test_finalize_transaction(self):
         checks = []
-        idx = w.start_transaction()
-        checks.append(w.add_utxo(idx, hash2doge, vout2doge))
-        checks.append(w.add_utxo(idx, hash10doge, vout10doge))
-        checks.append(w.add_output(idx, external_p2pkh_addr, send_amt))
+        idx = l.start_transaction()
+        checks.append(l.add_utxo(idx, hash2doge, vout2doge))
+        checks.append(l.add_utxo(idx, hash10doge, vout10doge))
+        checks.append(l.add_output(idx, external_p2pkh_addr, send_amt))
         for x in checks:
             self.assertTrue(x==1)
-        rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        rawhex = l.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
 
     def test_clear_transaction(self):
-        idx = w.start_transaction()
-        rawhex = w.get_raw_transaction(idx)
+        idx = l.start_transaction()
+        rawhex = l.get_raw_transaction(idx)
         self.assertTrue(rawhex==expected_empty_tx_hex)
-        w.clear_transaction(idx)
-        rawhex = w.get_raw_transaction(idx)
+        l.clear_transaction(idx)
+        rawhex = l.get_raw_transaction(idx)
         self.assertFalse(rawhex)
 
     def test_sign_raw_transaction(self):
-        w.dogecoin_ecc_start()
-        idx = w.start_transaction()
-        w.add_utxo(idx, hash2doge, vout2doge)
-        w.add_utxo(idx, hash10doge, vout10doge)
-        w.add_output(idx, external_p2pkh_addr, send_amt)
-        rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        l.dogecoin_ecc_start()
+        idx = l.start_transaction()
+        l.add_utxo(idx, hash2doge, vout2doge)
+        l.add_utxo(idx, hash10doge, vout10doge)
+        l.add_output(idx, external_p2pkh_addr, send_amt)
+        rawhex = l.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
-        rawhex = w.sign_raw_transaction(0, w.get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
+        rawhex = l.sign_raw_transaction(0, l.get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
         self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
-        w.save_raw_transaction(idx, rawhex)
-        rawhex = w.sign_raw_transaction(1, w.get_raw_transaction(idx), utxo_scriptpubkey, 1, 10, privkey_wif)
+        l.save_raw_transaction(idx, rawhex)
+        rawhex = l.sign_raw_transaction(1, l.get_raw_transaction(idx), utxo_scriptpubkey, 1, 10, privkey_wif)
         self.assertTrue(rawhex==expected_signed_raw_tx_hex)
-        w.dogecoin_ecc_stop()
+        l.dogecoin_ecc_stop()
 
     def test_sign_indexed_raw_transaction(self):
-        w.dogecoin_ecc_start()
-        idx = w.start_transaction()
-        w.add_utxo(idx, hash2doge, vout2doge)
-        w.add_utxo(idx, hash10doge, vout10doge)
-        w.add_output(idx, external_p2pkh_addr, send_amt)
-        rawhex = w.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        l.dogecoin_ecc_start()
+        idx = l.start_transaction()
+        l.add_utxo(idx, hash2doge, vout2doge)
+        l.add_utxo(idx, hash10doge, vout10doge)
+        l.add_output(idx, external_p2pkh_addr, send_amt)
+        rawhex = l.finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
-        w.save_raw_transaction(idx, rawhex)
-        rawhex = w.sign_indexed_raw_transaction(idx, 0, w.get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
-        self.assertTrue(w.get_raw_transaction(idx)==expected_signed_single_input_tx_hex)
-        rawhex = w.sign_indexed_raw_transaction(idx, 1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        l.save_raw_transaction(idx, rawhex)
+        rawhex = l.sign_indexed_raw_transaction(idx, 0, l.get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(l.get_raw_transaction(idx)==expected_signed_single_input_tx_hex)
+        rawhex = l.sign_indexed_raw_transaction(idx, 1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
         self.assertTrue(rawhex==expected_signed_raw_tx_hex)
-        w.dogecoin_ecc_stop()
+        l.dogecoin_ecc_stop()
         
 if __name__ == "__main__":
     test_src = inspect.getsource(TestTransactionFunctions)
