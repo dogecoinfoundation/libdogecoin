@@ -33,7 +33,8 @@ void test_random()
     unsigned char r_buf[32];
     memset(r_buf, 0, 32);
     dogecoin_random_init();
-    u_assert_int_eq(dogecoin_random_bytes(r_buf, 32, 0), true);
+    dogecoin_bool ret = dogecoin_random_bytes(r_buf, 32, 0);
+    u_assert_int_eq(ret, true);
     dogecoin_rnd_mapper mymapper = {test_random_init_cb, test_random_bytes_cb};
     dogecoin_rnd_set_mapper(mymapper);
     u_assert_int_eq(dogecoin_random_bytes(r_buf, 32, 0), false);

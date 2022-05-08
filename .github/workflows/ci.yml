@@ -85,7 +85,7 @@ jobs:
               sudo update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
               sudo update-binfmts --import /usr/share/binfmts/wine
             dep-opts: "CROSS_COMPILE='yes'"
-            config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' LD_LIBRARY_PATH='`pwd`/depends/i686-w64-mingw32/lib/' CFLAGS='-I`pwd`/depends/i686-w64-mingw32/include/ -s -static --static -fPIC' LDFLAGS='-L`pwd`/depends/i686-w64-mingw32/lib/' PKG_CONFIG_PATH=`pwd`/depends/i686-w64-mingw32/lib/pkgconfig LIBS='-levent -levent_core -lpthread -lm -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lcrypt32' --enable-static --disable-shared"
+            config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' LD_LIBRARY_PATH='`pwd`/depends/i686-w64-mingw32/lib/' CFLAGS='-I`pwd`/depends/i686-w64-mingw32/include/ -s -static --static -fPIC -m32' CXXFLAGS=-m32 LDFLAGS='-L`pwd`/depends/i686-w64-mingw32/lib/ -m32' PKG_CONFIG_PATH=`pwd`/depends/i686-w64-mingw32/lib/pkgconfig LIBS='-levent -levent_core -lpthread -lm -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lbcrypt -lcrypt32 -DWIN32' --enable-static --disable-shared"
             run-tests: false
             goal: install
           - name: i686-linux
