@@ -121,7 +121,7 @@ void test_utils()
         u_assert_double_eq(tmp, coin_amounts[i]);
         u_assert_uint32_eq(actual_answer, exp_answers[i]);
     #ifdef WIN32
-        debug_print("T%d\n\tcoin_amt: %.9Lg\n\texpected: %lu\n\tactual: %" PRIu64 "\n\n", i, coin_amounts[i], exp_answers[i], actual_answer);
+        debug_print("T%d\n\tcoin_amt: %.8Lf\n\texpected: %lu\n\tactual: %" PRIu64 "\n\n", i, (double_t)coin_amounts[i], exp_answers[i], actual_answer);
         debug_print("__LDBL_MAX__: %.9lg\n", __LDBL_MAX__);
         debug_print("__LDBL_MAX_10_EXP__: %.9lg\n", __LDBL_MAX_10_EXP__);
         debug_print("__LDBL_MAX_EXP__: %.9lg\n", __LDBL_MAX_EXP__);
@@ -170,6 +170,11 @@ void test_utils()
         u_assert_uint32_eq(actual_answer, exp_answers2[i]);
         diff = exp_answers2[i] - actual_answer;
         u_assert_int_eq((int)diff, 0);
-        debug_print("\n\n\tcoin_amt: %.8Lf\n\texpected: %"PRIu64"\n\tactual:   %"PRIu64"\n\n", coin_amounts2[i], exp_answers2[i], actual_answer);
+        #ifdef WIN32
+            // hack to print long double, not 100% reliable...
+            debug_print("\n\n\tcoin_amt: %.*Lf\n\texpected: %"PRIu64"\n\tactual:   %"PRIu64"\n\n", 8, (double_t)coin_amounts2[i], exp_answers2[i], actual_answer);
+        #else
+            debug_print("\n\n\tcoin_amt: %.*Lf\n\texpected: %"PRIu64"\n\tactual:   %"PRIu64"\n\n", 8, coin_amounts2[i], exp_answers2[i], actual_answer);
+        #endif
     }
 }

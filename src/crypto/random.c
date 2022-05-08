@@ -27,9 +27,7 @@
 */
 
 #include <assert.h>
-#ifdef HAVE_CONFIG_H
 #include <src/libdogecoin-config.h>
-#endif
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -93,6 +91,23 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     assert(ret);
     CryptReleaseContext(hProvider, 0);
     return ret;
+// #include <bcrypt.h>
+// #pragma comment(lib, "Bcrypt")
+//     BCRYPT_ALG_HANDLE hProvider;
+//     int ret = BCryptOpenAlgorithmProvider(&hProvider, BCRYPT_RNG_ALGORITHM, 	NULL, 0);
+//     if (!BCRYPT_SUCCESS(ret)) {
+//         debug_print("opening bcrypt algorithm provider failed: %d\n", ret);
+//         return false;
+//     }
+//     assert(BCRYPT_SUCCESS(ret));
+//     ret = BCryptGenRandom(hProvider, &buf,
+//                                        len, 0);
+//     if (!BCRYPT_SUCCESS(ret)) {
+//         debug_print("generating random number failed: %d\n", ret);
+//         return false;
+//    } 
+//    printf("Random number: %d\n" , buf); 
+//    BCryptCloseAlgorithmProvider(hProvider, 0); 
 #else
     (void)update_seed; //unused
     FILE* frand = fopen(RANDOM_DEVICE, "r");

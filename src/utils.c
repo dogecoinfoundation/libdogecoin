@@ -522,15 +522,78 @@ long double append_koinu(long double x, long double y) {
 int compare_diffs(uint64_t a, uint64_t b) {
     return a - b;
 }
+void show_fe_currentrnding_direction(void)
+{
+    switch (fegetround()) {
+           case FE_TONEAREST:  debug_print ("FE_TONEAREST: %d\n", FE_TONEAREST);  break;
+           case FE_DOWNWARD:   debug_print ("FE_DOWNWARD: %d\n", FE_DOWNWARD);   break;
+           case FE_UPWARD:     debug_print ("FE_UPWARD: %d\n", FE_UPWARD);     break;
+           case FE_TOWARDZERO: debug_print ("FE_TOWARDZERO: %d\n", FE_TOWARDZERO); break;
+           default:            debug_print ("%s\n", "unknown");
+    };
+}
 
 long double koinu_to_coins(uint64_t koinu) {
-    debug_print("(long double)koinu / (long double)1e8: %.*Lf\n", LDBL_MANT_DIG, (long double)koinu / (long double)1e8);
-    return (long double)koinu / (long double)1e8;
+    show_fe_currentrnding_direction();
+    int rounding_mode = fegetround();
+    long double output;
+    int l = length(koinu);
+#if defined(__ARM_ARCH_7A__)
+    output = (long double)koinu / (long double)1e8;
+    if (l >= 9) {
+        fesetround(FE_UPWARD);
+        output = (long double)koinu / (long double)1e8;
+    } else if (l >= 17) {
+        fesetround(FE_TOWARDZERO);
+        output = rnd((long double)koinu / (long double)1e8, 8.5) + .000000005;
+    }
+
+#elif defined(WIN32)
+    output = (long double)koinu / (long double)1e8;
+    debug_print("(long double)koinu / (long double)1e8: %.*Lf\n", LDBL_MANT_DIG, (double)output);
+#else
+    output = (long double)koinu / (long double)1e8;
+    debug_print("(long double)koinu / (long double)1e8: %.*Lf\n", 8, output);
+#endif
+    debug_print("length: %d\n", l);
+    fesetround(rounding_mode);
+    return output;
 }
 
 uint64_t coins_to_koinu(long double coins) {
-    debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", (uint64_t)rnd((long double)coins * (long double)1e8, 8.5));
-    return (uint64_t)rnd((long double)coins * (long double)1e8, 8.5);
+    show_fe_currentrnding_direction();
+    int rounding_mode = fegetround(),
+    l = length(coins);
+    long double output;
+    debug_print("length: %d\n", l);
+#if defined(__ARM_ARCH_7A__)
+    output = (uint64_t)round((long double)coins * (long double)1e8);
+    if (l == 1) {
+        fesetround(FE_UPWARD);
+    } else if (l >= 9) {
+        fesetround(FE_UPWARD);
+        debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", (uint64_t)rnd((long double)coins * (long double)1e8, 8.5));
+        long double root = sqrtl(coins * 1.0e8) * sqrtl(coins * 1.0e8);
+        debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %Lf\n", root + 1.0);
+        int quo;
+        long double end = frexpl(coins, &quo);
+        uint64_t  diff = DOGECOIN_MAX((uint64_t)get_diffl(coins * 1e8), get_diff((uint64_t)(long double)coins * (long double)1e8));
+        if (end != diff) {
+            // output = output - diff + end;
+        }
+        printf("x = %.2lf = %.2lf * 2^%d\n", coins, end, quo);
+        uint64_t out = round(((long double)coins * (long double)1e8)  + .000000005);
+        debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", out + 1);
+        output = (uint64_t)round((long double)coins * (long double)1e8);
+    }
+#elif defined(_WIN32)
+     output = (uint64_t)round((long double)coins * (long double)1e8);
+#else
+    output = rnd((long double)coins * (long double)1e8, 8.5);
+#endif
+    debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", (uint64_t)round((long double)coins * (long double)1e8));
+    fesetround(rounding_mode);
+    return output;
 }
 
 void print_bits(size_t const size, void const* ptr)
