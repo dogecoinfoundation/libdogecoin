@@ -57,8 +57,6 @@ extern NTSTATUS WINAPI BCryptGenRandom(BCRYPT_ALG_HANDLE, UCHAR*, ULONG, ULONG);
 # endif
 #endif
 
-#include "minmax.h"
-
 #if defined _WIN32 && ! defined __CYGWIN__
 
 /* Don't assume that UNICODE is not defined.  */

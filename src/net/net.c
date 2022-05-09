@@ -23,7 +23,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #endif
-
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
