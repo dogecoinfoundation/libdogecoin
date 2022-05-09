@@ -35,7 +35,13 @@ define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install
 endef
 
+ifeq ($(target_os),windows)
+define $(package)_postprocess_cmds
+  rm lib/*.la
+endef
+else
 define $(package)_postprocess_cmds
   $(package)_config_opts_linux=rm lib/*.la && \
   rm include/ev*.h
 endef
+endif
