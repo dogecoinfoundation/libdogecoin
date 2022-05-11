@@ -1,18 +1,19 @@
 """This module runs a mini command line interface to test python libdogecoin wrappers."""
 
-import sys
-sys.path.append("./bindings/py_wrappers/libdogecoin/")
-import wrappers as libdogecoin
+import libdogecoin
 
 # MAIN METHOD
 if __name__ == "__main__":
+
+    # start context
+    libdogecoin.context_start()
 
     # print option menu
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
-               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1, test>",
-               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1, test"]
+               "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1:test>",
+               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test"]
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -97,3 +98,6 @@ if __name__ == "__main__":
         # accept next command
         print()
         inp = input("$ ").split()
+
+    # stop context
+    libdogecoin.context_stop()

@@ -10,23 +10,21 @@ libdoge_extension = [Extension(
                         "include",
                         "include/dogecoin",
                         "include/dogecoin/crypto",
-                        "src/secp256k1/include"],
+                        "secp256k1/include"],
     libraries =         ["event", "event_core", "event_pthreads", "m"],
-    library_dirs =      ['/mnt/source/repos/libdogecoin/depends/x86_64-pc-linux-gnu/lib /mnt/source/repos/libdogecoin/src/secp256k1/libsecp256k1.la', '/mnt/source/repos/libdogecoin/src/secp256k1/depends/x86_64-pc-linux-gnu/lib', './src'],
-    extra_objects=      ["src/secp256k1/.libs/libsecp256k1.a",
-                        ".libs/libdogecoin.so"],
-    extra_compile_args= ['-s', '-static', '--static', '-lstdc++','-std=c++11', '-v'],
-    extra_link_args=    ['-lstdc++', '-v'],
+    library_dirs =      ["depends/x86_64-pc-linux-gnu/lib"],
+    extra_objects=      [".libs/libdogecoin.a", 
+                        "src/secp256k1/.libs/libsecp256k1.a", 
+                        "src/secp256k1/.libs/libsecp256k1_precomputed.a"],
 )]
 
 setup(
     name=               "libdogecoin",
-    version=            "0.1",
+    version=            "0.5",
     description=        "Python interface for the libdogecoin C library",
     author=             "Jackie McAninch",
     author_email=       "jackie.mcaninch.2019@gmail.com",
     license=            "MIT",
-    python_requires=    ">=3.8.10",
     cmdclass =          {'build_ext': build_ext},
     ext_modules=        cythonize(libdoge_extension)
 )
