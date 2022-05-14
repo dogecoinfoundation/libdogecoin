@@ -522,6 +522,7 @@ long double append_koinu(long double x, long double y) {
 int compare_diffs(uint64_t a, uint64_t b) {
     return a - b;
 }
+
 void show_fe_currentrnding_direction(void)
 {
     switch (fegetround()) {
@@ -534,65 +535,126 @@ void show_fe_currentrnding_direction(void)
 }
 
 long double koinu_to_coins(uint64_t koinu) {
-    show_fe_currentrnding_direction();
-    int rounding_mode = fegetround();
     long double output;
-    int l = length(koinu);
 #if defined(__ARM_ARCH_7A__)
+    int rounding_mode = fegetround();
+    int l = length(koinu);
     output = (long double)koinu / (long double)1e8;
     if (l >= 9) {
         fesetround(FE_UPWARD);
         output = (long double)koinu / (long double)1e8;
     } else if (l >= 17) {
-        fesetround(FE_TOWARDZERO);
         output = rnd((long double)koinu / (long double)1e8, 8.5) + .000000005;
     }
-
+    fesetround(rounding_mode);
 #elif defined(WIN32)
     output = (long double)koinu / (long double)1e8;
-    debug_print("(long double)koinu / (long double)1e8: %.*Lf\n", LDBL_MANT_DIG, (double)output);
 #else
     output = (long double)koinu / (long double)1e8;
-    debug_print("(long double)koinu / (long double)1e8: %.*Lf\n", 8, output);
 #endif
-    debug_print("length: %d\n", l);
-    fesetround(rounding_mode);
     return output;
 }
 
-uint64_t coins_to_koinu(long double coins) {
-    show_fe_currentrnding_direction();
-    int rounding_mode = fegetround(),
-    l = length(coins);
+uint64_t get_true_uint64_t(long double x) {
+    return (((uint64_t)get_koinu_integer(x * 100000000)) * 100000000) + (uint64_t)(rnd(get_koinu_mantissa(x * 100000000), 8.0) * 100000000);
+}
+
+long double round_ld(long double x)
+{
+    fenv_t save_env;
+    feholdexcept(&save_env);
+    long double result = rintl(x);
+    if (fetestexcept(FE_INEXACT)) {
+        int const save_round = fegetround();
+        fesetround(FE_UPWARD);
+        result = rintl(copysignl(0.5 + fabsl(x), x));
+        debug_print("result: %.8Lf\n", result);
+        fesetround(save_round);
+    }
+    feupdateenv(&save_env);
+    return result;
+}
+
+unsigned average(unsigned a, unsigned b)
+{
+#if defined(_MSC_VER)
+    unsigned sum;
+    auto carry = _addcarry_u32(0, a, b, &sum);
+    return (sum / 2) | (carry << 31);
+#elif defined(__clang__)
+    unsigned carry;
+    auto sum = _builtin_addc(a, b, 0, &carry);
+    return (sum / 2) | (carry << 31);
+#elif defined(__GNUC__)
+    unsigned sum;
+    int carry = __builtin_add_overflow(a, b, &sum);
+    return (sum / 2) | (carry << 31);
+#else
+#error Unsupported compiler.
+#endif
+}
+
+long double get_suffix_at_length(long double in, long double n) {
+    DISABLE_WARNING(-Wunused-variable)
+    DISABLE_WARNING_PUSH
+    long double base = n >= 8 ? powl(10, n - 8) : powl(10, 8 - n);
+    DISABLE_WARNING_POP
+    long double out, powered;
+    powered = (in * powl(10, n));
+    debug_print("powered %.8Lf\n", powered);
+    out = ((uint64_t)(in * powl(10, n)) % 10);
+    return out;
+}
+
+uint64_t coins_to_koinu_str(char* coins) {
     long double output;
-    debug_print("length: %d\n", l);
 #if defined(__ARM_ARCH_7A__)
-    output = (uint64_t)round((long double)coins * (long double)1e8);
-    if (l == 1) {
-        fesetround(FE_UPWARD);
-    } else if (l >= 9) {
-        fesetround(FE_UPWARD);
-        debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", (uint64_t)rnd((long double)coins * (long double)1e8, 8.5));
-        long double root = sqrtl(coins * 1.0e8) * sqrtl(coins * 1.0e8);
-        debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %Lf\n", root + 1.0);
-        int quo;
-        long double end = frexpl(coins, &quo);
-        uint64_t  diff = DOGECOIN_MAX((uint64_t)get_diffl(coins * 1e8), get_diff((uint64_t)(long double)coins * (long double)1e8));
-        if (end != diff) {
-            // output = output - diff + end;
-        }
-        printf("x = %.2lf = %.2lf * 2^%d\n", coins, end, quo);
-        uint64_t out = round(((long double)coins * (long double)1e8)  + .000000005);
-        debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", out + 1);
-        output = (uint64_t)round((long double)coins * (long double)1e8);
+    DISABLE_WARNING(-Wunused-but-set-variable)
+    DISABLE_WARNING(-Wunused-variable)
+    DISABLE_WARNING_PUSH
+    long double integer, integer_length, mantissa;
+    // length minus 1 representative of decimal and 8 representative of koinu
+    integer_length = strlen(coins) - 9;
+    char* int_end, int_str[256], mant_end, mant_str[256];
+    DISABLE_WARNING_POP
+    uint64_t x = 0, count = 0;
+    for (; x < integer_length; x++) {
+        int_str[x] = coins[x];
+    }
+    integer = strtold(int_str, &int_end);
+    unsigned long long int u64 = strtoull(int_str, &int_end, 10);
+    u64 *= 1e8;
+    for (uint64_t y = x; y <= strlen(coins) - 9; y++) {
+        mantissa = roundl(strtold(&coins[y], &int_end) / 10);
+        u64 += (uint64_t)mantissa;
+    }
+    return u64;
+#elif defined(_WIN32)
+     output = (uint64_t)round((long double)coins * (long double)1e8);
+#else
+    output = rnd((long double)coins * (long double)1e8, 8.5);
+#endif
+    return (uint64_t)output;
+}
+
+long long unsigned coins_to_koinu(long double coins) {
+    char* str[256];
+    sprintf((char * restrict)&str, "%.8Lf", coins);
+    long double output, integer_length, mantissa_length;
+#if defined(__ARM_ARCH_7A__)
+    // length minus 1 representative of decimal and 8 representative of koinu
+    integer_length = strlen((char * restrict)str) - 9;
+    mantissa_length = integer_length + (8 - integer_length);
+    if (integer_length <= mantissa_length) {
+        output = coins * powl(10, mantissa_length);
+    } else {
+        output = round_ld(coins * powl(10, mantissa_length));
     }
 #elif defined(_WIN32)
      output = (uint64_t)round((long double)coins * (long double)1e8);
 #else
     output = rnd((long double)coins * (long double)1e8, 8.5);
 #endif
-    debug_print("(uint64_t)rnd((long double)coins * (long double)1e8, 8.5): %"PRIu64"\n", (uint64_t)round((long double)coins * (long double)1e8));
-    fesetround(rounding_mode);
     return output;
 }
 
