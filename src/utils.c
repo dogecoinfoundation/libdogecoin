@@ -575,25 +575,6 @@ long double round_ld(long double x)
     return result;
 }
 
-unsigned average(unsigned a, unsigned b)
-{
-#if defined(_MSC_VER)
-    unsigned sum;
-    auto carry = _addcarry_u32(0, a, b, &sum);
-    return (sum / 2) | (carry << 31);
-#elif defined(__clang__)
-    unsigned carry;
-    auto sum = _builtin_addc(a, b, 0, &carry);
-    return (sum / 2) | (carry << 31);
-#elif defined(__GNUC__)
-    unsigned sum;
-    int carry = __builtin_add_overflow(a, b, &sum);
-    return (sum / 2) | (carry << 31);
-#else
-#error Unsupported compiler.
-#endif
-}
-
 long double get_suffix_at_length(long double in, long double n) {
     DISABLE_WARNING(-Wunused-variable)
     DISABLE_WARNING_PUSH
@@ -608,7 +589,6 @@ long double get_suffix_at_length(long double in, long double n) {
 
 uint64_t coins_to_koinu_str(char* coins) {
     long double output;
-#if defined(__ARM_ARCH_7A__)
     DISABLE_WARNING(-Wunused-but-set-variable)
     DISABLE_WARNING(-Wunused-variable)
     DISABLE_WARNING_PUSH
@@ -629,31 +609,23 @@ uint64_t coins_to_koinu_str(char* coins) {
         u64 += (uint64_t)mantissa;
     }
     return u64;
-#elif defined(_WIN32)
-     output = (uint64_t)round((long double)coins * (long double)1e8);
-#else
-    output = rnd((long double)coins * (long double)1e8, 8.5);
-#endif
-    return (uint64_t)output;
 }
 
 long long unsigned coins_to_koinu(long double coins) {
-    char* str[256];
-    sprintf((char * restrict)&str, "%.8Lf", coins);
     long double output, integer_length, mantissa_length;
 #if defined(__ARM_ARCH_7A__)
+    char* str[256];
+    sprintf(&str, "%.8Lf", coins);
     // length minus 1 representative of decimal and 8 representative of koinu
-    integer_length = strlen((char * restrict)str) - 9;
+    integer_length = strlen(str) - 9;
     mantissa_length = integer_length + (8 - integer_length);
     if (integer_length <= mantissa_length) {
         output = coins * powl(10, mantissa_length);
     } else {
         output = round_ld(coins * powl(10, mantissa_length));
     }
-#elif defined(_WIN32)
-     output = (uint64_t)round((long double)coins * (long double)1e8);
 #else
-    output = rnd((long double)coins * (long double)1e8, 8.5);
+     output = (uint64_t)round((long double)coins * (long double)1e8);
 #endif
     return output;
 }

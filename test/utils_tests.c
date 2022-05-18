@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <fenv.h>
 #include <tgmath.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -96,7 +97,7 @@ void test_utils()
     }
 
     /* stress test conversion between coins and koinu, random decimal values */
-    char* coin_amounts2[] =  {  "183447094.420691168","410357585.329255459",
+    char* coin_amounts_str[] =  {  "183447094.420691168","410357585.329255459",
                                 "567184894.440967455","1560227520.732426502",
                                 "2022535766.086211412","2047466422.707290167",
                                 "2487544599.240327145","4290779746.000111747",
@@ -106,6 +107,17 @@ void test_utils()
                                 "6654278072.590832439","7037268658.778085185",
                                 "7237308828.705953093","8606987445.409636773",
                                 "9100595327.168318456","9674059614.504642487"};
+
+    long double coin_amounts2[] =  {183447094.420691168L, 410357585.329255459L,
+                                    567184894.440967455L, 1560227520.732426502L,
+                                    2022535766.086211412L, 2047466422.707290167L,
+                                    2487544599.240327145L, 4290779746.000111747L,
+                                    4586257992.471687504L, 4660625607.783409803L,
+                                    4766962398.856681418L, 5123141607.642632654L,
+                                    5432527055.762317749L, 5778056333.994872841L,
+                                    6654278072.590832439L, 7037268658.778085185L,
+                                    7237308828.705953093L, 8606987445.409636773L,
+                                    9100595327.168318456L, 9674059614.504642487L};
 
     uint64_t exp_answers2[] = {     18344709442069117, 41035758532925546,
                                     56718489444096746, 156022752073242650,
@@ -120,18 +132,16 @@ void test_utils()
 
     for (int i=0; i<20; i++) {
         debug_print("\n-----------------------------------\nT%d build: %s\n------------------------------------\n", i, get_build());
-        actual_answer = coins_to_koinu_str(coin_amounts2[i]);
+        actual_answer = coins_to_koinu_str(coin_amounts_str[i]);
         tmp = koinu_to_coins(actual_answer);
         diff = exp_answers2[i] - actual_answer;  
         #ifndef __ARM_ARCH_7A__
-            u_assert_double_eq(tmp, exp_answers2[i] / 1e8);
-            u_assert_uint32_eq(actual_answer, exp_answers2[i]);
-            u_assert_int_eq((int)diff, 0);
+            u_assert_double_eq(tmp, coin_amounts2[i]);
         #else
             u_assert_long_double_eq(tmp, exp_answers2[i] / 1e8);
+        #endif
             u_assert_uint32_eq(actual_answer, exp_answers2[i]);
             u_assert_int_eq((int)diff, 0);
-        #endif
         #ifdef WIN32
             DISABLE_WARNING(-Wformat-extra-args)
             DISABLE_WARNING(-Wformat=)
