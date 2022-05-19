@@ -57,11 +57,11 @@ jobs:
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin11
-            os: ubuntu-18.04
-            run-tests: false
+            os: macos-latest
+            run-tests: true
             dep-opts: ""
             config-opts: "LIBS='-levent -levent_core -lm' --enable-static --disable-shared"
-            packages: cmake libcap-dev libz-dev libtinfo5 xorriso
+            packages: cmake zlib xorriso
             goal: install
             sdk: 10.11
           - name: x86_64-win
@@ -108,15 +108,20 @@ jobs:
 
       - name: install packages
         run: |
-          if ([ "${{ matrix.name }}" == "i686-win" ]); then
-            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86B72ED9
-            sudo add-apt-repository 'deb [arch=amd64] https://mirror.mxe.cc/repos/apt focal main'
-            sudo apt -qq update
-            sudo apt install -y --allow-downgrades libpcre2-8-0=10.34-7
+          if ([ "${{ matrix.name }}" == "x86_64-macos" ]); then
+              brew update
+              brew install automake python3 ${{ matrix.packages }}
           else
-            sudo apt-get update          
+            if ([ "${{ matrix.name }}" == "i686-win" ]); then
+              sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86B72ED9
+              sudo add-apt-repository 'deb [arch=amd64] https://mirror.mxe.cc/repos/apt focal main'
+              sudo apt -qq update
+              sudo apt install -y --allow-downgrades libpcre2-8-0=10.34-7
+            else
+              sudo apt-get update          
+            fi
+            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
           fi
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
 
       - name: post install
         if: ${{ matrix.postinstall }}
@@ -196,6 +201,7 @@ jobs:
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               ;;
               "x86_64-macos") 
+              ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
               ;;
               "x86_64-linux-dbg") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
