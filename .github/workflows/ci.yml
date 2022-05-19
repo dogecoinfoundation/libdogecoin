@@ -51,7 +51,7 @@ jobs:
             os: ubuntu-20.04
             run-tests: true
             dep-opts: "DEBUG=1 SPEED=slow V=1"
-            config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig LIBS='-levent -levent_core -levent_pthreads -lm' --enable-shared"
+            config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib -static-libgcc -static-libstdc++' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig LIBS='-levent -levent_core -levent_pthreads -lm' --enable-static"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin11
@@ -204,8 +204,6 @@ jobs:
               "x86_64-linux-dbg") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               python3 tooltests.py
-              python3 -m unittest bindings/py_wrappers/pytest/address_test.py
-              python3 -m unittest bindings/py_wrappers/pytest/transaction_test.py
               ;;
               "i686-linux") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
