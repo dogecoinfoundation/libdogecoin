@@ -24,59 +24,58 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          # - armhf-linux
-          # - aarch64-linux
-          # - x86_64-linux-dbg
-          # - x86_64-macos
-          # - x86_64-win
+          - armhf-linux
+          - aarch64-linux
+          - x86_64-linux-dbg
+          - x86_64-macos
+          - x86_64-win
           - i686-win
-          # - i686-linux
+          - i686-linux
         include:
-          # - name: armhf-linux
-          #   host: arm-linux-gnueabihf
-          #   os: ubuntu-20.04
-          #   packages: g++-arm-linux-gnueabihf qemu-user-static qemu-user
-          #   dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-          #   config-opts: "LIBS='-levent -levent_core -lm' LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++  --enable-static --disable-shared"
-          #   run-tests: false
-          #   goal: install
-          # - name: aarch64-linux
-          #   host: aarch64-linux-gnu
-          #   os: ubuntu-20.04
-          #   packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
-          #   dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-          #   config-opts: "LIBS='-levent -levent_core -levent_pthreads -lm' LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++ --enable-static --disable-shared"
-          #   run-tests: false
-          #   goal: install
-          # - name: x86_64-linux-dbg
-          #   host: x86_64-pc-linux-gnu
-          #   os: ubuntu-20.04
-          #   run-tests: true
-          #   dep-opts: "DEBUG=1 SPEED=slow V=1"
-          #   config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig LIBS='-levent -levent_core -levent_pthreads -lm' --enable-shared"
-          #   goal: install
-          # - name: x86_64-macos
-          #   host: x86_64-apple-darwin11
-          #   os: ubuntu-18.04
-          #   run-tests: false
-          #   dep-opts: ""
-          #   config-opts: "LIBS='-levent -levent_core -lm' --enable-static --disable-shared"
-          #   packages: cmake libcap-dev libz-dev libtinfo5 xorriso
-          #   goal: install
-          #   sdk: 10.11
-          # - name: x86_64-win
-          #   host: x86_64-w64-mingw32
-          #   arch: "i386"
-          #   os: ubuntu-20.04
-          #   packages: python3 nsis g++-mingw-w64-x86-64 wine64 wine-stable bc wine-binfmt
-          #   postinstall: |
-          #     sudo update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
-          #     sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
-          #     sudo update-binfmts --import /usr/share/binfmts/wine
-          #   dep-opts: "CROSS_COMPILE='yes' CFLAGS='-s -static --static -fPIC' LIBTOOL_APP_LDFLAGS='-all-static' LDFLAGS='-static-libgcc -static-libstdc++' SPEED=slow V=1"
-          #   config-opts: "CFLAGS='-s -static --static -fPIC' LIBS='-levent -levent_core -lm'"
-          #   run-tests: false
-          #   goal: install
+          - name: armhf-linux
+            host: arm-linux-gnueabihf
+            os: ubuntu-20.04
+            packages: g++-arm-linux-gnueabihf qemu-user-static qemu-user
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
+            config-opts: "LIBS='-levent -levent_core -lm' LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++  --enable-static --disable-shared"
+            run-tests: true
+            goal: install
+          - name: aarch64-linux
+            host: aarch64-linux-gnu
+            os: ubuntu-20.04
+            packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
+            config-opts: "LIBS='-levent -levent_core -levent_pthreads -lm' LIBTOOL_APP_LDFLAGS='-all-static' --enable-glibc-back-compat LDFLAGS=-static-libstdc++ --enable-static --disable-shared"
+            run-tests: true
+            goal: install
+          - name: x86_64-linux-dbg
+            host: x86_64-pc-linux-gnu
+            os: ubuntu-20.04
+            run-tests: true
+            dep-opts: "DEBUG=1 SPEED=slow V=1"
+            config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig LIBS='-levent -levent_core -levent_pthreads -lm' --enable-shared"
+            goal: install
+          - name: x86_64-macos
+            host: x86_64-apple-darwin11
+            os: ubuntu-18.04
+            run-tests: false
+            dep-opts: ""
+            config-opts: "LIBS='-levent -levent_core -lm' --enable-static --disable-shared"
+            packages: cmake libcap-dev libz-dev libtinfo5 xorriso
+            goal: install
+            sdk: 10.11
+          - name: x86_64-win
+            host: x86_64-w64-mingw32
+            os: ubuntu-20.04
+            packages: python3 nsis g++-mingw-w64-x86-64 wine64 wine-stable bc wine-binfmt
+            postinstall: |
+              sudo update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
+              sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
+              sudo update-binfmts --import /usr/share/binfmts/wine
+            dep-opts: "CROSS_COMPILE='yes' CFLAGS='-s -static --static -fPIC' LIBTOOL_APP_LDFLAGS='-all-static' LDFLAGS='-static-libgcc -static-libstdc++' SPEED=slow V=1"
+            config-opts: "CFLAGS='-s -static --static -fPIC' LIBS='-levent -levent_core -lm'"
+            run-tests: true
+            goal: install
           - name: i686-win
             host: i686-w64-mingw32
             arch: i386
@@ -90,14 +89,14 @@ jobs:
             config-opts: "CFLAGS='-s -static --static -fPIC -m32' CXXFLAGS=-m32 LIBS='-levent -levent_core -lpthread -lm -lwinpthread -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lbcrypt -lcrypt32 -DWIN32'"
             run-tests: true
             goal: install
-          # - name: i686-linux
-          #   host: i686-pc-linux-gnu
-          #   os: ubuntu-18.04
-          #   packages: g++-multilib bc
-          #   run-tests: false
-          #   dep-opts: ""
-          #   config-opts: "LIBS='-levent -levent_core -lm' --enable-glibc-back-compat LDFLAGS=-static-libstdc++ --enable-static --disable-shared"
-          #   goal: install
+          - name: i686-linux
+            host: i686-pc-linux-gnu
+            os: ubuntu-18.04
+            packages: g++-multilib bc
+            run-tests: true
+            dep-opts: ""
+            config-opts: "LIBS='-levent -levent_core -lm' --enable-glibc-back-compat LDFLAGS=-static-libstdc++ --enable-static --disable-shared"
+            goal: install
 
     runs-on: ${{ matrix.os }}
 
@@ -174,9 +173,9 @@ jobs:
           make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
           mkdir -p ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
           if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
-              mv libdogecoin.la such.exe sendtx.exe tests.exe ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
+              cp .libs/* such.exe sendtx.exe tests.exe ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
           else
-              mv libdogecoin.la such sendtx tests ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
+              cp .libs/* such sendtx tests ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
           fi
           chmod +x ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/*
 
