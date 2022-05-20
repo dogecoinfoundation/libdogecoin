@@ -116,8 +116,8 @@ class TestTransactionFunctions(unittest.TestCase):
         rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
         l.w_save_raw_transaction(idx, rawhex)
-        rawhex = l.w_sign_indexed_raw_transaction(idx, 0, l.w_get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
-        self.assertTrue(l.w_get_raw_transaction(idx)==expected_signed_single_input_tx_hex)
+        rawhex = l.w_sign_raw_transaction(0, l.w_get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
         rawhex = l.w_sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
         self.assertTrue(rawhex==expected_signed_raw_tx_hex)
         
