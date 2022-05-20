@@ -13,7 +13,8 @@ if __name__ == "__main__":
                "gen_hdkeypair <which_chain | 0:main, 1:test>",
                "derive_hdpubkey <master_privkey_wif>",
                "verify_keypair <privkey_wif> <p2pkh address> <which_chain | 0:main, 1:test>",
-               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test"]
+               "verify_hdkeypair <privkey_wif_master> <p2pkh address_master> <which_chain | 0:main, 1:test>",
+               "verify_address <p2pkh address>"]
     print("="*85)
     print("Press [q] to quit CLI")
     print("Press [w] to repeat previous command\n")
@@ -39,8 +40,8 @@ if __name__ == "__main__":
                 print(cmd+": enter valid chain code (0:main, 1:test)")
             else:
                 res = libdogecoin.generate_priv_pub_key_pair(int(args[0]))
-                print("private key wif:", res[0])
-                print("public key:", res[1])
+                print("WIF-encoded private key:", res[0].decode('utf-8'))
+                print("P2PKH address:", res[1].decode('utf-8'))
 
         # heirarchical deterministic key pair generation
         elif cmd == "gen_hdkeypair":
@@ -48,8 +49,8 @@ if __name__ == "__main__":
                 print(cmd+": enter valid chain code (0:main, 1:test)")
             else:
                 res = libdogecoin.generate_hd_master_pub_key_pair(int(args[0]))
-                print("master private key:", res[0])
-                print("master public key:", res[1])
+                print("WIF-encoded master private key:", res[0].decode('utf-8'))
+                print("Master P2PKH address:", res[1].decode('utf-8'))
 
         # derive child key from hd master key
         elif cmd == "derive_hdpubkey":
@@ -59,11 +60,11 @@ if __name__ == "__main__":
                 print(cmd+": private key must be WIF-encoded")
             else:
                 res = libdogecoin.generate_derived_hd_pub_key(args[0])
-                print("new derived child public key:", res)
+                print("New derived child P2PKH address:", res.decode('utf-8'))
 
         # verify private and p2pkh address pair
         elif cmd == "verify_keypair":
-            if not args or not args[0].isdigit():
+            if not args or args[0].isdigit():
                 print(cmd+": enter WIF-encoded private key")
             elif len(args) < 2 or args[1].isdigit():
                 print(cmd+": enter p2pkh address")
@@ -74,7 +75,7 @@ if __name__ == "__main__":
                 if res:
                     print("Keypair is valid.")
                 else:
-                    print("Keypair is invalid")
+                    print("Keypair is invalid.")
 
         # verify hd master private and p2pkh address pair
         elif cmd == "verify_hdkeypair":
@@ -89,7 +90,18 @@ if __name__ == "__main__":
                 if res:
                     print("Keypair is valid.")
                 else:
-                    print("Keypair is invalid")
+                    print("Keypair is invalid.")
+
+        # verify dogecoin address
+        elif cmd == "verify_address":
+            if not args:
+                print(cmd+": enter P2PKH address")
+            else:
+                res = libdogecoin.verify_p2pkh_address(args[0])
+                if res:
+                    print("Address is valid.")
+                else:
+                    print("Address is invalid.")
 
         # handle incorrect argument format
         else:
