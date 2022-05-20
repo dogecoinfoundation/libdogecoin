@@ -14,10 +14,19 @@ You can implement these functions in your own projects by following the directio
 The Python Libdogecoin module uses Cython to build wrappers for the functions mentioned above. Cython creates a shared library which can be normally imported like any other Python package, so long as it resides on the PYTHONPATH variable which accessible through Python's `sys` module. You can achieve this either by specifying the export location of the shared library at build time, or by appending the relative location to your PYTHONPATH using `sys.path.append()` within your project. 
 
 ### Building and Testing
-Building the shared library is simple! Firstly, make sure the Libdogecoin C library is built and functional (confirm by running `make check`). Then, run the following command from the root Libdogecoin folder, which exports the library to the pytest folder:
+Building the shared library is simple! Firstly, make sure the Libdogecoin C library is built and functional for your architecture (confirm by running `make check`). Then run the following command from the root Libdogecoin folder, which exports the library to the pytest folder:
 ```
-python3 bindings/py_wrappers/libdogecoin/setup.py build_ext --build-lib bindings/py_wrappers/pytest
+python3 bindings/py_wrappers/libdogecoin/setup.py build_depends --host=<host_architecture> build_ext --build-lib bindings/py_wrappers/pytest
 ```
+The --host flag requires you to provide the name of the host architecture used while building the C library. Valid options are listed below, with default x86_64-pc-linux-gnu selected if no architecture is specified:
+- arm-linux-gnueabihf
+- aarch64-linux-gnu
+- x86_64-pc-linux-gnu (default)
+- x86_64-apple-darwin11
+- x86_64-w64-mingw32
+- i686-w64-mingw32
+- i686-pc-linux-gnu
+
 Congrats, you've just built the Python wrapper package! Test that they are functional by running unit tests for address and transaction functions:
 ```
 python3 bindings/py_wrappers/pytest/address_test.py
@@ -84,8 +93,4 @@ Aborted (core dumped)
 For more information and documentation on how to properly call all the functions of Libdogecoin from Python, see address.md.
 
 ### Modifying Wrappers
-If you are interested in making your own modifications to these wrappers, you can edit the `bindings/py_wrappers/libdogecoin/libdogecoin.pyx` file. Once your changes have been made and you are ready to build again, make sure to delete both the previous shared library file _and_ the Cython-generated `libdogecoin.c` file adjacent to `libdogecoin.pyx` prior to running the build command.
-
-## Golang Wrappers
-
-#TODO
+If you are interested in making your own modifications to these wrappers, you can edit the `bindings/py_wrappers/libdogecoin/libdogecoin.pyx` file. Once your changes have been made, make sure to delete both the previous shared library file _and_ the Cython-generated `libdogecoin.c` file adjacent to `libdogecoin.pyx` prior to running the build command. Or, you can even run the bash script `bindings/py_wrappers/pytest/cython_tests.sh` to do this automatically and test out your implementation across all architectures.
