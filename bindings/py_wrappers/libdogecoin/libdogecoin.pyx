@@ -1,5 +1,4 @@
 cimport cython as cy
-from cython.operator cimport dereference as deref
 
 # FUNCTIONS FROM STATIC LIBRARY
 #========================================================
@@ -23,8 +22,8 @@ cdef extern from "transaction.h":
     char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, cy.ulong out_dogeamount_for_verification, char* public_key)
     char* get_raw_transaction(int txindex) 
     void clear_transaction(int txindex) 
-    char* sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
-    char* sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
+    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
+    int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
 
 
 # PYTHON INTERFACE
@@ -360,4 +359,38 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         privkey = privkey.encode('utf-8')
 
     # call c function
-    return sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey).decode('utf-8')
+    return sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
+
+def w_sign_indexed_raw_transaction(new_tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    """Sign a finalized raw transaction using the specified
+    private key and save it to a new working transaction with
+    the specified index.
+    Keyword arguments:
+    new_tx_index -- the index where the signed transaction will be saved
+    input_index -- the index of the input transaction to sign
+    incoming_raw_tx -- the serialized string of the transaction to sign
+    script_hex -- the hex of the script to be signed
+    sig_hash_type -- the type of signature hash to be used
+    amount -- the amount of dogecoin in the transaction being signed
+    privkey -- the private key to sign with
+    """
+    # verify arguments are valid
+    assert isinstance(new_tx_index, int)
+    assert isinstance(input_index, int)
+    assert isinstance(incoming_raw_tx, (str, bytes))
+    assert isinstance(script_hex, (str, bytes))
+    assert isinstance(sig_hash_type, int)
+    assert isinstance(amount, int) # TEMPORARY
+    assert isinstance(privkey, (str, bytes))
+
+    # prepare arguments
+    if not isinstance(incoming_raw_tx, bytes):
+        incoming_raw_tx = incoming_raw_tx.encode('utf-8')
+    if not isinstance(script_hex, bytes):
+        script_hex = script_hex.encode('utf-8')
+    if not isinstance(privkey, bytes):
+        privkey = privkey.encode('utf-8')
+
+    # call c function
+    # return int result
+    return sign_indexed_raw_transaction(new_tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
