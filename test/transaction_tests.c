@@ -293,7 +293,7 @@ void test_transaction()
 
     // sign current working transaction input index 0 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 2 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    raw_hexadecimal_transaction = sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 2.0, private_key_wif);
+    u_assert_int_eq(sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 2.0, private_key_wif), 1);
 
     // assert that our hexadecimal buffer (raw_hexadecimal_transaction) is equal to the expected transaction
     // with the first input signed:
@@ -303,7 +303,7 @@ void test_transaction()
 
     // sign current working transaction input index 1 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 10 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    raw_hexadecimal_transaction = sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10, private_key_wif);
+    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10, private_key_wif), 1);
     
     // assert that our hexadecimal bufer (raw_hexadecimal_transaction) is equal to the expected finalized
     // transaction with both inputs signed:

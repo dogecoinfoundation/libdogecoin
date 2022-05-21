@@ -431,7 +431,7 @@ void clear_transaction(int txindex) {
  * @param privkey 
  * @return char*  
  */
-char* sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if(!incomingrawtx && !scripthex) return false;
 
     if (strlen(incomingrawtx) > 1024*100) { //don't accept tx larger then 100kb
@@ -530,12 +530,12 @@ char* sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex,
 
         char signed_tx_hex[signed_tx->len*2+1];
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
-        memcpy(incomingrawtx, signed_tx_hex, sizeof(signed_tx_hex));
+        memcpy(incomingrawtx, signed_tx_hex, strlen(signed_tx_hex));
         printf("signed TX: %s\n", incomingrawtx);
         cstr_free((cstring*)signed_tx, true);
         dogecoin_tx_free(txtmp);
     }
-    return incomingrawtx;
+    return true;
 }
 
 /**
@@ -550,10 +550,15 @@ char* sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex,
  * @param privkey 
  * @return int 
  */
-char* sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
     if (!txindex) return false;
-    if (!save_raw_transaction(txindex, sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey))) {
-        printf("error saving transaction!\n");
+    if (!sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey)) {
+        printf("error signing raw transaction\n");
+        return false;
     }
-    return incomingrawtx;
+    if (!save_raw_transaction(txindex, incomingrawtx)) {
+        printf("error saving transaction!\n");
+        return false;
+    }
+    return true;
 }
