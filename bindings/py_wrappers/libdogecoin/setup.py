@@ -30,7 +30,7 @@ libdoge_extension = [Extension(
                         "include/dogecoin",
                         "include/dogecoin/crypto",
                         "secp256k1/include"],
-    libraries =         ["event", "event_core", "event_pthreads", "m"],
+    libraries =         ["event", "event_core", "pthread", "m"],
     library_dirs =      ["depends/" + depends_lib + "/lib"],
     extra_objects=      [".libs/libdogecoin.a", 
                         "src/secp256k1/.libs/libsecp256k1.a", 

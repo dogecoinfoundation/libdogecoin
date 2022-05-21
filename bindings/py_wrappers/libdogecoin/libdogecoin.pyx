@@ -360,15 +360,4 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         privkey = privkey.encode('utf-8')
 
     # call c function
-    cdef void* res
-    cdef char* signed_transaction_hex
-    res = sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
-
-    # return hex result
-    try:
-        if (res==<void*>0):
-            raise TypeError
-        signed_transaction_hex = <char*>res
-        return signed_transaction_hex.decode('utf-8')
-    except:
-        return 0
+    return sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey).decode('utf-8')
