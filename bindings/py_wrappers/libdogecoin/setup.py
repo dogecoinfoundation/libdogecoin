@@ -31,7 +31,7 @@ libdoge_extension = [Extension(
                         "include/dogecoin/crypto",
                         "secp256k1/include"],
     libraries =         ["event", "event_core", "event_pthreads", "m"],
-    library_dirs =      ["depends/"+depends_lib+"/lib"],
+    library_dirs =      ["depends/" + depends_lib + "/lib"],
     extra_objects=      [".libs/libdogecoin.a", 
                         "src/secp256k1/.libs/libsecp256k1.a", 
                         "src/secp256k1/.libs/libsecp256k1_precomputed.a"],
@@ -46,5 +46,5 @@ setup(
     license=            "MIT",
     cmdclass =          {'build_ext': build_ext,
                          'build_depends': BuildDepends},
-    ext_modules=        cythonize(libdoge_extension)
+    ext_modules=        cythonize(libdoge_extension, language_level = "3")
 )
