@@ -24,6 +24,7 @@ cdef extern from "transaction.h":
     void clear_transaction(int txindex) 
     int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
     int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
+    void remove_all()
 
 
 # PYTHON INTERFACE
@@ -330,6 +331,12 @@ def w_clear_transaction(tx_index):
     # call c function
     clear_transaction(tx_index)
 
+def w_remove_all():
+    """Clears all working_transaction structs from hashmap
+    """
+    # call c function
+    remove_all()
+
 
 def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
     """Sign a finalized raw transaction using the specified
@@ -359,7 +366,9 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         privkey = privkey.encode('utf-8')
 
     # call c function
-    return sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
+    cdef bint out
+    out = sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
+    return out
 
 def w_sign_indexed_raw_transaction(new_tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
     """Sign a finalized raw transaction using the specified

@@ -52,7 +52,7 @@ jobs:
             host: x86_64-pc-linux-gnu
             os: ubuntu-20.04
             run-tests: true
-            packages: python3-dev python3-dbg
+            packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
             config-opts: "LIBTOOL_APP_LDFLAGS='-all-static' LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib -static-libgcc -static-libstdc++' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig LIBS='-levent -levent_core -levent_pthreads -lm' --enable-static"
             goal: install

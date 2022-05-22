@@ -1,6 +1,7 @@
 """Testing module for wrappers from transaction.c"""
 
 import inspect
+import time
 import unittest
 import libdogecoin as l
 
@@ -108,6 +109,20 @@ class TestTransactionFunctions(unittest.TestCase):
         rawhex = l.w_get_raw_transaction(idx)
         self.assertFalse(rawhex)
 
+    def test_w_sign_raw_transaction(self):
+        idx = l.w_start_transaction()
+        l.w_add_utxo(idx, hash2doge, vout2doge)
+        l.w_add_utxo(idx, hash10doge, vout10doge)
+        l.w_add_output(idx, external_p2pkh_addr, send_amt)
+        rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        self.assertTrue(rawhex==expected_unsigned_tx_hex)
+        res = l.w_sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(res==1)
+        # self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
+        # res = l.w_sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        # self.assertTrue(res==1)
+        # self.assertTrue(rawhex==expected_signed_raw_tx_hex)
+
     def test_w_sign_indexed_raw_transaction(self):
         idx = l.w_start_transaction()
         l.w_add_utxo(idx, hash2doge, vout2doge)
@@ -115,11 +130,11 @@ class TestTransactionFunctions(unittest.TestCase):
         l.w_add_output(idx, external_p2pkh_addr, send_amt)
         rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(rawhex==expected_unsigned_tx_hex)
-        l.w_save_raw_transaction(idx, rawhex)
-        rawhex = l.w_sign_raw_transaction(0, l.w_get_raw_transaction(idx), utxo_scriptpubkey, 1, 2, privkey_wif)
-        self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
-        rawhex = l.w_sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
-        self.assertTrue(rawhex==expected_signed_raw_tx_hex)
+        res = l.w_sign_indexed_raw_transaction(idx, 0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+        self.assertTrue(res==1)
+        # self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
+        # rawhex = l.w_sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        # self.assertTrue(rawhex==expected_signed_raw_tx_hex)
         
 if __name__ == "__main__":
     test_src = inspect.getsource(TestTransactionFunctions)
@@ -127,3 +142,4 @@ if __name__ == "__main__":
         test_src.index(f"def {x}") - test_src.index(f"def {y}")
     )
     unittest.main()
+    l.w_remove_all()
