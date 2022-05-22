@@ -111,7 +111,7 @@ jobs:
         run: |
           if ([ "${{ matrix.name }}" == "x86_64-macos" ]); then
               brew update
-              brew install automake python3 valgrind ${{ matrix.packages }}
+              brew install automake python3 ${{ matrix.packages }}
           else
             if ([ "${{ matrix.name }}" == "i686-win" ]); then
               sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86B72ED9
