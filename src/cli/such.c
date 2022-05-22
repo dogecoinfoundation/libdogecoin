@@ -147,8 +147,9 @@ void signing_menu(int txindex, int is_testnet) {
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(txindex);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
-                    printf("transaction input successfully signed!\n");
+                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                        printf("signing indexed raw transaction failed!\n");
+                    } else printf("transaction input successfully signed!\n");
                     break;
                 case 2:
                     input_amount = atol(getl("input amount")); // 2 & 10
@@ -162,8 +163,9 @@ void signing_menu(int txindex, int is_testnet) {
                     debug_print("script_pubkey: %s\n", script_pubkey);
                     debug_print("input_to_sign: %d\n", input_to_sign);
                     debug_print("private_key: %s\n", private_key_wif);
-                    sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif);
-                    printf("transaction input successfully signed!\n");
+                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                        printf("signing indexed raw transaction failed!\n");
+                    } else printf("transaction input successfully signed!\n");
                     break;
                 case 3:
                     printf("raw_tx: %s\n", get_raw_transaction(txindex));
@@ -300,8 +302,8 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                         printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
                                         // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                                         if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
-                                            printf("error saving transaction!\n");
-                                            }
+                                            printf("signing indexed raw transaction failed!\n");
+                                        } else printf("transaction input successfully signed!\n");
                                         dogecoin_free(script_pubkey);
                                         break;
                                 }
