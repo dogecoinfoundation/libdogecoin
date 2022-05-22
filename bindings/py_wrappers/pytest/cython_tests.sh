@@ -21,6 +21,6 @@ python3 bindings/py_wrappers/pytest/address_test.py
 # --suppressions=`pwd`/bindings/py_wrappers/pytest/valgrind-python3.supp \
 # --log-file=`pwd`/bindings/py_wrappers/pytest/minimal.valgrind.log \
 # python33-dbg -Wd -X tracemalloc=5 bindings/py_wrappers/pytest/transaction_test.py -v
-python3 bindings/py_wrappers/pytest/transaction_test.py
+python3 bindings/py_wrappers/pytest/transaction_test.py -v
 deactivate
 rm -rf .venv
