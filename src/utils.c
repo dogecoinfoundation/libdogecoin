@@ -589,19 +589,14 @@ long double get_suffix_at_length(long double in, long double n) {
 
 uint64_t coins_to_koinu_str(char* coins) {
     long double output;
-    DISABLE_WARNING(-Wunused-but-set-variable)
-    DISABLE_WARNING(-Wunused-variable)
-    DISABLE_WARNING_PUSH
-    long double integer, integer_length, mantissa;
+    long double integer_length, mantissa;
     // length minus 1 representative of decimal and 8 representative of koinu
     integer_length = strlen(coins) - 9;
     char* int_end, int_str[256], mant_end, mant_str[256];
-    DISABLE_WARNING_POP
     uint64_t x = 0, count = 0;
     for (; x < integer_length; x++) {
         int_str[x] = coins[x];
     }
-    integer = strtold(int_str, &int_end);
     unsigned long long int u64 = strtoull(int_str, &int_end, 10);
     u64 *= 1e8;
     for (uint64_t y = x; y <= strlen(coins) - 9; y++) {
