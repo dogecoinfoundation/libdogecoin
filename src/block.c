@@ -38,9 +38,9 @@
 #include <dogecoin/utils.h>
 
 /**
- * It allocates a new dogecoin_block_header and returns it
+ * @brief This function allocates a new dogecoin block header.
  * 
- * @return A pointer to a new dogecoin_block_header object.
+ * @return A pointer to the new dogecoin block header object.
  */
 dogecoin_block_header* dogecoin_block_header_new() {
     dogecoin_block_header* header;
@@ -49,9 +49,12 @@ dogecoin_block_header* dogecoin_block_header_new() {
 }
 
 /**
- * It takes a pointer to a dogecoin_block_header and sets all the fields to zero
+ * @brief This function sets the memory for the specified block
+ * header to zero and then frees the memory.
  * 
- * @param header the pointer to the block header to be freed.
+ * @param header The pointer to the block header to be freed.
+ * 
+ * @return Nothing.
  */
 void dogecoin_block_header_free(dogecoin_block_header* header) {
     if (!header) return;
@@ -65,12 +68,13 @@ void dogecoin_block_header_free(dogecoin_block_header* header) {
 }
 
 /**
- * It deserializes a block header from a buffer
+ * @brief This function takes a raw buffer and deserializes
+ * it into a dogecoin block header object.
  * 
- * @param header the header object to be filled in
+ * @param header The header object to be constructed.
  * @param buf The buffer to deserialize from.
  * 
- * @return int
+ * @return 1 if deserialization was successful, 0 otherwise.
  */
 int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf) {
     if (!deser_s32(&header->version, buf))
@@ -89,10 +93,13 @@ int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct cons
 }
 
 /**
- * It serializes a dogecoin block header
+ * @brief This function serializes a dogecoin block header into
+ * a cstring object.
  * 
- * @param s The string to write to.
- * @param header the block header to serialize
+ * @param s The cstring to write the serialized header.
+ * @param header The block header to be serialized.
+ * 
+ * @return Nothing.
  */
 void dogecoin_block_header_serialize(cstring* s, const dogecoin_block_header* header) {
     ser_s32(s, header->version);
@@ -104,10 +111,13 @@ void dogecoin_block_header_serialize(cstring* s, const dogecoin_block_header* he
 }
 
 /**
- * Copy the contents of a dogecoin_block_header struct to another.
+ * @brief This function copies the contents of one header object 
+ * into another.
  * 
- * @param dest The destination block header.
- * @param src The source block header.
+ * @param dest The pointer to the header object copy.
+ * @param src The pointer to the source block header object.
+ * 
+ * @return Nothing.
  */
 void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_block_header* src) {
     dest->version = src->version;
@@ -119,12 +129,13 @@ void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_bloc
 }
 
 /**
- * The function takes a block header and returns a hash of the block header
+ * @brief This function takes a block header and generates its
+ * SHA256 hash.
  * 
- * @param header The block header to hash.
- * @param hash The hash of the block header.
+ * @param header The pointer to the block header to hash.
+ * @param hash The SHA256 hash of the block header.
  * 
- * @return A boolean value.
+ * @return True.
  */
 dogecoin_bool dogecoin_block_header_hash(dogecoin_block_header* header, uint256 hash) {
     cstring* s = cstr_new_sz(80);
