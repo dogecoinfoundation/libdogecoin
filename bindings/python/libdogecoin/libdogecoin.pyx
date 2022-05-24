@@ -1,4 +1,5 @@
 cimport cython as cy
+from libc.string cimport strncpy, memset
 
 # FUNCTIONS FROM STATIC LIBRARY
 #========================================================
@@ -365,41 +366,14 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     if not isinstance(privkey, bytes):
         privkey = privkey.encode('utf-8')
 
-    # call c function
-    cdef bint out
-    out = sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
-    return out
-
-def w_sign_indexed_raw_transaction(new_tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
-    """Sign a finalized raw transaction using the specified
-    private key and save it to a new working transaction with
-    the specified index.
-    Keyword arguments:
-    new_tx_index -- the index where the signed transaction will be saved
-    input_index -- the index of the input transaction to sign
-    incoming_raw_tx -- the serialized string of the transaction to sign
-    script_hex -- the hex of the script to be signed
-    sig_hash_type -- the type of signature hash to be used
-    amount -- the amount of dogecoin in the transaction being signed
-    privkey -- the private key to sign with
-    """
-    # verify arguments are valid
-    assert isinstance(new_tx_index, int)
-    assert isinstance(input_index, int)
-    assert isinstance(incoming_raw_tx, (str, bytes))
-    assert isinstance(script_hex, (str, bytes))
-    assert isinstance(sig_hash_type, int)
-    assert isinstance(amount, int) # TEMPORARY
-    assert isinstance(privkey, (str, bytes))
-
-    # prepare arguments
-    if not isinstance(incoming_raw_tx, bytes):
-        incoming_raw_tx = incoming_raw_tx.encode('utf-8')
-    if not isinstance(script_hex, bytes):
-        script_hex = script_hex.encode('utf-8')
-    if not isinstance(privkey, bytes):
-        privkey = privkey.encode('utf-8')
-
-    # call c function
-    # return int result
-    return sign_indexed_raw_transaction(new_tx_index, input_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey)
+    # allocate enough mem to cover extension of transaction hex
+    cdef char c_incoming_raw_tx[1024*100] # max size for a valid signable transaction
+    memset(c_incoming_raw_tx, 0, (1024*100))
+    strncpy(c_incoming_raw_tx, incoming_raw_tx, len(incoming_raw_tx))
+    
+    # call c function and return result
+    if sign_raw_transaction(tx_index, c_incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+        res = c_incoming_raw_tx.decode('utf-8')
+        return res
+    else:
+        return 0
