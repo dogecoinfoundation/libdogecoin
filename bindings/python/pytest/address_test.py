@@ -6,7 +6,6 @@ import libdogecoin as l
 
 
 class TestAddressFunctions(unittest.TestCase):
-    """Test class for function generate_priv_pub_key_pair()"""
 
     def setUpClass():
         l.context_start()
