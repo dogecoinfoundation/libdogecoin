@@ -2,7 +2,7 @@ package libdogecoin
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/../../.. -I${SRCDIR}/../../../include -I${SRCDIR}/../../../include/dogecoin -I${SRCDIR}/../../../include/dogecoin/crypto -I${SRCDIR}/../../../include/dogecoin/net -I${SRCDIR}/../../../src/secp256k1/include -I${SRCDIR}/../../../src/secp256k1/src
-#cgo LDFLAGS: -L${SRCDIR}/../../../.libs -ldogecoin -lm -Wl,-rpath=./.libs
+#cgo LDFLAGS: -L${SRCDIR}/../../../.libs -L${SRCDIR}/../../../src/secp256k1/.libs -ldogecoin -lsecp256k1 -lsecp256k1_precomputed -lm -Wl,-rpath=./.libs
 #include "address.h"
 #include "transaction.h"
 #include "ecc.h"
@@ -143,13 +143,15 @@ func w_clear_transaction(tx_index int) {
 
 func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount int, privkey string) (result string) {
 	c_input_index := C.int(input_index)
-	c_incoming_raw_tx := C.CString(incoming_raw_tx)
+	c_incoming_raw_tx := [1024 * 100]C.char{}
+	for i := 0; i < len(incoming_raw_tx) && i < 1024; i++ {
+		c_incoming_raw_tx[i] = C.char(incoming_raw_tx[i])
+	}
 	c_script_hex := C.CString(script_hex)
 	c_sig_hash_type := C.int(sig_hash_type)
 	c_amount := C.int(amount)
 	c_privkey := C.CString(privkey)
-	result = C.GoString(C.sign_raw_transaction(c_input_index, c_incoming_raw_tx, c_script_hex, c_sig_hash_type, c_amount, c_privkey))
-	C.free(unsafe.Pointer(c_incoming_raw_tx))
+	result = C.GoString(C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey))
 	C.free(unsafe.Pointer(c_script_hex))
 	C.free(unsafe.Pointer(c_privkey))
 	return
