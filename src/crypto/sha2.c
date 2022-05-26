@@ -621,7 +621,7 @@ void sha256_finalize(sha256_context* context, sha2_byte digest[]) {
             int j;
             for (j = 0; j < 8; j++) {
                 REVERSE32(context->state[j], context->state[j]);
-                *d++ = context->state[j];
+                memcpy_safe(d++, &context->state[j], sizeof(context->state[j]));
             }
         }
 #else
@@ -904,7 +904,7 @@ void sha512_finalize(sha512_context* context, sha2_byte digest[]) {
             int j;
             for (j = 0; j < 8; j++) {
                 REVERSE64(context->state[j], context->state[j]);
-                *d++ = context->state[j];
+                memcpy_safe(d++, &context->state[j], sizeof(context->state[j]));
             }
         }
 #else
