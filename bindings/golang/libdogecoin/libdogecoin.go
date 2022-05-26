@@ -151,7 +151,11 @@ func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	c_sig_hash_type := C.int(sig_hash_type)
 	c_amount := C.int(amount)
 	c_privkey := C.CString(privkey)
-	result = C.GoString(C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey))
+	if C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
+		result = C.GoString(&c_incoming_raw_tx[0])
+	} else {
+		result = ""
+	}
 	C.free(unsafe.Pointer(c_script_hex))
 	C.free(unsafe.Pointer(c_privkey))
 	return
