@@ -576,25 +576,12 @@ long double round_ld(long double x)
     return result;
 }
 
-long double get_suffix_at_length(long double in, long double n) {
-    DISABLE_WARNING(-Wunused-variable)
-    DISABLE_WARNING_PUSH
-    long double base = n >= 8 ? powl(10, n - 8) : powl(10, 8 - n);
-    DISABLE_WARNING_POP
-    long double out, powered;
-    powered = (in * powl(10, n));
-    debug_print("powered %.8Lf\n", powered);
-    out = ((uint64_t)(in * powl(10, n)) % 10);
-    return out;
-}
-
 uint64_t coins_to_koinu_str(char* coins) {
-    long double output;
     long double integer_length, mantissa;
     // length minus 1 representative of decimal and 8 representative of koinu
     integer_length = strlen(coins) - 9;
-    char* int_end, int_str[256], mant_end, mant_str[256];
-    uint64_t x = 0, count = 0;
+    char* int_end, int_str[256];
+    uint64_t x = 0;
     for (; x < integer_length; x++) {
         int_str[x] = coins[x];
     }
@@ -608,8 +595,9 @@ uint64_t coins_to_koinu_str(char* coins) {
 }
 
 long long unsigned coins_to_koinu(long double coins) {
-    long double output, integer_length, mantissa_length;
+    long double output;
 #if defined(__ARM_ARCH_7A__)
+    long double integer_length, mantissa_length;
     char* str[256];
     sprintf(&str, "%.8Lf", coins);
     // length minus 1 representative of decimal and 8 representative of koinu
