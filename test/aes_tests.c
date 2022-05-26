@@ -13,6 +13,7 @@
 
 #include <test/utest.h>
 
+#include <dogecoin/crypto/ctaes/ctaes.h>
 #include <dogecoin/crypto/aes.h>
 #include <dogecoin/utils.h>
 
@@ -545,7 +546,7 @@ static const struct nist_aes_test_vector nist_aes_test_vectors_decrypt[] =
 void test_aes()
 {
     /* TODO: add more NIST test vectors (non CBC / 128) */
-    uint8_t key_bin[128], iv_bin[128], plaintext_bin[65], ciphertext_bin[64];
+    uint8_t key_bin[128], iv_bin[128], plaintext_bin[65], ciphertext_bin[64], plaintext_bin_check[64];
 
     unsigned int i;
     for (i = 0; i < (sizeof(nist_aes_test_vectors_encrypt) / sizeof(nist_aes_test_vectors_encrypt[0])); i++) {
@@ -563,9 +564,9 @@ void test_aes()
         int outlen_cipthertext;
         utils_hex_to_bin(tv.out, ciphertext_bin, strlen(tv.out), &outlen_cipthertext);
 
-        aes_context ctx[1];
-        aes_set_key(key_bin, outlen_key, ctx);
-        aes_cbc_encrypt(plaintext_bin, ciphertext_bin, 1, iv_bin, ctx);
+        aes256_cbc_encrypt(key_bin, iv_bin, plaintext_bin, outlen_plaintext, 1, ciphertext_bin);
+        aes256_cbc_decrypt(key_bin, iv_bin, ciphertext_bin, outlen_plaintext, 1, plaintext_bin_check);
+        u_assert_mem_eq(plaintext_bin_check, plaintext_bin, outlen_plaintext);
 
         char hexout[128];
         utils_bin_to_hex(ciphertext_bin, outlen_cipthertext, hexout);
@@ -588,9 +589,9 @@ void test_aes()
         int outlen_cipthertext;
         utils_hex_to_bin(tv.out, ciphertext_bin, strlen(tv.out), &outlen_cipthertext);
 
-        aes_context ctx[1];
-        aes_set_key(key_bin, outlen_key, ctx);
-        aes_cbc_decrypt(plaintext_bin, ciphertext_bin, 1, iv_bin, ctx);
+        aes256_cbc_decrypt(key_bin, iv_bin, plaintext_bin, outlen_plaintext, 1, ciphertext_bin);
+        aes256_cbc_encrypt(key_bin, iv_bin, ciphertext_bin, outlen_plaintext, 1, plaintext_bin_check);
+        u_assert_mem_eq(plaintext_bin_check, plaintext_bin, outlen_plaintext);
 
         char hexout[128];
         utils_bin_to_hex(ciphertext_bin, outlen_cipthertext, hexout);
