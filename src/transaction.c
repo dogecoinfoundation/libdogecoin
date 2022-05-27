@@ -283,7 +283,7 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
  * @param amount 
  * @return int 
  */
-int add_output(int txindex, char* destinationaddress, uint64_t amount) {
+int add_output(int txindex, char* destinationaddress, long double amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
     // guard against null pointer exceptions
@@ -336,7 +336,7 @@ static int make_change(int txindex, char* public_key, float subtractedfee, uint6
  * @param sender_p2pkh 
  * @return char* 
  */
-char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification, char* sender_p2pkh) {
+char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* sender_p2pkh) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -350,7 +350,7 @@ char* finalize_transaction(int txindex, char* destinationaddress, double subtrac
     out_dogeamount_for_verification = coins_to_koinu(out_dogeamount_for_verification);
 
     // calculate total minus desired fees
-    uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee; // - subtractedfee;
+    uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee;
 
     int i, p2pkh_count = 0;
     uint64_t tx_out_total = 0;
@@ -431,7 +431,7 @@ void clear_transaction(int txindex) {
  * @param privkey 
  * @return char*  
  */
-int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey) {
     if(!incomingrawtx || !scripthex) return false;
 
     if (strlen(incomingrawtx) > 1024*100) { //don't accept tx larger then 100kb
@@ -538,7 +538,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 }
 
 /**
- * @brief same as above but retrieves raw transaction by index and then signs the transaction.
+ * @brief same as sign_raw_transaction but retrieves raw transaction from memory by index and then signs the transaction.
  * 
  * @param txindex 
  * @param inputindex 
@@ -549,7 +549,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
  * @param privkey 
  * @return int 
  */
-int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey) {
+int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey) {
     if (!txindex) return false;
     if (!sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey)) {
         printf("error signing raw transaction\n");

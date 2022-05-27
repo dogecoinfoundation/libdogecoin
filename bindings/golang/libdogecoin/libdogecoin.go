@@ -109,20 +109,20 @@ func w_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
 	return
 }
 
-func w_add_output(tx_index int, destination_address string, amount int) (result int) {
+func w_add_output(tx_index int, destination_address string, amount float64) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
-	c_amount := C.ulong(uint64(amount))
+	c_amount := C.double(uint64(amount))
 	result = int(C.add_output(c_tx_index, c_destination_address, c_amount))
 	C.free(unsafe.Pointer(c_destination_address))
 	return
 }
 
-func w_finalize_transaction(tx_index int, destination_address string, subtracted_fee float64, out_doge_amount_for_verification int, public_key string) (result string) {
+func w_finalize_transaction(tx_index int, destination_address string, subtracted_fee float64, out_doge_amount_for_verification float64, public_key string) (result string) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
 	c_subtracted_fee := C.double(subtracted_fee)
-	c_out_doge_amount_for_verification := C.ulong(uint64(out_doge_amount_for_verification))
+	c_out_doge_amount_for_verification := C.double(uint64(out_doge_amount_for_verification))
 	c_public_key := C.CString(public_key)
 	result = C.GoString(C.finalize_transaction(c_tx_index, c_destination_address, c_subtracted_fee, c_out_doge_amount_for_verification, c_public_key))
 	C.free(unsafe.Pointer(c_destination_address))
@@ -141,7 +141,7 @@ func w_clear_transaction(tx_index int) {
 	C.clear_transaction(c_tx_index)
 }
 
-func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount int, privkey string) (result string) {
+func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount float64, privkey string) (result string) {
 	c_input_index := C.int(input_index)
 	c_incoming_raw_tx := [1024 * 100]C.char{}
 	for i := 0; i < len(incoming_raw_tx) && i < 1024; i++ {
@@ -149,7 +149,7 @@ func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	}
 	c_script_hex := C.CString(script_hex)
 	c_sig_hash_type := C.int(sig_hash_type)
-	c_amount := C.int(amount)
+	c_amount := C.double(amount)
 	c_privkey := C.CString(privkey)
 	if C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
 		result = C.GoString(&c_incoming_raw_tx[0])

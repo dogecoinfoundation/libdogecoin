@@ -18,12 +18,12 @@ cdef extern from "transaction.h":
     int start_transaction()
     int save_raw_transaction(int txindex, const char* hexadecimal_transaction)
     int add_utxo(int txindex, char* hex_utxo_txid, int vout)
-    int add_output(int txindex, char* destinationaddress,  cy.ulong amount)
-    char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, cy.ulong out_dogeamount_for_verification, char* public_key)
+    int add_output(int txindex, char* destinationaddress,  double amount)
+    char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, double out_dogeamount_for_verification, char* public_key)
     char* get_raw_transaction(int txindex) 
     void clear_transaction(int txindex) 
-    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
-    int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)
+    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, double amount, char* privkey)
+    int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, double amount, char* privkey)
     void remove_all()
 
 

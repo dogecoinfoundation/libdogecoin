@@ -29,8 +29,8 @@ var vout2doge int = 1                                                           
 var vout10doge int = 1
 
 // new transaction parameters
-var send_amt int = 5
-var total_utxo_input int = 12
+var send_amt float64 = 5
+var total_utxo_input float64 = 12
 var fee float64 = 0.00226
 
 func TestTransaction(t *testing.T) {

@@ -73,11 +73,11 @@ LIBDOGECOIN_API int save_raw_transaction(int txindex, const char* hexadecimal_tr
 
 LIBDOGECOIN_API int add_utxo(int txindex, char* hex_utxo_txid, int vout); // #returns 1 if success.
 
-LIBDOGECOIN_API int add_output(int txindex, char* destinationaddress, uint64_t amount);
+LIBDOGECOIN_API int add_output(int txindex, char* destinationaddress, long double amount);
 
 // 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
 // out_dogeamount == just an echoback of the total amount specified in the addutxos for verification
-LIBDOGECOIN_API char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification, char* public_key);
+LIBDOGECOIN_API char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* public_key);
 
 LIBDOGECOIN_API char* get_raw_transaction(int txindex); // #returns 0 if not closed, returns rawtx again if closed/created.
 
@@ -86,8 +86,8 @@ LIBDOGECOIN_API void clear_transaction(int txindex); // #clears a tx in memory. 
 // sign a given inputted transaction with a given private key, and return a hex signed transaction.
 // we may want to add such things to 'advanced' section:
 // locktime, possibilities for multiple outputs, data, sequence.
-LIBDOGECOIN_API int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey);
-LIBDOGECOIN_API int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey);
+LIBDOGECOIN_API int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey);
+LIBDOGECOIN_API int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey);
 
 LIBDOGECOIN_END_DECL
 
