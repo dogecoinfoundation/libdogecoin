@@ -30,8 +30,10 @@ vout2doge =  1 # vout is the spendable output index from the existing transactio
 vout10doge = 1
 
 # new transaction parameters
-send_amt = 5
-total_utxo_input = 12
+input1_amt = 2.0
+input2_amt = 10.0
+send_amt = 5.0
+total_utxo_input = 12.0
 fee = .00226
 
 # invalid parameters
@@ -224,9 +226,9 @@ class TestTransactionFunctions(unittest.TestCase):
         idx = l.w_start_transaction()
         l.w_save_raw_transaction(idx, expected_unsigned_double_utxo_tx_hex)
         l.w_add_output(idx, external_p2pkh_addr, high_send_amt) # spending more than received
-        finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, 15, p2pkh_addr)
-        half_signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
-        full_signed_rawhex = l.w_sign_raw_transaction(1, half_signed_rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+        half_signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey, 1, input1_amt, privkey_wif)
+        full_signed_rawhex = l.w_sign_raw_transaction(1, half_signed_rawhex, utxo_scriptpubkey, 1, input2_amt, privkey_wif)
         print("\nTransaction looks valid but will get rejected:", full_signed_rawhex)
 
     def test_full_transaction_build(self):
@@ -239,9 +241,9 @@ class TestTransactionFunctions(unittest.TestCase):
         l.w_add_output(idx, external_p2pkh_addr, send_amt)
         finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(finalized_rawhex==expected_unsigned_tx_hex)
-        half_signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+        half_signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey, 1, input1_amt, privkey_wif)
         self.assertTrue(half_signed_rawhex==expected_signed_single_input_tx_hex)
-        full_signed_rawhex = l.w_sign_raw_transaction(1, half_signed_rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+        full_signed_rawhex = l.w_sign_raw_transaction(1, half_signed_rawhex, utxo_scriptpubkey, 1, input2_amt, privkey_wif)
         self.assertTrue(full_signed_rawhex==expected_signed_raw_tx_hex)
         l.w_clear_transaction(idx)
 

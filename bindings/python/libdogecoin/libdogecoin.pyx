@@ -244,11 +244,13 @@ def w_add_output(tx_index, destination_address, amount):
     # verify arguments are valid
     assert isinstance(tx_index, int)
     assert isinstance(destination_address, (str, bytes))
-    assert isinstance(amount, int) # TEMPORARY PATCH TO AGREE WITH C CODE, SHOULD BE FLOAT
+    assert isinstance(amount, (int, float))
 
     # prepare arguments
     if not isinstance(destination_address, bytes):
         destination_address = destination_address.encode('utf-8')
+    if not isinstance(amount, float):
+        amount = float(amount)
 
     # call c function
     res = add_output(tx_index, destination_address, amount)
@@ -272,7 +274,7 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
     assert isinstance(tx_index, int)
     assert isinstance(destination_address, (str, bytes))
     assert isinstance(subtracted_fee, float)
-    assert isinstance(out_dogeamount_for_verification, int) # ALSO TEMPORARY INT, CHANGE TO FLOAT LATER
+    assert isinstance(out_dogeamount_for_verification, (int, float))
     assert isinstance(sender_p2pkh, (str, bytes))
 
     # prepare arguments
@@ -280,6 +282,8 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
         destination_address = destination_address.encode('utf-8')
     if not isinstance(sender_p2pkh, bytes):
         sender_p2pkh = sender_p2pkh.encode('utf-8')
+    if not isinstance(out_dogeamount_for_verification, float):
+        out_dogeamount_for_verification = float(out_dogeamount_for_verification)
 
     # call c function
     cdef void* res
@@ -355,7 +359,7 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     assert isinstance(incoming_raw_tx, (str, bytes))
     assert isinstance(script_hex, (str, bytes))
     assert isinstance(sig_hash_type, int)
-    assert isinstance(amount, int) # TEMPORARY
+    assert isinstance(amount, (int, float))
     assert isinstance(privkey, (str, bytes))
 
     # prepare arguments
@@ -365,6 +369,8 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         script_hex = script_hex.encode('utf-8')
     if not isinstance(privkey, bytes):
         privkey = privkey.encode('utf-8')
+    if not isinstance(amount, float):
+        amount = float(amount)
 
     # allocate enough mem to cover extension of transaction hex
     cdef char c_incoming_raw_tx[1024*100] # max size for a valid signable transaction
