@@ -115,3 +115,4 @@ test-suite.log
 libdogecoin.egg-info/
 **/libdogecoin.c
 dist/
+!bindings/golang/libdogecoin/go.mod
