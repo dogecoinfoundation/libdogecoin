@@ -24,7 +24,7 @@ class BuildDepends(Command):
 libdoge_extension = [Extension(
     name=               "libdogecoin",
     language=           "c",
-    sources=            ["bindings/py_wrappers/libdogecoin/libdogecoin.pyx"],
+    sources=            ["bindings/python/libdogecoin/libdogecoin.pyx"],
     include_dirs=       [".",
                         "include",
                         "include/dogecoin",
@@ -35,6 +35,7 @@ libdoge_extension = [Extension(
     extra_objects=      [".libs/libdogecoin.a", 
                         "src/secp256k1/.libs/libsecp256k1.a", 
                         "src/secp256k1/.libs/libsecp256k1_precomputed.a"],
+    extra_compile_args= ["--static", "-fPIC"]
 )]
 
 setup(
