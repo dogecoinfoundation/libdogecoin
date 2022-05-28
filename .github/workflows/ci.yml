@@ -206,6 +206,7 @@ jobs:
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               python3 tooltests.py
               ./bindings/python/pytest/cython_tests.sh
+              ./bindings/golang/libdogecoin/build.sh
               ;;
               "i686-linux") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
