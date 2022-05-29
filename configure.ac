@@ -20,7 +20,30 @@ AC_PATH_TOOL(STRIP, strip)
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
 
+LIBTOOL_APP_LDFLAGS="-all-static"
+LIBS="$LIBS -levent -levent_core -lm"
+
 CFLAGS="$CFLAGS -W"
+case $host in
+  *mingw*)
+    CFLAGS="$CFLAGS -s -static --static -fPIC"
+     TARGET_OS=windows
+      case $host in
+       i?86-*) 
+        LIBS="$LIBS -lpthread -lwinpthread -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lbcrypt -lcrypt32 -DWIN32"
+       ;;
+       x86_64-*) 
+       ;;
+       *) AC_MSG_ERROR("Could not determine win32/win64 for installer") ;;
+      esac
+     ;;
+  *darwin*)
+     TARGET_OS=darwin
+     ;;
+  *linux*)
+     TARGET_OS=linux
+     ;;
+esac
 
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"
 saved_CFLAGS="$CFLAGS"
@@ -50,18 +73,6 @@ AC_ARG_ENABLE([net],
   [disable net functions])],
   [with_net=$enableval],
   [with_net=yes])
-
-case $host in
-  *mingw*)
-     TARGET_OS=windows
-     ;;
-  *darwin*)
-     TARGET_OS=darwin
-     ;;
-  *linux*)
-     TARGET_OS=linux
-     ;;
-esac
 
 if test "x$with_tools" = xyes; then
 AC_DEFINE_UNQUOTED([WITH_TOOLS],[1],[Define to 1 to enable wallet compilation])
