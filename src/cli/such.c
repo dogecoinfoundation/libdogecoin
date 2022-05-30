@@ -822,7 +822,7 @@ int main(int argc, char* argv[])
             for (i = from; i <= to; i++) {
                 char keypathnew[strlen(derived_path)+16];
                 memcpy_safe(keypathnew, derived_path, posanum-1);
-                char index[9] = {0};
+                char index[11] = {0};
                 sprintf(index, "%lld", (long long)i);
                 memcpy_safe(keypathnew+posanum-1, index, strlen(index));
                 memcpy_safe(keypathnew+posanum-1+strlen(index), &derived_path[end], strlen(derived_path)-end);
