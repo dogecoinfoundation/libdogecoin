@@ -6,6 +6,18 @@ package libdogecoin
 #include "address.h"
 #include "transaction.h"
 #include "ecc.h"
+
+int intermed_add_output(int txindex, char* destinationaddress, double amount) {
+	return add_output(txindex, destinationaddress, (long double) amount);
+}
+
+char* intermed_finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, double out_dogeamount_for_verification, char* sender_p2pkh) {
+	return finalize_transaction(txindex, destinationaddress, (long double)subtractedfee, (long double)out_dogeamount_for_verification, sender_p2pkh);
+}
+
+int intermed_sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, double amount, char* privkey) {
+	return sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, (long double)amount, privkey);
+}
 */
 import "C"
 import "unsafe"
@@ -112,8 +124,8 @@ func w_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
 func w_add_output(tx_index int, destination_address string, amount float64) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
-	c_amount := C.double(uint64(amount))
-	result = int(C.add_output(c_tx_index, c_destination_address, c_amount))
+	c_amount := C.double(amount)
+	result = int(C.intermed_add_output(c_tx_index, c_destination_address, c_amount))
 	C.free(unsafe.Pointer(c_destination_address))
 	return
 }
@@ -124,7 +136,7 @@ func w_finalize_transaction(tx_index int, destination_address string, subtracted
 	c_subtracted_fee := C.double(subtracted_fee)
 	c_out_doge_amount_for_verification := C.double(uint64(out_doge_amount_for_verification))
 	c_public_key := C.CString(public_key)
-	result = C.GoString(C.finalize_transaction(c_tx_index, c_destination_address, c_subtracted_fee, c_out_doge_amount_for_verification, c_public_key))
+	result = C.GoString(C.intermed_finalize_transaction(c_tx_index, c_destination_address, c_subtracted_fee, c_out_doge_amount_for_verification, c_public_key))
 	C.free(unsafe.Pointer(c_destination_address))
 	C.free(unsafe.Pointer(c_public_key))
 	return
@@ -151,7 +163,7 @@ func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	c_sig_hash_type := C.int(sig_hash_type)
 	c_amount := C.double(amount)
 	c_privkey := C.CString(privkey)
-	if C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
+	if C.intermed_sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
 		result = C.GoString(&c_incoming_raw_tx[0])
 	} else {
 		result = ""
