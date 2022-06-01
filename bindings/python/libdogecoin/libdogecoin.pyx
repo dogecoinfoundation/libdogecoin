@@ -259,7 +259,7 @@ def w_add_output(tx_index, destination_address, amount):
     return res
 
 
-def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh):
+def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress):
     """Given the index of a working transaction, prepares it
     for signing by specifying the recipient and fee to subtract,
     directing extra change back to the sender.
@@ -268,27 +268,27 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
     destination address -- the address to send coins to
     subtracted_fee -- the amount of dogecoin to assign as a fee
     out_dogeamount_for_verification -- the total amount of dogecoin being sent (fee included)
-    sender_p2pkh -- the address of the sender to receive their change
+    changeaddress -- the address of the sender to receive their change
     """
     # verify arguments are valid
     assert isinstance(tx_index, int)
     assert isinstance(destination_address, (str, bytes))
     assert isinstance(subtracted_fee, float)
     assert isinstance(out_dogeamount_for_verification, (int, float))
-    assert isinstance(sender_p2pkh, (str, bytes))
+    assert isinstance(changeaddress, (str, bytes))
 
     # prepare arguments
     if not isinstance(destination_address, bytes):
         destination_address = destination_address.encode('utf-8')
-    if not isinstance(sender_p2pkh, bytes):
-        sender_p2pkh = sender_p2pkh.encode('utf-8')
+    if not isinstance(changeaddress, bytes):
+        changeaddress = changeaddress.encode('utf-8')
     if not isinstance(out_dogeamount_for_verification, float):
         out_dogeamount_for_verification = float(out_dogeamount_for_verification)
 
     # call c function
     cdef void* res
     cdef char* finalized_transaction_hex
-    res = finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, sender_p2pkh)
+    res = finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress)
 
     # return hex result
     try:

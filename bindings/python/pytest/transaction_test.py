@@ -301,7 +301,7 @@ class TestTransactionFunctions(unittest.TestCase):
         l.w_add_output(idx, external_p2pkh_addr, decimal_send_amt)
         finalized_rawhex = l.w_get_raw_transaction(idx)
         self.assertTrue(finalized_rawhex==expected_unsigned_single_utxo_single_output_tx_hex2)
-        # finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, decimal_total_utxo_input, p2pkh_addr) # temp solution
+        finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, decimal_total_utxo_input, p2pkh_addr)
         self.assertTrue(finalized_rawhex==expected_unsigned_tx_hex2)
         signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey2, 1, decimal_total_utxo_input, privkey_wif2)
         self.assertTrue(signed_rawhex==expected_signed_raw_tx_hex2)

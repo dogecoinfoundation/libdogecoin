@@ -55,7 +55,7 @@ void add_transaction(working_transaction *working_tx) {
     if (tx == NULL) {
         HASH_ADD_INT(transactions, idx, working_tx);
     } else {
-        HASH_REPLACE_INT(transactions, idx, tx, working_tx);
+        HASH_REPLACE_INT(transactions, idx, working_tx, tx);
     }
     dogecoin_free(tx);
 }
@@ -308,7 +308,8 @@ int add_output(int txindex, char* destinationaddress, long double amount) {
  * @param amount 
  * @return int 
  */
-static int make_change(int txindex, char* public_key, float subtractedfee, uint64_t amount) {
+static int make_change(int txindex, char* public_key, uint64_t subtractedfee, uint64_t amount) {
+    if (amount==subtractedfee) return false; // utxos already fully spent, no change needed
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -319,7 +320,7 @@ static int make_change(int txindex, char* public_key, float subtractedfee, uint6
     const dogecoin_chainparams* chain = (public_key[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
     // calculate total minus fees
-    uint64_t total_change_back = (uint64_t)amount - (uint64_t)subtractedfee;
+    uint64_t total_change_back = amount - subtractedfee;
 
     return dogecoin_tx_add_address_out(tx->transaction, chain, total_change_back, public_key);
 }
@@ -333,10 +334,10 @@ static int make_change(int txindex, char* public_key, float subtractedfee, uint6
  * @param destinationaddress 
  * @param subtractedfee 
  * @param out_dogeamount_for_verification 
- * @param sender_p2pkh 
+ * @param changeaddress 
  * @return char* 
  */
-char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* sender_p2pkh) {
+char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* changeaddress) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -350,29 +351,30 @@ char* finalize_transaction(int txindex, char* destinationaddress, long double su
     out_dogeamount_for_verification = coins_to_koinu(out_dogeamount_for_verification);
 
     // calculate total minus desired fees
-    uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee;
+    uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee, tx_out_total = 0;
 
-    int i, p2pkh_count = 0;
-    uint64_t tx_out_total = 0;
+    int i, p2pkh_count = 0, length = (int)tx->transaction->vout->len;
 
     // iterate through transaction output values while adding each one to tx_out_total:
-    for (i = 0; i < (int)tx->transaction->vout->len; i++) {
+    for (i = 0; i < length; i++) {
         dogecoin_tx_out* tx_out_tmp = vector_idx(tx->transaction->vout, i);
         tx_out_total += tx_out_tmp->value;
         size_t len = 17;
         char* p2pkh[len];
         dogecoin_mem_zero(p2pkh, sizeof(p2pkh));
         p2pkh_count = dogecoin_script_hash_to_p2pkh(tx_out_tmp, (char *)p2pkh, is_testnet);
-        if (i == (int)tx->transaction->vout->len - 1 && sender_p2pkh) {
+        if (i == length - 1 && changeaddress) {
             // manually make change and send back to our public key address
-            p2pkh_count += make_change(txindex, sender_p2pkh, subtractedfee, out_dogeamount_for_verification - tx_out_total);
-            tx_out_tmp = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
-            tx_out_total += tx_out_tmp->value;
+            if (make_change(txindex, changeaddress, subtractedfee, out_dogeamount_for_verification - tx_out_total)) {
+                p2pkh_count += 1;
+                tx_out_tmp = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
+                tx_out_total += tx_out_tmp->value;
+            }
             break;
         }
     }
 
-    if (p2pkh_count != 2) {
+    if (p2pkh_count < 1) {
         printf("p2pkh address not found from any output script hash!\n");
         return false;
     }
