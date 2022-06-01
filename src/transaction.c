@@ -563,3 +563,43 @@ int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawt
     }
     return true;
 }
+
+/**
+ * @brief sign transaction stored in memory by providing working transaction index, array of amounts
+ * in sequential order along with private and script pubkey.
+ * 
+ * @param txindex 
+ * @param amounts 
+ * @param script_pubkey 
+ * @param privkey 
+ * @return int 
+ */
+int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey) {
+    char* raw_hexadecimal_transaction = get_raw_transaction(txindex);
+    // deserialize transaction
+    dogecoin_tx* txtmp = dogecoin_tx_new();
+    uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_transaction) / 2);
+    int outlength = 0;
+    // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
+    utils_hex_to_bin(raw_hexadecimal_transaction, data_bin, strlen(raw_hexadecimal_transaction), &outlength);
+    if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, false)) {
+        // free byte array
+        dogecoin_free(data_bin);
+        // free dogecoin_tx
+        dogecoin_tx_free(txtmp);
+        printf("invalid tx hex\n");
+        return false;
+    }
+    // free byte array
+    dogecoin_free(data_bin);
+    size_t i = 0, len = txtmp->vin->len;
+    for (; i < len; i++) {
+        if (!sign_raw_transaction(i, raw_hexadecimal_transaction, script_pubkey, 1, amounts[i], privkey)) {
+            printf("error signing raw transaction\n");
+            return false;
+        }
+    }
+    save_raw_transaction(txindex, raw_hexadecimal_transaction);
+    dogecoin_tx_free(txtmp);
+    return true;
+}

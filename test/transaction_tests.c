@@ -267,8 +267,31 @@ void test_transaction()
     // add 1st input worth 2 dogecoin:
     u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_2_dogecoin, utxo_previous_output_index_from_tx_worth_2_dogecoin), 1);
 
+    // add 2nd input worth 10 dogecoin:
+    u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_10_dogecoin, utxo_previous_output_index_from_tx_worth_10_dogecoin), 1);
+
+    // add output to transaction which is amount and address we are sending to:
+    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, 5), 1);
+    
+    // confirm total output value equals total utxo input value minus transaction fee
+    // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
+    char* raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, .00226, 12.0, internal_p2pkh_address);
+
+    long double input_amounts[] = {2.0, 10.0};
+    u_assert_int_eq(sign_transaction(working_transaction_index, input_amounts, utxo_scriptpubkey, private_key_wif), 1);
+    u_assert_str_eq(raw_hexadecimal_transaction, our_expected_signed_raw_hexadecimal_transaction);
+
+    // ----------------------------------------------------------------
+
+    // instantiate a new working_transaction object by calling start_transaction()
+    // which passes back index and stores in index variable
+    working_transaction_index = start_transaction();
+
+    // add 1st input worth 2 dogecoin:
+    u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_2_dogecoin, utxo_previous_output_index_from_tx_worth_2_dogecoin), 1);
+
     // get raw hexadecimal transaction to sign in the next steps
-    char* raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
+    raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
 
     u_assert_str_eq(our_unsigned_single_utxo_hexadecimal_transaction, raw_hexadecimal_transaction);
 
@@ -304,10 +327,11 @@ void test_transaction()
     // sign current working transaction input index 1 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 10 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
     u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10, private_key_wif), 1);
-    
     // assert that our hexadecimal bufer (raw_hexadecimal_transaction) is equal to the expected finalized
     // transaction with both inputs signed:
     u_assert_str_eq(raw_hexadecimal_transaction, our_expected_signed_raw_hexadecimal_transaction);
+
+    // ----------------------------------------------------------------
 
     char* res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
     u_assert_str_eq(res, utxo_scriptpubkey);
