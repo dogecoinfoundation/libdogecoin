@@ -603,3 +603,38 @@ int sign_transaction(int txindex, long double amounts[], char* script_pubkey, ch
     dogecoin_tx_free(txtmp);
     return true;
 }
+
+/**
+ * @brief Store a raw transaction that's already formed, and give it a txindex in memory. (txindex) is returned as int.
+ * 
+ * @param incomingrawtx 
+ * @return int 
+ */
+int store_raw_transaction(char* incomingrawtx) {
+    if (strlen(incomingrawtx) > 1024*100) { //don't accept tx larger then 100kb
+        printf("tx too large (max 100kb)\n");
+        return false;
+    }
+
+    // deserialize transaction
+    dogecoin_tx* txtmp = dogecoin_tx_new();
+    int txindex = start_transaction();
+    working_transaction* tx_raw = find_transaction(txindex);
+    uint8_t* data_bin = dogecoin_malloc(strlen(incomingrawtx));
+    int outlength = 0;
+    // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
+    utils_hex_to_bin(incomingrawtx, data_bin, strlen(incomingrawtx), &outlength);
+    if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL, true)) {
+        // free byte array
+        dogecoin_free(data_bin);
+        // free dogecoin_tx
+        dogecoin_tx_free(txtmp);
+        printf("invalid tx hex");
+        return false;
+    }
+    // free byte array
+    dogecoin_free(data_bin);
+    dogecoin_tx_copy(tx_raw->transaction, txtmp);
+    dogecoin_tx_free(txtmp);
+    return txindex;
+}
