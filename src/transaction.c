@@ -262,10 +262,10 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
         return false;
     }
     // free byte array
-    dogecoin_free(data_bin);
     working_transaction* tx_raw = find_transaction(txindex);
     dogecoin_tx_copy(tx_raw->transaction, txtmp);
     dogecoin_tx_free(txtmp);
+    dogecoin_free(data_bin);
     return true;
 }
 

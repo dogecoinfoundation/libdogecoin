@@ -243,9 +243,9 @@ void sub_menu(int txindex, int is_testnet) {
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void transaction_input_menu(int txindex, int is_testnet) {
 #pragma GCC diagnostic pop
-    int running = 1;
+    int running_transaction_input_menu = 1;
     working_transaction* tx = find_transaction(txindex);
-    while (running) {
+    while (running_transaction_input_menu) {
         int length = tx->transaction->vin->len;
         int selected = -1;
         char* hex_utxo_txid;
@@ -330,7 +330,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                             break;
                         case 2:
                             i = length;
-                            running = 0;
+                            running_transaction_input_menu = 0;
                             break;
                     }
                 }
@@ -339,28 +339,27 @@ void transaction_input_menu(int txindex, int is_testnet) {
     }
 
 void transaction_output_menu(int txindex, int is_testnet) {
-    int running = 1;
-    char* destinationaddress;
-    long double coin_amount;
-    uint64_t koinu_amount;
-    uint64_t tx_out_total = 0;
-    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
-    working_transaction* tx = find_transaction(txindex);
-    while (running) {
+    int running_transaction_output_menu = 1;
+    while (running_transaction_output_menu) {
+        char* destinationaddress;
+        long double coin_amount;
+        uint64_t koinu_amount;
+        uint64_t tx_out_total = 0;
+        const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+        working_transaction* tx = find_transaction(txindex);
         int length = tx->transaction->vout->len;
         int selected = -1;
         for (int i = 0; i <= length; i++) {
             dogecoin_tx_out* tx_out = vector_idx(tx->transaction->vout, i);
             tx_out_total += tx_out->value;
-
             printf("\n--------------------------------\n");
             printf("output index:       %d\n", i);
             printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
             coin_amount = koinu_to_coins(tx_out->value);
             #ifdef _WIN32
-            printf("amount:             %Lf\n", (double)coin_amount);
+                printf("amount:             %Lf\n", (double)coin_amount);
             #else
-            printf("amount:             %Lf\n", coin_amount);
+                printf("amount:             %Lf\n", coin_amount);
             #endif
             // selected should only equal anything other than -1 upon setting
             // loop index in conditional targetting last iteration:
@@ -421,7 +420,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                             break;
                         case 2:
                             i = length;
-                            running = 0;
+                            running_transaction_output_menu = 0;
                             break;
                     }
                 }
@@ -430,8 +429,8 @@ void transaction_output_menu(int txindex, int is_testnet) {
     }
 
 void edit_menu(int txindex, int is_testnet) {
-    int running = 1;
-    while (running) {
+    int running_edit_menu = 1;
+    while (running_edit_menu) {
         printf("\n");
         printf("1. edit input\n");
         printf("2. edit output\n");
@@ -444,7 +443,7 @@ void edit_menu(int txindex, int is_testnet) {
                     transaction_output_menu(txindex, is_testnet);
                     break;
                 case 3:
-                    running = 0;
+                    running_edit_menu = 0;
                     break;
             }
         }
@@ -473,7 +472,7 @@ void main_menu() {
     wow();
 
     // load existing testnet transaction into memory for demonstration purposes.
-    save_raw_transaction(start_transaction(), "0100000000010000000000000000466a44524144494f444f474554583142594d4943484926424c55455a524d414445574c4942444f4745434f494e545840332e354d485a264243415354564941535441524c494e4b00000000");
+    save_raw_transaction(start_transaction(), "0100000002746007aed61e8531faba1af6610f10a5422c70a2a7eb6ffb51cb7a7b7b5e45b40100000000ffffffffe216461c60c629333ac6b40d29b5b0b6d0ce241aea5903cf4329fc65dc3b11420100000000ffffffff020065cd1d000000001976a9144da2f8202789567d402f7f717c01d98837e4325488ac30b4b529000000001976a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac00000000");
     while (running) {
         printf("\nsuch transaction: \n\n");
         printf(" 1. add transaction\n");
