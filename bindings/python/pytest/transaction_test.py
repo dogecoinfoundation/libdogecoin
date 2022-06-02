@@ -67,6 +67,8 @@ class TestTransactionFunctions(unittest.TestCase):
         suite = unittest.TestSuite()
         suite.addTest(TestTransactionFunctions("test_start_transaction"))
         suite.addTest(TestTransactionFunctions("test_start_transaction_value"))
+        suite.addTest(TestTransactionFunctions("test_store_raw_transaction"))
+        suite.addTest(TestTransactionFunctions("test_store_raw_transaction_value"))
         suite.addTest(TestTransactionFunctions("test_save_raw_transaction"))
         suite.addTest(TestTransactionFunctions("test_save_raw_transaction_value"))
         suite.addTest(TestTransactionFunctions("test_save_long_raw_transaction"))
@@ -110,10 +112,25 @@ class TestTransactionFunctions(unittest.TestCase):
         self.assertTrue(rawhex==expected_empty_tx_hex)
         l.w_clear_transaction(idx)
 
+    def test_store_raw_transaction(self):
+        """Test that store transaction successfully saves
+        a transaction hex string to the next available
+        working transaction in memory."""
+        idx = l.w_start_transaction()
+        idx2 = l.w_store_raw_transaction(expected_unsigned_single_utxo_tx_hex)
+        self.assertTrue(idx2==idx+1)
+
+    def test_store_raw_transaction_value(self):
+        """Test that store transaction successfully saves
+        a transaction hex string to the next available
+        working transaction in memory."""
+        idx = l.w_store_raw_transaction(expected_unsigned_single_utxo_tx_hex)
+        self.assertTrue(l.w_get_raw_transaction(idx)==expected_unsigned_single_utxo_tx_hex)
+
     def test_save_raw_transaction(self):
         """Test that function successfully saves a
-        transaction hex string to working transaction
-        object."""
+        transaction hex string to the specified
+        working transaction object."""
         idx = l.w_start_transaction()
         res = l.w_save_raw_transaction(idx, expected_unsigned_single_utxo_tx_hex)
         self.assertTrue(res)
