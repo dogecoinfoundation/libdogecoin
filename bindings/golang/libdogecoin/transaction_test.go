@@ -75,12 +75,26 @@ func TestTransaction(t *testing.T) {
 		w_clear_transaction(res2)
 	})
 
+	t.Run("store_raw_transaction", func(t *testing.T) {
+		idx := w_start_transaction()
+		idx2 := w_store_raw_transaction(expected_unsigned_single_utxo_tx_hex)
+		if idx2 != idx+1 {
+			t.Errorf("Transactions are not consecutive.")
+		}
+		if w_get_raw_transaction(idx2) != expected_unsigned_single_utxo_tx_hex {
+			t.Errorf("Transaction hex not stored properly.")
+		}
+		w_clear_transaction(idx)
+		w_clear_transaction(idx2)
+	})
+
 	t.Run("save_raw_transaction", func(t *testing.T) {
 		idx := w_start_transaction()
 		res := w_save_raw_transaction(idx, expected_unsigned_single_utxo_tx_hex)
 		if res != 1 {
 			t.Errorf("Error while saving current transaction.")
 		}
+		w_clear_transaction(idx)
 	})
 
 	t.Run("save_raw_transaction_value", func(t *testing.T) {
@@ -132,10 +146,10 @@ func TestTransaction(t *testing.T) {
 	t.Run("get_raw_transaction_bad_index", func(t *testing.T) {
 		idx := w_start_transaction()
 		res := w_get_raw_transaction(idx + 1) // out of bounds
-		w_clear_transaction(idx)
 		if res != "" {
 			t.Errorf("Bad index should return empty string.")
 		}
+		w_clear_transaction(idx)
 	})
 
 	t.Run("single_utxo", func(t *testing.T) {
@@ -168,6 +182,7 @@ func TestTransaction(t *testing.T) {
 		if res != 0 {
 			t.Errorf("Bad index should return failure.")
 		}
+		w_clear_transaction(idx)
 	})
 
 	t.Run("add_output", func(t *testing.T) {
@@ -277,6 +292,7 @@ func TestTransaction(t *testing.T) {
 		if w_get_raw_transaction(idx) != expected_signed_raw_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after signing inputs.")
 		}
+		w_clear_transaction(idx)
 	})
 
 	t.Run("full_decimal_amt_transaction_build", func(t *testing.T) {
@@ -298,5 +314,6 @@ func TestTransaction(t *testing.T) {
 		if w_get_raw_transaction(idx) != expected_signed_raw_tx_hex2 {
 			t.Errorf("Returned hex does not match expected hex after signing inputs.")
 		}
+		w_clear_transaction(idx)
 	})
 }

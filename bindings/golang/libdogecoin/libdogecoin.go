@@ -196,3 +196,9 @@ func w_sign_transaction(tx_index int, amounts []float64, script_pubkey string, p
 	C.free(unsafe.Pointer(c_privkey))
 	return
 }
+
+func w_store_raw_transaction(incoming_raw_tx string) (result int) {
+	c_incoming_raw_tx := C.CString(incoming_raw_tx)
+	result = int(C.store_raw_transaction(c_incoming_raw_tx))
+	return
+}
