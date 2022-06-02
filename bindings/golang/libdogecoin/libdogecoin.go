@@ -18,6 +18,14 @@ char* intermed_finalize_transaction(int txindex, char* destinationaddress, doubl
 int intermed_sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, double amount, char* privkey) {
 	return sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, (long double)amount, privkey);
 }
+
+int intermed_sign_transaction(int txindex, double amounts[], int arr_len, char* script_pubkey, char* privkey) {
+	long double ld_amounts[arr_len];
+	for (int i=0; i<arr_len; i++) {
+		ld_amounts[i] = (long double)amounts[i];
+	}
+	return sign_transaction(txindex, ld_amounts, script_pubkey, privkey);
+}
 */
 import "C"
 import "unsafe"
@@ -134,7 +142,7 @@ func w_finalize_transaction(tx_index int, destination_address string, subtracted
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
 	c_subtracted_fee := C.double(subtracted_fee)
-	c_out_doge_amount_for_verification := C.double(uint64(out_doge_amount_for_verification))
+	c_out_doge_amount_for_verification := C.double(out_doge_amount_for_verification)
 	c_public_key := C.CString(public_key)
 	result = C.GoString(C.intermed_finalize_transaction(c_tx_index, c_destination_address, c_subtracted_fee, c_out_doge_amount_for_verification, c_public_key))
 	C.free(unsafe.Pointer(c_destination_address))
@@ -151,6 +159,7 @@ func w_get_raw_transaction(tx_index int) (result string) {
 func w_clear_transaction(tx_index int) {
 	c_tx_index := C.int(tx_index)
 	C.clear_transaction(c_tx_index)
+	return
 }
 
 func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount float64, privkey string) (result string) {
@@ -170,5 +179,26 @@ func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	}
 	C.free(unsafe.Pointer(c_script_hex))
 	C.free(unsafe.Pointer(c_privkey))
+	return
+}
+
+func w_sign_transaction(tx_index int, amounts []float64, script_pubkey string, privkey string) (result int) {
+	c_tx_index := C.int(tx_index)
+	c_amounts := [32]C.double{}
+	c_arr_len := C.int(len(amounts))
+	for i := 0; i < len(amounts); i++ {
+		c_amounts[i] = C.double(amounts[i])
+	}
+	c_script_pubkey := C.CString(script_pubkey)
+	c_privkey := C.CString(privkey)
+	result = int(C.intermed_sign_transaction(c_tx_index, &c_amounts[0], c_arr_len, c_script_pubkey, c_privkey))
+	C.free(unsafe.Pointer(c_script_pubkey))
+	C.free(unsafe.Pointer(c_privkey))
+	return
+}
+
+func w_store_raw_transaction(incoming_raw_tx string) (result int) {
+	c_incoming_raw_tx := C.CString(incoming_raw_tx)
+	result = int(C.store_raw_transaction(c_incoming_raw_tx))
 	return
 }

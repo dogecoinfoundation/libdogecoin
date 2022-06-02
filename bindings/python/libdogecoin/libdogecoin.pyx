@@ -23,9 +23,10 @@ cdef extern from "transaction.h":
     char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, long double out_dogeamount_for_verification, char* public_key)
     char* get_raw_transaction(int txindex) 
     void clear_transaction(int txindex) 
-    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)
-    int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)
     void remove_all()
+    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)
+    int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey)
+    int store_raw_transaction(char* incomingrawtx)
 
 
 # PYTHON INTERFACE
@@ -342,7 +343,6 @@ def w_remove_all():
     # call c function
     remove_all()
 
-
 def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
     """Sign a finalized raw transaction using the specified
     private key.
@@ -383,3 +383,49 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         return res
     else:
         return 0
+
+def w_sign_transaction(tx_index, amounts, script_pubkey, privkey):
+    """Sign all the inputs of a working transaction using the
+    specified private key and public key script.
+    Keyword arguments:
+    tx_index -- the index of the working transaction to sign
+    amounts -- an array of the input amounts in the specified transaction
+    script_pubkey -- the pubkey script associated with the private key
+    privkey -- the private key used to sign the specified transaction"""
+    # verify arguments are valid
+    assert isinstance(tx_index, int)
+    if not isinstance(amounts, list):
+        amounts = [amounts]
+    for amt in amounts:
+        assert isinstance(amt, (int, float))
+    assert isinstance(script_pubkey, (str, bytes))
+    assert isinstance(privkey, (str, bytes))
+
+    # prepare arguments
+    cdef long double *C_amount_list = []
+    for i in range(len(amounts)):
+        C_amount_list[i]=amounts[i]
+    if not isinstance(script_pubkey, bytes):
+        script_pubkey = script_pubkey.encode('utf-8')
+    if not isinstance(privkey, bytes):
+        privkey = privkey.encode('utf-8')
+    
+    # call c function
+    res = sign_transaction(tx_index, C_amount_list, script_pubkey, privkey)
+
+    # return result
+    return res    
+
+def w_store_raw_transaction(incoming_raw_tx):
+    # verify arguments are valid
+    assert isinstance(incoming_raw_tx, (str, bytes))
+
+    # prepare arguments
+    if not isinstance(incoming_raw_tx, bytes):
+        incoming_raw_tx = incoming_raw_tx.encode('utf-8')
+    
+    # call c function
+    res = store_raw_transaction(incoming_raw_tx)
+
+    # return result
+    return res
