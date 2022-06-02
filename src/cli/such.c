@@ -255,7 +255,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
         float input_amount;
         int input_to_sign;
         char* private_key_wif;
-        for (int i = 0; i <= length; i++) {
+        for (int i = 0; i < length; i++) {
             printf("\n--------------------------------\n");
             printf("input index:      %d\n", i);
             dogecoin_tx_in* tx_in = vector_idx(tx->transaction->vin, i);
@@ -349,7 +349,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
         working_transaction* tx = find_transaction(txindex);
         int length = tx->transaction->vout->len;
         int selected = -1;
-        for (int i = 0; i <= length; i++) {
+        for (int i = 0; i < length; i++) {
             dogecoin_tx_out* tx_out = vector_idx(tx->transaction->vout, i);
             tx_out_total += tx_out->value;
             printf("\n--------------------------------\n");
@@ -536,13 +536,15 @@ void main_menu() {
                     print_transactions();
                     break;
                 case 8:
-                    txindex = save_raw_transaction(start_transaction(), get_raw_tx("raw transaction"));
-                    if (!txindex) {
+                    txindex = start_transaction();
+                    int res = save_raw_transaction(txindex, get_raw_tx("raw transaction"));
+                    if (!res) {
                         printf("error saving transaction!\n");
+                        clear_transaction(txindex);
                         }
                     else {
                         printf("successfully saved raw transaction to memory for the session!\n");
-                        printf("working transaction id is: %d\n", txindex + 1);
+                        printf("working transaction id is: %d\n", txindex);
                         }
                     break;
 #ifdef WITH_NET
