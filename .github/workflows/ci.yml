@@ -180,9 +180,9 @@ jobs:
           make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
           mkdir -p ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
           if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
-              cp .libs/* such.exe sendtx.exe tests.exe ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
+              cp .libs/* such.exe sendtx.exe ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
           else
-              cp .libs/* such sendtx tests ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
+              cp .libs/* such sendtx ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
           fi
           chmod +x ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/*
 
@@ -191,10 +191,10 @@ jobs:
         run: |
             case "${{ matrix.name }}" in
               "armhf-linux") 
-              qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
+              qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./tests
               ;;
               "aarch64-linux") 
-              qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
+              qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./tests
               ;;
               "x86_64-win")
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
@@ -203,7 +203,7 @@ jobs:
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               ;;
               "x86_64-macos") 
-              ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/tests
+              ./tests
               ;;
               "x86_64-linux-dbg") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
