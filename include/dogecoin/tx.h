@@ -32,7 +32,7 @@
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
-#include <dogecoin/crypto/hash.h>
+#include <dogecoin/hash.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/script.h>
@@ -40,8 +40,8 @@
 
 #ifdef WITH_NET
 #include <event2/event.h>
-#include <dogecoin/net/net.h>
-#include <dogecoin/net/protocol.h>
+#include <dogecoin/net.h>
+#include <dogecoin/protocol.h>
 #endif
 
 LIBDOGECOIN_BEGIN_DECL

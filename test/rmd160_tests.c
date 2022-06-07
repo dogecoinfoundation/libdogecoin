@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <dogecoin/crypto/rmd160.h>
+#include <dogecoin/rmd160.h>
 #include <dogecoin/utils.h>
 
 #define TESTS 8

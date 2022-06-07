@@ -70,7 +70,7 @@ Advice on how to navigate this library:
 `/src/<feature>/*.c,*.h` look here for local .c/.h source implementing the contracts in `/include`</br>
 `/build/<arch>/*.a,*.so,*.dll` output targets, see `Makefile`, excluded in .gitignore</br>
 `/contrib/<proj>` a place for misc non-core experiments, utils, demo-nodes etc</br>
-`/bindings/<lang>/` individual language bindings</br>
+`/wrappers/<lang>/` individual language bindings</br>
 `/test/` test suite</br>
 `/doc/*.md` general library documentation</br>
 `/doc/spec/*.md` A place to begin documenting the Dogecoin Standard as we go</br>

@@ -28,7 +28,9 @@
 
 #include <assert.h>
 #include <getopt.h>
-#include <src/libdogecoin-config.h>
+#ifdef HAVE_CONFIG_H
+#  include "libdogecoin-config.h"
+#endif
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -39,12 +41,12 @@
 
 #ifdef WITH_NET
 #include <event2/event.h>
-#include <dogecoin/net/net.h>
-#include <dogecoin/net/protocol.h>
+#include <dogecoin/net.h>
+#include <dogecoin/protocol.h>
 #endif
 
 #include <dogecoin/chainparams.h>
-#include <dogecoin/crypto/ecc.h>
+#include <dogecoin/ecc.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/tx.h>

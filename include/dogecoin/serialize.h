@@ -33,7 +33,7 @@
 #include <stdio.h>
 
 #include <dogecoin/buffer.h>
-#include <dogecoin/compat/portable_endian.h>
+#include <dogecoin/portable_endian.h>
 #include <dogecoin/cstr.h>
 
 LIBDOGECOIN_BEGIN_DECL

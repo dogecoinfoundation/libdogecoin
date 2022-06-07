@@ -24,7 +24,7 @@
 
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
-#include <src/libdogecoin-config.h>
+#  include "libdogecoin-config.h"
 #endif
 #include <stdarg.h>
 #include <stdbool.h>
@@ -37,10 +37,10 @@
 #endif
 
 #include <dogecoin/bip32.h>
-#include <dogecoin/crypto/base58.h>
-#include <dogecoin/crypto/ecc.h>
-#include <dogecoin/crypto/key.h>
-#include <dogecoin/crypto/random.h>
+#include <dogecoin/base58.h>
+#include <dogecoin/ecc.h>
+#include <dogecoin/key.h>
+#include <dogecoin/random.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>

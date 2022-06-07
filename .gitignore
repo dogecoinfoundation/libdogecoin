@@ -115,4 +115,18 @@ test-suite.log
 libdogecoin.egg-info/
 **/libdogecoin.c
 dist/
-!bindings/golang/libdogecoin/go.mod
+!wrappers/golang/libdogecoin/go.mod
+
+# CMake files
+build/*
+**/cmake-build-debug
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/Makefile
+**/*.cbp
+**/CMakeScripts
+**/compile_commands.json
+Testing/

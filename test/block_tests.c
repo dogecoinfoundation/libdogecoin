@@ -14,7 +14,7 @@
 #include <dogecoin/block.h>
 
 #include <dogecoin/cstr.h>
-#include <dogecoin/crypto/key.h>
+#include <dogecoin/key.h>
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
 

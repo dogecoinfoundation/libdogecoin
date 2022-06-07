@@ -31,12 +31,12 @@
 #include <string.h>
 
 #include <dogecoin/bip32.h>
-#include <dogecoin/crypto/base58.h>
-#include <dogecoin/crypto/ecc.h>
-#include <dogecoin/crypto/hash.h>
-#include <dogecoin/crypto/key.h>
-#include <dogecoin/crypto/rmd160.h>
-#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/base58.h>
+#include <dogecoin/ecc.h>
+#include <dogecoin/hash.h>
+#include <dogecoin/key.h>
+#include <dogecoin/rmd160.h>
+#include <dogecoin/sha2.h>
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
 

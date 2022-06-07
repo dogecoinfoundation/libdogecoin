@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <test/utest.h>
+#include "utest.h"
 
 #include <dogecoin/bip32.h>
-#include <dogecoin/crypto/key.h>
+#include <dogecoin/key.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/script.h>
 #include <dogecoin/tool.h>

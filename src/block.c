@@ -32,9 +32,9 @@
 #include <string.h>
 
 #include <dogecoin/block.h>
-#include <dogecoin/net/protocol.h>
+#include <dogecoin/protocol.h>
 #include <dogecoin/serialize.h>
-#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/sha2.h>
 #include <dogecoin/utils.h>
 
 /**

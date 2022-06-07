@@ -36,7 +36,7 @@ LIBDOGECOIN_BEGIN_DECL
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/cstr.h>
-#include <dogecoin/crypto/hash.h>
+#include <dogecoin/hash.h>
 #include <dogecoin/tx.h>
 
 typedef struct dogecoin_block_header_ {

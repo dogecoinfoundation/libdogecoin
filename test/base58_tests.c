@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <dogecoin/crypto/base58.h>
+#include <dogecoin/base58.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
 

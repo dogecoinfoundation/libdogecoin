@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/sha2.h>
 #include <dogecoin/utils.h>
 
 struct sha256_test_v_short {

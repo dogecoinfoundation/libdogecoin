@@ -14,31 +14,31 @@ lib_LTLIBRARIES = libdogecoin.la
 libdogecoinincludedir = $(includedir)/dogecoin
 libdogecoininclude_HEADERS = \
     include/dogecoin/address.h \
-    include/dogecoin/crypto/aes.h \
-    include/dogecoin/crypto/base58.h \
+    include/dogecoin/aes.h \
+    include/dogecoin/base58.h \
     include/dogecoin/bip32.h \
     include/dogecoin/block.h \
     include/dogecoin/buffer.h \
-    include/dogecoin/compat/byteswap.h \
+    include/dogecoin/byteswap.h \
     include/dogecoin/chainparams.h \
     include/dogecoin/cstr.h \
-    include/dogecoin/crypto/ctaes/ctaes.h \
+    include/dogecoin/ctaes.h \
     include/dogecoin/dogecoin.h \
-    include/dogecoin/crypto/ecc.h \
-    include/dogecoin/crypto/hash.h \
-    include/dogecoin/crypto/key.h \
+    include/dogecoin/ecc.h \
+    include/dogecoin/hash.h \
+    include/dogecoin/key.h \
     include/dogecoin/mem.h \
-    include/dogecoin/compat/portable_endian.h \
-    include/dogecoin/crypto/random.h \
-    include/dogecoin/crypto/rmd160.h \
+    include/dogecoin/portable_endian.h \
+    include/dogecoin/random.h \
+    include/dogecoin/rmd160.h \
     include/dogecoin/script.h \
-    include/dogecoin/crypto/segwit_addr.h \
+    include/dogecoin/segwit_addr.h \
     include/dogecoin/serialize.h \
-    include/dogecoin/crypto/sha2.h \
+    include/dogecoin/sha2.h \
     include/dogecoin/tool.h \
     include/dogecoin/transaction.h \
     include/dogecoin/tx.h \
-    contrib/uthash/uthash.h \
+    include/uthash/uthash.h \
     include/dogecoin/utils.h \
     include/dogecoin/vector.h \
     include/dogecoin/wow.h
@@ -48,24 +48,23 @@ pkgconfig_DATA = libdogecoin.pc
 
 libdogecoin_la_SOURCES = \
     src/address.c \
-    src/crypto/aes.c \
-    src/crypto/base58.c \
+    src/aes.c \
+    src/base58.c \
     src/bip32.c \
     src/block.c \
     src/buffer.c \
     src/chainparams.c \
     src/cstr.c \
-    src/crypto/ctaes/ctaes.c \
-    src/crypto/ecc.c \
-    src/crypto/key.c \
+    src/ctaes.c \
+    src/ecc.c \
+    src/key.c \
     src/mem.c \
-    src/crypto/random.c \
-    src/crypto/rmd160.c \
+    src/random.c \
+    src/rmd160.c \
     src/script.c \
-    src/crypto/segwit_addr.c \
+    src/segwit_addr.c \
     src/serialize.c \
-    src/crypto/sha2.c \
-    src/cli/such.c \
+    src/sha2.c \
     src/cli/tool.c \
     src/transaction.c \
     src/tx.c \
@@ -110,12 +109,12 @@ endif
 
 if WITH_NET
 libdogecoininclude_HEADERS += \
-    include/dogecoin/net/protocol.h \
-    include/dogecoin/net/net.h
+    include/dogecoin/protocol.h \
+    include/dogecoin/net.h
 
 libdogecoin_la_SOURCES += \
-    src/net/net.c \
-    src/net/protocol.c
+    src/net.c \
+    src/protocol.c
 
 libdogecoin_la_LIBADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 libdogecoin_la_CFLAGS += $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)

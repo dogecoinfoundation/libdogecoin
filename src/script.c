@@ -32,8 +32,8 @@
 #include <string.h>
 
 #include <dogecoin/buffer.h>
-#include <dogecoin/crypto/hash.h>
-#include <dogecoin/crypto/rmd160.h>
+#include <dogecoin/hash.h>
+#include <dogecoin/rmd160.h>
 #include <dogecoin/script.h>
 #include <dogecoin/serialize.h>
 

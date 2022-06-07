@@ -11,7 +11,7 @@
 
 #include <dogecoin/chainparams.h>
 #include <dogecoin/utils.h>
-#include <dogecoin/net/protocol.h>
+#include <dogecoin/protocol.h>
 #include "utest.h"
 
 #include <event2/util.h>

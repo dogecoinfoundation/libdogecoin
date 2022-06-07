@@ -6,7 +6,7 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#include <test/utest.h>
+#include "utest.h"
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/utils.h>

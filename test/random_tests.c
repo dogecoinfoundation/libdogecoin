@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <test/utest.h>
+#include "utest.h"
 
-#include <dogecoin/crypto/random.h>
+#include <dogecoin/random.h>
 #include <dogecoin/utils.h>
 
 void test_random_init_cb(void)

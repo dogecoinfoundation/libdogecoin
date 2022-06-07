@@ -10,15 +10,15 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include <test/utest.h>
+#include "utest.h"
 
 #include <dogecoin/address.h>
 #include <dogecoin/buffer.h>
-#include <dogecoin/crypto/key.h>
+#include <dogecoin/key.h>
 #include <dogecoin/transaction.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
-#include <dogecoin/crypto/rmd160.h>
+#include <dogecoin/rmd160.h>
 
 void test_op_return() {
     // intended message included in OP_RETURN:

@@ -33,10 +33,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <dogecoin/crypto/base58.h>
-#include <dogecoin/crypto/ecc.h>
-#include <dogecoin/crypto/segwit_addr.h>
-#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/base58.h>
+#include <dogecoin/ecc.h>
+#include <dogecoin/segwit_addr.h>
+#include <dogecoin/sha2.h>
 #include <dogecoin/mem.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/tx.h>
@@ -44,8 +44,8 @@
 
 #ifdef WITH_NET
 #include <event2/event.h>
-#include <dogecoin/net/net.h>
-#include <dogecoin/net/protocol.h>
+#include <dogecoin/net.h>
+#include <dogecoin/protocol.h>
 
 /**
  * @brief Disconnect node if it has been connected for more than the timeout.

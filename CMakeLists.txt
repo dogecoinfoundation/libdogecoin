@@ -46,56 +46,56 @@ ADD_LIBRARY(${LIBDOGECOIN_NAME})
 
 INSTALL(FILES
     include/dogecoin/address.h
-    include/dogecoin/crypto/aes.h
-    include/dogecoin/crypto/base58.h
+    include/dogecoin/aes.h
+    include/dogecoin/base58.h
     include/dogecoin/bip32.h
     include/dogecoin/block.h
-    include/dogecoin/blockchain.h
     include/dogecoin/buffer.h
-    include/dogecoin/compat/byteswap.h
+    include/dogecoin/byteswap.h
     include/dogecoin/chainparams.h
-    include/dogecoin/common.h
     include/dogecoin/cstr.h
-    include/dogecoin/crypto/ctaes/ctaes.h
+    include/dogecoin/ctaes.h
     include/dogecoin/dogecoin.h
-    include/dogecoin/crypto/ecc.h
-    include/dogecoin/crypto/hash.h
-    include/dogecoin/crypto/key.h
+    include/dogecoin/ecc.h
+    include/dogecoin/hash.h
+    include/dogecoin/key.h
     include/dogecoin/mem.h
-    include/dogecoin/compat/portable_endian.h
-    include/dogecoin/crypto/random.h
-    include/dogecoin/crypto/rmd160.h
+    include/dogecoin/portable_endian.h
+    include/dogecoin/random.h
+    include/dogecoin/rmd160.h
     include/dogecoin/script.h
-    include/dogecoin/crypto/segwit_addr.h
+    include/dogecoin/segwit_addr.h
     include/dogecoin/serialize.h
-    include/dogecoin/crypto/sha2.h
+    include/dogecoin/sha2.h
     include/dogecoin/tool.h
     include/dogecoin/transaction.h
     include/dogecoin/tx.h
+    include/uthash/uthash.h
     include/dogecoin/utils.h
     include/dogecoin/vector.h
+    include/dogecoin/wow.h
     DESTINATION include/dogecoin
 )
 
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/address.c
-    src/crypto/aes.c
-    src/crypto/base58.c
+    src/aes.c
+    src/base58.c
     src/bip32.c
     src/block.c
     src/buffer.c
     src/chainparams.c
     src/cstr.c
-    src/crypto/ctaes/ctaes.c
-    src/crypto/ecc.c
-    src/crypto/key.c
+    src/ctaes.c
+    src/ecc.c
+    src/key.c
     src/mem.c
-    src/crypto/random.c
-    src/crypto/rmd160.c
+    src/random.c
+    src/rmd160.c
     src/script.c
-    src/crypto/segwit_addr.c
+    src/segwit_addr.c
     src/serialize.c
-    src/crypto/sha2.c
+    src/sha2.c
     src/cli/tool.c
     src/transaction.c
     src/tx.c
@@ -131,6 +131,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE ${SECP256K1})
 INCLUDE_DIRECTORIES(
     include
     src/secp256k1
+    src/secp256k1/include
     ${GMP_INSTALL_DIR}/include)
 
 IF(USE_TESTS)
@@ -147,6 +148,7 @@ IF(USE_TESTS)
         test/hash_tests.c
         test/key_tests.c
         test/mem_tests.c
+        test/opreturn_tests.c
         test/random_tests.c
         test/rmd160_tests.c
         test/serialize_tests.c
@@ -158,22 +160,22 @@ IF(USE_TESTS)
         test/utils_tests.c
         test/vector_tests.c
     )
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME})
+    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} m)
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
 ENDIF()
 
 IF(WITH_NET)
     INSTALL(FILES
-        include/dogecoin/net/protocol.h
-        include/dogecoin/net/net.h
+        include/dogecoin/protocol.h
+        include/dogecoin/net.h
         DESTINATION include/dogecoin
     )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
-        src/net/net.c
-        src/net/protocol.c
+        src/net.c
+        src/protocol.c
     )
 
-    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS})
+    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} m)
 
     IF(USE_TESTS)
         TARGET_SOURCES(tests PRIVATE
@@ -192,13 +194,13 @@ IF(WITH_TOOLS)
 
     ADD_EXECUTABLE(such src/cli/such.c)
     INSTALL(TARGETS such RUNTIME)
-    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME})
+    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} m)
     TARGET_INCLUDE_DIRECTORIES(such PRIVATE src)
 
     IF(WITH_NET)
         ADD_EXECUTABLE(sendtx src/cli/sendtx.c)
         INSTALL(TARGETS sendtx RUNTIME)
-        TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME})
+        TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME} m)
         TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
     ENDIF()
 ENDIF()
