@@ -44,7 +44,6 @@ case $host in
      TARGET_OS=linux
      ;;
 esac
-
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $warn_CFLAGS"

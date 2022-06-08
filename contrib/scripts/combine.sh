@@ -3,7 +3,7 @@ export LC_ALL=C
 set -e -o pipefail
 
 # helper script to combine static libraries together. basic usage:
-# ./contrib/scripts/combine_lib.sh --target .libs/libdogecoin.a --append "src/secp256k1/.libs/libsecp256k1.a src/secp256k1/.libs/libsecp256k1_precomputed.a"
+# ./contrib/scripts/combine.sh --target .libs/libdogecoin.a --append "src/secp256k1/.libs/libsecp256k1.a src/secp256k1/.libs/libsecp256k1_precomputed.a"
 
 if [ $# -eq 0 ]; then
     echo "No arguments provided"
