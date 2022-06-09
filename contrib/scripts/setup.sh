@@ -66,7 +66,7 @@ if has_param '--host' "$@"; then
             sudo update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
             sudo update-binfmts --import /usr/share/binfmts/wine
         ;;
-        "x86_64-apple-darwin11")
+        "x86_64-apple-darwin")
             ARCH_PACKAGES="cmake zlib xorriso"
             TARGET_ARCH="amd64"
         ;;
@@ -87,7 +87,7 @@ fi
 
 OPTIONS=""
 # sudo dpkg --add-architecture $TARGET_ARCH
-if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin11" ]]; then
+if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin" ]]; then
     unameOut="$(uname -s)"
     case "${unameOut}" in
         Linux*)
@@ -115,9 +115,9 @@ if [[ $TARGET_HOST_TRIPLET == "x86_64-apple-darwin11" ]]; then
         *)          machine="UNKNOWN:${unameOut}"
     esac
     echo ${machine}
-    SDK_VERSION=10.11
+    SDK_VERSION=10.14
     SDK_URL=https://bitcoincore.org/depends-sources/sdks
-    SDK_SHASUM="bec9d089ebf2e2dd59b1a811a38ec78ebd5da18cbbcd6ab39d1e59f64ac5033f"
+    SDK_SHASUM="328aff47e28c17093d59a72712a9b2e62cd8a8b87bbe03f91abb32960b413f0f"
     mkdir -p ./depends/sdk-sources
     mkdir -p ./depends/SDKs
     echo "$SDK_SHASUM depends/sdk-sources/MacOSX$SDK_VERSION.sdk.tar.gz" | sha256sum -c || \
@@ -128,7 +128,7 @@ else
     sudo apt-get update
     DEBIAN_FRONTEND=noninteractive sudo apt-get install --no-install-recommends -y $COMMON_PACKAGES $ARCH_PACKAGES
 fi
-NO_X_COMPILE=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "x86_64-apple-darwin11");
+NO_X_COMPILE=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "x86_64-apple-darwin");
 
 if [ "$DEPENDS" = "1" ]; then
     match=0

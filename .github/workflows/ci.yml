@@ -55,14 +55,14 @@ jobs:
             config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib -static-libgcc -static-libstdc++' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig --enable-static --disable-shared"
             goal: install
           - name: x86_64-macos
-            host: x86_64-apple-darwin11
+            host: x86_64-apple-darwin
             os: macos-latest
             run-tests: true
             dep-opts: "SPEED=slow V=1"
             config-opts: "--enable-static --disable-shared"
             packages: cmake zlib xorriso
             goal: install
-            sdk: 10.11
+            sdk: 10.14
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
@@ -144,10 +144,7 @@ jobs:
       - name: install sdk
         if: ${{ matrix.sdk }}
         run: |
-          mkdir -p ./depends/sdk-sources
-          mkdir -p ./depends/SDKs
-          curl --location --fail $SDK_URL/MacOSX${{ matrix.sdk }}.sdk.tar.gz -o depends/sdk-sources/MacOSX${{ matrix.sdk }}.sdk.tar.gz
-          tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${{ matrix.sdk }}.sdk.tar.gz
+          contrib/scripts/run.sh --host x86_64-apple-darwin --depends --clean
 
       - name: dependency cache
         uses: actions/cache@v2

@@ -46,7 +46,7 @@ if has_param '--host' "$@"; then
             LDFLAGS+=-no-undefined
             LIBS+="-lpthread -lwinpthread -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lbcrypt -lcrypt32 -DWIN32"
         ;;
-        "x86_64-apple-darwin11")
+        "x86_64-apple-darwin")
             TARGET_ARCH="amd64"
         ;;
         "x86_64-pc-linux-gnu")
