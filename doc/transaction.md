@@ -1,119 +1,30 @@
-# Dogecoin Transactions
+# Libdogecoin Transactions
 
-tx describes a dogecoin transaction in reply to getdata. When a bloom filter is applied tx objects are sent automatically for matching transactions following the merkleblock.
+## Table of Contents
+- [Libdogecoin Transactions](#libdogecoin-transactions)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Working Transaction API](#working-transaction-api)
+    - [**new_transaction**](#new_transaction)
+    - [**add_transaction**](#add_transaction)
+    - [**find_transaction**](#find_transaction)
+    - [**remove_transaction**](#remove_transaction)
+  - [Essential API](#essential-api)
+    - [**start_transaction**](#start_transaction)
+    - [**add_utxo**](#add_utxo)
+    - [**add_output**](#add_output)
+    - [**finalize_transaction**](#finalize_transaction)
+    - [**get_raw_transaction**](#get_raw_transaction)
+    - [**clear_transaction**](#clear_transaction)
+    - [**sign_raw_transaction**](#sign_raw_transaction)
+    - [**sign_transaction**](#sign_transaction)
+    - [**store_raw_transaction**](#store_raw_transaction)
 
-| Field Size      | Description | Data type | Comments |
-| ----------- | ----------- | - | - |
-| 4      | version       | uint32_t | Transaction data format version |
-| 0 or 2   | flag        | optional uint8_t[2] | If present, always 0001, and indicates the presence of witness data |
-| 1+      | tx_in count       | var_int | Number of Transaction inputs (never zero) |
-| 41+   | tx_in        | tx_in[] | A list of 1 or more transaction inputs or sources for coins |
-| 1+      | tx_out count | var_int | Number of Transaction outputs |
-| 9+   | tx_out        | tx_out[] | A list of 1 or more transaction outputs or destinations for coins |
-| 0+      | tx_witnesses | tx_witness[] |  	A list of witnesses, one for each input; omitted if flag is omitted above |
-| 4   | lock_time        | uint32_t | The block number or timestamp at which this transaction is unlocked: 0 == not locked, < 500000000 == Block number at which this transaction is unlocked, >= 500000000 == UNIX timestamp at which this transaction is unlocked. If all TxIn have final (0xffffffff) sequence numbers then lock_time is irrelevant. Otherwise, the transaction may not be added to a block until after lock_time. |
-
-Structure definition as found in tx.h:
-```
-typedef struct dogecoin_tx_ {
-    int32_t version;
-    vector* vin;
-    vector* vout;
-    uint32_t locktime;
-} dogecoin_tx;
-```
-
-TxIn consists of the following fields:
-| Field Size      | Description | Data type | Comments |
-| ----------- | ----------- | - | - |
-| 36 | previous_output | outpoint | The previous output transaction reference, as an Outpoint structure |
-| 1+ | script length | var_int | The length of the signature script |
-| ? | signature script | uchar[] | Computational Script fro confirming transaction authorization |
-| 4 | sequence | uint32_t | Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block. |
-
-Structure definition as found in tx.h:
-```
-typedef struct dogecoin_tx_in_ {
-    dogecoin_tx_outpoint prevout;
-    cstring* script_sig;
-    uint32_t sequence;
-    vector* witness_stack;
-} dogecoin_tx_in;
-```
-
-The outpoint structure consists of the following fields:
-| Field Size      | Description | Data type | Comments |
-| ----------- | ----------- | - | - |
-| 32 | hash | char[32] | The hash of the referenced transaction |
-| 4 | index | uint32_t | The index of the specific output in the transaction. The first output is 0, etc. |
-
-Structure definition as found in tx.h:
-```
-typedef struct dogecoin_tx_outpoint_ {
-    uint256 hash;
-    uint32_t n;
-} dogecoin_tx_outpoint;
-```
-
-The script structure consists of a series of pieces of information and operations related to the value of the transaction. When notating scripts, data to be pushed to the stack is generally enclosed in angle brackets and data push commands are ommited. Non-bracketed words are opcodes. These examples include the "OP_" prefix, but it is permissible to omit it. Thus “<pubkey1> <pubkey2> OP_2 OP_CHECKMULTISIG” may be abbreviated to “<pubkey1> <pubkey2> 2 CHECKMULTISIG”. Note that there is a small number of standard script forms that are relayed from node to node; non-standard scripts are accepted if they are in a block, but nodes will not relay them.
-
-#### Standard Transaction to Dogecoin Address (pay-to-pubkey-hash)
-```
-scriptPubKey: OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
-scriptSig: <sig> <pubKey>
-```
-To demonstrate how scripts look on the wire, here is a raw scriptPubKey:
-```
-  76       A9             14
-OP_DUP OP_HASH160    Bytes to push
-
-89 AB CD EF AB BA AB BA AB BA AB BA AB BA AB BA AB BA AB BA   88         AC
-                      Data to push                     OP_EQUALVERIFY OP_CHECKSIG
-```
-Note: scriptSig is in the input of the spending transaction and scriptPubKey is in the output of the previously unspent i.e. "available" transaction.
-
-Here is how each word is processed: 
-| Stack      | Script | Description |
-| ----------- | ----------- | - |
-| Empty | `<sig> <pubKey>` OP_DUP OP_HASH160 `<pubKeyHash>` OP_EQUALVERIFY OP_CHECKSIG | scriptSig and scriptPubKey are combined. |
-| `<sig> <pubKey>` | OP_DUP OP_HASH160 `<pubKeyHash>` OP_EQUALVERIFY OP_CHECKSIG | Constants are added to the stack. |
-| `<sig> <pubKey> <pubKey>` | OP_HASH160 `<pubKeyHash>` OP_EQUALVERIFY OP_CHECKSIG | Top stack item is duplicated. |
-| `<sig> <pubKey> <pubHashA>` | `<pubKeyHash>` OP_EQUALVERIFY OP_CHECKSIG | Top stack item is hashed. |
-| `<sig> <pubKey> <pubHashA> <pubKeyHash>` | OP_EQUALVERIFY OP_CHECKSIG | Constant added. |
-| `<sig> <pubKey>` | OP_CHECKSIG | Equality is checked between the top two stack items. |
-| true | Empty | Signature is checked for top two stack items. |
-
-Structure definition as found in tx.h:
-```
-typedef struct dogecoin_script_ {
-    int* data;
-    size_t limit;   // Total size of the vector
-    size_t current; //Number of vectors in it at present
-} dogecoin_script;
-```
-
-The TxOut structure consists of the following fields:
-| Field Size      | Description | Data type | Comments |
-| ----------- | ----------- | - | - |
-| 8 | value | int64_t | Transaction value |
-| 1+ | pk_script length | var_int | Length of the pk_script |
-| ? | pk_script | uchar[] | Usually contains the public key as a dogecoin script setting up conditions to claim this output. |
-
-Structure definition as found in tx.h:
-```
-typedef struct dogecoin_tx_out_ {
-    int64_t value;
-    cstring* script_pubkey;
-} dogecoin_tx_out;
-```
-
-## Simple Transactions
-
-#### Essential APIs
+## Introduction
 
 The high level 'essential' API provided by libdogecoin for working with simple 
-transactions revolve around a structure defined as a `working_transaction` which is comprised of an index as an integer meant for retrieval, a dogecoin_tx 'transaction' structure as seen above and finally a UT_hash_handle which stores our working_transaction struct in a hash table (using Troy D. Hansons uthash library: see ./uthash/uthash.h and visit https://troydhanson.github.io/uthash/ for more information) to allow us to generate multiple transactions per "session":
-```
+transactions revolve around a structure defined as a `working_transaction` which is comprised of an index as an integer meant for retrieval, a dogecoin_tx 'transaction' structure as seen above, and finally a UT_hash_handle which stores our working_transaction struct in a hash table (using Troy D. Hanson's uthash library: see ./contrib/uthash/uthash.h and visit https://troydhanson.github.io/uthash/ for more information) to allow us to generate multiple transactions per "session". This `working_transaction` structure is defined as such:
+```C
 typedef struct working_transaction {
     int index;
     dogecoin_tx* transaction;
@@ -121,72 +32,64 @@ typedef struct working_transaction {
 } working_transaction;
 ```
 
-The functions that have been built around this `working_transaction` structure and flow of operation are comprised of 4 macros used to interact with uthash with the remaining 8 used to interact with a `working_transaction` structure and are found in `include/dogecoin/transactions.h` and `src/transactions.c`. Please look below for descriptions and use cases for each:
+The functions that have been built around this `working_transaction` structure and flow of operation are comprised of 4 macros, which are explained further in the following section describing the [working transaction API](#working-transaction-api). used to interact with uthash.
 
-**function:**
+The [Libdogecoin Essential API](#essential-api) itself is a higher level interface that contains all the necessary operations for building Dogecoin transactions from scratch. The generic process for building a transaction is as follows:
+- Create an empty transaction.
+- Add inputs from your wallet's UTXOs.
+- Add outputs describing amount and recipient.
+- Return any leftover change back to your address.
+- Sign all inputs with your wallet's private key.
+
+All of these steps can be done purely with Libdogecoin Essential API, by calling directly from C and including the "libdogecoin.h" header file, or by importing a set of wrappers for the API implemented in Python and Go. For details on the usage of this API, jump to the [Essential API](#essential-api) section.
+
+## Working Transaction API
+
+These functions are designed to be "under the hood" and obfuscated from the end user as you will see in the Essential functions later on. They are to be used for manipulating the hash table which stores transactions in memory, and are already implemented within the Essential functions, so there is no need to call them again.
+
+---
+### **new_transaction**
 
 `working_transaction* new_transaction()`
 
-This function instantiates a new working_transaction structure for use. It allocates memory using dogecoin_calloc, auto increments the index, instantiates a new dogecoin_tx structure, adds the working_transaction and index to a hash table and finally returns the working_transaction structure itself to the caller.
-
-This function is designed to be 'under the hood' and obfuscated from the end user as you will see in the 'high level' functions later on.
+This function instantiates a new working_transaction structure for use. It allocates memory using `dogecoin_calloc()`, auto increments the index, instantiates a new dogecoin_tx structure, adds the working_transaction to the hash table and finally returns a pointer to the newly created working_transaction.
 
 _C usage:_
 ```C
 working_transaction* transaction = new_transaction();
 ```
 
-_Python usage:_
-```py
-
-```
-
 ---
+### **add_transaction**
 
-**add_transaction**
+`void add_transaction(working_transaction *working_tx)`
 
-`void add_transaction(int index, working_transaction *transaction)`
-
-This function adds a working_transaction and unique index to a hash table for retrieval.
+This function takes a working_transaction generated from `new_transaction()` and adds it to the hash table. 
 
 _C usage:_
 ```C
-working_transaction* working_tx;
-add_transaction(working_tx->index, working_tx);
-```
-
-_Python usage:_
-
-```py
-
+working_transaction* working_tx = new_transaction();
+add_transaction(working_tx);
 ```
 
 ---
+### **find_transaction**
 
-**find_transaction**
+`working_transaction* find_transaction(int idx)`
 
-`working_transaction* find_transaction(int index)`
-
-This function adds a working_transaction and unique index to a hash table for retrieval.
+This function returns a pointer to the working transaction at the specified index. If no transaction exists at that index, the function will return a NULL pointer.
 
 _C usage:_
 ```C
 working_transaction* working_tx = find_transaction(1);
 ```
 
-_Python usage:_
-
-```py
-
-```
-
 ---
+### **remove_transaction**
 
-**remove_transaction**
+`void remove_transaction(working_transaction *working_tx)`
 
-`void remove_transaction(working_transaction *transaction)`
-
-This function deletes a working_transaction from our hash table.
+This function removes a working_transaction from the hash table and deallocates all memory dedicated to the working_transaction and the objects it contains using `dogecoin_free()`.
 
 _C usage:_
 ```C
@@ -194,221 +97,557 @@ working_transaction* working_tx = find_transaction(1);
 remove_transaction(working_tx);
 ```
 
-_Python usage:_
+## Essential API
 
-```py
-
-```
-
-### --- high level functions -------------------------------- 
-
-**start_transaction**
+---
+### **start_transaction**
 
 `int start_transaction()`
 
-This function instantiates a new working_transaction structure using `new_transaction()` as seen above and returns its index for future retrieval as an integer.
+This function instantiates a new working_transaction structure and returns its index for future retrieval as an integer. This new working_transaction will contain an empty hex, which is "01000000000000000000". Note that anytime a new working transaction is created, it must also be removed at the end of the session by calling either `clear_transaction()`, otherwise a memory leak may occur.
 
 _C usage:_
 ```C
-int index = start_transaction()
-working_transaction* working_tx = find_transaction(index);
-remove_transaction(working_tx);
-```
+#include "libdogecoin.h"
 
-_Python usage:_
-
-```py
-
-```
-
----
-
-**add_utxo**
-
-`int add_utxo(int txindex, char* hex_utxo_txid, int vout)`
-
-This function takes in a working_transaction structures index as an integer (txindex), a raw hexadecimal transaction identifier as a char array (hex_utxo_txid) and an index representative of the previous transactions output index that will be spent as a transaction input (vout) and adds it to a working_transaction structure.
-
-_C usage:_
-```C
-int working_transaction_index = start_transaction();
-
-...
-
-char* previous_output_txid = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
-
-int previous_output_n = 1;
-
-if (!add_utxo(working_transaction_index, previous_output_txid, previous_output_n)) {
-  // handle failure, return false; or printf("failure\n"); etc...
+int main() {
+    int index = start_transaction();
+    // build onto the working transaction here
+    clear_transaction(index);
 }
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
 
+index = l.w_start_transaction()
+# build onto the working transaction here
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import l "TODO: FIND CORRECT PATH NAME FOR MODULE DOWNLOAD"
+
+func main() {
+    index := l.w_start_transaction()
+    defer l.w_clear_transaction(index)
+    // build onto the working transaction here
+}
 ```
 
 ---
+### **add_utxo**
 
-**add_output**
+`int add_utxo(int txindex, char* hex_utxo_txid, int vout)`
 
-`char* add_output(int txindex, char* destinationaddress, uint64_t amount)`
-
-This function takes in a working_transaction structures index as an integer (txindex) for retrieval, the destination p2pkh address (destinationaddress) as a char array and the amount (amount) formatted as koinu (multiplied by 100 million) to send as a transaction output. This will be added to the working_transaction->transaction->vout parameter.
+An unspent transaction output (utxo) is an output of a previous transaction in which funds were sent to the user's address. These can be spent by including them as inputs in a new transaction. This function takes in a working_transaction's index as an integer (txindex), a raw hexadecimal string id of the transaction containing the utxo to spend (hex_utxo_txid), and index of the desired utxo within the previous transaction's list of outputs (vout). The utxo is then added to the working_transaction->transaction->vin field, returning either 1 for success or 0 for failure.
 
 _C usage:_
 ```C
-int working_transaction_index = start_transaction();
+#include "libdogecoin.h"
 
-...
+int main() {
+    char* prev_output_txid = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"; // worth 2 dogecoin
+    int prev_output_n = 1;
 
-char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
-
-add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+    int index = start_transaction();
+    if (!add_utxo(index, prev_output_txid, prev_output_n)) {
+        // handle failure, return false; or printf("failure\n"); etc...
+    }
+    clear_transaction(index);
+}
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
 
+prev_output_txid = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
+prev_output_n = 1
+
+index = l.w_start_transaction()
+if not l.w_add_utxo(index, prev_output_txid, prev_output_n):
+    # error handling here
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import l "libdogecoin"
+
+func main() {
+    previous_output_txid := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
+    previous_output_n := 1
+
+    index := l.w_start_transaction()
+    defer l.w_clear_transaction(index)
+    if l.w_add_utxo(index, previous_output_txid, previous_output_n)!=1 {
+        // error handling here
+    }
+}
 ```
 
 ---
+### **add_output**
 
-**make_change**
+`int add_output(int txindex, char* destinationaddress, long double amount)`
 
-`char* make_change(int txindex, char* public_key_hex, char* destinationaddress, double subtractedfee, uint64_t amount)`
-
-This function takes in a working_transaction structures index as an integer (txindex), the public key used to derive the destination address in hexadecimal format, the desired fee to send the transaction and the amount we want in change. The fee will automatically be subtracted from the amount provided. This will be added to the working_transaction->transaction->vout parameter.
+In order to actually spend utxos, the user must specify the new recipient address and how much of the total input amount will be sent to this address. This function takes in a working_transaction's index as an integer (txindex), the string p2pkh address of the new recipient (destinationaddress), and the amount in Dogecoin (amount) to send. This new output will be added to the working_transaction->transaction->vout field, returning either 1 for success or 0 for failure.
 
 _C usage:_
 ```C
-int working_transaction_index = start_transaction();
+#include "libdogecoin.h"
 
-...
+int main() {
+    char* prev_output_txid = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"; // worth 10 dogecoin
+    int prev_output_n = 1;
+    char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
 
-char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
-
-add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+    int index = start_transaction();
+    add_utxo(index, prev_output_txid, prev_output_n);
+    if (!add_output(index, external_address, 5.0)) { // 5 dogecoin to be sent
+        // error handling here
+    }
+    clear_transaction(index);
+}
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
+
+prev_output_txid = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
+prev_output_n = 1
+external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+
+index = l.w_start_transaction()
+l.w_add_utxo(index, prev_output_txid, prev_output_n)
+if not l.w_add_output(index, external_address, 5.0):
+    # error handling here
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import l "libdogecoin"
+
+func main() {
+    prev_output_txid := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
+    prev_output_n := 1
+    external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+
+    index := w_start_transaction()
+    defer l.w_clear_transaction(index)
+    l.w_add_utxo(index, prev_output_txid, prev_output_n)
+    if l.w_add_output(index, external_address, 5.0) != 1 {
+        // error handling here
+    }
+}
 
 ```
 
 ---
+### **finalize_transaction**
 
-**finalize_transaction**
+`char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* changeaddress) `
 
-`char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification)`
-
-This function takes in a working_transaction structures index as an integer (txindex), the external destination address we are sending to, the desired fee to be substracted and the total amount of all utxos to be spent. It automatically calculates the total minus the fee and compares against whats found in the raw hexadecimal transaction. In addition it compares the external destination address to the script hash by converting to p2pkh and counting to check it's found. If either the amount or address are not found the function will return false and failure should be handled by the caller. 
+Because Dogecoin protocol requires that utxos must be spent in full, an additional output is usually included in a transaction to return all the leftover funds to the sender. This function automatically handles both creating this extra output and reserving some funds for the network fee. It takes in a working_transaction's index as an integer (txindex), the external destination address we are sending to (destinationaddress), the desired fee to be subtracted (subtractedfee), the total amount of all inputs included through `add_utxo()` (out_dogeamount_for_verification), and the public key of the sender (public_key). In addition to making change and deducting the fee, it checks that all of the recipients included in the transaction outputs are valid by converting their script hashes to p2pkh, and returns false if any are not found. Otherwise, the hex of the finalized transaction is returned as a string.
 
 _C usage:_
 ```C
-int working_transaction_index = start_transaction();
+#include "libdogecoin.h"
 
-char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+int main() {
+    char* prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"; // worth 2 dogecoin
+    char* prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"; // worth 10 dogecoin
+    int prev_output_n_2 = 1;
+    int prev_output_n_10 = 1;
+    char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+    char* my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy";
 
-add_output(working_transaction_index, external_address, 500000000) // 5 dogecoin
+    int index = start_transaction();
+    add_utxo(index, prev_output_txid_2, prev_output_n_2);
+    add_utxo(index, prev_output_txid_10, prev_output_n_10);
+    add_output(index, external_address, 5.0);
 
-make_change(working_transaction_index, public_key_hex, external_p2pkh_address, 226000, 700000000);
-
-// get updated raw hexadecimal transaction
-raw_hexadecimal_transaction = get_raw_transaction(1);
-
-// confirm total output value equals total utxo input value minus transaction fee
-// validate external p2pkh address by converting script hash to p2pkh and asserting equal:
-raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000);
+    // finalize transaction with min fee of 0.00226 doge on the input total of 12 dogecoin
+    char* rawhex = finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
+    clear_transaction(index);
+}
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
 
+prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
+prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
+prev_output_n_2 = 1
+prev_output_n_10 = 1
+external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
+
+index = l.w_start_transaction()
+l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+l.w_add_output(index, external_address, 5.0)
+rawhex = l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import l "libdogecoin"
+
+func main() {
+    prev_output_txid_2 := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
+    prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
+    prev_output_n_2 := 1
+    prev_output_n_10 := 1
+
+    index := start_transaction()
+    defer l.w_clear_transaction(index)
+    l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+    l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+    l.w_add_output(index, external_address, 5.0)
+    rawhex := l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+}
 ```
 
 ---
-
-**get_raw_transaction**
+### **get_raw_transaction**
 
 `char* get_raw_transaction(int txindex)`
 
-This function takes in a working_transaction structures index as an integer (txindex)and returns the current working_transaction in raw hexadecimal format.
+This function takes in a working_transaction's index as an integer (txindex) and returns the current working_transaction in raw hexadecimal format.
 
 _C usage:_
 ```C
-char* raw_hexadecimal_transaction;
-raw_hexadecimal_transaction = get_raw_transaction(1);
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+    int index = start_transaction();
+    char* rawhex = get_raw_transaction(index);
+    printf("The transaction hex at index %d is %s.\n", index, rawhex);
+    clear_transaction(index);
+}
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
 
+index = l.w_start_transaction()
+rawhex = l.w_get_raw_transaction(index)
+print(f"The transaction hex at index {index} is {rawhex}.")
+l.w_clear_transaction(index)
 ```
 
----
+_Golang usage:_
+```go
+import (
+    "fmt"
+    l "libdogecoin"
+)
 
-**clear_transaction**
+func main() {
+    index := l.w_start_transaction()
+    defer l.w_clear_transaction(index)
+    rawhex := l.w_get_raw_transaction(index)
+    fmt.Printf("The transaction hex at index %d is %s\n", index, rawhex)
+}
+```
+
+
+---
+### **clear_transaction**
 
 `void clear_transaction(int txindex)`
 
-This function takes in a working_transaction structures index as an integer (txindex), retreives it and passes into a working_transaction structure, checks to see if working_transaction->transaction->vin and working_transaction->transaction->vout exist and if so, free them using vector_free, then free the working_transaction->transaction and finally removes the working_transaction itself from our hashmap.  
+This function takes in a working_transaction's index as an integer (txindex), and removes the transaction at that index from the hash table. All memory dedicated to transaction objects, such as dogecoin_tx_in and dogecoin_tx_out, is freed from within this function.
 
 _C usage:_
 ```C
-int working_transaction_index = start_transaction();
+#include "libdogecoin.h"
+#include <stdio.h>
 
-...
-
-clear_transaction(working_transaction_index);
+int main() {
+    int index = start_transaction();
+    clear_transaction(index);
+    printf("The transaction hex at index %d is %s.\n", index, get_raw_transaction(index)); // should return (null)
+}
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
 
+index = l.w_start_transaction()
+l.w_clear_transaction(index)
+print(f"The transaction hex at index {index} is {l.w_get_raw_transaction(index)}.") # should return 0
+```
+
+_Golang usage:_
+```go
+import (
+    "fmt"
+    l "libdogecoin"
+)
+
+func main() {
+    index = l.w_start_transaction()
+    l.w_clear_transaction(index)
+    fmt.Printf("The transaction hex at index %d is %s.\n", index, l.w_get_raw_transaction(index)) // should return empty string
+}
 ```
 
 ---
+### **sign_raw_transaction**
 
-**sign_raw_transaction**
+`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)`
 
-`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, int amount, char* privkey)`
-
-This function takes in an inputs index which is representative of the previous transaction outputs index we are spending, the finalized raw hexadecimal transaction, the script hash in hexadecimal format, the signature hash type, the amount of the input we are spending and a private key in wif format and signs the transaction.
+This function takes in an index denoting which of the current transaction's inputs to sign (inputindex), the raw hexadecimal representation of the transaction to sign (incomingrawtx), the pubkey script in hexadecimal format (scripthex), the signature hash type (sighashtype), the amount included in the input to sign (amount), and the WIF-encoded private key used to sign the input (privkey). **Important:** `sign_raw_transaction` must be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
 _C usage:_
 ```C
-char* private_key_wif = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy";
+#include "libdogecoin.h"
+#include <stdio.h>
 
-...
+int main() {
+    char* prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"; // worth 2 dogecoin
+    char* prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"; // worth 10 dogecoin
+    int prev_output_n_2 = 1;
+    int prev_output_n_10 = 1;
+    char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+    char* my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy";
+    char* my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
+    char* my_privkey = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy";
 
-char* utxo_scriptpubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
+    int index = start_transaction();
+    add_utxo(index, prev_output_txid_2, prev_output_n_2);
+    add_utxo(index, prev_output_txid_10, prev_output_n_10);
+    add_output(index, external_address, 5.0);
+    finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
 
-...
-
-int working_transaction_index = start_transaction();
-
-...
-
-raw_hexadecimal_transaction = get_raw_transaction(1);
-raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, 226000, 1200000000);
-
-...
-
-sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 200000000, private_key_wif);
+    //sign both inputs of the current finalized transaction
+    dogecoin_ecc_start();
+    sign_raw_transaction(0, get_raw_transaction(index), my_script_pubkey, 1, 2.0, my_privkey);
+    sign_raw_transaction(1, get_raw_transaction(index), my_script_pubkey, 1, 10.0, my_privkey);
+    dogecoin_ecc_stop();
+    printf("The final signed transaction hex is: %s\n", get_raw_transaction(index));
+    clear_transaction(index);
+}
 ```
 
 _Python usage:_
-
 ```py
+import libdogecoin as l
 
+prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074" # worth 2 dogecoin
+prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" # worth 10 dogecoin
+prev_output_n_2 = 1
+prev_output_n_10 = 1
+amounts = [2.0, 10.0]
+external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
+my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
+my_privkey = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
+
+index = l.w_start_transaction()
+l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+l.w_add_output(index, external_address, 5.0)
+l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+
+# sign both inputs of the current finalized transaction
+l.context_start()
+if not l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey):
+    # error handling here
+print("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+l.context_stop()
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import (
+    "fmt"
+    l "libdogecoin"
+)
+
+func main() {
+    prev_output_txid_2 := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074" // worth 2 dogecoin
+    prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" // worth 10 dogecoin
+    prev_output_n_2 := 1
+    prev_output_n_10 := 1
+    amounts := [2]float64{2.0, 10.0}
+    external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+    my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
+    my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
+    my_privkey := "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
+
+    index := l.w_start_transaction()
+    defer l.w_clear_transaction(index)
+    l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+    l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+    l.w_add_output(index, external_address, 5.0)
+    l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+
+    // sign both inputs of the current finalized transaction
+    if l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1 {
+        // error handling here
+    }
+    fmt.Println("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+}
 ```
 
 ---
+### **sign_transaction**
+
+`int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey)`
+
+This function takes in a working transaction structure's index as an integer (txindex), an array of all the input amounts (amounts), the pubkey in script hex form (script_pubkey), and the WIF-encoded private key (privkey). Each input is then signed using the specified private key, and the final signed transaction is saved to the hash table, which can be retrieved using `get_raw_transaction()`. The return value of `sign_transaction()` is a boolean denoting whether the signing was successful, but the output from `get_raw_transaction()` is a fully signed transaction that--if all information is valid--can be broadcast to miners and incorporated into the blockchain.**Important:** `sign_transaction` must also be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
+
+_Note: Golang does not currently support the use of long doubles, so depending on architecture, using Go wrappers may result in loss of precision._
+
+_C usage:_
+```C
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+    char* prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"; // worth 2 dogecoin
+    char* prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"; // worth 10 dogecoin
+    int prev_output_n_2 = 1;
+    int prev_output_n_10 = 1;
+    long double amounts[] = {2, 10};
+    char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
+    char* my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy";
+    char* my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
+    char* my_privkey = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy";
+
+    int index = start_transaction();
+    add_utxo(index, prev_output_txid_2, prev_output_n_2);
+    add_utxo(index, prev_output_txid_10, prev_output_n_10);
+    add_output(index, external_address, 5.0);
+    finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
+
+    //sign both inputs of the current finalized transaction
+    dogecoin_ecc_start();
+    if (!sign_transaction(index, amounts, my_script_pubkey, my_privkey)) {
+        // error handling here
+    }
+    dogecoin_ecc_stop();
+    printf("The final signed transaction hex is: %s\n", get_raw_transaction(index));
+    clear_transaction(index);
+}
+```
+
+_Python usage:_
+```py
+import libdogecoin as l
+
+prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074" # worth 2 dogecoin
+prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" # worth 10 dogecoin
+prev_output_n_2 = 1
+prev_output_n_10 = 1
+amounts = [2.0, 10.0]
+external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
+my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
+my_privkey = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
+
+index = l.w_start_transaction()
+l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+l.w_add_output(index, external_address, 5.0)
+l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+
+# sign both inputs of the current finalized transaction
+l.context_start()
+if not l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey):
+    # error handling here
+l.context_stop()
+print("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import (
+    "fmt"
+    l "libdogecoin"
+)
+
+func main() {
+    prev_output_txid_2 := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074" // worth 2 dogecoin
+    prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" // worth 10 dogecoin
+    prev_output_n_2 := 1
+    prev_output_n_10 := 1
+    amounts := [2]float64{2.0, 10.0}
+    external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+    my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
+    my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
+    my_privkey := "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
+
+    index := l.w_start_transaction()
+    defer l.w_clear_transaction(index)
+    l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+    l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+    l.w_add_output(index, external_address, 5.0)
+    l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+
+    // sign both inputs of the current finalized transaction
+    if l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1:
+        // error handling here
+    fmt.Println("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+}
+```
+
+---
+### **store_raw_transaction**
+
+`int store_raw_transaction(char* incomingrawtx)`
+
+This function is equivalent to `save_raw_transaction` but takes the next available index in the hash table to save the provided transaction hex (incomingrawtx), rather than allowing the user to specify which index. It then returns this automatically chosen index as an integer.
+
+_C usage:_
+```C
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+    char* hex_to_store = "0100000001746007aed61e8531faba1af6610f10a5422c70a2a7eb6ffb51cb7a7b7b5e45b40100000000ffffffff0000000000";
+    int index = store_raw_transaction(hex_to_store);
+    printf("The transaction hex at index %d is %s.\n", index, get_raw_transaction(index));
+    clear_transaction(index);
+}
+```
+
+_Python usage:_
+```py
+import libdogecoin as l
+
+hex_to_store = "0100000001746007aed61e8531faba1af6610f10a5422c70a2a7eb6ffb51cb7a7b7b5e45b40100000000ffffffff0000000000"
+index = l.w_store_raw_transaction(hex_to_store)
+print(f"The transaction hex at index {index} is {l.w_get_raw_transaction(index)}.")
+l.w_clear_transaction(index)
+```
+
+_Golang usage:_
+```go
+import (
+    "fmt"
+    l "libdogecoin"
+)
+
+func main() {
+    hex_to_store := "0100000001746007aed61e8531faba1af6610f10a5422c70a2a7eb6ffb51cb7a7b7b5e45b40100000000ffffffff0000000000"
+    index := l.w_store_raw_transaction(hex_to_store)
+    defer l.w_clear_transaction(index)
+    fmt.Printf("The transaction hex at index %d is %s.\n", index, l.w_get_raw_transaction(index))
+}
+```
