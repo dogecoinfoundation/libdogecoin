@@ -114,7 +114,10 @@ jobs:
         run: |
           if ([ "${{ matrix.name }}" == "x86_64-macos" ]); then
               brew update
-              brew install automake python3 ${{ matrix.packages }}
+              brew install automake coreutils python3 ${{ matrix.packages }}
+              echo PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH" >> ~/.bashrc
+              source ~/.bashrc
+
           else
             if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
               sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86B72ED9
@@ -122,7 +125,7 @@ jobs:
               sudo apt -qq update
               sudo apt install -y --allow-downgrades libpcre2-8-0=10.34-7
             else
-              sudo apt-get update          
+              sudo apt-get update
             fi
             DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
           fi
