@@ -17,13 +17,11 @@ cdef extern from "address.h":
 
 cdef extern from "transaction.h":
     int start_transaction()
-    int save_raw_transaction(int txindex, const char* hexadecimal_transaction)
     int add_utxo(int txindex, char* hex_utxo_txid, int vout)
     int add_output(int txindex, char* destinationaddress,  long double amount)
     char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, long double out_dogeamount_for_verification, char* public_key)
     char* get_raw_transaction(int txindex) 
-    void clear_transaction(int txindex) 
-    void remove_all()
+    void clear_transaction(int txindex)
     int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)
     int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey)
     int store_raw_transaction(char* incomingrawtx)
@@ -36,8 +34,10 @@ cdef extern from "transaction.h":
 def context_start():
     dogecoin_ecc_start()
 
+
 def context_stop():
     dogecoin_ecc_stop()
+
 
 def generate_priv_pub_key_pair(chain_code=0):
     """Generate a valid private key paired with the corresponding
@@ -188,27 +188,6 @@ def w_start_transaction():
     # return boolean result
     return res
 
-def w_save_raw_transaction(tx_index, hex_transaction):
-    """Given a serialized transaction string, saves the transaction
-    as a working transaction with the specified index.
-    Keyword arguments:
-    tx_index -- the index where the new working transaction will be saved
-    hex_transaction -- the serialized string of the transaction to save
-    """
-    # verify arguments are valid
-    assert isinstance(tx_index, int)
-    assert isinstance(hex_transaction, (str, bytes))
-
-    # prepare arguments
-    if not isinstance(hex_transaction, bytes):
-        hex_transaction = hex_transaction.encode('utf-8')
-
-    # call c function
-    res = save_raw_transaction(tx_index, hex_transaction)
-
-    # return boolean result
-    return res
-
 
 def w_add_utxo(tx_index, hex_utxo_txid, vout):
     """Given the index of a working transaction, add another
@@ -325,7 +304,6 @@ def w_get_raw_transaction(tx_index):
         return 0
         
 
-
 def w_clear_transaction(tx_index):
     """Discard a working transaction.
     Keyword arguments:
@@ -337,11 +315,6 @@ def w_clear_transaction(tx_index):
     # call c function
     clear_transaction(tx_index)
 
-def w_remove_all():
-    """Clears all working_transaction structs from hashmap
-    """
-    # call c function
-    remove_all()
 
 def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
     """Sign a finalized raw transaction using the specified
@@ -384,6 +357,7 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     else:
         return 0
 
+
 def w_sign_transaction(tx_index, amounts, script_pubkey, privkey):
     """Sign all the inputs of a working transaction using the
     specified private key and public key script.
@@ -415,6 +389,7 @@ def w_sign_transaction(tx_index, amounts, script_pubkey, privkey):
 
     # return result
     return res    
+
 
 def w_store_raw_transaction(incoming_raw_tx):
     # verify arguments are valid

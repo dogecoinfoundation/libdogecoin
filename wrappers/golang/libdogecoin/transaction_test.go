@@ -88,42 +88,11 @@ func TestTransaction(t *testing.T) {
 		w_clear_transaction(idx2)
 	})
 
-	t.Run("save_raw_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		res := w_save_raw_transaction(idx, expected_unsigned_single_utxo_tx_hex)
-		if res != 1 {
-			t.Errorf("Error while saving current transaction.")
-		}
-		w_clear_transaction(idx)
-	})
-
-	t.Run("save_raw_transaction_value", func(t *testing.T) {
-		// start to build one transaction
-		idx := w_start_transaction()
-		w_add_utxo(idx, hash_2_doge, vout_2_doge)
-		rawhex := w_get_raw_transaction(idx)
-		// save progress to a new transaction
-		idx2 := w_start_transaction()
-		w_save_raw_transaction(idx2, rawhex)
-		rawhex2 := w_get_raw_transaction(idx2)
-		//ensure that both working transactions are equal
-		if rawhex != rawhex2 {
-			t.Errorf("Saved transaction copy does not match original.")
-		}
-		w_clear_transaction(idx)
-		w_clear_transaction(idx2)
-	})
-
-	t.Run("save_long_raw_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		res := w_save_raw_transaction(idx, long_tx_hex)
+	t.Run("store_long_raw_transaction", func(t *testing.T) {
+		res := w_store_raw_transaction(long_tx_hex)
 		if res != 0 {
 			t.Errorf("Long transaction hex should not be saved.")
 		}
-		if w_get_raw_transaction(idx) != expected_empty_tx_hex {
-			t.Errorf("Working transaction was changed despite saving error.")
-		}
-		w_clear_transaction(idx)
 	})
 
 	t.Run("get_raw_transaction", func(t *testing.T) {
@@ -186,8 +155,8 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("add_output", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_save_raw_transaction(idx, expected_unsigned_double_utxo_tx_hex) == 0 {
+		idx := w_store_raw_transaction(expected_unsigned_double_utxo_tx_hex)
+		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		if w_add_output(idx, external_p2pkh_addr, send_amt) == 0 {
@@ -201,8 +170,8 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("finalize_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_save_raw_transaction(idx, expected_unsigned_double_utxo_single_output_tx_hex) == 0 {
+		idx := w_store_raw_transaction(expected_unsigned_double_utxo_single_output_tx_hex)
+		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		rawhex := w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
@@ -213,8 +182,8 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("clear_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_save_raw_transaction(idx, expected_unsigned_double_utxo_single_output_tx_hex) == 0 {
+		idx := w_store_raw_transaction(expected_unsigned_double_utxo_single_output_tx_hex)
+		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		w_clear_transaction(idx)
@@ -225,8 +194,8 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("bad_sign_raw_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_save_raw_transaction(idx, expected_unsigned_tx_hex) == 0 {
+		idx := w_store_raw_transaction(expected_unsigned_tx_hex)
+		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		rawhex := w_get_raw_transaction(idx)
@@ -238,8 +207,8 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("sign_raw_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_save_raw_transaction(idx, expected_unsigned_tx_hex) == 0 {
+		idx := w_store_raw_transaction(expected_unsigned_tx_hex)
+		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		rawhex := w_get_raw_transaction(idx)
@@ -255,8 +224,8 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("sign_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_save_raw_transaction(idx, expected_unsigned_tx_hex) == 0 {
+		idx := w_store_raw_transaction(expected_unsigned_tx_hex)
+		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		var inputs = []float64{input1_amt, input2_amt}

@@ -112,14 +112,6 @@ func w_start_transaction() (result int) {
 	return
 }
 
-func w_save_raw_transaction(tx_index int, hexadecimal_transaction string) (result int) {
-	c_tx_index := C.int(tx_index)
-	c_hexadecimal_transaction := C.CString(hexadecimal_transaction)
-	result = int(C.save_raw_transaction(c_tx_index, c_hexadecimal_transaction))
-	C.free(unsafe.Pointer(c_hexadecimal_transaction))
-	return
-}
-
 func w_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_hex_utxo_txid := C.CString(hex_utxo_txid)
