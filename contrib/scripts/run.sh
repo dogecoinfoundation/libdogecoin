@@ -33,26 +33,6 @@ if has_param '--host' "$@"; then
     TARGET_HOST_TRIPLET=$2
 fi
 
-git_root() {
-    git rev-parse --show-toplevel 2> /dev/null
-}
-
-same_dir() {
-    local resolved1 resolved2
-    resolved1="$(git_root)"
-    resolved2="$(echo `pwd`)"
-    [ "$resolved1" = "$resolved2" ]
-}
-
-if ! same_dir "${PWD}" "$(git_root)"; then
-cat << EOF
-ERR: This script must be invoked from the top level of the git repository
-Hint: This may look something like:
-    contrib/scripts/run.sh
-EOF
-exit 1
-fi
-
 if [ "$DEPENDS" = "1" ]; then
     if has_param '--clean' "$@"; then
         git clean -xdff --exclude='/depends/SDKs/*' --exclude='/depends/sdk-sources/*'
