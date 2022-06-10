@@ -21,7 +21,7 @@ AM_PROG_CC_C_O
 AC_PROG_CC_C99
 
 LIBTOOL_APP_LDFLAGS="-all-static"
-LIBS="$LIBS -levent -levent_core -lm"
+LIBS="$LIBS -levent -levent_core"
 
 CFLAGS="$CFLAGS -W"
 case $host in
@@ -53,6 +53,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
   [ AC_MSG_RESULT([no])
     CFLAGS="$saved_CFLAGS"
   ])
+
+AC_SEARCH_LIBS([powl],[m],[have_math=yes],[have_math=no])
 
 # Enable debug
 AC_ARG_ENABLE([debug],

@@ -82,7 +82,7 @@ if has_param '--host' "$@"; then
         ;;
         "x86_64-apple-darwin14")
             OS_PACKAGES="cmake zlib xorriso"
-            ARCH_PACKAGES+="g++ cmake libz-dev libcap-dev libtinfo5 libncurses-dev python python-dev python-setuptools"
+            ARCH_PACKAGES+="g++ cmake libz-dev libcap-dev libtinfo5 libplist-utils librsvg2-bin libz-dev libtiff-tools libncurses-dev python python-dev python-setuptools"
             TARGET_ARCH="amd64"
         ;;
         "x86_64-pc-linux-gnu") 
