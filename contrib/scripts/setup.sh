@@ -25,7 +25,7 @@ has_param() {
     return 1
 }
 
-COMMON_PACKAGES="autoconf automake bison build-essential curl ca-certificates libtool libtool-bin pkg-config procps python3 rsync valgrind"
+COMMON_PACKAGES="autoconf automake autotools-dev bison build-essential curl ca-certificates libtool libtool-bin pkg-config procps python3 rsync valgrind"
 ARCH_PACKAGES=""
 OS_PACKAGES=""
 DEPENDS=""
