@@ -43,7 +43,9 @@ if [ "$DEPENDS" = "1" ]; then
     fi
     ./contrib/scripts/setup.sh --host $TARGET_HOST_TRIPLET --depends
     ./contrib/scripts/build.sh --host $TARGET_HOST_TRIPLET --depends
+    ./contrib/scripts/test.sh --host $TARGET_HOST_TRIPLET --depends
 else
     ./contrib/scripts/setup.sh --host $TARGET_HOST_TRIPLET
     ./contrib/scripts/build.sh --host $TARGET_HOST_TRIPLET
+    ./contrib/scripts/test.sh --host $TARGET_HOST_TRIPLET
 fi
