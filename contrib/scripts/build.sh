@@ -56,15 +56,15 @@ if has_param '--host' "$@"; then
             TARGET_ARCH="i386"
         ;;
     esac
-    CONFIGURE_OPTIONS+=" --enable-static --disable-shared"
+    CONFIGURE_OPTIONS="--enable-static --disable-shared"
 fi
 
 if has_param '--depends' "$@"; then
     DEPENDS=1
     PREFIX=`pwd`/depends/$TARGET_HOST_TRIPLET
-    CFLAGS+=-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/
-    LDFLAGS+=-L`pwd`/depends/$TARGET_HOST_TRIPLET/lib/
-    LD_LIBRARY_PATH+="`pwd`/depends/$TARGET_HOST_TRIPLET/lib/"
+    CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
+    LDFLAGS+="-L`pwd`/depends/$TARGET_HOST_TRIPLET/lib/"
+    LD_LIBRARY_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/
     PKG_CONFIG_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig
     LIBS+="-levent -levent_core -lm -lsecp256k1 -lsecp256k1_precomputed"
 fi
@@ -73,17 +73,13 @@ fi
 if [ $DEPENDS ]; then
     echo $PREFIX
     ./configure \
-    --build=$(dpkg --print-architecture) \
-    --host=$TARGET_ARCH \
-    --target=$TARGET_ARCH \
     --prefix=$PREFIX \
-    CFLAGS="$CFLAGS" \
+    CFLAGS=$CFLAGS \
     LIBTOOL_APP_LDFLAGS="-all-static" \
-    LDFLAGS="$LDFLAGS -s -static --static -static-libgcc -static-libstdc++" \
+    LDFLAGS="-s -static --static -static-libgcc -static-libstdc++" \
     LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
     PKG_CONFIG_PATH=$PKG_CONFIG_PATH \
     $CONFIGURE_OPTIONS
 else
     ./configure
 fi
-make
