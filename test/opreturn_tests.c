@@ -66,4 +66,3 @@ void test_op_return() {
     vector_add(tx->transaction->vout, tx_out);
     remove_all();
 }
-    

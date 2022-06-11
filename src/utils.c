@@ -452,36 +452,12 @@ void print_image(FILE* fptr)
         printf("%s", read_string);
     }
 
-int cmp_ld_uint64(long double x, uint64_t y) {
-    return (x == (long double)y) && (x != 0x1p64l) && ((uint64_t)x == y);
-    }
-
-inline long double inv_trunc(long double Number, uint64_t target) {
-    return Number < target ? floor(Number) : ceil(Number);
-}
-
 long double rnd(long double v, long double digit) {
     long double _pow;
     _pow = pow(10.0, digit);
     long double t = v * _pow;
     long double r = ceil(t + 0.5);
     return r / _pow;
-}
-
-long double get_koinu_mantissa(long double in) {
-    return fmodl(in, 1e8) / 1e8;
-}
-
-long double get_koinu_integer(uint64_t in) {
-    return (long double)truncl(in / 1e8);
-}
-
-uint64_t get_diff(uint64_t x) {
-    return x % 10;
-}
-
-long double get_diffl(long double x) {
-    return fmodl(x, 10);
 }
 
 long double length(double n) {
@@ -508,21 +484,6 @@ long double length(double n) {
     // UINT64_MAX // 18446744073709551615
     return 20;
     }
-
-long double get_mantissa_upto(long double in, long double x) {
-    return fmodl(in, powl(10.0, x)) / powl(10, x);
-}
-
-long double append_koinu(long double x, long double y) {
-    debug_print("x:                                          %.25Lf\n", x);
-    y = y * 1e7;
-    debug_print("y:                                          %.25Lf\n", y);
-    return (long double)((x + y) * 1e1) / 100000000;
-}
-
-int compare_diffs(uint64_t a, uint64_t b) {
-    return a - b;
-}
 
 void show_fe_currentrnding_direction(void)
 {
@@ -554,10 +515,6 @@ long double koinu_to_coins(uint64_t koinu) {
     output = (long double)koinu / (long double)1e8;
 #endif
     return output;
-}
-
-uint64_t get_true_uint64_t(long double x) {
-    return (((uint64_t)get_koinu_integer(x * 100000000)) * 100000000) + (uint64_t)(rnd(get_koinu_mantissa(x * 100000000), 8.0) * 100000000);
 }
 
 long double round_ld(long double x)
