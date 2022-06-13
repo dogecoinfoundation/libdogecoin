@@ -141,6 +141,7 @@ case "$TARGET_HOST_TRIPLET" in
     "x86_64-w64-mingw32")
         setup_linux
         if [[ $EUID == 0 ]] || [[ $DOCKER == 1 ]]; then
+            dpkg -s mono-runtime && sudo apt-get remove mono-runtime || echo "Very nothing to uninstall."
             update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
             update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
             update-binfmts --import /usr/share/binfmts/wine
@@ -150,6 +151,7 @@ case "$TARGET_HOST_TRIPLET" in
     "i686-w64-mingw32")
         setup_linux
         if [[ $EUID == 0 ]] || [[ $DOCKER == 1 ]]; then
+            dpkg -s mono-runtime && sudo apt-get remove mono-runtime || echo "Very nothing to uninstall."
             update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix
             update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
             update-binfmts --import /usr/share/binfmts/wine
