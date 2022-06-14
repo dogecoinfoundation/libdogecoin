@@ -146,7 +146,6 @@ case "$TARGET_HOST_TRIPLET" in
             update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
             update-binfmts --import /usr/share/binfmts/wine
         fi
-        echo $TARGET_ARCH done
     ;;
     "i686-w64-mingw32")
         setup_linux
@@ -166,11 +165,6 @@ case "$TARGET_HOST_TRIPLET" in
         contrib/scripts/sdk.sh
     ;;
     *)
-        if [[ $EUID == 0 ]] || [[ $DOCKER == 1 ]]; then
-            dpkg --add-architecture $TARGET_ARCH
-        else
-            echo "please run with sudo"
-        fi
         setup_linux
     ;;
 esac

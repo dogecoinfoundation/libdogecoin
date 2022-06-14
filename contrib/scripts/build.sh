@@ -40,16 +40,18 @@ if has_param '--host' "$@"; then
         ;;
         "x86_64-w64-mingw32")
             TARGET_ARCH="amd64"
-            export CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
-            export LDFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/lib/"
-            export LDFLAGS+="-s -static --static -static-libgcc -static-libstdc++"
-            export LD_LIBRARY_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib
-            export PKG_CONFIG_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig
+            CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
+            LDFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/lib/ -s -static --static -static-libgcc -static-libstdc++"
+            LD_LIBRARY_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib
+            PKG_CONFIG_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig
             LIBS+=" -lpthread -lwinpthread"
         ;;
         "i686-w64-mingw32")
             TARGET_ARCH="i386"
-            LDFLAGS+=-no-undefined
+            CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
+            LDFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/lib/ -s -static --static -static-libgcc -static-libstdc++"
+            LD_LIBRARY_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib
+            PKG_CONFIG_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig
             LIBS+=" -lpthread -lwinpthread -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lbcrypt -lcrypt32 -DWIN32"
         ;;
         "x86_64-apple-darwin14")
@@ -67,15 +69,24 @@ fi
 if has_param '--depends' "$@"; then
     DEPENDS=1
     PREFIX=`pwd`/depends/$TARGET_HOST_TRIPLET
+    export CFLAGS
+    export LDFLAGS
     export LIBS
+    export LD_LIBRARY_PATH
     export LIBTOOL_APP_LDFLAGS="-all-static"
+    export PKG_CONFIG_PATH
 fi
 
 ./autogen.sh
 if [ $DEPENDS ]; then
     echo $PREFIX
     ./configure \
-    --prefix=$PREFIX --enable-reduce-exports --enable-static --disable-shared
+    --prefix=$PREFIX \
+    --disable-maintainer-mode \
+    --disable-dependency-tracking \
+    --enable-reduce-exports \
+    --enable-static \
+    --disable-shared
 else
     ./configure
 fi

@@ -40,6 +40,7 @@
 
 #include <dogecoin/address.h>
 #include <dogecoin/bip32.h>
+#include <dogecoin/chainparams.h>
 #include <dogecoin/key.h>
 #include <dogecoin/random.h>
 #include <dogecoin/sha2.h>

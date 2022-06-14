@@ -25,6 +25,17 @@ has_param() {
     return 1
 }
 
+detect_os() {
+    uname_out="$(uname -s)"
+    case "${uname_out}" in
+        Linux*)     machine=linux;;
+        Darwin*)    machine=mac;;
+        CYGWIN*)    machine=cygwin;;
+        MINGW*)     machine=mingw;;
+        *)          machine="unknown:${uname_out}"
+    esac
+}
+
 TARGET_HOST_TRIPLET=""
 TARGET_ARCH=""
 
@@ -43,12 +54,14 @@ if has_param '--host' "$@"; then
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
         ;;
         "x86_64-apple-darwin14")
-            ./tests
+            if [[ detect_os == "darwin" ]]; then
+                ./tests
+            fi
         ;;
         "x86_64-pc-linux-gnu") 
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
             python3 tooltests.py
-            ./wrappers/python/pytest/cython_tests.sh -host=${{ matrix.host }}
+            ./wrappers/python/pytest/cython_tests.sh
             ./wrappers/golang/libdogecoin/build.sh
         ;;
         "i686-pc-linux-gnu")
