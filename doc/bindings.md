@@ -90,7 +90,55 @@ python3: src/ecc.c:73: dogecoin_ecc_verify_privatekey: Assertion `secp256k1_ctx'
 Aborted (core dumped)
 ```
 
-For more information and documentation on how to properly call all the functions of Libdogecoin from Python, see address.md.
+For more information and documentation on how to properly call all the functions of Libdogecoin from Python, see [address.md](address.md) and [transaction.md](transaction.md).
 
-### Modifying Wrappers
+### Modifying Python Wrappers
 If you are interested in making your own modifications to these wrappers, you can edit the `wrappers/python/libdogecoin/libdogecoin.pyx` file. Once your changes have been made, make sure to delete both the previous shared library file _and_ the Cython-generated `libdogecoin.c` file adjacent to `libdogecoin.pyx` prior to running the build command. Or, you can even run the bash script `wrappers/python/pytest/cython_tests.sh` to do this automatically and test out your implementation across all architectures.
+
+### Downloading from PyPI
+#TODO
+
+
+## Golang Wrappers
+The Go Libdogecoin module uses cgo to build wrappers call the functions in the C library, and this module can be downloaded from Github at https://github.com/jaxlotl/go-libdogecoin-sandbox. Unlike Python, this module does not require building and can be used directly out of the box; **however, the library module for Go currently only supports Linux 64-bit architecture.**
+
+### Integration
+To use these wrappers inside of your own project, you must first include the correct import statement in your source code:
+```go
+package main
+
+import "github.com/jaxlotl/go-libdogecoin-sandbox"
+```
+If a module has not yet been created for your project, create it with `go mod init myproject`. From there, the following commands will make sure you are up to date with the most recent MINOR.PATCH:
+```
+go get -u github.com/jaxlotl/go-libdogecoin-sandbox
+go mod tidy
+```
+The output, if any, should tell you which version of go-libdogecoin you have downloaded. Now you are ready to call the functions from inside your project!
+
+In order to access the functions inside this module, you must invoke the function through the `libdogecoin` package. All wrapped functions are named the same as those mentioned in the [Essential API description](transaction.md#essential-api), but with a preceding _capital_ "W" and underscore. For example, to call `start_transaction()` and `clear_transaction()` in your project, it would look like this:
+
+_Example:_
+```go
+package main
+
+import "github.com/jaxlotl/go-libdogecoin-sandbox"
+
+func main() {
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
+    /*
+    your code here...
+    */
+}
+```
+
+Similar to Python, any time a function related to a private key is called, it must be from within a secp256k1 context. Start the context with `libdogecoin.W_context_start()` and stop the context with `libdogecoin.W_context_stop()`. If a function is called outside of a secp256k1 context, you will receive an error resembling the following:
+```
+myfilename: src/ecc.c:74: dogecoin_ecc_verify_privatekey: Assertion `secp256k1_ctx' failed.
+SIGABRT: abort
+PC=0x7fa9b3bb500b m=0 sigcode=18446744073709551610
+signal arrived during cgo execution
+```
+
+For more information and documentation on how to properly call all the functions of Libdogecoin from Go, see [address.md](address.md) and [transaction.md](transaction.md).

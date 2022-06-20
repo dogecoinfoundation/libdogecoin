@@ -1,7 +1,7 @@
-# Libdogecoin Transactions
+# Libdogecoin Transaction API
 
 ## Table of Contents
-- [Libdogecoin Transactions](#libdogecoin-transactions)
+- [Libdogecoin Transaction API](#libdogecoin-transaction-api)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Working Transaction API](#working-transaction-api)
@@ -9,7 +9,7 @@
     - [**add_transaction**](#add_transaction)
     - [**find_transaction**](#find_transaction)
     - [**remove_transaction**](#remove_transaction)
-  - [Essential API](#essential-api)
+  - [Essential Transaction API](#essential-transaction-api)
     - [**start_transaction**](#start_transaction)
     - [**add_utxo**](#add_utxo)
     - [**add_output**](#add_output)
@@ -97,7 +97,9 @@ working_transaction* working_tx = find_transaction(1);
 remove_transaction(working_tx);
 ```
 
-## Essential API
+## Essential Transaction API
+
+These functions implement the core functionality of Libdogecoin for building transactions, and are described in depth below. You can access them through a C program, by including the `libdogecoin.h` header in the source code and including the `libdogecoin.a` library at compile time. Or, you may implement either set of wrappers if you are more inclined towards a high-level language. For more details about wrapper installation and setup, see [bindings.md](bindings.md).
 
 ---
 ### **start_transaction**
@@ -128,11 +130,13 @@ l.w_clear_transaction(index)
 
 _Golang usage:_
 ```go
-import l "TODO: FIND CORRECT PATH NAME FOR MODULE DOWNLOAD"
+package main
+
+import "github.com/jaxlotl/go-libdogecoin-sandbox"
 
 func main() {
-    index := l.w_start_transaction()
-    defer l.w_clear_transaction(index)
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
     // build onto the working transaction here
 }
 ```
@@ -175,15 +179,17 @@ l.w_clear_transaction(index)
 
 _Golang usage:_
 ```go
-import l "libdogecoin"
+package main
+
+import "github.com/jaxlotl/go-libdogecoin-sandbox"
 
 func main() {
     previous_output_txid := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
     previous_output_n := 1
 
-    index := l.w_start_transaction()
-    defer l.w_clear_transaction(index)
-    if l.w_add_utxo(index, previous_output_txid, previous_output_n)!=1 {
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
+    if libdogecoin.W_add_utxo(index, previous_output_txid, previous_output_n)!=1 {
         // error handling here
     }
 }
@@ -231,21 +237,22 @@ l.w_clear_transaction(index)
 
 _Golang usage:_
 ```go
-import l "libdogecoin"
+package main
+
+import "github.com/jaxlotl/go-libdogecoin-sandbox"
 
 func main() {
     prev_output_txid := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
     prev_output_n := 1
     external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
 
-    index := w_start_transaction()
-    defer l.w_clear_transaction(index)
-    l.w_add_utxo(index, prev_output_txid, prev_output_n)
-    if l.w_add_output(index, external_address, 5.0) != 1 {
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
+    libdogecoin.W_add_utxo(index, prev_output_txid, prev_output_n)
+    if libdogecoin.W_add_output(index, external_address, 5.0) != 1 {
         // error handling here
     }
 }
-
 ```
 
 ---
@@ -258,6 +265,7 @@ Because Dogecoin protocol requires that utxos must be spent in full, an addition
 _C usage:_
 ```C
 #include "libdogecoin.h"
+#include <stdio.h>
 
 int main() {
     char* prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"; // worth 2 dogecoin
@@ -274,6 +282,7 @@ int main() {
 
     // finalize transaction with min fee of 0.00226 doge on the input total of 12 dogecoin
     char* rawhex = finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
+    printf("Finalized transaction hex is %s.", rawhex);
     clear_transaction(index);
 }
 ```
@@ -294,25 +303,34 @@ l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
 l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
 l.w_add_output(index, external_address, 5.0)
 rawhex = l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+print(f"Finalized transaction hex is {rawhex}.")
 l.w_clear_transaction(index)
 ```
 
 _Golang usage:_
 ```go
-import l "libdogecoin"
+package main
+
+import (
+    "fmt"
+    "github.com/jaxlotl/go-libdogecoin-sandbox"
+)
 
 func main() {
     prev_output_txid_2 := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
     prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
     prev_output_n_2 := 1
     prev_output_n_10 := 1
+    external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+    my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
 
-    index := start_transaction()
-    defer l.w_clear_transaction(index)
-    l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
-    l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-    l.w_add_output(index, external_address, 5.0)
-    rawhex := l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
+    libdogecoin.W_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+    libdogecoin.W_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+    libdogecoin.W_add_output(index, external_address, 5.0)
+    rawhex := libdogecoin.W_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+    fmt.Printf("Finalized transaction hex is %s.\n", rawhex)  
 }
 ```
 
@@ -348,16 +366,18 @@ l.w_clear_transaction(index)
 
 _Golang usage:_
 ```go
+package main
+
 import (
     "fmt"
-    l "libdogecoin"
+    "github.com/jaxlotl/go-libdogecoin-sandbox"
 )
 
 func main() {
-    index := l.w_start_transaction()
-    defer l.w_clear_transaction(index)
-    rawhex := l.w_get_raw_transaction(index)
-    fmt.Printf("The transaction hex at index %d is %s\n", index, rawhex)
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
+    rawhex := libdogecoin.W_get_raw_transaction(index)
+    fmt.Printf("The transaction hex at index %d is %s.\n", index, rawhex)
 }
 ```
 
@@ -392,15 +412,17 @@ print(f"The transaction hex at index {index} is {l.w_get_raw_transaction(index)}
 
 _Golang usage:_
 ```go
+package main
+
 import (
     "fmt"
-    l "libdogecoin"
+    "github.com/jaxlotl/go-libdogecoin-sandbox"
 )
 
 func main() {
-    index = l.w_start_transaction()
-    l.w_clear_transaction(index)
-    fmt.Printf("The transaction hex at index %d is %s.\n", index, l.w_get_raw_transaction(index)) // should return empty string
+    index := libdogecoin.W_start_transaction()
+    libdogecoin.W_clear_transaction(index)
+    fmt.Printf("The transaction hex at index %d is %s.\n", index, libdogecoin.W_get_raw_transaction(index)) // should return empty string
 }
 ```
 
@@ -409,7 +431,7 @@ func main() {
 
 `int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)`
 
-This function takes in an index denoting which of the current transaction's inputs to sign (inputindex), the raw hexadecimal representation of the transaction to sign (incomingrawtx), the pubkey script in hexadecimal format (scripthex), the signature hash type (sighashtype), the amount included in the input to sign (amount), and the WIF-encoded private key used to sign the input (privkey). **Important:** `sign_raw_transaction` must be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
+This function takes in an index denoting which of the current transaction's inputs to sign (inputindex), the raw hexadecimal representation of the transaction to sign (incomingrawtx), the pubkey script in hexadecimal format (scripthex), the signature hash type (sighashtype), the amount included in the input to sign (amount), and the WIF-encoded private key used to sign the input (privkey). Signature hash type in normal use cases is set to 1 to denote that anyone can pay. In C, the function returns a boolean denoting success, but the actual signed transaction hex is passed back through incomingrawtx. From the wrappers, the transaction is simply returned as a string unless the signing fails, which results in a return of zero (Python) or an empty string (Go). **Important:** `sign_raw_transaction` must be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
 _C usage:_
 ```C
@@ -434,10 +456,11 @@ int main() {
 
     //sign both inputs of the current finalized transaction
     dogecoin_ecc_start();
-    sign_raw_transaction(0, get_raw_transaction(index), my_script_pubkey, 1, 2.0, my_privkey);
-    sign_raw_transaction(1, get_raw_transaction(index), my_script_pubkey, 1, 10.0, my_privkey);
+    char* rawhex = get_raw_transaction(index);
+    sign_raw_transaction(0, rawhex, my_script_pubkey, 1, 2.0, my_privkey);
+    sign_raw_transaction(1, rawhex, my_script_pubkey, 1, 10.0, my_privkey);
     dogecoin_ecc_stop();
-    printf("The final signed transaction hex is: %s\n", get_raw_transaction(index));
+    printf("The final signed transaction hex is: %s\n", rawhex);
     clear_transaction(index);
 }
 ```
@@ -464,43 +487,48 @@ l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
 
 # sign both inputs of the current finalized transaction
 l.context_start()
-if not l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey):
-    # error handling here
-print("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+rawhex = l.w_get_raw_transaction(index)
+half_signed_hex = l.w_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, 2.0, my_privkey)
+full_signed_hex = l.w_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, 10.0, my_privkey)
+print("The final signed transaction hex is:", full_signed_hex)
 l.context_stop()
 l.w_clear_transaction(index)
 ```
 
 _Golang usage:_
 ```go
+package main
+
 import (
-    "fmt"
-    l "libdogecoin"
+	"fmt"
+
+	"github.com/jaxlotl/go-libdogecoin-sandbox"
 )
 
 func main() {
-    prev_output_txid_2 := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074" // worth 2 dogecoin
-    prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" // worth 10 dogecoin
-    prev_output_n_2 := 1
-    prev_output_n_10 := 1
-    amounts := [2]float64{2.0, 10.0}
-    external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
-    my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
-    my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
-    my_privkey := "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
+	prev_output_txid_2 := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"  // worth 2 dogecoin
+	prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" // worth 10 dogecoin
+	prev_output_n_2 := 1
+	prev_output_n_10 := 1
+	external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
+	my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
+	my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
+	my_privkey := "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
 
-    index := l.w_start_transaction()
-    defer l.w_clear_transaction(index)
-    l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
-    l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-    l.w_add_output(index, external_address, 5.0)
-    l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+	index := libdogecoin.W_start_transaction()
+	defer libdogecoin.W_clear_transaction(index)
+	libdogecoin.W_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+	libdogecoin.W_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+	libdogecoin.W_add_output(index, external_address, 5.0)
+	libdogecoin.W_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
 
-    // sign both inputs of the current finalized transaction
-    if l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1 {
-        // error handling here
-    }
-    fmt.Println("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+	// sign both inputs of the current finalized transaction
+	libdogecoin.W_context_start()
+    rawhex := libdogecoin.W_get_raw_transaction(index)
+	half_signed_hex := libdogecoin.W_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, 2.0, my_privkey)
+    full_signed_hex := libdogecoin.W_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, 10.0, my_privkey)
+	libdogecoin.W_context_stop()
+	fmt.Printf("The final signed transaction hex is: %s.\n", full_signed_hex)
 }
 ```
 
@@ -509,7 +537,7 @@ func main() {
 
 `int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey)`
 
-This function takes in a working transaction structure's index as an integer (txindex), an array of all the input amounts (amounts), the pubkey in script hex form (script_pubkey), and the WIF-encoded private key (privkey). Each input is then signed using the specified private key, and the final signed transaction is saved to the hash table, which can be retrieved using `get_raw_transaction()`. The return value of `sign_transaction()` is a boolean denoting whether the signing was successful, but the output from `get_raw_transaction()` is a fully signed transaction that--if all information is valid--can be broadcast to miners and incorporated into the blockchain.**Important:** `sign_transaction` must also be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
+This function takes in a working transaction structure's index as an integer (txindex), an array of all the input amounts (amounts), the pubkey in script hex form (script_pubkey), and the WIF-encoded private key (privkey). Each input is then signed using the specified private key, and the final signed transaction is saved to the hash table, which can be retrieved using `get_raw_transaction()`. The return value of `sign_transaction()` is a boolean denoting whether the signing was successful, but the output from `get_raw_transaction()` is a fully signed transaction that--if all information is valid--can be broadcast to miners and incorporated into the blockchain. **Important:** `sign_transaction` must also be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
 _Note: Golang does not currently support the use of long doubles, so depending on architecture, using Go wrappers may result in loss of precision._
 
@@ -577,9 +605,11 @@ l.w_clear_transaction(index)
 
 _Golang usage:_
 ```go
+package main
+
 import (
     "fmt"
-    l "libdogecoin"
+    "github.com/jaxlotl/go-libdogecoin-sandbox"
 )
 
 func main() {
@@ -593,17 +623,17 @@ func main() {
     my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
     my_privkey := "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
 
-    index := l.w_start_transaction()
-    defer l.w_clear_transaction(index)
-    l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
-    l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-    l.w_add_output(index, external_address, 5.0)
-    l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+    index := libdogecoin.W_start_transaction()
+    defer libdogecoin.W_clear_transaction(index)
+    libdogecoin.W_add_utxo(index, prev_output_txid_2, prev_output_n_2)
+    libdogecoin.W_add_utxo(index, prev_output_txid_10, prev_output_n_10)
+    libdogecoin.W_add_output(index, external_address, 5.0)
+    libdogecoin.W_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
 
     // sign both inputs of the current finalized transaction
-    if l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1:
+    if libdogecoin.W_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1:
         // error handling here
-    fmt.Println("The final signed transaction hex is:", l.w_get_raw_transaction(index))
+    fmt.Println("The final signed transaction hex is:", libdogecoin.W_get_raw_transaction(index))
 }
 ```
 
@@ -639,15 +669,17 @@ l.w_clear_transaction(index)
 
 _Golang usage:_
 ```go
+package main
+
 import (
     "fmt"
-    l "libdogecoin"
+    "github.com/jaxlotl/go-libdogecoin-sandbox"
 )
 
 func main() {
     hex_to_store := "0100000001746007aed61e8531faba1af6610f10a5422c70a2a7eb6ffb51cb7a7b7b5e45b40100000000ffffffff0000000000"
-    index := l.w_store_raw_transaction(hex_to_store)
-    defer l.w_clear_transaction(index)
-    fmt.Printf("The transaction hex at index %d is %s.\n", index, l.w_get_raw_transaction(index))
+    index := libdogecoin.W_store_raw_transaction(hex_to_store)
+    defer libdogecoin.W_clear_transaction(index)
+    fmt.Printf("The transaction hex at index %d is %s.\n", index, libdogecoin.W_get_raw_transaction(index))
 }
 ```
