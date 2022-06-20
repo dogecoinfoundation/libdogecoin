@@ -30,15 +30,15 @@ int intermed_sign_transaction(int txindex, double amounts[], int arr_len, char* 
 import "C"
 import "unsafe"
 
-func w_context_start() {
+func W_context_start() {
 	C.dogecoin_ecc_start()
 }
 
-func w_context_stop() {
+func W_context_stop() {
 	C.dogecoin_ecc_stop()
 }
 
-func w_generate_priv_pub_keypair(is_testnet bool) (wif_privkey string, p2pkh_pubkey string) {
+func W_generate_priv_pub_keypair(is_testnet bool) (wif_privkey string, p2pkh_pubkey string) {
 	c_wif_privkey := [53]C.char{}
 	c_p2pkh_pubkey := [35]C.char{}
 	c_is_testnet := C._Bool(is_testnet)
@@ -48,7 +48,7 @@ func w_generate_priv_pub_keypair(is_testnet bool) (wif_privkey string, p2pkh_pub
 	return
 }
 
-func w_generate_hd_master_pub_keypair(is_testnet bool) (wif_privkey_master string, p2pkh_pubkey_master string) {
+func W_generate_hd_master_pub_keypair(is_testnet bool) (wif_privkey_master string, p2pkh_pubkey_master string) {
 	c_wif_privkey_master := [128]C.char{}
 	c_p2pkh_pubkey_master := [35]C.char{}
 	c_is_testnet := C._Bool(is_testnet)
@@ -58,7 +58,7 @@ func w_generate_hd_master_pub_keypair(is_testnet bool) (wif_privkey_master strin
 	return
 }
 
-func w_generate_derived_hd_pub_key(wif_privkey_master string) (child_p2pkh_pubkey string) {
+func W_generate_derived_hd_pub_key(wif_privkey_master string) (child_p2pkh_pubkey string) {
 	c_wif_privkey_master := C.CString(wif_privkey_master)
 	c_child_p2pkh_pubkey := [35]C.char{}
 	C.generateDerivedHDPubkey(c_wif_privkey_master, (*C.char)(&c_child_p2pkh_pubkey[0]))
@@ -67,7 +67,7 @@ func w_generate_derived_hd_pub_key(wif_privkey_master string) (child_p2pkh_pubke
 	return
 }
 
-func w_verify_priv_pub_keypair(wif_privkey string, p2pkh_pubkey string, is_testnet bool) (result bool) {
+func W_verify_priv_pub_keypair(wif_privkey string, p2pkh_pubkey string, is_testnet bool) (result bool) {
 	c_wif_privkey := C.CString(wif_privkey)
 	c_p2pkh_pubkey := C.CString(p2pkh_pubkey)
 	c_is_testnet := C._Bool(is_testnet)
@@ -81,7 +81,7 @@ func w_verify_priv_pub_keypair(wif_privkey string, p2pkh_pubkey string, is_testn
 	return
 }
 
-func w_verify_hd_master_pub_keypair(wif_privkey_master string, p2pkh_pubkey_master string, is_testnet bool) (result bool) {
+func W_verify_hd_master_pub_keypair(wif_privkey_master string, p2pkh_pubkey_master string, is_testnet bool) (result bool) {
 	c_wif_privkey_master := C.CString(wif_privkey_master)
 	c_p2pkh_pubkey_master := C.CString(p2pkh_pubkey_master)
 	c_is_testnet := C._Bool(is_testnet)
@@ -95,8 +95,9 @@ func w_verify_hd_master_pub_keypair(wif_privkey_master string, p2pkh_pubkey_mast
 	return
 }
 
-func w_verify_p2pkh_address(p2pkh_pubkey string, len int) (result bool) {
+func W_verify_p2pkh_address(p2pkh_pubkey string) (result bool) {
 	c_p2pkh_pubkey := C.CString(p2pkh_pubkey)
+	len := len(p2pkh_pubkey)
 	c_len := C.uchar(len)
 	if C.verifyP2pkhAddress(c_p2pkh_pubkey, c_len) == 1 {
 		result = true
@@ -107,12 +108,12 @@ func w_verify_p2pkh_address(p2pkh_pubkey string, len int) (result bool) {
 	return
 }
 
-func w_start_transaction() (result int) {
+func W_start_transaction() (result int) {
 	result = int(C.start_transaction())
 	return
 }
 
-func w_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
+func W_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_hex_utxo_txid := C.CString(hex_utxo_txid)
 	c_vout := C.int(vout)
@@ -121,7 +122,7 @@ func w_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
 	return
 }
 
-func w_add_output(tx_index int, destination_address string, amount float64) (result int) {
+func W_add_output(tx_index int, destination_address string, amount float64) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
 	c_amount := C.double(amount)
@@ -130,7 +131,7 @@ func w_add_output(tx_index int, destination_address string, amount float64) (res
 	return
 }
 
-func w_finalize_transaction(tx_index int, destination_address string, subtracted_fee float64, out_doge_amount_for_verification float64, public_key string) (result string) {
+func W_finalize_transaction(tx_index int, destination_address string, subtracted_fee float64, out_doge_amount_for_verification float64, public_key string) (result string) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
 	c_subtracted_fee := C.double(subtracted_fee)
@@ -142,19 +143,18 @@ func w_finalize_transaction(tx_index int, destination_address string, subtracted
 	return
 }
 
-func w_get_raw_transaction(tx_index int) (result string) {
+func W_get_raw_transaction(tx_index int) (result string) {
 	c_tx_index := C.int(tx_index)
 	result = C.GoString(C.get_raw_transaction(c_tx_index))
 	return
 }
 
-func w_clear_transaction(tx_index int) {
+func W_clear_transaction(tx_index int) {
 	c_tx_index := C.int(tx_index)
 	C.clear_transaction(c_tx_index)
-	return
 }
 
-func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount float64, privkey string) (result string) {
+func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount float64, privkey string) (result string) {
 	c_input_index := C.int(input_index)
 	c_incoming_raw_tx := [1024 * 100]C.char{}
 	for i := 0; i < len(incoming_raw_tx) && i < 1024; i++ {
@@ -174,7 +174,7 @@ func w_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	return
 }
 
-func w_sign_transaction(tx_index int, amounts []float64, script_pubkey string, privkey string) (result int) {
+func W_sign_transaction(tx_index int, amounts []float64, script_pubkey string, privkey string) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_amounts := [32]C.double{}
 	c_arr_len := C.int(len(amounts))
@@ -189,7 +189,7 @@ func w_sign_transaction(tx_index int, amounts []float64, script_pubkey string, p
 	return
 }
 
-func w_store_raw_transaction(incoming_raw_tx string) (result int) {
+func W_store_raw_transaction(incoming_raw_tx string) (result int) {
 	c_incoming_raw_tx := C.CString(incoming_raw_tx)
 	result = int(C.store_raw_transaction(c_incoming_raw_tx))
 	return

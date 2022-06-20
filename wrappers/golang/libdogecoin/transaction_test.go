@@ -60,229 +60,229 @@ var high_send_amt int = 15 // max we can spend from the two inputs is 12
 
 func TestTransaction(t *testing.T) {
 	t.Run("start_transaction", func(t *testing.T) {
-		res := w_start_transaction()
+		res := W_start_transaction()
 		if res <= 0 {
 			t.Errorf("Invalid index received.")
 		}
-		res2 := w_start_transaction()
+		res2 := W_start_transaction()
 		if res2 != res+1 {
 			t.Errorf("Transactions are not consecutive.")
 		}
-		if w_get_raw_transaction(res) != expected_empty_tx_hex || w_get_raw_transaction(res2) != expected_empty_tx_hex {
+		if W_get_raw_transaction(res) != expected_empty_tx_hex || W_get_raw_transaction(res2) != expected_empty_tx_hex {
 			t.Errorf("Transaction state does not match expected hash.")
 		}
-		w_clear_transaction(res)
-		w_clear_transaction(res2)
+		W_clear_transaction(res)
+		W_clear_transaction(res2)
 	})
 
 	t.Run("store_raw_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		idx2 := w_store_raw_transaction(expected_unsigned_single_utxo_tx_hex)
+		idx := W_start_transaction()
+		idx2 := W_store_raw_transaction(expected_unsigned_single_utxo_tx_hex)
 		if idx2 != idx+1 {
 			t.Errorf("Transactions are not consecutive.")
 		}
-		if w_get_raw_transaction(idx2) != expected_unsigned_single_utxo_tx_hex {
+		if W_get_raw_transaction(idx2) != expected_unsigned_single_utxo_tx_hex {
 			t.Errorf("Transaction hex not stored properly.")
 		}
-		w_clear_transaction(idx)
-		w_clear_transaction(idx2)
+		W_clear_transaction(idx)
+		W_clear_transaction(idx2)
 	})
 
 	t.Run("store_long_raw_transaction", func(t *testing.T) {
-		res := w_store_raw_transaction(long_tx_hex)
+		res := W_store_raw_transaction(long_tx_hex)
 		if res != 0 {
 			t.Errorf("Long transaction hex should not be saved.")
 		}
 	})
 
 	t.Run("get_raw_transaction", func(t *testing.T) {
-		idx := w_start_transaction()
-		w_add_utxo(idx, hash_2_doge, vout_2_doge)
-		if w_get_raw_transaction(idx) != expected_unsigned_single_utxo_tx_hex {
+		idx := W_start_transaction()
+		W_add_utxo(idx, hash_2_doge, vout_2_doge)
+		if W_get_raw_transaction(idx) != expected_unsigned_single_utxo_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after adding the first utxo.")
 		}
-		w_add_utxo(idx, hash_10_doge, vout_10_doge)
-		if w_get_raw_transaction(idx) != expected_unsigned_double_utxo_tx_hex {
+		W_add_utxo(idx, hash_10_doge, vout_10_doge)
+		if W_get_raw_transaction(idx) != expected_unsigned_double_utxo_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after adding the second utxo.")
 		}
-		w_add_output(idx, external_p2pkh_addr, send_amt)
-		if w_get_raw_transaction(idx) != expected_unsigned_double_utxo_single_output_tx_hex {
+		W_add_output(idx, external_p2pkh_addr, send_amt)
+		if W_get_raw_transaction(idx) != expected_unsigned_double_utxo_single_output_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after adding both utxos and an output.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("get_raw_transaction_bad_index", func(t *testing.T) {
-		idx := w_start_transaction()
-		res := w_get_raw_transaction(idx + 1) // out of bounds
+		idx := W_start_transaction()
+		res := W_get_raw_transaction(idx + 1) // out of bounds
 		if res != "" {
 			t.Errorf("Bad index should return empty string.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("single_utxo", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_add_utxo(idx, hash_2_doge, vout_2_doge) == 0 {
+		idx := W_start_transaction()
+		if W_add_utxo(idx, hash_2_doge, vout_2_doge) == 0 {
 			t.Errorf("Error while running add_utxo().")
 		}
-		rawhex := w_get_raw_transaction(idx)
+		rawhex := W_get_raw_transaction(idx)
 		if rawhex != expected_unsigned_single_utxo_tx_hex {
 			t.Errorf("Transaction state does not match expected hash.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("double_utxo", func(t *testing.T) {
-		idx := w_start_transaction()
-		if w_add_utxo(idx, hash_2_doge, vout_2_doge) == 0 || w_add_utxo(idx, hash_10_doge, vout_10_doge) == 0 {
+		idx := W_start_transaction()
+		if W_add_utxo(idx, hash_2_doge, vout_2_doge) == 0 || W_add_utxo(idx, hash_10_doge, vout_10_doge) == 0 {
 			t.Errorf("Error while running add_utxo().")
 		}
-		rawhex := w_get_raw_transaction(idx)
+		rawhex := W_get_raw_transaction(idx)
 		if rawhex != expected_unsigned_double_utxo_tx_hex {
 			t.Errorf("Transaction state does not match expected hash.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("add_utxo_bad_index", func(t *testing.T) {
-		idx := w_start_transaction()
-		res := w_add_utxo(idx+1, hash_2_doge, vout_2_doge)
+		idx := W_start_transaction()
+		res := W_add_utxo(idx+1, hash_2_doge, vout_2_doge)
 		if res != 0 {
 			t.Errorf("Bad index should return failure.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("add_output", func(t *testing.T) {
-		idx := w_store_raw_transaction(expected_unsigned_double_utxo_tx_hex)
+		idx := W_store_raw_transaction(expected_unsigned_double_utxo_tx_hex)
 		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
-		if w_add_output(idx, external_p2pkh_addr, send_amt) == 0 {
+		if W_add_output(idx, external_p2pkh_addr, send_amt) == 0 {
 			t.Errorf("Error while adding output.")
 		}
-		rawhex := w_get_raw_transaction(idx)
+		rawhex := W_get_raw_transaction(idx)
 		if rawhex != expected_unsigned_double_utxo_single_output_tx_hex {
 			t.Errorf("Transaction state does not match expected hash.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("finalize_transaction", func(t *testing.T) {
-		idx := w_store_raw_transaction(expected_unsigned_double_utxo_single_output_tx_hex)
+		idx := W_store_raw_transaction(expected_unsigned_double_utxo_single_output_tx_hex)
 		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
-		rawhex := w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+		rawhex := W_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
 		if rawhex != expected_unsigned_tx_hex {
 			t.Errorf("Transaction state does not match expected hash.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("clear_transaction", func(t *testing.T) {
-		idx := w_store_raw_transaction(expected_unsigned_double_utxo_single_output_tx_hex)
+		idx := W_store_raw_transaction(expected_unsigned_double_utxo_single_output_tx_hex)
 		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
-		w_clear_transaction(idx)
-		rawhex := w_get_raw_transaction(idx)
+		W_clear_transaction(idx)
+		rawhex := W_get_raw_transaction(idx)
 		if rawhex != "" {
 			t.Errorf("Error while erasing current transaction.")
 		}
 	})
 
 	t.Run("bad_sign_raw_transaction", func(t *testing.T) {
-		idx := w_store_raw_transaction(expected_unsigned_tx_hex)
+		idx := W_store_raw_transaction(expected_unsigned_tx_hex)
 		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
-		rawhex := w_get_raw_transaction(idx)
-		rawhex = w_sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, bad_privkey_wif)
+		rawhex := W_get_raw_transaction(idx)
+		rawhex = W_sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, bad_privkey_wif)
 		if rawhex != "" {
 			t.Errorf("Bad private key should yield empty transaction.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("sign_raw_transaction", func(t *testing.T) {
-		idx := w_store_raw_transaction(expected_unsigned_tx_hex)
+		idx := W_store_raw_transaction(expected_unsigned_tx_hex)
 		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
-		rawhex := w_get_raw_transaction(idx)
-		rawhex = w_sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
+		rawhex := W_get_raw_transaction(idx)
+		rawhex = W_sign_raw_transaction(0, rawhex, utxo_scriptpubkey, 1, 2, privkey_wif)
 		if rawhex != expected_signed_single_input_tx_hex {
 			t.Errorf("Error signing first input.")
 		}
-		rawhex = w_sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
+		rawhex = W_sign_raw_transaction(1, rawhex, utxo_scriptpubkey, 1, 10, privkey_wif)
 		if rawhex != expected_signed_raw_tx_hex {
 			t.Errorf("Error signing second input.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("sign_transaction", func(t *testing.T) {
-		idx := w_store_raw_transaction(expected_unsigned_tx_hex)
+		idx := W_store_raw_transaction(expected_unsigned_tx_hex)
 		if idx == 0 {
 			t.Errorf("Error while deserializing expected transaction.")
 		}
 		var inputs = []float64{input1_amt, input2_amt}
-		if w_sign_transaction(idx, inputs, utxo_scriptpubkey, privkey_wif) == 0 {
+		if W_sign_transaction(idx, inputs, utxo_scriptpubkey, privkey_wif) == 0 {
 			t.Errorf("Error signing transaction.")
 		}
-		if w_get_raw_transaction(idx) != expected_signed_raw_tx_hex {
+		if W_get_raw_transaction(idx) != expected_signed_raw_tx_hex {
 			t.Errorf("Transaction state does not match expected hash.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("full_int_amt_transaction_build", func(t *testing.T) {
-		idx := w_start_transaction()
-		w_add_utxo(idx, hash_2_doge, vout_2_doge)
-		if w_get_raw_transaction(idx) != expected_unsigned_single_utxo_tx_hex {
+		idx := W_start_transaction()
+		W_add_utxo(idx, hash_2_doge, vout_2_doge)
+		if W_get_raw_transaction(idx) != expected_unsigned_single_utxo_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after adding the first utxo.")
 		}
-		w_add_utxo(idx, hash_10_doge, vout_10_doge)
-		if w_get_raw_transaction(idx) != expected_unsigned_double_utxo_tx_hex {
+		W_add_utxo(idx, hash_10_doge, vout_10_doge)
+		if W_get_raw_transaction(idx) != expected_unsigned_double_utxo_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after adding the second utxo.")
 		}
-		w_add_output(idx, external_p2pkh_addr, send_amt)
-		if w_get_raw_transaction(idx) != expected_unsigned_double_utxo_single_output_tx_hex {
+		W_add_output(idx, external_p2pkh_addr, send_amt)
+		if W_get_raw_transaction(idx) != expected_unsigned_double_utxo_single_output_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after adding both utxos and an ouput.")
 		}
-		w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
-		if w_get_raw_transaction(idx) != expected_unsigned_tx_hex {
+		W_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
+		if W_get_raw_transaction(idx) != expected_unsigned_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after making change.")
 		}
 		var inputs = []float64{input1_amt, input2_amt}
-		w_sign_transaction(idx, inputs, utxo_scriptpubkey, privkey_wif)
-		if w_get_raw_transaction(idx) != expected_signed_raw_tx_hex {
+		W_sign_transaction(idx, inputs, utxo_scriptpubkey, privkey_wif)
+		if W_get_raw_transaction(idx) != expected_signed_raw_tx_hex {
 			t.Errorf("Returned hex does not match expected hex after signing inputs.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 
 	t.Run("full_decimal_amt_transaction_build", func(t *testing.T) {
-		idx := w_start_transaction()
-		w_add_utxo(idx, hash_decimal_doge, vout_decimal_doge)
-		if w_get_raw_transaction(idx) != expected_unsigned_single_utxo_tx_hex2 {
+		idx := W_start_transaction()
+		W_add_utxo(idx, hash_decimal_doge, vout_decimal_doge)
+		if W_get_raw_transaction(idx) != expected_unsigned_single_utxo_tx_hex2 {
 			t.Errorf("Returned hex does not match expected hex after adding the first utxo.")
 		}
-		w_add_output(idx, external_p2pkh_addr, decimal_send_amt)
-		if w_get_raw_transaction(idx) != expected_unsigned_single_utxo_single_output_tx_hex2 {
+		W_add_output(idx, external_p2pkh_addr, decimal_send_amt)
+		if W_get_raw_transaction(idx) != expected_unsigned_single_utxo_single_output_tx_hex2 {
 			t.Errorf("Returned hex does not match expected hex after adding both utxos and an ouput.")
 		}
-		w_finalize_transaction(idx, external_p2pkh_addr, fee, decimal_total_utxo_input, p2pkh_addr2)
-		if w_get_raw_transaction(idx) != expected_unsigned_tx_hex2 {
+		W_finalize_transaction(idx, external_p2pkh_addr, fee, decimal_total_utxo_input, p2pkh_addr2)
+		if W_get_raw_transaction(idx) != expected_unsigned_tx_hex2 {
 			t.Errorf("Returned hex does not match expected hex after making change.")
 		}
 		var inputs = []float64{decimal_input_amt}
-		w_sign_transaction(idx, inputs, utxo_scriptpubkey2, privkey_wif2)
-		if w_get_raw_transaction(idx) != expected_signed_raw_tx_hex2 {
+		W_sign_transaction(idx, inputs, utxo_scriptpubkey2, privkey_wif2)
+		if W_get_raw_transaction(idx) != expected_signed_raw_tx_hex2 {
 			t.Errorf("Returned hex does not match expected hex after signing inputs.")
 		}
-		w_clear_transaction(idx)
+		W_clear_transaction(idx)
 	})
 }

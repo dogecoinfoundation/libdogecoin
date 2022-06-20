@@ -6,7 +6,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	w_context_start()
+	W_context_start()
 	os.Exit(m.Run())
-	w_context_stop()
+	W_context_stop()
 }
