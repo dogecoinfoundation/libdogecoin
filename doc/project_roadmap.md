@@ -1,4 +1,4 @@
-### Project stages
+# Project stages
 
 We understand that there's a steep lerning curve for most of the folk working
 on this project, and that's OK. This is an inflection point for the Dogecoin 
