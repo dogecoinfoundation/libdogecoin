@@ -64,7 +64,7 @@ if has_param '--host' "$@"; then
             if [ $DEPENDS ]; then
                 ARCH_PACKAGES+="g++-mingw-w64 "
             fi
-            ARCH_PACKAGES+="nsis wine32 wine-stable bc wine-binfmt"
+            ARCH_PACKAGES+="nsis wine64 wine-stable bc wine-binfmt"
             TARGET_ARCH="amd64"
             sudo update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
             sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix

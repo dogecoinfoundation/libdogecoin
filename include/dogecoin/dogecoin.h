@@ -60,7 +60,6 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 #else
 #define LIBDOGECOIN_API
 #endif
-#define __USE_MINGW_ANSI_STDIO 0
 #elif defined(__GNUC__) && defined(LIBDOGECOIN_BUILD)
 #define LIBDOGECOIN_API __attribute__((visibility("default")))
 #else
