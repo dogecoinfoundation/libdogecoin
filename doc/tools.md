@@ -2,7 +2,7 @@
 
 ## Overview
 
-If you are looking to just explore the functionality of Libdogecoin without building a complicated project yourself, look no further than the CLI tools provided in this repo. The first tool, `such`, is an interactive CLI application that allows you to perform all Essential address and transaction operations with prompts to guide you through the process. The second tool, `sendtx`, TODO IDK WHAT THIS ONE DOES
+If you are looking to just explore the functionality of Libdogecoin without building a complicated project yourself, look no further than the CLI tools provided in this repo. The first tool, `such`, is an interactive CLI application that allows you to perform all Essential address and transaction operations with prompts to guide you through the process. The second tool, `sendtx`, handles the process of broadcasting a transaction built using Libdogecoin to eventually push it onto the blockchain.
 
 This document goes over the usage of these tools along with examples of how to use them.
 
@@ -29,11 +29,11 @@ So an example run of `such` could be something like this:
 Most of these commands require a flag following them to denote things like existing keys, transaction hex strings, and more: 
 
 | Flag | Name | Required Arg? | Usage |
-| -   | -                   | -   |-  |
-| -p  | private_key         | yes | generate_public_key -p <private_key> |
-| -k  | public_key          | yes | p2pkh -k <public_key> |
-| -m  | derived_path        | yes | derive_child_key -p <extended_private_key> -m <derived_path> |
-| -t  | designate_testnet   | no  | generate_private_key -t |
+| -    | -    | -             |-      |
+| -p, --privkey  | private_key         | yes | generate_public_key -p <private_key> |
+| -k, --pubkey  | public_key          | yes | p2pkh -k <public_key> |
+| -m, --derived_path | derived_path        | yes | derive_child_key -p <extended_private_key> -m <derived_path> |
+| -t, --testnet  | designate_testnet   | no  | generate_private_key -t |
 | -s  | script_hex          | yes | comp2der -s <compact_signature> |
 | -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> -a <amount_in_utxo> |
 | -i  | input_index         | yes | see above |
@@ -53,13 +53,17 @@ Below is a list of all the commands and the flags that they require. As a remind
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
 | sign                      | -x, -s, -i, -h, -a, -p | -t   | See the definition of sign_raw_transaction in the Transaction API.
 | comp2der                  | -s                     | None | Convert a compact signature to a DER signature.
-| transaction               | None                   | None | Start the interactive transaction app. |
+| transaction               | None                   | None | Start the interactive transaction app. [Usage instructions below.]() |
 
+Lastly, to display the version of `such`, simply run the following command, which overrides any previous ones specified:
+```
+./such -v
+```
 
 ### Examples
-Below are some examples on how to use the tool in practice.
+Below are some examples on how to use the `such` tool in practice.
 
-##### Generate a new privatekey WIF and HEX encoded:
+##### Generate a new private key WIF and hex encoded:
 
     ./such -c generate_private_key
     > privatekey WIF: QSPDnjzvrSPAeiM7N2jCkzv2dqsi7fxoHipgpPfz2zdE3ZpYp74j
@@ -105,38 +109,65 @@ Below are some examples on how to use the tool in practice.
     > pubkey hex: 023973b755fdaf5b2b7b20ac134c936ec7882b1ce0a3a75857fc490c12cdf4fb4f
     > extended pubkey: dgub8nZhGxRSGUA1wuN8e4themWSxbEfYKCZynFe7GuZ413gPiVoMNZoxYucn8DQ5doeqt1cmZnxZ4Ms9SdsraiSbUkZSYbx1GzpGbrAqmFdSSL
 
+### Interactive Transaction Building with `such`
+
+When you start the interactive `such` transaction tool with `./such -c transaction`, you will be faced with a menu of options. To choose one of these options to execute, simply type the number of that command and hit enter. 
+
+| Command | Description |
+| -       | -           |
+| add transaction           | Start building a new transaction. |
+| edit transaction by id    | Make changes to a transaction that has already been started. |
+| find transaction          | Print out the hex of a transaction that has already been started. |
+| sign transaction          | Sign the inputs of a finalized transaction. |
+| delete transaction        | Remove an existing transaction from memory. |
+| delete all transactions   | Remove all existing transactions from memory. |
+| print transactions        | Start building a new transaction. |
+| import raw transaction    | Saves the entered transaction hex as a transaction object in memory. |
+| broadcast transaction     | Performs the same operation as [`./sendtx`] (#the-sendtx-tool) (`sendtx` recommended) |
+| change network            | Specify the network for building transactions. |
+| quit                      | Exit the tool. |
+
+Once you choose a command, there will be on-screen prompts to guide your next actions. All of these commands internally call the functions that make up Libdogecoin, so for more information on what happens when these commands are run, please refer to the [Libdogecoin Essential Transaction API](doc/../transaction.md). 
+
+
 
 ## The `sendtx` Tool
 
+Now that you've built a sendable transaction with Libdogecoin, `sendtx` is here to broadcast that transaction so that it can be published on the blockchain. You can broadcast to peers retrieved from a DNS seed or specify with IP/port. The application will try to connect to a default maximum of 10 peers, send the transaction to two of them, and listen on the remaining ones if the transaction has been relayed back. Alongside Libdogecoin, `sendtx` gives you the capability to publish your own transactions directly to the blockchain without using external services.
 
+### Usage
 
+Similar to `such`, `sendtx` is simple to run and is invoked by simply running the command `./sendtx` in the top level of the Libdogecoin directory, which is then simply followed by the transaction hex to broadcast rather than a command like in `such`. There are still several flags that may be helpful
 
+| Flag | Name | Required Arg? | Usage |
+| -   | -                   | -   |-  |
+| -t, --testnet  | designate_testnet   | no  | ./sendtx -t <tx_hex_for_testnet> |
+| -r, --regtest  | designate_regtest   | no  | ./sendtx -r <tx_hex_for_regtest> |
+| -d, --debug    | designate_debug     | no  | ./sendtx -d <tx_hex> |
+| -s, --timeout  | timeout_threshold   | yes | ./sendtx -s 10 <tx_hex> |
+| -i, --ips      | ip_addresses        | yes | ./sendtx -i 127.0.0.1:22556,192.168.0.1:22556 <tx_hex>|
+| -m, --maxnodes | max_connected_nodes | yes | ./sendtx -m 6 <tx_hex> |
 
+Lastly, to display only the version of `sendtx`, simply run the following command:
+```
+./sendtx -v
+```
 
-
-
-
-
-
-
-
-
-
-
-
-### The sendtx CLI
-----------------
-This tools can be used to broadcast a raw transaction to peers retrived from a dns seed or specified by ip/port.
-The application will try to connect to max 6 peers, send the transaction two two of them and listens on the remaining ones if the transaction has been relayed back.
+### Examples
+Below are some examples on how to use the `sendtx` tool in practice.
 
 ##### Send a raw transaction to random peers on mainnet
 
-    ./sendtx <txhex>
+    ./sendtx <tx_hex>
 
-##### Send a raw transaction to random peers on testnet and show debug infos
+##### Send a raw transaction to random peers on testnet and show debug information
 
-    ./sendtx -d -t <txhex>
+    ./sendtx -d -t <tx_hex>
 
-##### Send a raw transaction to specific peers on mainnet and show debug infos use a timeout of 5s
+##### Send a raw transaction to specific peers on mainnet and show debug information using a timeout of 5s
 
-    ./sendtx -d -s 5 -i 192.168.1.110:22556,127.0.0.1:22556 <txhex>
+    ./sendtx -d -s 5 -i 192.168.1.110:22556,127.0.0.1:22556 <tx_hex>
+
+##### Send a raw transaction to at most 5 random peers on mainnet
+
+    ./sendtx -m 5 <tx_hex>
