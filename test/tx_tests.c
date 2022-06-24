@@ -1077,7 +1077,7 @@ void test_script_parse()
     dogecoin_tx_hash(tx, txhash);
     char txhashhex[sizeof(txhash) * 2];
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
-    utils_reverse_hex(txhashhex, sizeof(txhashhex));
+    utils_reverse_hex(txhashhex, strlen(txhashhex));
 
     u_assert_str_eq(txhashhex, "41a86af25423391b1d9d78df1143e3a237f20db27511d8b72e25f2dec7a81d80");
 
