@@ -66,6 +66,7 @@ if has_param '--host' "$@"; then
             fi
             ARCH_PACKAGES+="nsis wine64 wine-stable bc wine-binfmt"
             TARGET_ARCH="amd64"
+            sudo dpkg --add-architecture $TARGET_ARCH
             sudo update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
             sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
             sudo update-binfmts --import /usr/share/binfmts/wine
@@ -76,6 +77,7 @@ if has_param '--host' "$@"; then
             fi
             ARCH_PACKAGES+="nsis wine32 wine-stable bc wine-binfmt"
             TARGET_ARCH="i386"
+            sudo dpkg --add-architecture $TARGET_ARCH
             sudo update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix
             sudo update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
             sudo update-binfmts --import /usr/share/binfmts/wine
@@ -95,6 +97,7 @@ if has_param '--host' "$@"; then
             fi
             ARCH_PACKAGES+="bc"
             TARGET_ARCH="i386"
+            sudo dpkg --add-architecture $TARGET_ARCH
         ;;
     esac
     TARGET_HOST_TRIPLET=$2

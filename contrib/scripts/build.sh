@@ -79,7 +79,6 @@ fi
 
 ./autogen.sh
 if [ $DEPENDS ]; then
-    echo $PREFIX
     ./configure \
     --prefix=$PREFIX \
     --disable-maintainer-mode \
