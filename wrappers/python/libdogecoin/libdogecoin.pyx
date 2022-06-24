@@ -31,20 +31,25 @@ cdef extern from "transaction.h":
 #========================================================
 
 # ADDRESS FUNCTIONS
-def context_start():
+def w_context_start():
+    """Start the secp256k1 context necessary for key pair 
+    generation. Must be started before calling any functions
+    dealing with private or public keys.
+    """
     dogecoin_ecc_start()
 
-
-def context_stop():
+def w_context_stop():
+    """Stop the current instance of the secp256k1 context. It is
+    advised to wait until the session is completely over before
+    stopping the context.
+    """
     dogecoin_ecc_stop()
 
-
-def generate_priv_pub_key_pair(chain_code=0):
+def w_generate_priv_pub_key_pair(chain_code=0):
     """Generate a valid private key paired with the corresponding
-    p2pkh address
+    p2pkh address.
     Keyword arguments:
     chain_code -- 0 for mainnet pair, 1 for testnet pair
-    as_bytes -- flag to return key pair as bytes object
     """
     # verify arguments are valid
     assert isinstance(chain_code, int) and chain_code in [0,1]
@@ -61,13 +66,12 @@ def generate_priv_pub_key_pair(chain_code=0):
     return privkey, p2pkh_pubkey
 
 
-def generate_hd_master_pub_key_pair(chain_code=0):
+def w_generate_hd_master_pub_key_pair(chain_code=0):
     """Generate a master private and public key pair for use in
-    heirarchical deterministic wallets. Public key can be used for
-    child key derivation using generate_derived_hd_pub_key().
+    hierarchical deterministic wallets. Public key can be used for
+    child key derivation using w_generate_derived_hd_pub_key().
     Keyword arguments:
     chain_code -- 0 for mainnet pair, 1 for testnet pair
-    as_bytes -- flag to return key pair as bytes object
     """
     # verify arguments are valid
     assert isinstance(chain_code, int) and chain_code in [0,1]
@@ -84,11 +88,10 @@ def generate_hd_master_pub_key_pair(chain_code=0):
     return master_privkey, master_p2pkh_pubkey[:34]
 
 
-def generate_derived_hd_pub_key(wif_privkey_master):
-    """Given a HD master public key, derive a child key from it.
+def w_generate_derived_hd_pub_key(wif_privkey_master):
+    """Given a HD master private key, derive a child key from it.
     Keyword arguments:
     wif_privkey_master -- HD master public key as wif-encoded string
-    as_bytes -- flag to return key pair as bytes object
     """
     # verify arguments are valid
     assert isinstance(wif_privkey_master, (str, bytes))
@@ -105,9 +108,9 @@ def generate_derived_hd_pub_key(wif_privkey_master):
     return child_p2pkh_pubkey
 
 
-def verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
-    """Given a keypair from generate_priv_pub_key_pair, verify that the keys
-    are valid and are associated with each other.
+def w_verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
+    """Given a private/public key pair, verify that the keys are
+    valid and are associated with each other.
     Keyword arguments:
     wif_privkey -- string containing wif-encoded private key
     p2pkh_pubkey -- string containing address derived from wif_privkey
@@ -131,7 +134,7 @@ def verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
     return res
 
 
-def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chain_code=0):
+def w_verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chain_code=0):
     """Given a keypair from generate_hd_master_pub_key_pair, verify that the
     keys are valid and are associated with each other.
     Keyword arguments:
@@ -157,9 +160,9 @@ def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chai
     return res
 
 
-def verify_p2pkh_address(p2pkh_pubkey):
+def w_verify_p2pkh_address(p2pkh_pubkey):
     """Given a p2pkh address, confirm address is in correct Dogecoin
-    format
+    format.
     Keyword arguments:
     p2pkh_pubkey -- string containing basic p2pkh address
     """
@@ -392,6 +395,11 @@ def w_sign_transaction(tx_index, amounts, script_pubkey, privkey):
 
 
 def w_store_raw_transaction(incoming_raw_tx):
+    """Stores a raw transaction at the next available index
+    in the hash table.
+    Keyword arguments:
+    incoming_raw_tx -- the serialized string of the transaction to store.
+    """
     # verify arguments are valid
     assert isinstance(incoming_raw_tx, (str, bytes))
 

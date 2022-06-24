@@ -58,10 +58,10 @@ high_send_amt =         15 # max we can spend from the two inputs is 12
 class TestTransactionFunctions(unittest.TestCase):
 
     def setUpClass():
-        l.context_start()
+        l.w_context_start()
 
     def tearDownClass():
-        l.context_stop()
+        l.w_context_stop()
 
     def suite():
         suite = unittest.TestSuite()
