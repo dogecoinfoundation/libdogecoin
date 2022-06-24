@@ -23,10 +23,10 @@ AC_PROG_CC_C99
 LIBTOOL_APP_LDFLAGS="-all-static"
 LIBS="$LIBS -levent -levent_core"
 
-CFLAGS="$CFLAGS -W"
+CFLAGS="$CFLAGS -W -fPIC"
 case $host in
   *mingw*)
-    CFLAGS="$CFLAGS -s -static --static -fPIC"
+    CFLAGS="$CFLAGS -s -static --static"
      TARGET_OS=windows
       case $host in
        i?86-*) 
