@@ -123,7 +123,7 @@ if USE_TESTS
 tests_SOURCES += \
     test/net_tests.c \
     test/protocol_tests.c
-tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBSECP256K1)
 endif
 endif
 
@@ -134,7 +134,7 @@ tests_SOURCES += \
 endif
 instdir=$(prefix)/bin
 inst_PROGRAMS = such
-such_LDADD = libdogecoin.la
+such_LDADD = libdogecoin.la $(LIBSECP256K1)
 such_SOURCES = \
     src/cli/such.c
 such_CFLAGS = $(libdogecoin_la_CFLAGS)
@@ -143,7 +143,7 @@ such_LDFLAGS = -static
 
 if WITH_NET
 inst_PROGRAMS += sendtx
-sendtx_LDADD = libdogecoin.la $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+sendtx_LDADD = libdogecoin.la $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBSECP256K1)
 sendtx_SOURCES = \
     src/cli/sendtx.c
 sendtx_CFLAGS = $(libdogecoin_la_CFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
