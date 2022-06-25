@@ -30,12 +30,19 @@
 #ifndef __LIBDOGECOIN_TX_H__
 #define __LIBDOGECOIN_TX_H__
 
+#include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
-#include <dogecoin/crypto/hash.h>
+#include <dogecoin/hash.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/script.h>
 #include <dogecoin/vector.h>
+
+#ifdef WITH_NET
+#include <event2/event.h>
+#include <dogecoin/net.h>
+#include <dogecoin/protocol.h>
+#endif
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -69,15 +76,42 @@ typedef struct dogecoin_tx_ {
     uint32_t locktime;
 } dogecoin_tx;
 
+#ifdef WITH_NET
+struct broadcast_ctx {
+    const dogecoin_tx* tx;
+    unsigned int timeout;
+    int debuglevel;
+    int connected_to_peers;
+    int max_peers_to_connect;
+    int max_peers_to_inv;
+    int inved_to_peers;
+    int getdata_from_peers;
+    int found_on_non_inved_peers;
+    uint64_t start_time;
+};
+
+//!broadcast utilities
+LIBDOGECOIN_API dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx* tx, const char* ips, int maxpeers, int timeout, dogecoin_bool debug);
+#endif
+
+//!p2pkh utilities
+LIBDOGECOIN_API int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet);
+LIBDOGECOIN_API char* dogecoin_p2pkh_to_script_hash(char* p2pkh);
+LIBDOGECOIN_API char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif);
+
 //!create a new tx input
 LIBDOGECOIN_API dogecoin_tx_in* dogecoin_tx_in_new();
 LIBDOGECOIN_API void dogecoin_tx_in_free(dogecoin_tx_in* tx_in);
 LIBDOGECOIN_API void dogecoin_tx_in_copy(dogecoin_tx_in* dest, const dogecoin_tx_in* src);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_in_deserialize(dogecoin_tx_in* tx_in, struct const_buffer* buf);
+LIBDOGECOIN_API void dogecoin_tx_in_serialize(cstring* s, const dogecoin_tx_in* tx_in);
 
 //!create a new tx output
 LIBDOGECOIN_API dogecoin_tx_out* dogecoin_tx_out_new();
 LIBDOGECOIN_API void dogecoin_tx_out_free(dogecoin_tx_out* tx_out);
 LIBDOGECOIN_API void dogecoin_tx_out_copy(dogecoin_tx_out* dest, const dogecoin_tx_out* src);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_out_deserialize(dogecoin_tx_out* tx_out, struct const_buffer* buf);
+LIBDOGECOIN_API void dogecoin_tx_out_serialize(cstring* s, const dogecoin_tx_out* tx_out);
 
 //!create a new tx input
 LIBDOGECOIN_API dogecoin_tx* dogecoin_tx_new();
@@ -87,7 +121,7 @@ LIBDOGECOIN_API void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
 //!deserialize/parse a p2p serialized dogecoin transaction
 LIBDOGECOIN_API int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, dogecoin_tx* tx, size_t* consumed_length, dogecoin_bool allow_witness);
 
-//!serialize a lbc dogecoin data structure into a p2p serialized buffer
+//!serialize a dogecoin data structure into a p2p serialized buffer
 LIBDOGECOIN_API void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx, dogecoin_bool allow_witness);
 
 LIBDOGECOIN_API void dogecoin_tx_hash(const dogecoin_tx* tx, uint8_t* hashout);
@@ -110,7 +144,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_tx_has_witness(const dogecoin_tx* tx);
 enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_UNKNOWN = 0,
     DOGECOIN_SIGN_INVALID_KEY = -2,
-    DOGECOIN_SIGN_NO_KEY_MATCH = -3, //if the key found in the script doesn't match the given key, will sign anyways
+    DOGECOIN_SIGN_NO_KEY_MATCH = -3, // if the key found in the script doesn't match the given key, will sign anyways
     DOGECOIN_SIGN_SIGHASH_FAILED = -4,
     DOGECOIN_SIGN_UNKNOWN_SCRIPT_TYPE = -5,
     DOGECOIN_SIGN_INVALID_TX_OR_SCRIPT = -6,

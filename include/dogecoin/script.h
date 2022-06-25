@@ -30,7 +30,7 @@
 #ifndef __LIBDOGECOIN_SCRIPT_H__
 #define __LIBDOGECOIN_SCRIPT_H__
 
-#include <dogecoin/crypto/key.h>
+#include <dogecoin/key.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/vector.h>
@@ -185,7 +185,6 @@ enum opcodetype {
     OP_NOP8 = 0xb7,
     OP_NOP9 = 0xb8,
     OP_NOP10 = 0xb9,
-
 
     // template matching params
     OP_SMALLINTEGER = 0xfa,

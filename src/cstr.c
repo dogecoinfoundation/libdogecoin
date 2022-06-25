@@ -79,7 +79,7 @@ int cstr_alloc_minsize(cstring* s, size_t new_sz)
     }
 
     /* contents of string tail undefined */
-    //s->len = new_sz;
+    // s->len = new_sz;
     s->str[s->len] = 0;
 
     return 1;
@@ -127,7 +127,7 @@ cstring* cstr_new_buf(const void* buf, size_t sz)
         return NULL;
     }
 
-    memcpy(s->str, buf, sz);
+    memcpy_safe(s->str, buf, sz);
     s->len = sz;
     s->str[s->len] = 0;
 
@@ -180,7 +180,7 @@ void cstr_free(cstring* s, int free_buf)
         dogecoin_free(s->str);
     }
 
-    memset(s, 0, sizeof(*s));
+    dogecoin_mem_zero(s, sizeof(*s));
     dogecoin_free(s);
 }
 
@@ -238,7 +238,7 @@ int cstr_append_buf(cstring* s, const void* buf, size_t sz)
         return 0;
     }
 
-    memcpy(s->str + s->len, buf, sz);
+    memcpy_safe(s->str + s->len, buf, sz);
     s->len += sz;
     s->str[s->len] = 0;
 

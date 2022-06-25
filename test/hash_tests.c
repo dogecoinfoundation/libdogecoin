@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <dogecoin/crypto/hash.h>
-#include <dogecoin/crypto/sha2.h>
+#include <dogecoin/hash.h>
+#include <dogecoin/sha2.h>
 #include <dogecoin/utils.h>
 
 void test_hash()

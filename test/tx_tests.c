@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <test/utest.h>
+#include "utest.h"
 
 #include <dogecoin/bip32.h>
-#include <dogecoin/crypto/key.h>
+#include <dogecoin/key.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/script.h>
 #include <dogecoin/tool.h>
@@ -852,7 +852,7 @@ void test_tx_serialization()
         utils_hex_to_bin(one_test->hextx, tx_data, strlen(one_test->hextx), &outlen);
 
         dogecoin_tx* tx = dogecoin_tx_new();
-        dogecoin_tx_deserialize(tx_data, outlen, tx, NULL, true);
+        dogecoin_tx_deserialize(tx_data, outlen, tx, NULL, false);
 
         dogecoin_tx* tx_copy = dogecoin_tx_new();
         dogecoin_tx_copy(tx_copy, tx);
@@ -891,14 +891,15 @@ void test_tx_serialization()
 void test_tx_sighash_ext()
 {
     //extended sighash tests
-    for (unsigned int i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
+    unsigned int i;
+    for (i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
         int outlen_sighash = 0;
-        uint8_t tx_data_sighash[sizeof(txvalid_sighash[i].sertx) / 2];
+        uint8_t tx_data_sighash[strlen(txvalid_sighash[i].sertx) / 2];
         utils_hex_to_bin(txvalid_sighash[i].sertx, tx_data_sighash, strlen(txvalid_sighash[i].sertx), &outlen_sighash);
         dogecoin_tx* tx_sighash = dogecoin_tx_new();
         dogecoin_tx_deserialize(tx_data_sighash, outlen_sighash, tx_sighash, NULL, true);
 
-        uint8_t script_data[strlen(txvalid_sighash[i].script)];
+        uint8_t script_data[strlen(txvalid_sighash[i].script) / 2];
         utils_hex_to_bin(txvalid_sighash[i].script, script_data, strlen(txvalid_sighash[i].script), &outlen_sighash);
         cstring* str = cstr_new_buf(script_data, outlen_sighash);
         uint256 hash;
@@ -906,12 +907,13 @@ void test_tx_sighash_ext()
 
         dogecoin_tx_free(tx_sighash);
         cstr_free(str, true);
-
-        char sighash_hex[65];
+ 
+        char sighash_hex[64];
+        memset(sighash_hex, 0, sizeof(sighash_hex));
         utils_bin_to_hex(hash, sizeof(hash), sighash_hex);
         utils_reverse_hex(sighash_hex, strlen(sighash_hex));
 
-        assert(memcmp(txvalid_sighash[i].sighash, sighash_hex, 64) == 0);
+        assert(memcmp(txvalid_sighash[i].sighash, sighash_hex, sizeof(sighash_hex)) == 0);
     }
 }
 
@@ -932,7 +934,7 @@ void test_tx_sighash()
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
         uint256 sighash;
-        memset(sighash, 0, sizeof(sighash));
+        dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, 0, SIGVERSION_BASE, sighash);
 
         vector* vec = vector_new(10, dogecoin_script_op_free_cb);
@@ -949,7 +951,7 @@ void test_tx_sighash()
         utils_bin_to_hex(sighash, sizeof(sighash), hexbuf);
         utils_reverse_hex(hexbuf, sizeof(hexbuf));
 
-        assert(strcmp(hexbuf, test->hashhex) == 0);
+        assert(memcmp(hexbuf, test->hashhex, sizeof(test->hashhex) - 1) == 0);
 
         dogecoin_tx_free(tx);
     }
@@ -1056,7 +1058,7 @@ void test_script_parse()
 
     dogecoin_pubkey pubkeytx;
     dogecoin_pubkey_init(&pubkeytx);
-    memcpy(&pubkeytx.pubkey, pubkeydat, 33);
+    memcpy_safe(&pubkeytx.pubkey, pubkeydat, 33);
     pubkeytx.compressed = true;
 
     dogecoin_tx* tx = dogecoin_tx_new();
@@ -1075,7 +1077,7 @@ void test_script_parse()
     dogecoin_tx_hash(tx, txhash);
     char txhashhex[sizeof(txhash) * 2];
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
-    utils_reverse_hex(txhashhex, sizeof(txhashhex));
+    utils_reverse_hex(txhashhex, strlen(txhashhex));
 
     u_assert_str_eq(txhashhex, "41a86af25423391b1d9d78df1143e3a237f20db27511d8b72e25f2dec7a81d80");
 
@@ -1138,7 +1140,7 @@ void test_script_parse()
     dogecoin_key key;
     dogecoin_privkey_init(&key);
 
-    memcpy(key.privkey, node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
+    memcpy_safe(key.privkey, node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     unsigned char sigcmp[64];
     size_t outlencmp = 64;
     dogecoin_key_sign_hash_compact(&key, sig_hash, sigcmp, &outlencmp);

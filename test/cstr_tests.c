@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <dogecoin/cstr.h>
+#include <dogecoin/mem.h>
 
 void test_cstr()
 {
@@ -54,7 +55,7 @@ void test_cstr()
     cstr_resize(s, 4);
     assert(s->len == 4);
     assert(s->alloc > 4);
-    memcpy(s->str, "food", 4);
+    memcpy_safe(s->str, "food", 4);
     assert(strcmp(s->str, "food") == 0);
     cstr_free(s, true);
     assert(cstr_compare(s1, s2) == 0);

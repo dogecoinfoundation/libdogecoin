@@ -26,11 +26,8 @@
  */
 
 #include <assert.h>
-#ifndef _MSC_VER
-#include <getopt.h>
-#endif
 #ifdef HAVE_CONFIG_H
-#include <src/libdogecoin-config.h>
+#  include "libdogecoin-config.h"
 #endif
 #include <stdbool.h>
 #include <stdio.h>
@@ -38,14 +35,16 @@
 #include <string.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <getopt.h>
 #endif
 
 #include <dogecoin/address.h>
 #include <dogecoin/bip32.h>
-#include <dogecoin/crypto/key.h>
-#include <dogecoin/crypto/random.h>
-#include <dogecoin/crypto/sha2.h>
-#include <dogecoin/crypto/base58.h>
+#include <dogecoin/chainparams.h>
+#include <dogecoin/key.h>
+#include <dogecoin/random.h>
+#include <dogecoin/sha2.h>
+#include <dogecoin/base58.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/utils.h>
 
@@ -69,10 +68,10 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
 
     /* if nothing is passed in use internal variables */
     if (wif_privkey) {
-        memcpy(wif_privkey_internal, wif_privkey, privkey_len);
+        memcpy_safe(wif_privkey_internal, wif_privkey, privkey_len);
     }
     if (p2pkh_pubkey) {
-        memcpy(p2pkh_pubkey_internal, p2pkh_pubkey, pubkey_len);
+        memcpy_safe(p2pkh_pubkey_internal, p2pkh_pubkey, pubkey_len);
     }
 
     /* determine if mainnet or testnet/regtest */
@@ -94,15 +93,15 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_pubkey_internal);
 
     if (wif_privkey) {
-        memcpy(wif_privkey, wif_privkey_internal, privkey_len);
+        memcpy_safe(wif_privkey, wif_privkey_internal, privkey_len);
     }
     if (p2pkh_pubkey) {
-        memcpy(p2pkh_pubkey, p2pkh_pubkey_internal, pubkey_len);
+        memcpy_safe(p2pkh_pubkey, p2pkh_pubkey_internal, pubkey_len);
     }
 
     /* reset internal variables */
-    memset(wif_privkey_internal, 0, strlen(wif_privkey_internal));
-    memset(p2pkh_pubkey_internal, 0, strlen(p2pkh_pubkey_internal));
+    dogecoin_mem_zero(wif_privkey_internal, strlen(wif_privkey_internal));
+    dogecoin_mem_zero(p2pkh_pubkey_internal, strlen(p2pkh_pubkey_internal));
 
     /* cleanup memory */
     dogecoin_pubkey_cleanse(&pubkey);
@@ -130,10 +129,10 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
 
     /* if nothing is passed use internal variables */
     if (wif_privkey_master) {
-        memcpy(hd_privkey_master, wif_privkey_master, strsize);
+        memcpy_safe(hd_privkey_master, wif_privkey_master, strsize);
     }
     if (p2pkh_pubkey_master) {
-        memcpy(hd_pubkey_master, p2pkh_pubkey_master, hd_pubkey_master_len);
+        memcpy_safe(hd_pubkey_master, p2pkh_pubkey_master, hd_pubkey_master_len);
     }
 
     /* determine if mainnet or testnet/regtest */
@@ -145,15 +144,15 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     generateDerivedHDPubkey(hd_privkey_master, hd_pubkey_master);
 
     if (wif_privkey_master) {
-        memcpy(wif_privkey_master, hd_privkey_master, strlen(hd_privkey_master));
+        memcpy_safe(wif_privkey_master, hd_privkey_master, strlen(hd_privkey_master));
     }
     if (p2pkh_pubkey_master) {
-        memcpy(p2pkh_pubkey_master, hd_pubkey_master, strlen(hd_pubkey_master));
+        memcpy_safe(p2pkh_pubkey_master, hd_pubkey_master, strlen(hd_pubkey_master));
     }
 
     /* reset internal variables */
-    memset(hd_privkey_master, 0, strlen(hd_privkey_master));
-    memset(hd_privkey_master, 0, strlen(hd_privkey_master));
+    dogecoin_mem_zero(hd_privkey_master, strlen(hd_privkey_master));
+    dogecoin_mem_zero(hd_privkey_master, strlen(hd_privkey_master));
     
     return true;
 }
@@ -177,16 +176,14 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     }
 
     /* determine address prefix for network chainparams */
-    char prefix[1];
-    memcpy(prefix, wif_privkey_master, 1);
-    const dogecoin_chainparams* chain = memcmp(prefix, "d", 1) == 0 ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(wif_privkey_master);
 
     size_t strsize = 128;
     char str[strsize];
 
     /* if nothing is passed in use internal variables */
     if (p2pkh_pubkey) {
-        memcpy(str, p2pkh_pubkey, strsize);
+        memcpy_safe(str, p2pkh_pubkey, strsize);
     }
 
     dogecoin_hdnode* node = dogecoin_hdnode_new();
@@ -196,12 +193,12 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
 
     /* pass back to external variable if exists */
     if (p2pkh_pubkey) {
-        memcpy(p2pkh_pubkey, str, strsize);
+        memcpy_safe(p2pkh_pubkey, str, strsize);
     }
 
     /* reset internal variables */
     dogecoin_hdnode_free(node);
-    memset(str, 0, strlen(str));
+    dogecoin_mem_zero(str, strlen(str));
 
     return true;
 }

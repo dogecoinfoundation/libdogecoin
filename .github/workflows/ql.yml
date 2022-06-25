@@ -4,12 +4,12 @@ name: CodeQL
 on:
   push:
     branches:
-      - '*-dev'
+      - '*-dev-*'
       - 'main'
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
-      - '*-dev'
+      - '*-dev-*'
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'python' ]
+        language: [ 'cpp', 'python', 'go' ]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
 
     steps:
@@ -41,7 +41,7 @@ jobs:
         sudo apt-get install autoconf automake libtool build-essential libevent-dev python3 --yes
 
     - name: init codeql
-      uses: github/codeql-action/init@v1
+      uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
 
@@ -52,4 +52,4 @@ jobs:
        make check -j3 VERBOSE=1
 
     - name: perform codeql analysis
-      uses: github/codeql-action/analyze@v1
+      uses: github/codeql-action/analyze@v2

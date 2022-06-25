@@ -33,9 +33,18 @@ commands.append(["-c derive_child_keys -p dgub8kXBZ7ymNWy2TFvsWoQu5qGuFZk1zVAS69
 commands.append(["-c derive_child_keys", 1]) #missing key
 commands.append(["-c derive_child_keys -p dgub8kXBZ7ymNWy2TFvsWoQu5qGuFZk1zVAS69bD8pif6QYcnHMP2VotzLragqavGQkkpaGSwt1EqTr5A6JqKviXTnJdKp7vJ62nFyn246GjuHj", 1]) #missing keypath
 
+commands2 = []
+commands2.append(["-t 0200000001554fb2f97f8fe299bf01004c70ec1930bc3c51fe162d1f81b18089e4f7cae470000000006a47304402207f5af3a9724be2946741e15b89bd2c989c9c20a0dfb519cb14b4efdaad945dc502206507ec7a3ba91be7794312961294c7a09a7bc693d918ab5a93712ff8576995fc012103caef57fae78ec425f5ff99d805fddd2417f3bfa7c7b0ec3b6b860cf6cc0e1d99ffffffff0100c63e05000000001976a91415e7469e21938db38e943abd7a2c1073c00e0edd88ac00000000", 0])
+commands2.append(["-v", 1])
+commands2.append(["?", 1])
+commands2.append(["-t -s 8 -d 0200000001554fb2f9", 1])
+commands2.append(["-t -s 5 -i 127.0.0.1:44556 0200000001554fb2f97f8fe299bf01004c70ec1930bc3c51fe162d1f81b18089e4f7cae470000000006a47304402207f5af3a9724be2946741e15b89bd2c989c9c20a0dfb519cb14b4efdaad945dc502206507ec7a3ba91be7794312961294c7a09a7bc693d918ab5a93712ff8576995fc012103caef57fae78ec425f5ff99d805fddd2417f3bfa7c7b0ec3b6b860cf6cc0e1d99ffffffff0100c63e05000000001976a91415e7469e21938db38e943abd7a2c1073c00e0edd88ac00000000", 0])
+
 baseCommand = "./such"
+baseCommand2 = "./sendtx"
 if valgrind == True:
     baseCommand = "valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes  --error-exitcode=1 "+baseCommand
+    baseCommand2 = "valgrind --track-origins=yes --error-exitcode=1 --leak-check=full "+baseCommand2
 
 errored = False
 for cmd in commands:
@@ -44,4 +53,11 @@ for cmd in commands:
         print("ERROR during "+cmd[0])
         sys.exit(os.EX_DATAERR)
 
+errored = False
+for cmd in commands2:
+    retcode = call(baseCommand2+" "+cmd[0], shell=True)
+    if retcode != cmd[1]:
+        print("ERROR during "+cmd[0])
+        sys.exit(os.EX_DATAERR)
+        
 sys.exit(os.EX_OK)

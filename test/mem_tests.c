@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <test/utest.h>
+#include "utest.h"
 
 #include <dogecoin/mem.h>
 

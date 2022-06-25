@@ -110,7 +110,7 @@ void vector_free(vector* vec, dogecoin_bool free_array)
         vector_free_data(vec);
     }
 
-    memset(vec, 0, sizeof(*vec));
+    dogecoin_mem_zero(vec, sizeof(*vec));
     dogecoin_free(vec);
 }
 
