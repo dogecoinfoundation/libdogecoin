@@ -38,8 +38,10 @@
 #include <uthash/uthash.h>
 
 #include <dogecoin/bip32.h>
+#include <dogecoin/cstr.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/ecc.h>
+#include <dogecoin/koinu.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/transaction.h>
