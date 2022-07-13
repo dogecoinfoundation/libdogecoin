@@ -27,20 +27,13 @@
 
 */
 
-#include <time.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <math.h>
-#include <float.h>
-#include <fenv.h>
-#include <tgmath.h>
-#include <stdbool.h>
 #include <stdlib.h>
-#include <inttypes.h> 
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
-#include <errno.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
@@ -451,125 +444,6 @@ void print_image(FILE* fptr)
     while (fgets(read_string, sizeof(read_string), fptr) != NULL)
         printf("%s", read_string);
     }
-
-long double rnd(long double v, long double digit) {
-    long double _pow;
-    _pow = pow(10.0, digit);
-    long double t = v * _pow;
-    long double r = ceil(t + 0.5);
-    return r / _pow;
-}
-
-long double length(double n) {
-    if (n < 0) n = (n == DBL_MIN) ? DBL_MAX : -n;
-    if (n < 10) return 1;
-    if (n < 100) return 2;
-    if (n < 1000) return 3;
-    if (n < 10000) return 4;
-    if (n < 100000) return 5;
-    if (n < 1000000) return 6;
-    if (n < 10000000) return 7;
-    if (n < 100000000) return 8;
-    if (n < 1000000000) return 9;
-    if (n < 10000000000) return 10;
-    if (n < 100000000000) return 11;
-    if (n < 1000000000000) return 12;
-    if (n < 10000000000000) return 13;
-    if (n < 100000000000000) return 14;
-    if (n < 1000000000000000) return 15;
-    if (n < 10000000000000000) return 16;
-    if (n < 100000000000000000) return 17;
-    if (n < 1000000000000000000) return 18;
-    if (n < 10000000000000000000UL) return 19;
-    // UINT64_MAX // 18446744073709551615
-    return 20;
-    }
-
-void show_fe_currentrnding_direction(void)
-{
-    switch (fegetround()) {
-           case FE_TONEAREST:  debug_print ("FE_TONEAREST: %d\n", FE_TONEAREST);  break;
-           case FE_DOWNWARD:   debug_print ("FE_DOWNWARD: %d\n", FE_DOWNWARD);   break;
-           case FE_UPWARD:     debug_print ("FE_UPWARD: %d\n", FE_UPWARD);     break;
-           case FE_TOWARDZERO: debug_print ("FE_TOWARDZERO: %d\n", FE_TOWARDZERO); break;
-           default:            debug_print ("%s\n", "unknown");
-    };
-}
-
-long double koinu_to_coins(uint64_t koinu) {
-    long double output;
-#if defined(__ARM_ARCH_7A__)
-    int rounding_mode = fegetround();
-    int l = length(koinu);
-    output = (long double)koinu / (long double)1e8;
-    if (l >= 9) {
-        fesetround(FE_UPWARD);
-        output = (long double)koinu / (long double)1e8;
-    } else if (l >= 17) {
-        output = rnd((long double)koinu / (long double)1e8, 8.5) + .000000005;
-    }
-    fesetround(rounding_mode);
-#elif defined(WIN32)
-    output = (long double)koinu / (long double)1e8;
-#else
-    output = (long double)koinu / (long double)1e8;
-#endif
-    return output;
-}
-
-long double round_ld(long double x)
-{
-    fenv_t save_env;
-    feholdexcept(&save_env);
-    long double result = rintl(x);
-    if (fetestexcept(FE_INEXACT)) {
-        int const save_round = fegetround();
-        fesetround(FE_UPWARD);
-        result = rintl(copysignl(0.5 + fabsl(x), x));
-        debug_print("result: %.8Lf\n", result);
-        fesetround(save_round);
-    }
-    feupdateenv(&save_env);
-    return result;
-}
-
-uint64_t coins_to_koinu_str(char* coins) {
-    long double integer_length, mantissa;
-    // length minus 1 representative of decimal and 8 representative of koinu
-    integer_length = strlen(coins) - 9;
-    char* int_end, int_str[256];
-    uint64_t x = 0;
-    for (; x < integer_length; x++) {
-        int_str[x] = coins[x];
-    }
-    unsigned long long int u64 = strtoull(int_str, &int_end, 10);
-    u64 *= 1e8;
-    for (uint64_t y = x; y <= strlen(coins) - 9; y++) {
-        mantissa = roundl(strtold(&coins[y], &int_end) / 10);
-        u64 += (uint64_t)mantissa;
-    }
-    return u64;
-}
-
-long long unsigned coins_to_koinu(long double coins) {
-    long double output;
-#if defined(__ARM_ARCH_7A__)
-    long double integer_length, mantissa_length;
-    char* str[256];
-    sprintf(&str, "%.8Lf", coins);
-    // length minus 1 representative of decimal and 8 representative of koinu
-    integer_length = strlen(str) - 9;
-    mantissa_length = integer_length + (8 - integer_length);
-    if (integer_length <= mantissa_length) {
-        output = coins * powl(10, mantissa_length);
-    } else {
-        output = round_ld(coins * powl(10, mantissa_length));
-    }
-#else
-     output = (uint64_t)round((long double)coins * (long double)1e8);
-#endif
-    return output;
-}
 
 void print_bits(size_t const size, void const* ptr)
     {

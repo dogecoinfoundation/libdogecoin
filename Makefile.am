@@ -27,6 +27,7 @@ libdogecoininclude_HEADERS = \
     include/dogecoin/ecc.h \
     include/dogecoin/hash.h \
     include/dogecoin/key.h \
+    include/dogecoin/koinu.h \
     include/dogecoin/mem.h \
     include/dogecoin/portable_endian.h \
     include/dogecoin/random.h \
@@ -58,6 +59,7 @@ libdogecoin_la_SOURCES = \
     src/ctaes.c \
     src/ecc.c \
     src/key.c \
+    src/koinu.c \
     src/mem.c \
     src/random.c \
     src/rmd160.c \
@@ -88,6 +90,7 @@ tests_SOURCES = \
     test/ecc_tests.c \
     test/hash_tests.c \
     test/key_tests.c \
+    test/koinu_tests.c \
     test/mem_tests.c \
     test/opreturn_tests.c \
     test/random_tests.c \

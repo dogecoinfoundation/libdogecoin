@@ -15,6 +15,7 @@
 #include <dogecoin/address.h>
 #include <dogecoin/buffer.h>
 #include <dogecoin/key.h>
+#include <dogecoin/koinu.h>
 #include <dogecoin/transaction.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>

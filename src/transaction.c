@@ -28,6 +28,7 @@
 #include <assert.h>
 
 #include <dogecoin/base58.h>
+#include <dogecoin/koinu.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/transaction.h>
 #include <dogecoin/utils.h>

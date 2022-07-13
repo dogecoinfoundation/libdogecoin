@@ -59,6 +59,7 @@ INSTALL(FILES
     include/dogecoin/ecc.h
     include/dogecoin/hash.h
     include/dogecoin/key.h
+    include/dogecoin/koinu.h
     include/dogecoin/mem.h
     include/dogecoin/portable_endian.h
     include/dogecoin/random.h
