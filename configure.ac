@@ -54,8 +54,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
     CFLAGS="$saved_CFLAGS"
   ])
 
-AC_SEARCH_LIBS([powl],[m],[have_math=yes],[have_math=no])
-
 # Enable debug
 AC_ARG_ENABLE([debug],
   [AS_HELP_STRING([--enable-debug],
