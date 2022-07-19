@@ -3,11 +3,12 @@ from libc.string cimport strncpy, memset
 
 # FUNCTIONS FROM STATIC LIBRARY
 #========================================================
-cdef extern from "ecc.h":
+cdef extern from "libdogecoin.h":
+    # ecc.c
     void dogecoin_ecc_start()
     void dogecoin_ecc_stop()
 
-cdef extern from "address.h":
+    # address.c
     int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bint is_testnet)
     int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bint is_testnet)
     int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
@@ -15,15 +16,15 @@ cdef extern from "address.h":
     int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bint is_testnet)
     int verifyP2pkhAddress(char* p2pkh_pubkey, cy.uchar len)
 
-cdef extern from "transaction.h":
+    # transaction.c
     int start_transaction()
     int add_utxo(int txindex, char* hex_utxo_txid, int vout)
-    int add_output(int txindex, char* destinationaddress,  long double amount)
-    char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, long double out_dogeamount_for_verification, char* public_key)
+    int add_output(int txindex, char* destinationaddress, char* amount)
+    char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress)
     char* get_raw_transaction(int txindex) 
     void clear_transaction(int txindex)
-    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)
-    int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey)
+    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey)
+    int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey)
     int store_raw_transaction(char* incomingrawtx)
 
 
@@ -203,7 +204,7 @@ def w_add_utxo(tx_index, hex_utxo_txid, vout):
     # verify arguments are valid
     assert isinstance(tx_index, int)
     assert isinstance(hex_utxo_txid, (str, bytes))
-    assert isinstance(vout, (int, float))
+    assert isinstance(vout, (int, str))
 
     # prepare arguments
     if not isinstance(hex_utxo_txid, bytes):
@@ -227,13 +228,12 @@ def w_add_output(tx_index, destination_address, amount):
     # verify arguments are valid
     assert isinstance(tx_index, int)
     assert isinstance(destination_address, (str, bytes))
-    assert isinstance(amount, (int, float))
+    assert isinstance(amount, (int, str))
 
     # prepare arguments
     if not isinstance(destination_address, bytes):
         destination_address = destination_address.encode('utf-8')
-    if not isinstance(amount, float):
-        amount = float(amount)
+    amount = str(amount).encode('utf-8')
 
     # call c function
     res = add_output(tx_index, destination_address, amount)
@@ -253,11 +253,12 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
     out_dogeamount_for_verification -- the total amount of dogecoin being sent (fee included)
     changeaddress -- the address of the sender to receive their change
     """
+    print(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress)
     # verify arguments are valid
     assert isinstance(tx_index, int)
     assert isinstance(destination_address, (str, bytes))
-    assert isinstance(subtracted_fee, float)
-    assert isinstance(out_dogeamount_for_verification, (int, float))
+    assert isinstance(subtracted_fee, (int, str))
+    assert isinstance(out_dogeamount_for_verification, (int, str))
     assert isinstance(changeaddress, (str, bytes))
 
     # prepare arguments
@@ -265,8 +266,8 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
         destination_address = destination_address.encode('utf-8')
     if not isinstance(changeaddress, bytes):
         changeaddress = changeaddress.encode('utf-8')
-    if not isinstance(out_dogeamount_for_verification, float):
-        out_dogeamount_for_verification = float(out_dogeamount_for_verification)
+    subtracted_fee = str(subtracted_fee).encode('utf-8')
+    out_dogeamount_for_verification = str(out_dogeamount_for_verification).encode('utf-8')
 
     # call c function
     cdef void* res
@@ -335,7 +336,7 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     assert isinstance(incoming_raw_tx, (str, bytes))
     assert isinstance(script_hex, (str, bytes))
     assert isinstance(sig_hash_type, int)
-    assert isinstance(amount, (int, float))
+    assert isinstance(amount, (int, str))
     assert isinstance(privkey, (str, bytes))
 
     # prepare arguments
@@ -345,8 +346,7 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         script_hex = script_hex.encode('utf-8')
     if not isinstance(privkey, bytes):
         privkey = privkey.encode('utf-8')
-    if not isinstance(amount, float):
-        amount = float(amount)
+    amount = str(amount).encode('utf-8')
 
     # allocate enough mem to cover extension of transaction hex
     cdef char c_incoming_raw_tx[1024*100] # max size for a valid signable transaction
@@ -374,14 +374,17 @@ def w_sign_transaction(tx_index, amounts, script_pubkey, privkey):
     if not isinstance(amounts, list):
         amounts = [amounts]
     for amt in amounts:
-        assert isinstance(amt, (int, float))
+        assert isinstance(amt, (int, str))
     assert isinstance(script_pubkey, (str, bytes))
     assert isinstance(privkey, (str, bytes))
 
     # prepare arguments
-    cdef long double *C_amount_list = []
+    cdef char **C_amount_list = []
+    cdef char *string = []
     for i in range(len(amounts)):
-        C_amount_list[i]=amounts[i]
+        bstring = str(amounts[i]).encode('utf-8')
+        string = <char*>bstring
+        C_amount_list[i]= string
     if not isinstance(script_pubkey, bytes):
         script_pubkey = script_pubkey.encode('utf-8')
     if not isinstance(privkey, bytes):
