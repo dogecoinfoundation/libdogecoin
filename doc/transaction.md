@@ -198,7 +198,7 @@ func main() {
 ---
 ### **add_output**
 
-`int add_output(int txindex, char* destinationaddress, long double amount)`
+`int add_output(int txindex, char* destinationaddress, char* amount)`
 
 In order to actually spend utxos, the user must specify the new recipient address and how much of the total input amount will be sent to this address. This function takes in a working_transaction's index as an integer (txindex), the string p2pkh address of the new recipient (destinationaddress), and the amount in Dogecoin (amount) to send. This new output will be added to the working_transaction->transaction->vout field, returning either 1 for success or 0 for failure.
 
@@ -213,7 +213,7 @@ int main() {
 
     int index = start_transaction();
     add_utxo(index, prev_output_txid, prev_output_n);
-    if (!add_output(index, external_address, 5.0)) { // 5 dogecoin to be sent
+    if (!add_output(index, external_address, "5.0")) { // 5 dogecoin to be sent
         // error handling here
     }
     clear_transaction(index);
@@ -230,7 +230,7 @@ external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
 
 index = l.w_start_transaction()
 l.w_add_utxo(index, prev_output_txid, prev_output_n)
-if not l.w_add_output(index, external_address, 5.0):
+if not l.w_add_output(index, external_address, "5.0"):
     # error handling here
 l.w_clear_transaction(index)
 ```
@@ -249,7 +249,7 @@ func main() {
     index := libdogecoin.W_start_transaction()
     defer libdogecoin.W_clear_transaction(index)
     libdogecoin.W_add_utxo(index, prev_output_txid, prev_output_n)
-    if libdogecoin.W_add_output(index, external_address, 5.0) != 1 {
+    if libdogecoin.W_add_output(index, external_address, "5.0") != 1 {
         // error handling here
     }
 }
@@ -258,7 +258,7 @@ func main() {
 ---
 ### **finalize_transaction**
 
-`char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* changeaddress) `
+`char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress) `
 
 Because Dogecoin protocol requires that utxos must be spent in full, an additional output is usually included in a transaction to return all the leftover funds to the sender. This function automatically handles both creating this extra output and reserving some funds for the network fee. It takes in a working_transaction's index as an integer (txindex), the external destination address we are sending to (destinationaddress), the desired fee to be subtracted (subtractedfee), the total amount of all inputs included through `add_utxo()` (out_dogeamount_for_verification), and the public key of the sender (public_key). In addition to making change and deducting the fee, it checks that all of the recipients included in the transaction outputs are valid by converting their script hashes to p2pkh, and returns false if any are not found. Otherwise, the hex of the finalized transaction is returned as a string.
 
@@ -278,10 +278,10 @@ int main() {
     int index = start_transaction();
     add_utxo(index, prev_output_txid_2, prev_output_n_2);
     add_utxo(index, prev_output_txid_10, prev_output_n_10);
-    add_output(index, external_address, 5.0);
+    add_output(index, external_address, "5.0");
 
     // finalize transaction with min fee of 0.00226 doge on the input total of 12 dogecoin
-    char* rawhex = finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
+    char* rawhex = finalize_transaction(index, external_address, "0.00226", "12.0", my_address);
     printf("Finalized transaction hex is %s.", rawhex);
     clear_transaction(index);
 }
@@ -301,8 +301,8 @@ my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
 index = l.w_start_transaction()
 l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
 l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-l.w_add_output(index, external_address, 5.0)
-rawhex = l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+l.w_add_output(index, external_address, "5.0")
+rawhex = l.w_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 print(f"Finalized transaction hex is {rawhex}.")
 l.w_clear_transaction(index)
 ```
@@ -328,8 +328,8 @@ func main() {
     defer libdogecoin.W_clear_transaction(index)
     libdogecoin.W_add_utxo(index, prev_output_txid_2, prev_output_n_2)
     libdogecoin.W_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-    libdogecoin.W_add_output(index, external_address, 5.0)
-    rawhex := libdogecoin.W_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+    libdogecoin.W_add_output(index, external_address, "5.0")
+    rawhex := libdogecoin.W_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
     fmt.Printf("Finalized transaction hex is %s.\n", rawhex)  
 }
 ```
@@ -429,7 +429,7 @@ func main() {
 ---
 ### **sign_raw_transaction**
 
-`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey)`
+`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey)`
 
 This function takes in an index denoting which of the current transaction's inputs to sign (inputindex), the raw hexadecimal representation of the transaction to sign (incomingrawtx), the pubkey script in hexadecimal format (scripthex), the signature hash type (sighashtype), the amount included in the input to sign (amount), and the WIF-encoded private key used to sign the input (privkey). Signature hash type in normal use cases is set to 1 to denote that anyone can pay. In C, the function returns a boolean denoting success, but the actual signed transaction hex is passed back through incomingrawtx. From the wrappers, the transaction is simply returned as a string unless the signing fails, which results in a return of zero (Python) or an empty string (Go). **Important:** `sign_raw_transaction` must be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
@@ -451,14 +451,14 @@ int main() {
     int index = start_transaction();
     add_utxo(index, prev_output_txid_2, prev_output_n_2);
     add_utxo(index, prev_output_txid_10, prev_output_n_10);
-    add_output(index, external_address, 5.0);
-    finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
+    add_output(index, external_address, "5.0");
+    finalize_transaction(index, external_address, "0.00226", "12.0", my_address);
 
     //sign both inputs of the current finalized transaction
     dogecoin_ecc_start();
     char* rawhex = get_raw_transaction(index);
-    sign_raw_transaction(0, rawhex, my_script_pubkey, 1, 2.0, my_privkey);
-    sign_raw_transaction(1, rawhex, my_script_pubkey, 1, 10.0, my_privkey);
+    sign_raw_transaction(0, rawhex, my_script_pubkey, 1, "2.0", my_privkey);
+    sign_raw_transaction(1, rawhex, my_script_pubkey, 1, "10.0", my_privkey);
     dogecoin_ecc_stop();
     printf("The final signed transaction hex is: %s\n", rawhex);
     clear_transaction(index);
@@ -473,7 +473,7 @@ prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae
 prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" # worth 10 dogecoin
 prev_output_n_2 = 1
 prev_output_n_10 = 1
-amounts = [2.0, 10.0]
+amounts = ["2.0", "10.0"]
 external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
 my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
 my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
@@ -482,14 +482,14 @@ my_privkey = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
 index = l.w_start_transaction()
 l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
 l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-l.w_add_output(index, external_address, 5.0)
-l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+l.w_add_output(index, external_address, "5.0")
+l.w_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 
 # sign both inputs of the current finalized transaction
 l.context_start()
 rawhex = l.w_get_raw_transaction(index)
-half_signed_hex = l.w_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, 2.0, my_privkey)
-full_signed_hex = l.w_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, 10.0, my_privkey)
+half_signed_hex = l.w_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, "2.0", my_privkey)
+full_signed_hex = l.w_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, "10.0", my_privkey)
 print("The final signed transaction hex is:", full_signed_hex)
 l.context_stop()
 l.w_clear_transaction(index)
@@ -519,14 +519,14 @@ func main() {
 	defer libdogecoin.W_clear_transaction(index)
 	libdogecoin.W_add_utxo(index, prev_output_txid_2, prev_output_n_2)
 	libdogecoin.W_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-	libdogecoin.W_add_output(index, external_address, 5.0)
-	libdogecoin.W_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+	libdogecoin.W_add_output(index, external_address, "5.0")
+	libdogecoin.W_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 
 	// sign both inputs of the current finalized transaction
 	libdogecoin.W_context_start()
     rawhex := libdogecoin.W_get_raw_transaction(index)
-	half_signed_hex := libdogecoin.W_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, 2.0, my_privkey)
-    full_signed_hex := libdogecoin.W_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, 10.0, my_privkey)
+	half_signed_hex := libdogecoin.W_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, "2.0", my_privkey)
+    full_signed_hex := libdogecoin.W_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, "10.0", my_privkey)
 	libdogecoin.W_context_stop()
 	fmt.Printf("The final signed transaction hex is: %s.\n", full_signed_hex)
 }
@@ -535,11 +535,11 @@ func main() {
 ---
 ### **sign_transaction**
 
-`int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey)`
+`int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey)`
 
 This function takes in a working transaction structure's index as an integer (txindex), an array of all the input amounts (amounts), the pubkey in script hex form (script_pubkey), and the WIF-encoded private key (privkey). Each input is then signed using the specified private key, and the final signed transaction is saved to the hash table, which can be retrieved using `get_raw_transaction()`. The return value of `sign_transaction()` is a boolean denoting whether the signing was successful, but the output from `get_raw_transaction()` is a fully signed transaction that--if all information is valid--can be broadcast to miners and incorporated into the blockchain. **Important:** `sign_transaction` must also be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
-_Note: Golang does not currently support the use of long doubles, so depending on architecture, using Go wrappers may result in loss of precision._
+_Note: Golang does not currently support the use of char*s, so depending on architecture, using Go wrappers may result in loss of precision._
 
 _C usage:_
 ```C
@@ -551,7 +551,7 @@ int main() {
     char* prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"; // worth 10 dogecoin
     int prev_output_n_2 = 1;
     int prev_output_n_10 = 1;
-    long double amounts[] = {2, 10};
+    char* amounts[] = {"2", "10"};
     char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
     char* my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy";
     char* my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
@@ -560,8 +560,8 @@ int main() {
     int index = start_transaction();
     add_utxo(index, prev_output_txid_2, prev_output_n_2);
     add_utxo(index, prev_output_txid_10, prev_output_n_10);
-    add_output(index, external_address, 5.0);
-    finalize_transaction(index, external_address, 0.00226, 12.0, my_address);
+    add_output(index, external_address, "5.0");
+    finalize_transaction(index, external_address, "0.00226", "12.0", my_address);
 
     //sign both inputs of the current finalized transaction
     dogecoin_ecc_start();
@@ -591,8 +591,8 @@ my_privkey = "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
 index = l.w_start_transaction()
 l.w_add_utxo(index, prev_output_txid_2, prev_output_n_2)
 l.w_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-l.w_add_output(index, external_address, 5.0)
-l.w_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+l.w_add_output(index, external_address, "5.0")
+l.w_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 
 # sign both inputs of the current finalized transaction
 l.context_start()
@@ -617,7 +617,7 @@ func main() {
     prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" // worth 10 dogecoin
     prev_output_n_2 := 1
     prev_output_n_10 := 1
-    amounts := [2]float64{2.0, 10.0}
+    amounts := []string{"2.0", "10.0"}
     external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
     my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
     my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
@@ -627,8 +627,8 @@ func main() {
     defer libdogecoin.W_clear_transaction(index)
     libdogecoin.W_add_utxo(index, prev_output_txid_2, prev_output_n_2)
     libdogecoin.W_add_utxo(index, prev_output_txid_10, prev_output_n_10)
-    libdogecoin.W_add_output(index, external_address, 5.0)
-    libdogecoin.W_finalize_transaction(index, external_address, 0.00226, 12.0, my_address)
+    libdogecoin.W_add_output(index, external_address, "5.0")
+    libdogecoin.W_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 
     // sign both inputs of the current finalized transaction
     if libdogecoin.W_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1:

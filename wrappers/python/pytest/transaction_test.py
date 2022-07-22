@@ -39,21 +39,21 @@ vout_10_doge =      1
 vout_decimal_doge = 1
 
 # transaction amounts
-input1_amt =        2
-input2_amt =        10
-send_amt =          5
-total_utxo_input =  12
+input1_amt =        "2"
+input2_amt =        "10"
+send_amt =          "5"
+total_utxo_input =  "12"
 
-decimal_input_amt =         119.43536540
-decimal_send_amt =          119.43310540 # fee of 0.00226 deducted
-decimal_total_utxo_input =  119.43536540 
+decimal_input_amt =         "119.43536540"
+decimal_send_amt =          "119.43310540"# fee of 0.00226 deducted
+decimal_total_utxo_input =  "119.43536540" 
 
-fee = 0.00226
+fee = "0.00226"
 
 # invalid parameters
 bad_privkey_wif =       "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fx"
 long_tx_hex =           "x"*((1024*100)+1)
-high_send_amt =         15 # max we can spend from the two inputs is 12
+high_send_amt =         "15" # max we can spend from the two inputs is 12
 
 class TestTransactionFunctions(unittest.TestCase):
 

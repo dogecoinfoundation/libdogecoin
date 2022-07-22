@@ -3,32 +3,14 @@ package libdogecoin
 /*
 #cgo CFLAGS: -I${SRCDIR}/../../.. -I${SRCDIR}/../../../include -I${SRCDIR}/../../../include/dogecoin -I${SRCDIR}/../../../include/dogecoin/ -I${SRCDIR}/../../../src/secp256k1/include -I${SRCDIR}/../../../src/secp256k1/src -I${SRCDIR}/../../../depends/x86_64-pc-linux-gnu/include -fPIC
 #cgo LDFLAGS: -L${SRCDIR}/../../../.libs -L${SRCDIR}/../../../src/secp256k1/.libs -L${SRCDIR}/../../../depends/x86_64-pc-linux-gnu/lib -ldogecoin -levent_core -levent -lpthread -lsecp256k1 -lsecp256k1_precomputed -lm -Wl,-rpath=${SRCDIR}/../../../.libs
-#include "address.h"
-#include "transaction.h"
-#include "ecc.h"
-
-int intermed_add_output(int txindex, char* destinationaddress, double amount) {
-	return add_output(txindex, destinationaddress, (long double) amount);
-}
-
-char* intermed_finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, double out_dogeamount_for_verification, char* sender_p2pkh) {
-	return finalize_transaction(txindex, destinationaddress, (long double)subtractedfee, (long double)out_dogeamount_for_verification, sender_p2pkh);
-}
-
-int intermed_sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, double amount, char* privkey) {
-	return sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, (long double)amount, privkey);
-}
-
-int intermed_sign_transaction(int txindex, double amounts[], int arr_len, char* script_pubkey, char* privkey) {
-	long double ld_amounts[arr_len];
-	for (int i=0; i<arr_len; i++) {
-		ld_amounts[i] = (long double)amounts[i];
-	}
-	return sign_transaction(txindex, ld_amounts, script_pubkey, privkey);
-}
+#include "libdogecoin.h"
 */
 import "C"
-import "unsafe"
+import (
+	"fmt"
+	"strconv"
+	"unsafe"
+)
 
 func W_context_start() {
 	C.dogecoin_ecc_start()
@@ -122,22 +104,37 @@ func W_add_utxo(tx_index int, hex_utxo_txid string, vout int) (result int) {
 	return
 }
 
-func W_add_output(tx_index int, destination_address string, amount float64) (result int) {
+func W_add_output(tx_index int, destination_address string, amount string) (result int) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
-	c_amount := C.double(amount)
-	result = int(C.intermed_add_output(c_tx_index, c_destination_address, c_amount))
+	_, err := strconv.ParseFloat(amount, 64)
+	if err != nil {
+		fmt.Println("Error: amount is not numeric.")
+		return 0
+	}
+	c_amount := C.CString(amount)
+	result = int(C.add_output(c_tx_index, c_destination_address, c_amount))
 	C.free(unsafe.Pointer(c_destination_address))
 	return
 }
 
-func W_finalize_transaction(tx_index int, destination_address string, subtracted_fee float64, out_doge_amount_for_verification float64, public_key string) (result string) {
+func W_finalize_transaction(tx_index int, destination_address string, subtracted_fee string, out_doge_amount_for_verification string, public_key string) (result string) {
 	c_tx_index := C.int(tx_index)
 	c_destination_address := C.CString(destination_address)
-	c_subtracted_fee := C.double(subtracted_fee)
-	c_out_doge_amount_for_verification := C.double(out_doge_amount_for_verification)
+	_, err1 := strconv.ParseFloat(subtracted_fee, 64)
+	if err1 != nil {
+		fmt.Println("Error: subtracted fee is not numeric.")
+		return ""
+	}
+	c_subtracted_fee := C.CString(subtracted_fee)
+	_, err2 := strconv.ParseFloat(out_doge_amount_for_verification, 64)
+	if err2 != nil {
+		fmt.Println("Error: send amount is not numeric.")
+		return ""
+	}
+	c_out_doge_amount_for_verification := C.CString(out_doge_amount_for_verification)
 	c_public_key := C.CString(public_key)
-	result = C.GoString(C.intermed_finalize_transaction(c_tx_index, c_destination_address, c_subtracted_fee, c_out_doge_amount_for_verification, c_public_key))
+	result = C.GoString(C.finalize_transaction(c_tx_index, c_destination_address, c_subtracted_fee, c_out_doge_amount_for_verification, c_public_key))
 	C.free(unsafe.Pointer(c_destination_address))
 	C.free(unsafe.Pointer(c_public_key))
 	return
@@ -154,7 +151,7 @@ func W_clear_transaction(tx_index int) {
 	C.clear_transaction(c_tx_index)
 }
 
-func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount float64, privkey string) (result string) {
+func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount string, privkey string) (result string) {
 	c_input_index := C.int(input_index)
 	c_incoming_raw_tx := [1024 * 100]C.char{}
 	for i := 0; i < len(incoming_raw_tx) && i < 1024; i++ {
@@ -162,9 +159,16 @@ func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	}
 	c_script_hex := C.CString(script_hex)
 	c_sig_hash_type := C.int(sig_hash_type)
-	c_amount := C.double(amount)
+	_, err := strconv.ParseFloat(amount, 64)
+
+	if err != nil {
+		fmt.Println("Error: amount is not numeric.")
+		return ""
+	}
+	c_amount := C.CString(amount)
 	c_privkey := C.CString(privkey)
-	if C.intermed_sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
+
+	if C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
 		result = C.GoString(&c_incoming_raw_tx[0])
 	} else {
 		result = ""
@@ -174,16 +178,20 @@ func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	return
 }
 
-func W_sign_transaction(tx_index int, amounts []float64, script_pubkey string, privkey string) (result int) {
+func W_sign_transaction(tx_index int, amounts []string, script_pubkey string, privkey string) (result int) {
 	c_tx_index := C.int(tx_index)
-	c_amounts := [32]C.double{}
-	c_arr_len := C.int(len(amounts))
+	c_amounts := make([]*C.char, len(amounts))
 	for i := 0; i < len(amounts); i++ {
-		c_amounts[i] = C.double(amounts[i])
+		_, err := strconv.ParseFloat(amounts[i], 64)
+		if err != nil {
+			fmt.Println("Error: amount is not numeric.")
+			return 0
+		}
+		c_amounts[i] = (C.CString(amounts[i]))
 	}
 	c_script_pubkey := C.CString(script_pubkey)
 	c_privkey := C.CString(privkey)
-	result = int(C.intermed_sign_transaction(c_tx_index, &c_amounts[0], c_arr_len, c_script_pubkey, c_privkey))
+	result = int(C.sign_transaction(c_tx_index, &c_amounts[0], c_script_pubkey, c_privkey))
 	C.free(unsafe.Pointer(c_script_pubkey))
 	C.free(unsafe.Pointer(c_privkey))
 	return

@@ -160,7 +160,7 @@ int main() {
 }
 ```
 
-Once you are ready to compile, the `libdogecoin.a` file must be linked to your source code, along with `libevent` and `libm`. The resulting compilation command will looks similar to this:
+Once you are ready to compile, the `libdogecoin.a` file must be linked to your source code, along with `libevent`. The resulting compilation command will looks similar to this:
 ```
-gcc main.c -ldogecoin -lm -levent -o myprojectname
+gcc main.c -ldogecoin -levent -o myprojectname
 ```

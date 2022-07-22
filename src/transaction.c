@@ -318,7 +318,7 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
  * 
  * @return 1 if the transaction input was added successfully, 0 otherwise.
  */
-int add_output(int txindex, char* destinationaddress, long double amount) {
+int add_output(int txindex, char* destinationaddress, char* amount) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
     // guard against null pointer exceptions
@@ -328,10 +328,10 @@ int add_output(int txindex, char* destinationaddress, long double amount) {
     // determine intended network by checking address prefix:
     const dogecoin_chainparams* chain = (destinationaddress[0] == 'D') ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 
-    amount = coins_to_koinu(amount);
+    uint64_t koinu = coins_to_koinu_str(amount);
     // calculate total minus fees
     // pass in transaction obect, network paramters, amount of dogecoin to send to address and finally p2pkh address:
-    return dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)amount, destinationaddress);
+    return dogecoin_tx_add_address_out(tx->transaction, chain, (int64_t)koinu, destinationaddress);
 }
 
 /**
@@ -375,7 +375,7 @@ static int make_change(int txindex, char* public_key, uint64_t subtractedfee, ui
  * 
  * @return The hex of the finalized transaction.
  */
-char* finalize_transaction(int txindex, char* destinationaddress, long double subtractedfee, long double out_dogeamount_for_verification, char* changeaddress) {
+char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress) {
     // find working transaction by index and pass to funciton local variable to manipulate:
     working_transaction* tx = find_transaction(txindex);
 
@@ -385,11 +385,11 @@ char* finalize_transaction(int txindex, char* destinationaddress, long double su
     // determine intended network by checking address prefix:
     int is_testnet = chain_from_b58_prefix_bool(destinationaddress);
 
-    subtractedfee = coins_to_koinu(subtractedfee);
-    out_dogeamount_for_verification = coins_to_koinu(out_dogeamount_for_verification);
+    uint64_t subtractedfee_koinu = coins_to_koinu_str(subtractedfee);
+    uint64_t out_koinu_for_verification = coins_to_koinu_str(out_dogeamount_for_verification);
 
     // calculate total minus desired fees
-    uint64_t total = (uint64_t)out_dogeamount_for_verification - (uint64_t)subtractedfee, tx_out_total = 0;
+    uint64_t total = (uint64_t)out_koinu_for_verification - (uint64_t)subtractedfee_koinu, tx_out_total = 0;
 
     int i, p2pkh_count = 0, length = (int)tx->transaction->vout->len;
 
@@ -403,7 +403,7 @@ char* finalize_transaction(int txindex, char* destinationaddress, long double su
         p2pkh_count = dogecoin_script_hash_to_p2pkh(tx_out_tmp, (char *)p2pkh, is_testnet);
         if (i == length - 1 && changeaddress) {
             // manually make change and send back to our public key address
-            if (make_change(txindex, changeaddress, subtractedfee, out_dogeamount_for_verification - tx_out_total)) {
+            if (make_change(txindex, changeaddress, subtractedfee_koinu, out_koinu_for_verification - tx_out_total)) {
                 p2pkh_count += 1;
                 tx_out_tmp = vector_idx(tx->transaction->vout, tx->transaction->vout->len - 1);
                 tx_out_total += tx_out_tmp->value;
@@ -477,7 +477,7 @@ void clear_transaction(int txindex) {
  * 
  * @return 1 if the raw transaction was signed successfully, 0 otherwise.
  */
-int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey) {
+int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey) {
     if(!incomingrawtx || !scripthex) return false;
 
     if (strlen(incomingrawtx) > 1024*100) { //don't accept tx larger then 100kb
@@ -522,9 +522,9 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     uint256 sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
     
-    amount = coins_to_koinu(amount);
+    uint64_t koinu = coins_to_koinu_str(amount);
 
-    dogecoin_tx_sighash(txtmp, script, inputindex, sighashtype, amount, SIGVERSION_BASE, sighash);
+    dogecoin_tx_sighash(txtmp, script, inputindex, sighashtype, koinu, SIGVERSION_BASE, sighash);
 
     char *hex = utils_uint8_to_hex(sighash, 32);
     utils_reverse_hex(hex, 64);
@@ -555,7 +555,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         uint8_t sigcompact[64] = {0};
         int sigderlen = 74+1; //&hashtype
         uint8_t sigder_plus_hashtype[75] = {0};
-        enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(txtmp, script, amount, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
+        enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(txtmp, script, koinu, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
         cstr_free(script, true);
 
         if (res != DOGECOIN_SIGN_OK) return false;
@@ -597,7 +597,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
  * 
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
-int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey) {
+int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey) {
     if (!txindex) return false;
     if (!sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey)) {
         printf("error signing raw transaction\n");
@@ -621,7 +621,7 @@ int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawt
  * 
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
-int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey) {
+int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey) {
     char* raw_hexadecimal_transaction = get_raw_transaction(txindex);
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();

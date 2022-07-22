@@ -30,33 +30,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <inttypes.h>
-#include <math.h>
-#include <fenv.h>
 #include <errno.h>
 #include <ctype.h>
 
 #include <dogecoin/koinu.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
-
-long double rnd(long double v, long double digit) {
-    long double _pow;
-    _pow = pow(10.0, digit);
-    long double t = v * _pow;
-    long double r = ceil(t + 0.5);
-    return r / _pow;
-}
-
-void show_fe_currentrnding_direction(void)
-{
-    switch (fegetround()) {
-           case FE_TONEAREST:  debug_print ("FE_TONEAREST: %d\n", FE_TONEAREST);  break;
-           case FE_DOWNWARD:   debug_print ("FE_DOWNWARD: %d\n", FE_DOWNWARD);   break;
-           case FE_UPWARD:     debug_print ("FE_UPWARD: %d\n", FE_UPWARD);     break;
-           case FE_TOWARDZERO: debug_print ("FE_TOWARDZERO: %d\n", FE_TOWARDZERO); break;
-           default:            debug_print ("%s\n", "unknown");
-    };
-}
 
 enum conversion_type {
     CONVERSION_SUCCESS,
@@ -93,9 +72,6 @@ const char* conversion_type_to_str(const enum conversion_type type)
 }
 
 int check_length(char* string) {
-    int integer_length;
-    // length minus 1 representative of decimal point and 8 representative of koinu
-    integer_length = strlen(string);
     // set max length for all string inputs to 20 to account for total supply in 2022
     // (currently 132.67 billion dogecoin) + 1e8 koinu passing UINT64_MAX 184467440737
     // in 9.854916426 years (2032) with output of 5,256,000,000 mined dogecoins per year
@@ -107,10 +83,9 @@ int check_length(char* string) {
     // set max length for all string inputs to 21 to account for total supply passing 
     // 1T in ~180 years from 2022. this limit will be valid for the next 1980 years so 
     // make sure to update in year 4002. :)
-    if (integer_length > 21) {
-        return false;
-    }
-    return integer_length;
+    int integer_length = strlen(string);
+    if (integer_length > 22) return false;
+    else return integer_length;
 }
 
 enum conversion_type validate_conversion(uint64_t converted, const char* src, const char* src_end, const char* target_end) {
@@ -166,129 +141,83 @@ void string(uint64_t input, char output[]) {
 int koinu_to_coins_str(uint64_t koinu, char* str) {
     enum conversion_type state = validate_conversion(koinu, NULL, NULL, NULL);
     if (state != CONVERSION_SUCCESS) return false;
-    uint64_t length = calc_length(koinu), target = length - 9, i = 0;
-    char tmp[21];
-    string(koinu, tmp);
-    for (; i < length; i++) {
-        if (i < target) {
-            str[i] = tmp[i];
-        } else if (i == target) {
-            str[i] = tmp[i];
-            str[i + 1] = '.';
-        } else if (i > target) {
-            str[i + 1] = tmp[i];
+
+    uint64_t i = 0, j =0, length = calc_length(koinu),
+    target = length < 9 ? 10 - length : length - 9;
+    
+    if (length < 9) {
+        string(koinu, str);
+        int l = str ? strlen(str) : 0;
+        char swap[l + 1];
+        memcpy_safe(swap, str, l + 1);
+        for (; i < target; i++) {
+            if (i == 0 || i == 1) {
+                str[0] = '0';
+                str[1] = '.';
+            } else str[i] = '0';
         }
+        for (; i < 10; i++, j++) str[i] = swap[j];
+    } else {
+        char tmp[21];
+        string(koinu, tmp);
+        for (; i < length; i++) {
+            if (i < target) str[i] = tmp[i];
+            else if (i == target) {
+                str[i] = tmp[i];
+                str[i + 1] = '.';
+            } else if (i > target) str[i + 1] = tmp[i];
+        }
+        str[length + 1] = '\0';
     }
-    str[length + 1] = '\0';
+
     return true;
 }
 
 uint64_t coins_to_koinu_str(char* coins) {
-    if (!check_length(coins)) return false;
-    enum conversion_type state;
-    char coins_string[32];
-    char koinu_string[32];
-    sprintf(coins_string, "%s", coins);
-    char* c_ptr = coins_string;
-    char* k_ptr = koinu_string;
-    int i;
+    if (coins[0] == '-') return false;
+    int length = check_length(coins);
+    if (!length) return false;
 
-    // copy all digits until end of string or decimal point is reached
-    while (*c_ptr != '\0') {
-        if (*c_ptr =='.') {
-            c_ptr++;
+    char *end, dogecoin_string[21], koinu_string[9];
+    dogecoin_mem_zero(dogecoin_string, 21);
+    dogecoin_mem_zero(koinu_string, 9);
+    
+    int i = 0, j = 0, mantissa_length = 0;
+    for (; i < length; i++) { 
+        dogecoin_string[i] = coins[i];
+        if (coins[i] == '.') {
+            j = i;
+            while (j < i + 8) { 
+                dogecoin_string[j] = '0'; j++; 
+            }
+            dogecoin_string[i] = '\0';
+            i++;
             break;
         }
-        memcpy(k_ptr, c_ptr, 1);
-        c_ptr++;
-        k_ptr++;
+    }
+    
+    for (j = 0; i < length && j < 8; i++, j++) {
+        koinu_string[j] = coins[i]; 
+        mantissa_length++; 
     }
 
-    // pad mantissa with up to 8 trailing zeros
-    if (strlen(c_ptr) != 8) {
-        for (i = strlen(c_ptr); i < 8; i++) {
-            if (i == 8) {
-                c_ptr[i] = '\0';
-            } else c_ptr[i] = '0';
-            
+    if (mantissa_length != 8) {
+        for (i = mantissa_length; i < 8; i++) {
+            koinu_string[i] = '0';
         }
-    }
+    } else koinu_string[strlen(koinu_string)] = '\0';
 
-    //copy remaining 8 or less decimal places
-    for (i = 1; i <= 8; i++) {
-        if (i==8) {
-            memcpy(k_ptr, c_ptr, 1);
-            k_ptr++;
-            memset(k_ptr, '\0', 1);
-            break;
-        }
-        memcpy(k_ptr, c_ptr, 1);
-        c_ptr++;
-        k_ptr++;
-    }
     errno = 0;
-    uint64_t result = strtoull(koinu_string, &k_ptr, 10);
-    state = validate_conversion(result, (const char*)koinu_string, k_ptr, "\0");
-    if (state == CONVERSION_SUCCESS) return result;
-    else {
-        debug_print("%s\n", conversion_type_to_str(state));
-        return false;
-    }
-}
+    uint64_t dogecoin = strtoull(dogecoin_string, &end, 10);
+    enum conversion_type state = validate_conversion(dogecoin, (const char*)dogecoin_string, end, "\0");
+    if (state == CONVERSION_SUCCESS) { 
+        if (strlen(dogecoin_string) <= 12) dogecoin *= 100000000; 
+    } else debug_print("%s\n", conversion_type_to_str(state));
 
-long double round_ld(long double x)
-{
-    fenv_t save_env;
-    feholdexcept(&save_env);
-    long double result = rintl(x);
-    if (fetestexcept(FE_INEXACT)) {
-        int const save_round = fegetround();
-        fesetround(FE_UPWARD);
-        result = rintl(copysignl(0.5 + fabsl(x), x));
-        fesetround(save_round);
-    }
-    feupdateenv(&save_env);
-    return result;
-}
 
-long double koinu_to_coins(uint64_t koinu) {
-    long double output;
-#if defined(__ARM_ARCH_7A__)
-    int rounding_mode = fegetround();
-    int l = calc_length(koinu);
-    output = (long double)koinu / (long double)1e8;
-    if (l >= 9) {
-        fesetround(FE_UPWARD);
-        output = (long double)koinu / (long double)1e8;
-    } else if (l >= 17) {
-        output = rnd((long double)koinu / (long double)1e8, 8.5) + .000000005;
-    }
-    fesetround(rounding_mode);
-#elif defined(WIN32)
-    output = (long double)koinu / (long double)1e8;
-#else
-    output = (long double)koinu / (long double)1e8;
-#endif
-    return output;
-}
-
-long long unsigned coins_to_koinu(long double coins) {
-    long double output;
-#if defined(__ARM_ARCH_7A__)
-    long double integer_length, mantissa_length;
-    char* str[22];
-    dogecoin_mem_zero(str, 11);
-    snprintf(&str, sizeof(str), "%.8Lf", coins);
-    // length minus 1 representative of decimal and 8 representative of koinu
-    integer_length = strlen(str) - 9;
-    mantissa_length = integer_length + (8 - integer_length);
-    if (integer_length <= mantissa_length) {
-        output = coins * powl(10, mantissa_length);
-    } else {
-        output = round_ld(coins * powl(10, mantissa_length));
-    }
-#else
-     output = (uint64_t)round((long double)coins * (long double)1e8);
-#endif
-    return output;
+    errno = 0;
+    uint64_t koinu = strtoull(koinu_string, &end, 10) + dogecoin;
+    state = validate_conversion(koinu, (const char*)koinu_string, end, "\0");
+    if (state == CONVERSION_SUCCESS) return koinu;
+    else { debug_print("%s\n", conversion_type_to_str(state)); return false; }
 }
