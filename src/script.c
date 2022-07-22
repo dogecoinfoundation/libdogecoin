@@ -464,9 +464,7 @@ enum dogecoin_tx_out_type dogecoin_script_classify_ops(const vector* ops)
  * @brief This function takes a cstring representation of
  * a script, classifies it as one of the four script types
  * and loads the script data into data_out if it is not a 
- * multisig script. If the script is a witness program, 
- * determine whether it is for a pubkey hash or a script 
- * hash, and then copy the witness data to data_out.
+ * multisig script.
  * 
  * @param script The pointer to the cstring script to be parsed and classified.
  * @param data_out The pointer to the vector that will contain the parsed scripts.
@@ -490,27 +488,8 @@ enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector
         tx_out_type = DOGECOIN_TX_PUBKEY;
     if (dogecoin_script_is_multisig(ops))
         tx_out_type = DOGECOIN_TX_MULTISIG;
+
     uint8_t version = 0;
-    uint8_t witness_program[40] = {0};
-    int witness_program_len = 0;
-    if (dogecoin_script_is_witnessprogram(script, &version, witness_program, &witness_program_len)) {
-        if (version == 0 && witness_program_len == 20) {
-            tx_out_type = DOGECOIN_TX_WITNESS_V0_PUBKEYHASH;
-            if (data_out) {
-                uint8_t* witness_program_cpy = dogecoin_calloc(1, witness_program_len);
-                memcpy_safe(witness_program_cpy, witness_program, witness_program_len);
-                vector_add(data_out, witness_program_cpy);
-            }
-        }
-        if (version == 0 && witness_program_len == 32) {
-            tx_out_type = DOGECOIN_TX_WITNESS_V0_SCRIPTHASH;
-            if (data_out) {
-                uint8_t* witness_program_cpy = dogecoin_calloc(1, witness_program_len);
-                memcpy_safe(witness_program_cpy, witness_program, witness_program_len);
-                vector_add(data_out, witness_program_cpy);
-            }
-        }
-    }
     vector_free(ops, true);
     return tx_out_type;
 }
@@ -644,28 +623,6 @@ dogecoin_bool dogecoin_script_build_p2pkh(cstring* script_in, const uint160 hash
 
 
 /**
- * @brief This function builds a pay-to-witness-public-key-hash
- * script which pushes an empty array of bytes to the stack and
- * and then subsequently pushes the pubkey hash160 to the stack.
- * This script is then loaded into the cstring script_in.
- * 
- * @param script_in The pointer to the cstring where the p2wpkh script will be built.
- * @param hash160 The hash160 of a public key.
- * 
- * @return 1 if the p2wpkh script was built successfully.
- */
-dogecoin_bool dogecoin_script_build_p2wpkh(cstring* script_in, const uint160 hash160)
-{
-    cstr_resize(script_in, 0); //clear script
-
-    dogecoin_script_append_op(script_in, OP_0);
-    dogecoin_script_append_pushdata(script_in, (unsigned char*)hash160, sizeof(uint160));
-
-    return true;
-}
-
-
-/**
  * @brief This function builds a pay-to-script-hash script
  * which hashes the value on the top of the stack (script
  * data) and ensures that this equals the uint160 object given. 
@@ -748,42 +705,4 @@ static uint8_t dogecoin_decode_op_n(enum opcodetype op)
     }
     assert(op >= OP_1 && op <= OP_16);
     return (uint8_t)op - (uint8_t)(OP_1 - 1);
-}
-
-
-/**
- * @brief This function checks whether the script is a witness
- * program, which is true if the script consists of a 1-byte
- * push opcode followed by a data push between 2 and 40 bytes.
- * Script data is passed in through cstring format, and script
- * data is passed back out through an unsigned byte array.
- * 
- * @param script The pointer to the script to be checked and parsed.
- * @param version_out The pointer to the byte that will store the script version.
- * @param program_out The pointer to the byte array that will store the script data.
- * @param programm_len_out The pointer to the int that will store the length of the script.
- * 
- * @return 1 if the script is a witness program, 0 otherwise.
- */
-dogecoin_bool dogecoin_script_is_witnessprogram(const cstring* script, uint8_t* version_out, uint8_t* program_out, int* programm_len_out)
-{
-    if (!version_out || !program_out) {
-        return false;
-    }
-    if (script->len < 4 || script->len > 42) {
-        return false;
-    }
-    if (script->str[0] != OP_0 && (script->str[0] < OP_1 || script->str[0] > OP_16)) {
-        return false;
-    }
-    if ((size_t)(script->str[1] + 2) == script->len) {
-        *version_out = dogecoin_decode_op_n((enum opcodetype)script->str[0]);
-        if (program_out) {
-            assert(script->len - 2 <= 40);
-            memcpy_safe(program_out, script->str + 2, script->len - 2);
-            *programm_len_out = script->len - 2;
-        }
-        return true;
-    }
-    return false;
 }

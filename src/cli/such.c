@@ -80,7 +80,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                             utils_hex_to_bin(raw_hexadecimal_tx, data_bin, sizeof(&raw_hexadecimal_tx), &outlen);
 
                             /* Deserializing the transaction and broadcasting it to the network. */
-                            if (dogecoin_tx_deserialize(data_bin, outlen, tx->transaction, NULL, true)) {
+                            if (dogecoin_tx_deserialize(data_bin, outlen, tx->transaction, NULL)) {
                                 broadcast_tx(chain, tx->transaction, 0, 10, 15, 0);
                                 }
                             else {
@@ -711,35 +711,24 @@ int main(int argc, char* argv[])
 
         /* give out p2pkh address */
         char address_p2pkh[sizeout];
-        char address_p2sh_p2wpkh[sizeout];
-        char address_p2wpkh[sizeout];
-        addresses_from_pubkey(chain, pubkey_hex, address_p2pkh, address_p2sh_p2wpkh, address_p2wpkh);
+        addresses_from_pubkey(chain, pubkey_hex, address_p2pkh);
         printf("p2pkh address: %s\n", address_p2pkh);
-        printf("p2sh-p2wpkh address: %s\n", address_p2sh_p2wpkh);
 
         /* clean memory */
         dogecoin_mem_zero(pubkey_hex, strlen(pubkey_hex));
         dogecoin_mem_zero(address_p2pkh, strlen(address_p2pkh));
-        dogecoin_mem_zero(address_p2sh_p2wpkh, strlen(address_p2sh_p2wpkh));
     /* Creating a new address from a public key. */
     } else if (strcmp(cmd, "p2pkh") == 0) {
-        /* get p2pkh address from pubkey */
-
         size_t sizeout = 128;
         char address_p2pkh[sizeout];
-        char address_p2sh_p2wpkh[sizeout];
-        char address_p2wpkh[sizeout];
         if (!pubkey)
             return showError("Missing public key (use -k)");
-        if (!addresses_from_pubkey(chain, pubkey, address_p2pkh, address_p2sh_p2wpkh, address_p2wpkh))
+        if (!addresses_from_pubkey(chain, pubkey, address_p2pkh))
             return showError("Operation failed, invalid pubkey");
         printf("p2pkh address: %s\n", address_p2pkh);
-        printf("p2sh-p2wpkh address: %s\n", address_p2sh_p2wpkh);
-        printf("p2wpkh (doge / bech32) address: %s\n", address_p2wpkh);
 
         dogecoin_mem_zero(pubkey, strlen(pubkey));
         dogecoin_mem_zero(address_p2pkh, strlen(address_p2pkh));
-        dogecoin_mem_zero(address_p2sh_p2wpkh, strlen(address_p2sh_p2wpkh));
     /* Generating a new private key and printing it out. */
     } else if (strcmp(cmd, "generate_private_key") == 0) {
         size_t sizeout = 128;
@@ -761,7 +750,6 @@ int main(int argc, char* argv[])
         hd_gen_master(chain, masterkey, sizeout);
         printf("bip32 extended master key: %s\n", masterkey);
         dogecoin_mem_zero(masterkey, strlen(masterkey));
-    /* Printing the node keys. */
     } else if (strcmp(cmd, "print_keys") == 0) {
         if (!pkey)
             return showError("no extended key (-p)");
@@ -832,7 +820,6 @@ int main(int argc, char* argv[])
                 memcpy_safe(keypathnew+posanum-1, index, strlen(index));
                 memcpy_safe(keypathnew+posanum-1+strlen(index), &derived_path[end], strlen(derived_path)-end);
 
-
                 if (!hd_derive(chain, pkey, keypathnew, newextkey, sizeout))
                     return showError("Deriving child key failed\n");
                 else
@@ -860,11 +847,12 @@ int main(int argc, char* argv[])
         uint8_t* data_bin = dogecoin_malloc(strlen(txhex) / 2 + 1);
         int outlen = 0;
         utils_hex_to_bin(txhex, data_bin, strlen(txhex), &outlen);
-        if (!dogecoin_tx_deserialize(data_bin, outlen, tx, NULL, true)) {
+        if (!dogecoin_tx_deserialize(data_bin, outlen, tx, NULL)) {
             dogecoin_free(data_bin);
             dogecoin_tx_free(tx);
             return showError("Invalid tx hex");
             }
+
         dogecoin_free(data_bin);
 
         if ((size_t)inputindex >= tx->vin->len) {
@@ -901,19 +889,17 @@ int main(int argc, char* argv[])
         dogecoin_privkey_init(&key);
         if (dogecoin_privkey_decode_wif(pkey, chain, &key)) {
             sign = true;
-            }
-        else {
+        } else {
             if (pkey) {
                 if (strlen(pkey) > 50) {
                     dogecoin_tx_free(tx);
                     cstr_free(script, true);
                     return showError("Invalid wif privkey\n");
                     }
-                }
-            else {
+            } else {
                 printf("No private key provided, signing will not happen\n");
-                }
             }
+        }
         if (sign) {
             uint8_t sigcompact[64] = { 0 };
             int sigderlen = 74 + 1; //&hashtype
@@ -937,7 +923,7 @@ int main(int argc, char* argv[])
             printf("signature DER (+hashtype): %s\n", sigderhex);
 
             cstring* signed_tx = cstr_new_sz(1024);
-            dogecoin_tx_serialize(signed_tx, tx, true);
+            dogecoin_tx_serialize(signed_tx, tx);
 
             char signed_tx_hex[signed_tx->len * 2 + 1];
             utils_bin_to_hex((unsigned char*)signed_tx->str, signed_tx->len, signed_tx_hex);

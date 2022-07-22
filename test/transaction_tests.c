@@ -53,7 +53,7 @@ void test_transaction()
     // convert raw_hexadecimal_transaction_from_tx_worth_2_dogecoin to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin, data_bin_2, strlen(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin), &outlength_2);
 
-    if (!dogecoin_tx_deserialize(data_bin_2, outlength_2, tx_worth_2, NULL, false)) {
+    if (!dogecoin_tx_deserialize(data_bin_2, outlength_2, tx_worth_2, NULL)) {
         // free dogecoin_tx
         printf("deserializing tx_worth_2 failed\n");
         dogecoin_tx_free(tx_worth_2);
@@ -149,7 +149,7 @@ void test_transaction()
 
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin, data_bin_10, strlen(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin), &outlength_10);
-    if (!dogecoin_tx_deserialize(data_bin_10, outlength_10, tx_worth_10, NULL, false)) {
+    if (!dogecoin_tx_deserialize(data_bin_10, outlength_10, tx_worth_10, NULL)) {
         // free dogecoin_tx
         dogecoin_tx_free(tx_worth_10);
     }

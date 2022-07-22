@@ -41,7 +41,6 @@ LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout, int len);
 LIBDOGECOIN_API dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, int len);
-LIBDOGECOIN_API dogecoin_bool dogecoin_p2wpkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout);
 
 LIBDOGECOIN_END_DECL
 

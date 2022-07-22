@@ -34,7 +34,7 @@
 LIBDOGECOIN_BEGIN_DECL
 
 /* generate the p2pkh address from a given hex pubkey */
-LIBDOGECOIN_API dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address, char* p2sh_p2wpkh_address, char* p2wpkh_address);
+LIBDOGECOIN_API dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address);
 
 /* generate the hex publickey from a given hex private key */
 LIBDOGECOIN_API dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_hex, char* pubkey_hex, size_t* sizeout);
