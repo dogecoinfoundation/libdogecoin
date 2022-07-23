@@ -40,7 +40,6 @@ LIBDOGECOIN_BEGIN_DECL
 /** Sighash version types */
 enum dogecoin_sig_version {
     SIGVERSION_BASE = 0,
-    SIGVERSION_WITNESS_V0 = 1,
 };
 
 /** Signature hash types/flags */
@@ -203,8 +202,6 @@ enum dogecoin_tx_out_type {
     DOGECOIN_TX_PUBKEYHASH,
     DOGECOIN_TX_SCRIPTHASH,
     DOGECOIN_TX_MULTISIG,
-    DOGECOIN_TX_WITNESS_V0_PUBKEYHASH,
-    DOGECOIN_TX_WITNESS_V0_SCRIPTHASH,
 };
 
 typedef struct dogecoin_script_op_ {
@@ -233,13 +230,10 @@ LIBDOGECOIN_API void dogecoin_script_append_pushdata(cstring* script_in, const u
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_multisig(cstring* script_in, const unsigned int required_signatures, const vector* pubkeys_chars);
 LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2pkh(cstring* script, const uint160 hash160);
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2wpkh(cstring* script, const uint160 hash160);
 LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160 hash160);
 LIBDOGECOIN_API dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160 scripthash);
 
 LIBDOGECOIN_API const char* dogecoin_tx_out_type_to_str(const enum dogecoin_tx_out_type type);
-
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_is_witnessprogram(const cstring* script, uint8_t* version_out, uint8_t* program_out, int* programm_len_out);
 
 LIBDOGECOIN_END_DECL
 

@@ -22,8 +22,7 @@
 
 ## Introduction
 
-The high level 'essential' API provided by libdogecoin for working with simple 
-transactions revolve around a structure defined as a `working_transaction` which is comprised of an index as an integer meant for retrieval, a dogecoin_tx 'transaction' structure as seen above, and finally a UT_hash_handle which stores our working_transaction struct in a hash table (using Troy D. Hanson's uthash library: see ./contrib/uthash/uthash.h and visit https://troydhanson.github.io/uthash/ for more information) to allow us to generate multiple transactions per "session". This `working_transaction` structure is defined as such:
+The high level 'essential' API provided by libdogecoin for working with simple transactions revolve around a structure defined as a `working_transaction` which is comprised of an index as an integer meant for retrieval, a dogecoin_tx 'transaction' structure as seen above, and finally a UT_hash_handle which stores our working_transaction struct in a hash table (using Troy D. Hanson's uthash library: see ./contrib/uthash/uthash.h and visit https://troydhanson.github.io/uthash/ for more information) which allow us to generate multiple transactions per "session". This `working_transaction` structure is defined as such:
 ```C
 typedef struct working_transaction {
     int index;
@@ -32,7 +31,7 @@ typedef struct working_transaction {
 } working_transaction;
 ```
 
-The functions that have been built around this `working_transaction` structure and flow of operation are comprised of 4 macros, which are explained further in the following section describing the [working transaction API](#working-transaction-api). used to interact with uthash.
+The functions that have been built around this `working_transaction` structure and flow of operation are comprised of 4 macros, which are explained further in the following section describing the [working transaction API](#working-transaction-api). used to interact with uthash. For more detailed technical information about the `dogecoin_tx` structure and Dogecoin transactions in general, please refer to the [extended transaction documentation](./transaction_extended.md).
 
 The [Libdogecoin Essential API](#essential-api) itself is a higher level interface that contains all the necessary operations for building Dogecoin transactions from scratch. The generic process for building a transaction is as follows:
 - Create an empty transaction.

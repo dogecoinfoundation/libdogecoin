@@ -51,13 +51,10 @@
  * @param chain The chainparams struct for the chain you want to generate addresses for.
  * @param pubkey_hex The hexadecimal representation of the public key.
  * @param p2pkh_address The address in legacy format (DRnwTww6YB2zw1TTjiPfeFkfuabojfyaB8)
- * @param p2sh_p2wpkh_address The address that the user will send funds to in order to fund the
- * p2sh_p2wpkh address.
- * @param p2wpkh_address The address that the pubkey will be converted to.
  * 
  * @return dogecoin_bool (uint8_t)
  */
-dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address, char* p2sh_p2wpkh_address, char* p2wpkh_address)
+dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address)
 {
     if (!pubkey_hex)
         return false;
@@ -70,8 +67,6 @@ dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const cha
     utils_hex_to_bin(pubkey_hex, pubkey.pubkey, strlen(pubkey_hex), (int*)&outlen);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 1);
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_address);
-    dogecoin_pubkey_getaddr_p2sh_p2wpkh(&pubkey, chain, p2sh_p2wpkh_address);
-    dogecoin_pubkey_getaddr_p2wpkh(&pubkey, chain, p2wpkh_address);
     return true;
 }
 
@@ -188,12 +183,8 @@ dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodes
     printf("depth:               %d\n", node.depth);
     printf("child index:         %d\n", node.child_num);
     char addr[34];
-    char addr_p2sh_p2wpkh[34];
-    char addr_p2wpkh[31];
-    addresses_from_pubkey(&dogecoin_chainparams_main, str, addr, addr_p2sh_p2wpkh, addr_p2wpkh);
+    addresses_from_pubkey(&dogecoin_chainparams_main, str, addr);
     printf("p2pkh address:       %s\n", addr);
-    printf("p2sh-p2wpkh address: %s\n", addr_p2sh_p2wpkh);
-    printf("p2wpkh address:      %s\n", addr_p2wpkh);
     return true;
 }
 

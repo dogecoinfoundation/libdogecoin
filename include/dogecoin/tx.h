@@ -61,7 +61,6 @@ typedef struct dogecoin_tx_in_ {
     dogecoin_tx_outpoint prevout;
     cstring* script_sig;
     uint32_t sequence;
-    vector* witness_stack;
 } dogecoin_tx_in;
 
 typedef struct dogecoin_tx_out_ {
@@ -119,10 +118,10 @@ LIBDOGECOIN_API void dogecoin_tx_free(dogecoin_tx* tx);
 LIBDOGECOIN_API void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src);
 
 //!deserialize/parse a p2p serialized dogecoin transaction
-LIBDOGECOIN_API int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, dogecoin_tx* tx, size_t* consumed_length, dogecoin_bool allow_witness);
+LIBDOGECOIN_API int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, dogecoin_tx* tx, size_t* consumed_length);
 
 //!serialize a dogecoin data structure into a p2p serialized buffer
-LIBDOGECOIN_API void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx, dogecoin_bool allow_witness);
+LIBDOGECOIN_API void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx);
 
 LIBDOGECOIN_API void dogecoin_tx_hash(const dogecoin_tx* tx, uint8_t* hashout);
 
@@ -138,8 +137,6 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_puzzle_out(dogecoin_tx* tx, const 
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_outpoint_is_null(dogecoin_tx_outpoint* tx);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_is_coinbase(dogecoin_tx* tx);
-
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_has_witness(const dogecoin_tx* tx);
 
 enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_UNKNOWN = 0,

@@ -16,12 +16,8 @@
 void test_tool()
 {
     char addr[100];
-    char addr_p2sh_p2wpkh[100];
-    char addr_p2wpkh[100];
-    u_assert_int_eq(addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr, addr_p2sh_p2wpkh, addr_p2wpkh), true);
+    u_assert_int_eq(addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr), true);
     u_assert_str_eq(addr, "DTwqVfB7tbwca2PzwBvPV1g1xDB2YPrCYh");
-    u_assert_str_eq(addr_p2sh_p2wpkh, "A6JS4r6BucWmrMXeTuuxbVCrS9iHPckeBf");
-    u_assert_str_eq(addr_p2wpkh, "doge1qlg5uydlgue7ywqcnt6rumf8743pm5usr5rlvmd");
 
     size_t pubkeylen = 100;
     char pubkey[pubkeylen];

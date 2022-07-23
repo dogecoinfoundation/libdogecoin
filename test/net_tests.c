@@ -83,7 +83,7 @@ void postcmd(struct dogecoin_node_ *node, dogecoin_p2p_msg_hdr *hdr, struct cons
         for (i = 0; i < vsize; i++)
         {
             dogecoin_tx *tx = dogecoin_tx_new(); //needs to be on the heep
-            dogecoin_tx_deserialize(buf->p, buf->len, tx, NULL, true);
+            dogecoin_tx_deserialize(buf->p, buf->len, tx, NULL);
 
             dogecoin_tx_free(tx);
         }

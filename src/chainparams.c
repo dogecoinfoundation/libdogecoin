@@ -32,8 +32,6 @@ const dogecoin_chainparams dogecoin_chainparams_main = {
     "main",
     0x1e, // 30, starts with D
     0x16, // 22, starts with 9 or A
-    // Human-readable part for Bech32 encoded segwit addresses, as defined in
-    // BIP 173.
     "doge",                   // bech32_hrp planned for 0.21
     0x9e,                     // 158, starts with 6 (uncompressed) or Q (compressed)
     0x02fac398,               // starts with dgpv
@@ -48,8 +46,6 @@ const dogecoin_chainparams dogecoin_chainparams_test = {
     "testnet3",
     0x71, // 113 starts with n
     0xc4, // 196 starts with 2
-    // Human-readable part for Bech32 encoded segwit addresses, as defined in
-    // BIP 173.
     "tdge",                   // bech32_hrp 0.21
     0xf1,                     // 241 starts with 9 (uncompressed) or c (compressed)
     0x04358394,               // starts with tprv

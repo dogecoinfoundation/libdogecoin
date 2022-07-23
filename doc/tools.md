@@ -74,14 +74,11 @@ Below are some examples on how to use the `such` tool in practice.
     ./such -c generate_public_key -p QSPDnjzvrSPAeiM7N2jCkzv2dqsi7fxoHipgpPfz2zdE3ZpYp74j
     > pubkey: 02cf2c99c2db4b3d72d4289aa23bdaf5f3ccf4867ec8e5f8223ea716a7a3de10bc
     > p2pkh address: D62RKK6AGkzX6fM8RzoVM8fjPx2nzrdvKU
-    > p2sh-p2wpkh address: 9zXbecoxo4aDsG8Ng1osUhGN9URrF1P9JZ
 
 ##### Generate the P2PKH address from a hex encoded compact public key
 
     ./such -c generate_public_key -pubkey 02cf2c99c2db4b3d72d4289aa23bdaf5f3ccf4867ec8e5f8223ea716a7a3de10bc
     > p2pkh address: D62RKK6AGkzX6fM8RzoVM8fjPx2nzrdvKU
-    > p2sh-p2wpkh address: 9zXbecoxo4aDsG8Ng1osUhGN9URrF1P9JZ
-    > p2wpkh (doge / bech32) address: doge1qpx6wxh9xv780a7uj675vl0c88zd3fg4v26vlsn
 
 ##### Generate new BIP32 master key
 

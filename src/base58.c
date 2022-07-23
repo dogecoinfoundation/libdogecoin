@@ -30,7 +30,6 @@
 #include <dogecoin/base58.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/mem.h>
-#include <dogecoin/segwit_addr.h>
 #include <dogecoin/sha2.h>
 #include <dogecoin/hash.h>
 
@@ -248,8 +247,4 @@ dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogeco
     memcpy_safe(hash160 + 1, hashin, sizeof(uint160));
 
     return (dogecoin_base58_encode_check(hash160, sizeof(uint160) + 1, addrout, len) > 0);
-}
-
-dogecoin_bool dogecoin_p2wpkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout) {
-    return segwit_addr_encode(addrout, chain->bech32_hrp, 0, hashin, sizeof(uint160));
 }

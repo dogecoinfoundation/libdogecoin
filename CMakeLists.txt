@@ -65,7 +65,6 @@ INSTALL(FILES
     include/dogecoin/random.h
     include/dogecoin/rmd160.h
     include/dogecoin/script.h
-    include/dogecoin/segwit_addr.h
     include/dogecoin/serialize.h
     include/dogecoin/sha2.h
     include/dogecoin/tool.h
@@ -94,7 +93,6 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/random.c
     src/rmd160.c
     src/script.c
-    src/segwit_addr.c
     src/serialize.c
     src/sha2.c
     src/cli/tool.c

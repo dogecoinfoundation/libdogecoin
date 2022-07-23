@@ -82,9 +82,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned ch
 //verifies a DER encoded signature with given pubkey and return true if valid
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, int len);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2sh_p2wpkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
-LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2wpkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
 
 LIBDOGECOIN_END_DECL
 

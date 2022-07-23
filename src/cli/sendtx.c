@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 
     dogecoin_tx* tx = dogecoin_tx_new();
     /* Deserializing the transaction and broadcasting it to the network. */
-    if (dogecoin_tx_deserialize(data_bin, outlen, tx, NULL, true)) {
+    if (dogecoin_tx_deserialize(data_bin, outlen, tx, NULL)) {
         broadcast_tx(chain, tx, ips, maxnodes, timeout, debug);
         }
     else {
