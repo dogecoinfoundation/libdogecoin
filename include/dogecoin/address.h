@@ -27,7 +27,6 @@
 #include <stdbool.h>
 
 #include <dogecoin/dogecoin.h>
-#include <dogecoin/tool.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

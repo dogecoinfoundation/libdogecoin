@@ -29,10 +29,10 @@
 #ifndef __LIBDOGECOIN_HASH_H__
 #define __LIBDOGECOIN_HASH_H__
 
-#include <dogecoin/sha2.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/sha2.h>
 #include <dogecoin/vector.h>
 
 LIBDOGECOIN_BEGIN_DECL

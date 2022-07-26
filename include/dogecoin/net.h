@@ -29,15 +29,12 @@
 #ifndef __LIBDOGECOIN_NET_H__
 #define __LIBDOGECOIN_NET_H__
 
-#include <dogecoin/dogecoin.h>
-
-#include <event2/event.h>
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
+#include <stdarg.h>
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/cstr.h>
+#include <dogecoin/dogecoin.h>
 #include <dogecoin/protocol.h>
 #include <dogecoin/vector.h>
 

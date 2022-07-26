@@ -10,6 +10,9 @@
 #include <stdint.h>
 
 #include <dogecoin/byteswap.h>
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
 
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
@@ -121,5 +124,7 @@
 #error platform not supported
 
 #endif
+
+LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_PORTABLE_ENDIAN_H__

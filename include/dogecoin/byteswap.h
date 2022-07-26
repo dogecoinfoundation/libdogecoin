@@ -8,6 +8,10 @@
 #ifndef __LIBDOGECOIN_BYTESWAP_H__
 #define __LIBDOGECOIN_BYTESWAP_H__
 
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
+
 #if defined(HAVE_BYTESWAP_H)
 #include <byteswap.h>
 #endif
@@ -65,5 +69,7 @@ LIBDOGECOIN_API inline uint64_t bswap_64(uint64_t x)
 #endif // HAVE_DECL_BSWAP64
 
 #endif // defined(__APPLE__)
+
+LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_BYTESWAP_H__
