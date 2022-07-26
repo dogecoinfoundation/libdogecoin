@@ -109,8 +109,8 @@ int main() {
     char *oldScriptPubKey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
     char* utxo_id = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
     int utxo_vout = 1;
-    long double amounts[] = {2.0};
-    long double amt_total = 2.0;
+    char* amounts[] = {"2.0"};
+    char* amt_total = "2.0";
 
     // generate new key pair to send to
     char newPrivKey[53]; 
@@ -120,8 +120,8 @@ int main() {
     // build and sign the transaction
     int idx = start_transaction();
     add_utxo(idx, utxo_id, utxo_vout);
-    add_output(idx, newPubKey, 0.69);
-    finalize_transaction(idx, newPubKey, 0.00226, amt_total, oldPubKey);
+    add_output(idx, newPubKey, "0.69");
+    finalize_transaction(idx, newPubKey, "0.00226", amt_total, oldPubKey);
     sign_transaction(idx, amounts, oldScriptPubKey, oldPrivKey);
 
     // print result
@@ -132,12 +132,11 @@ int main() {
 ```
 The last step is to specify the libraries you will need to link into your project, done by using the `-l` flag. The libraries that are required to use Libdogecoin in your project are:
 - libdogecoin (of course!)
-- libm
 - libevent
 
 On the command line, your final compilation will look something like the command below, factoring in all of the steps previously mentioned. _Note: the prefix "lib" is excluded when specifying libraries to link._
 ```
-gcc main.c -L./path/to/library/file -I./path/to/header/file -ldogecoin -lm -levent -o myprojectname
+gcc main.c -L./path/to/library/file -I./path/to/header/file -ldogecoin -levent -o myprojectname
 ```
 Congratulations, you have just built an executable program that implements Libdogecoin!
 

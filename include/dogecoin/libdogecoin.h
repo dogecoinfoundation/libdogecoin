@@ -70,14 +70,14 @@ int start_transaction();
 int add_utxo(int txindex, char* hex_utxo_txid, int vout);
 
 /* add an output to the transaction being worked on at (txindex) of amount (amount) in dogecoins, returns 1 if successful. */
-int add_output(int txindex, char* destinationaddress, long double amount);
+int add_output(int txindex, char* destinationaddress, char* amount);
 
 /* finalize the transaction being worked on at (txindex), with the (destinationaddress) paying a fee of (subtractedfee), */
 /* re-specify the amount in dogecoin for verification, and change address for change. If not specified, change will go to the first utxo's address. */
-char* finalize_transaction(int txindex, char* destinationaddress, double subtractedfee, uint64_t out_dogeamount_for_verification, char* changeaddress);
+char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress);
 
 /* sign a raw transaction in memory at (txindex), sign (inputindex) with (scripthex) of (sighashtype) for (amount - koinu? dogecoin? why a 3rd time), with (privkey) */
-int sign_transaction(int txindex, long double amounts[], char* script_pubkey, char* privkey);
+int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey);
 
 /* clear all internal working transactions */
 void remove_all();
@@ -93,7 +93,7 @@ void clear_transaction(int txindex);
 */
 
 /*Sign a raw transaction hexadecimal string using inputindex, scripthex, sighashtype, amount and privkey. */
-int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, long double amount, char* privkey);
+int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey);
 
 /*Store a raw transaction that's already formed, and give it a txindex in memory. (txindex) is returned as int. */
 int store_raw_transaction(char* incomingrawtx);

@@ -99,7 +99,10 @@ void test_transaction()
     //     {
     //       "value": 5885.98644000,
             dogecoin_tx_out* tx_out = vector_idx(tx_worth_2->vout, 0);
-            u_assert_double_eq(koinu_to_coins(tx_out->value), 5885.98644000);
+            char* dogecoin[21];
+            dogecoin_mem_zero(dogecoin, 21);
+            koinu_to_coins_str(tx_out->value, (char*)dogecoin);
+            u_assert_str_eq((char*)dogecoin, "5885.98644000");
     //       "n": 0,
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 a4a942c99c94522a025b2b8cfd2edd149fb49954 OP_EQUALVERIFY OP_CHECKSIG",
@@ -116,7 +119,8 @@ void test_transaction()
     //       "value": 2.00000000,
     //       "n": 1,
             tx_out = vector_idx(tx_worth_2->vout, 1);
-            u_assert_double_eq(koinu_to_coins(tx_out->value), 2.00000000);
+            koinu_to_coins_str(tx_out->value, (char*)dogecoin);
+            u_assert_str_eq((char*)dogecoin, "2.00000000");
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac",
@@ -193,7 +197,8 @@ void test_transaction()
     //       "value": 227889.99548000,
     //       "n": 0,
             dogecoin_tx_out* tx_out_10 = vector_idx(tx_worth_10->vout, 0);
-            u_assert_double_eq(koinu_to_coins(tx_out_10->value), 227889.99548000);
+            koinu_to_coins_str(tx_out_10->value, (char*)dogecoin);
+            u_assert_str_eq((char*)dogecoin, "227889.99548000");
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 1476c35e582eb198e1a28c455005a70c68695868 OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a9141476c35e582eb198e1a28c455005a70c6869586888ac",
@@ -209,7 +214,8 @@ void test_transaction()
     //       "value": 10.00000000,
     //       "n": 1,
             tx_out_10 = vector_idx(tx_worth_10->vout, 1);
-            u_assert_double_eq(koinu_to_coins(tx_out_10->value), 10.00000000);
+            koinu_to_coins_str(tx_out_10->value, (char*)dogecoin);
+            u_assert_str_eq((char*)dogecoin, "10.00000000");
     //       "scriptPubKey": {
     //         "asm": "OP_DUP OP_HASH160 d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c OP_EQUALVERIFY OP_CHECKSIG",
     //         "hex": "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac",
@@ -276,13 +282,13 @@ void test_transaction()
     u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_10_dogecoin, utxo_previous_output_index_from_tx_worth_10_dogecoin), 1);
 
     // add output to transaction which is amount and address we are sending to:
-    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, 5), 1);
+    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, "5"), 1);
     
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
-    char* raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, .00226, 12.0, internal_p2pkh_address);
+    char* raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00226", "12.0", internal_p2pkh_address);
 
-    long double input_amounts[] = {2.0, 10.0};
+    char* input_amounts[] = {"2.0", "10.0"};
     u_assert_int_eq(sign_transaction(working_transaction_index, input_amounts, utxo_scriptpubkey, private_key_wif), 1);
     u_assert_str_eq(raw_hexadecimal_transaction, expected_signed_raw_hexadecimal_transaction);
 
@@ -297,13 +303,13 @@ void test_transaction()
     u_assert_int_eq(add_utxo(working_transaction_index, utxo_txid_from_tx_worth_10_dogecoin, utxo_previous_output_index_from_tx_worth_10_dogecoin), 1);
 
     // add output to transaction which is amount and address we are sending to:
-    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, 9.99887), 1);
+    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, "9.99887"), 1);
     
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
-    raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, .00113, 10.0, internal_p2pkh_address);
+    raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00113", "10.0", internal_p2pkh_address);
 
-    long double input_amounts2[] = {10.0};
+    char* input_amounts2[] = {"10.0"};
     u_assert_int_eq(sign_transaction(working_transaction_index, input_amounts2, utxo_scriptpubkey, private_key_wif), 1);
     u_assert_str_eq(raw_hexadecimal_transaction, expected_single_utxo_signed_transaction);
 
@@ -342,21 +348,21 @@ void test_transaction()
     u_assert_str_eq(raw_hexadecimal_transaction, unsigned_double_utxo_hexadecimal_transaction);
 
     // add output to transaction which is amount and address we are sending to:
-    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, 5), 1);
+    u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, "5"), 1);
 
     raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
     u_assert_str_eq(raw_hexadecimal_transaction, unsigned_double_utxo_single_output_hexadecimal_transaction);
     
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
-    raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, .00226, 12.0, internal_p2pkh_address);
+    raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00226", "12.0", internal_p2pkh_address);
 
     // assert complete raw hexadecimal transaction is equal to expected unsigned_hexadecimal_transaction
     u_assert_str_eq(raw_hexadecimal_transaction, unsigned_hexadecimal_transaction);
 
     // sign current working transaction input index 0 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 2 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    u_assert_int_eq(sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 2.0, private_key_wif), 1);
+    u_assert_int_eq(sign_raw_transaction(0, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, "2.0", private_key_wif), 1);
 
     // assert that our hexadecimal buffer (raw_hexadecimal_transaction) is equal to the expected transaction
     // with the first input signed:
@@ -366,7 +372,7 @@ void test_transaction()
 
     // sign current working transaction input index 1 of raw tx hex with script pubkey from utxo with sighash type of 1 (SIGHASH_ALL),
     // amount of 10 dogecoin represented as koinu (multiplied by 100 million) and with private key in wif format
-    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, 10, private_key_wif), 1);
+    u_assert_int_eq(sign_raw_transaction(1, raw_hexadecimal_transaction, utxo_scriptpubkey, 1, "10", private_key_wif), 1);
 
     // assert that our hexadecimal bufer (raw_hexadecimal_transaction) is equal to the expected finalized
     // transaction with both inputs signed:
