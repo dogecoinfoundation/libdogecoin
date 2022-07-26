@@ -151,7 +151,7 @@ func W_clear_transaction(tx_index int) {
 	C.clear_transaction(c_tx_index)
 }
 
-func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, amount string, privkey string) (result string) {
+func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex string, sig_hash_type int, privkey string) (result string) {
 	c_input_index := C.int(input_index)
 	c_incoming_raw_tx := [1024 * 100]C.char{}
 	for i := 0; i < len(incoming_raw_tx) && i < 1024; i++ {
@@ -159,16 +159,10 @@ func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	}
 	c_script_hex := C.CString(script_hex)
 	c_sig_hash_type := C.int(sig_hash_type)
-	_, err := strconv.ParseFloat(amount, 64)
 
-	if err != nil {
-		fmt.Println("Error: amount is not numeric.")
-		return ""
-	}
-	c_amount := C.CString(amount)
 	c_privkey := C.CString(privkey)
 
-	if C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_amount, c_privkey) == 1 {
+	if C.sign_raw_transaction(c_input_index, &c_incoming_raw_tx[0], c_script_hex, c_sig_hash_type, c_privkey) == 1 {
 		result = C.GoString(&c_incoming_raw_tx[0])
 	} else {
 		result = ""
@@ -178,20 +172,11 @@ func W_sign_raw_transaction(input_index int, incoming_raw_tx string, script_hex 
 	return
 }
 
-func W_sign_transaction(tx_index int, amounts []string, script_pubkey string, privkey string) (result int) {
+func W_sign_transaction(tx_index int, script_pubkey string, privkey string) (result int) {
 	c_tx_index := C.int(tx_index)
-	c_amounts := make([]*C.char, len(amounts))
-	for i := 0; i < len(amounts); i++ {
-		_, err := strconv.ParseFloat(amounts[i], 64)
-		if err != nil {
-			fmt.Println("Error: amount is not numeric.")
-			return 0
-		}
-		c_amounts[i] = (C.CString(amounts[i]))
-	}
 	c_script_pubkey := C.CString(script_pubkey)
 	c_privkey := C.CString(privkey)
-	result = int(C.sign_transaction(c_tx_index, &c_amounts[0], c_script_pubkey, c_privkey))
+	result = int(C.sign_transaction(c_tx_index, c_script_pubkey, c_privkey))
 	C.free(unsafe.Pointer(c_script_pubkey))
 	C.free(unsafe.Pointer(c_privkey))
 	return

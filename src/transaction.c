@@ -29,8 +29,8 @@
 
 #include <dogecoin/base58.h>
 #include <dogecoin/koinu.h>
-#include <dogecoin/tx.h>
 #include <dogecoin/transaction.h>
+#include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
 
 /**
@@ -472,12 +472,11 @@ void clear_transaction(int txindex) {
  * @param incomingrawtx The hex representation of the transaction to sign.
  * @param scripthex The hex representation of the public key script.
  * @param sighashtype The type of signature hash to perform.
- * @param amount The amount enclosed in the input utxo specified.
  * @param privkey The private key used to sign the transaction input.
  * 
  * @return 1 if the raw transaction was signed successfully, 0 otherwise.
  */
-int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey) {
+int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey) {
     if(!incomingrawtx || !scripthex) return false;
 
     if (strlen(incomingrawtx) > 1024*100) { //don't accept tx larger then 100kb
@@ -521,10 +520,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
     uint256 sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
-    
-    uint64_t koinu = coins_to_koinu_str(amount);
 
-    dogecoin_tx_sighash(txtmp, script, inputindex, sighashtype, koinu, SIGVERSION_BASE, sighash);
+    dogecoin_tx_sighash(txtmp, script, inputindex, sighashtype, sighash);
 
     char *hex = utils_uint8_to_hex(sighash, 32);
     utils_reverse_hex(hex, 64);
@@ -555,7 +552,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         uint8_t sigcompact[64] = {0};
         int sigderlen = 74+1; //&hashtype
         uint8_t sigder_plus_hashtype[75] = {0};
-        enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(txtmp, script, koinu, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
+        enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(txtmp, script, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
         cstr_free(script, true);
 
         if (res != DOGECOIN_SIGN_OK) return false;
@@ -592,14 +589,13 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
  * @param incomingrawtx The hex representation of the transaction to sign.
  * @param scripthex The hex representation of the public key script.
  * @param sighashtype The type of signature hash to perform.
- * @param amount The amount enclosed in the input utxo specified.
  * @param privkey The private key used to sign the transaction input.
  * 
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
-int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey) {
+int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey) {
     if (!txindex) return false;
-    if (!sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, amount, privkey)) {
+    if (!sign_raw_transaction(inputindex, incomingrawtx, scripthex, sighashtype, privkey)) {
         printf("error signing raw transaction\n");
         return false;
     }
@@ -615,13 +611,12 @@ int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawt
  * transaction using the provided script pubkey and private key.
  * 
  * @param txindex The index of the working transaction to sign.
- * @param amounts The array of input amounts in sequential order.
  * @param script_pubkey The hex representation of the public key script.
  * @param privkey The private key used to sign the transaction input.
  * 
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
-int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey) {
+int sign_transaction(int txindex, char* script_pubkey, char* privkey) {
     char* raw_hexadecimal_transaction = get_raw_transaction(txindex);
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
@@ -641,7 +636,7 @@ int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* pr
     dogecoin_free(data_bin);
     size_t i = 0, len = txtmp->vin->len;
     for (; i < len; i++) {
-        if (!sign_raw_transaction(i, raw_hexadecimal_transaction, script_pubkey, 1, amounts[i], privkey)) {
+        if (!sign_raw_transaction(i, raw_hexadecimal_transaction, script_pubkey, 1, privkey)) {
             printf("error signing raw transaction\n");
             return false;
         }

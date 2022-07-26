@@ -235,16 +235,16 @@ class TestTransactionFunctions(unittest.TestCase):
     def test_sign_raw_transaction(self):
         """Test that the updated transaction matches the
         expected hex after each input has been signed."""
-        rawhex = l.w_sign_raw_transaction(0, expected_unsigned_tx_hex, utxo_scriptpubkey, 1, input1_amt, privkey_wif)
+        rawhex = l.w_sign_raw_transaction(0, expected_unsigned_tx_hex, utxo_scriptpubkey, 1, privkey_wif)
         self.assertTrue(rawhex==expected_signed_single_input_tx_hex)
-        rawhex = l.w_sign_raw_transaction(1, expected_signed_single_input_tx_hex, utxo_scriptpubkey, 1, input2_amt, privkey_wif)
+        rawhex = l.w_sign_raw_transaction(1, expected_signed_single_input_tx_hex, utxo_scriptpubkey, 1, privkey_wif)
         self.assertTrue(rawhex==expected_signed_raw_tx_hex)
 
     def test_sign_raw_transaction_bad_privkey(self):
         """Test that a transaction cannot be signed by
         an incorrect private key."""
-        self.assertFalse(l.w_sign_raw_transaction(0, expected_unsigned_tx_hex, utxo_scriptpubkey, 1, input1_amt, bad_privkey_wif))
-        self.assertFalse(l.w_sign_raw_transaction(1, expected_unsigned_tx_hex, utxo_scriptpubkey, 1, input2_amt, bad_privkey_wif))
+        self.assertFalse(l.w_sign_raw_transaction(0, expected_unsigned_tx_hex, utxo_scriptpubkey, 1, bad_privkey_wif))
+        self.assertFalse(l.w_sign_raw_transaction(1, expected_unsigned_tx_hex, utxo_scriptpubkey, 1, bad_privkey_wif))
 
     def test_sign_raw_transaction_high_send_amt(self):
         """Test that a transaction cannot be signed if
@@ -252,8 +252,8 @@ class TestTransactionFunctions(unittest.TestCase):
         idx = l.w_store_raw_transaction(expected_unsigned_double_utxo_tx_hex)
         l.w_add_output(idx, external_p2pkh_addr, high_send_amt) # spending more than received
         finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
-        half_signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey, 1, input1_amt, privkey_wif)
-        full_signed_rawhex = l.w_sign_raw_transaction(1, half_signed_rawhex, utxo_scriptpubkey, 1, input2_amt, privkey_wif)
+        half_signed_rawhex = l.w_sign_raw_transaction(0, finalized_rawhex, utxo_scriptpubkey, 1, privkey_wif)
+        full_signed_rawhex = l.w_sign_raw_transaction(1, half_signed_rawhex, utxo_scriptpubkey, 1, privkey_wif)
         print("\nTransaction looks valid but will get rejected:", full_signed_rawhex)
         l.w_clear_transaction(idx)
 
@@ -261,7 +261,7 @@ class TestTransactionFunctions(unittest.TestCase):
         """Test that the updated transaction matches the
         expected hex after each input has been signed."""
         idx = l.w_store_raw_transaction(expected_unsigned_tx_hex)
-        res = l.w_sign_transaction(idx, [input1_amt, input2_amt], utxo_scriptpubkey, privkey_wif)
+        res = l.w_sign_transaction(idx, utxo_scriptpubkey, privkey_wif)
         self.assertTrue(res)
         l.w_clear_transaction(idx)
         
@@ -269,7 +269,7 @@ class TestTransactionFunctions(unittest.TestCase):
         """Test that the updated transaction matches the
         expected hex after each input has been signed."""
         idx = l.w_store_raw_transaction(expected_unsigned_tx_hex)
-        l.w_sign_transaction(idx, [input1_amt, input2_amt], utxo_scriptpubkey, privkey_wif)
+        l.w_sign_transaction(idx, utxo_scriptpubkey, privkey_wif)
         self.assertTrue(l.w_get_raw_transaction(idx)==expected_signed_raw_tx_hex)
         l.w_clear_transaction(idx)
 
@@ -287,7 +287,7 @@ class TestTransactionFunctions(unittest.TestCase):
         self.assertTrue(l.w_get_raw_transaction(idx)==expected_unsigned_double_utxo_single_output_tx_hex)
         finalized_rawhex = l.w_finalize_transaction(idx, external_p2pkh_addr, fee, total_utxo_input, p2pkh_addr)
         self.assertTrue(finalized_rawhex==expected_unsigned_tx_hex)
-        l.w_sign_transaction(idx, [input1_amt, input2_amt], utxo_scriptpubkey, privkey_wif)
+        l.w_sign_transaction(idx, utxo_scriptpubkey, privkey_wif)
         self.assertTrue(l.w_get_raw_transaction(idx)==expected_signed_raw_tx_hex)
         l.w_clear_transaction(idx)
 
@@ -302,7 +302,7 @@ class TestTransactionFunctions(unittest.TestCase):
         l.w_add_output(idx, external_p2pkh_addr, decimal_send_amt)
         finalized_rawhex = l.w_get_raw_transaction(idx)
         self.assertTrue(finalized_rawhex==expected_unsigned_single_utxo_single_output_tx_hex2)
-        l.w_sign_transaction(idx, decimal_input_amt, utxo_scriptpubkey2, privkey_wif2)
+        l.w_sign_transaction(idx, utxo_scriptpubkey2, privkey_wif2)
         self.assertTrue(l.w_get_raw_transaction(idx)==expected_signed_raw_tx_hex2)
         l.w_clear_transaction(idx)
 

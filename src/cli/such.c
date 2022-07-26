@@ -133,7 +133,6 @@ void signing_menu(int txindex, int is_testnet) {
     int input_to_sign;
     char* raw_hexadecimal_tx;
     char* script_pubkey;
-    char* input_amount;
     char* private_key_wif;
     while (running) {
         printf("\n 1. sign input (from current working transaction)\n");
@@ -142,19 +141,17 @@ void signing_menu(int txindex, int is_testnet) {
         printf(" 4. go back\n\n");
         switch (atoi(getl("command"))) {
                 case 1:
-                    input_amount = (char*)getl("input amount"); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(txindex);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, private_key_wif)) {
                         printf("signing indexed raw transaction failed!\n");
                     } else printf("transaction input successfully signed!\n");
                     break;
                 case 2:
-                    input_amount = (char*)getl("input amount"); // 2 & 10
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                     script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
@@ -165,7 +162,7 @@ void signing_menu(int txindex, int is_testnet) {
                     debug_print("script_pubkey: %s\n", script_pubkey);
                     debug_print("input_to_sign: %d\n", input_to_sign);
                     debug_print("private_key: %s\n", private_key_wif);
-                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                    if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, private_key_wif)) {
                         printf("signing indexed raw transaction failed!\n");
                     } else printf("transaction input successfully signed!\n");
                     break;
@@ -256,7 +253,6 @@ void transaction_input_menu(int txindex, int is_testnet) {
         int vout;
         char* raw_hexadecimal_tx;
         char* script_pubkey;
-        char* input_amount;
         int input_to_sign;
         char* private_key_wif;
         for (int i = 0; i < length; i++) {
@@ -294,7 +290,6 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                         break;
                                     case 3:
                                         printf("\nediting script signature:\n\n");
-                                        input_amount = (char*)getl("input amount"); // 2 & 10
                                         input_to_sign = i;
                                         private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
                                         script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
@@ -303,7 +298,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                         raw_hexadecimal_tx = get_raw_transaction(txindex);
                                         printf("raw_hexadecimal_transaction: %s\n", raw_hexadecimal_tx);
                                         // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
-                                        if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, input_amount, private_key_wif)) {
+                                        if (!sign_indexed_raw_transaction(txindex, input_to_sign, raw_hexadecimal_tx, script_pubkey, 1, private_key_wif)) {
                                             printf("signing indexed raw transaction failed!\n");
                                         } else printf("transaction input successfully signed!\n");
                                         dogecoin_free(script_pubkey);
@@ -625,12 +620,11 @@ int main(int argc, char* argv[])
     char* scripthex = 0;
     int inputindex = 0;
     int sighashtype = 1;
-    uint64_t amount = 0;
     dogecoin_mem_zero(&pkey, sizeof(pkey));
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:a:m:c:trv", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:c:trv", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'p':
                     pkey = optarg;
@@ -667,9 +661,6 @@ int main(int argc, char* argv[])
                     break;
                 case 'h':
                     sighashtype = (int)strtol(optarg, (char**)NULL, 10);
-                    break;
-                case 'a':
-                    amount = (int)strtoll(optarg, (char**)NULL, 10);
                     break;
                 default:
                     print_usage();
@@ -828,7 +819,7 @@ int main(int argc, char* argv[])
                 hd_print_node(chain, newextkey);
         }
     } else if (strcmp(cmd, "sign") == 0) {
-        // ./such -c sign -x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -a <amount> -p <private key>
+        // ./such -c sign -x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -p <private key>
         if (!txhex || !scripthex) {
             return showError("Missing tx-hex or script-hex (use -x, -s)\n");
             }
@@ -855,18 +846,13 @@ int main(int argc, char* argv[])
             return showError("Inputindex out of range");
             }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-value"
-        vector_idx(tx->vin, inputindex);
-#pragma GCC diagnostic pop
-
         uint8_t script_data[strlen(scripthex) / 2 + 1];
         utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
 
         uint256 sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
-        dogecoin_tx_sighash(tx, script, inputindex, sighashtype, 0, SIGVERSION_BASE, sighash);
+        dogecoin_tx_sighash(tx, script, inputindex, sighashtype, sighash);
 
         char* hex = utils_uint8_to_hex(sighash, 32);
         utils_reverse_hex(hex, 64);
@@ -899,7 +885,7 @@ int main(int argc, char* argv[])
             uint8_t sigcompact[64] = { 0 };
             int sigderlen = 74 + 1; //&hashtype
             uint8_t sigder_plus_hashtype[75] = { 0 };
-            enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script, amount, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
+            enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
             cstr_free(script, true);
 
             if (res != DOGECOIN_SIGN_OK) {

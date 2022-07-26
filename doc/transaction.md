@@ -456,8 +456,8 @@ int main() {
     //sign both inputs of the current finalized transaction
     dogecoin_ecc_start();
     char* rawhex = get_raw_transaction(index);
-    sign_raw_transaction(0, rawhex, my_script_pubkey, 1, "2.0", my_privkey);
-    sign_raw_transaction(1, rawhex, my_script_pubkey, 1, "10.0", my_privkey);
+    sign_raw_transaction(0, rawhex, my_script_pubkey, 1, my_privkey);
+    sign_raw_transaction(1, rawhex, my_script_pubkey, 1, my_privkey);
     dogecoin_ecc_stop();
     printf("The final signed transaction hex is: %s\n", rawhex);
     clear_transaction(index);
@@ -472,7 +472,6 @@ prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae
 prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" # worth 10 dogecoin
 prev_output_n_2 = 1
 prev_output_n_10 = 1
-amounts = ["2.0", "10.0"]
 external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
 my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
 my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
@@ -487,8 +486,8 @@ l.w_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 # sign both inputs of the current finalized transaction
 l.context_start()
 rawhex = l.w_get_raw_transaction(index)
-half_signed_hex = l.w_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, "2.0", my_privkey)
-full_signed_hex = l.w_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, "10.0", my_privkey)
+half_signed_hex = l.w_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, my_privkey)
+full_signed_hex = l.w_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, my_privkey)
 print("The final signed transaction hex is:", full_signed_hex)
 l.context_stop()
 l.w_clear_transaction(index)
@@ -524,8 +523,8 @@ func main() {
 	// sign both inputs of the current finalized transaction
 	libdogecoin.W_context_start()
     rawhex := libdogecoin.W_get_raw_transaction(index)
-	half_signed_hex := libdogecoin.W_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, "2.0", my_privkey)
-    full_signed_hex := libdogecoin.W_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, "10.0", my_privkey)
+	half_signed_hex := libdogecoin.W_sign_raw_transaction(0, rawhex, my_script_pubkey, 1, my_privkey)
+    full_signed_hex := libdogecoin.W_sign_raw_transaction(1, half_signed_hex, my_script_pubkey, 1, my_privkey)
 	libdogecoin.W_context_stop()
 	fmt.Printf("The final signed transaction hex is: %s.\n", full_signed_hex)
 }
@@ -550,7 +549,6 @@ int main() {
     char* prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"; // worth 10 dogecoin
     int prev_output_n_2 = 1;
     int prev_output_n_10 = 1;
-    char* amounts[] = {"2", "10"};
     char* external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
     char* my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy";
     char* my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
@@ -564,7 +562,7 @@ int main() {
 
     //sign both inputs of the current finalized transaction
     dogecoin_ecc_start();
-    if (!sign_transaction(index, amounts, my_script_pubkey, my_privkey)) {
+    if (!sign_transaction(index, my_script_pubkey, my_privkey)) {
         // error handling here
     }
     dogecoin_ecc_stop();
@@ -581,7 +579,6 @@ prev_output_txid_2 = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae
 prev_output_txid_10 = "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" # worth 10 dogecoin
 prev_output_n_2 = 1
 prev_output_n_10 = 1
-amounts = [2.0, 10.0]
 external_address = "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
 my_address = "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
 my_script_pubkey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
@@ -595,7 +592,7 @@ l.w_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 
 # sign both inputs of the current finalized transaction
 l.context_start()
-if not l.w_sign_transaction(index, amounts, my_script_pubkey, my_privkey):
+if not l.w_sign_transaction(index, my_script_pubkey, my_privkey):
     # error handling here
 l.context_stop()
 print("The final signed transaction hex is:", l.w_get_raw_transaction(index))
@@ -616,7 +613,6 @@ func main() {
     prev_output_txid_10 := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2" // worth 10 dogecoin
     prev_output_n_2 := 1
     prev_output_n_10 := 1
-    amounts := []string{"2.0", "10.0"}
     external_address := "nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde"
     my_address := "noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy"
     my_script_pubkey := "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac"
@@ -630,7 +626,7 @@ func main() {
     libdogecoin.W_finalize_transaction(index, external_address, "0.00226", "12.0", my_address)
 
     // sign both inputs of the current finalized transaction
-    if libdogecoin.W_sign_transaction(index, amounts, my_script_pubkey, my_privkey)!=1:
+    if libdogecoin.W_sign_transaction(index, my_script_pubkey, my_privkey)!=1:
         // error handling here
     fmt.Println("The final signed transaction hex is:", libdogecoin.W_get_raw_transaction(index))
 }
