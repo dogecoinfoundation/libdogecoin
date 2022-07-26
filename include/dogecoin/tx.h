@@ -32,9 +32,9 @@
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
-#include <dogecoin/hash.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/hash.h>
 #include <dogecoin/script.h>
 #include <dogecoin/vector.h>
 

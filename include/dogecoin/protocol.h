@@ -29,9 +29,9 @@
 #ifndef __LIBDOGECOIN_PROTOCOL_H__
 #define __LIBDOGECOIN_PROTOCOL_H__
 
-#include <dogecoin/dogecoin.h>
 #include <dogecoin/buffer.h>
 #include <dogecoin/cstr.h>
+#include <dogecoin/dogecoin.h>
 #include <dogecoin/vector.h>
 
 LIBDOGECOIN_BEGIN_DECL

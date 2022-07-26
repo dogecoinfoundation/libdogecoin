@@ -5,10 +5,11 @@
  **********************************************************************/
 
 #ifndef __LIBDOGECOIN_CTAES_H__
-#define __LIBDOGECOIN_CTAES_H__ 1
+#define __LIBDOGECOIN_CTAES_H__
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
 
 typedef struct {
     uint16_t slice[8];
@@ -37,5 +38,7 @@ void AES192_decrypt(const AES192_ctx* ctx, size_t blocks, unsigned char* plain16
 void AES256_init(AES256_ctx* ctx, const unsigned char* key32);
 void AES256_encrypt(const AES256_ctx* ctx, size_t blocks, unsigned char* cipher16, const unsigned char* plain16);
 void AES256_decrypt(const AES256_ctx* ctx, size_t blocks, unsigned char* plain16, const unsigned char* cipher16);
+
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBDOGECOIN_CTAES_H__ */
