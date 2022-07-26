@@ -35,10 +35,9 @@ Most of these commands require a flag following them to denote things like exist
 | -m, --derived_path | derived_path        | yes | derive_child_key -p <extended_private_key> -m <derived_path> |
 | -t, --testnet  | designate_testnet   | no  | generate_private_key -t |
 | -s  | script_hex          | yes | comp2der -s <compact_signature> |
-| -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> -a <amount_in_utxo> |
+| -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> |
 | -i  | input_index         | yes | see above |
 | -h  | sighash_type        | yes | see above |
-| -a  | amount              | yes | see above |
 
 Below is a list of all the commands and the flags that they require. As a reminder, any command that includes the `-t` flag will set the default chain used in internal calculations to _testnet_ rather than _mainnet_. Also included are descriptions of what each function does.
 
@@ -51,7 +50,7 @@ Below is a list of all the commands and the flags that they require. As a remind
 | bip32maintotest           | -p                     | None | Convert a mainnet private key into an equivalent testnet key. |
 | derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified private key using the specified derivation path. 
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
-| sign                      | -x, -s, -i, -h, -a, -p | -t   | See the definition of sign_raw_transaction in the Transaction API.
+| sign                      | -x, -s, -i, -h, -p     | -t   | See the definition of sign_raw_transaction in the Transaction API.
 | comp2der                  | -s                     | None | Convert a compact signature to a DER signature.
 | transaction               | None                   | None | Start the interactive transaction app. [Usage instructions below.]() |
 

@@ -489,7 +489,6 @@ enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector
     if (dogecoin_script_is_multisig(ops))
         tx_out_type = DOGECOIN_TX_MULTISIG;
 
-    uint8_t version = 0;
     vector_free(ops, true);
     return tx_out_type;
 }
@@ -687,22 +686,4 @@ const char* dogecoin_tx_out_type_to_str(const enum dogecoin_tx_out_type type)
     } else {
         return "TX_NONSTANDARD";
     }
-}
-
-
-/**
- * @brief This function takes a small int opcode and
- * translates it back into an unsigned byte.
- * 
- * @param op The opcode to translate.
- * 
- * @return The numerical value of the opcode as an unsigned byte.
- */
-static uint8_t dogecoin_decode_op_n(enum opcodetype op)
-{
-    if (op == OP_0) {
-        return 0;
-    }
-    assert(op >= OP_1 && op <= OP_16);
-    return (uint8_t)op - (uint8_t)(OP_1 - 1);
 }

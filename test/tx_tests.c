@@ -831,7 +831,7 @@ void test_tx_sighash_ext()
         utils_hex_to_bin(txvalid_sighash[i].script, script_data, strlen(txvalid_sighash[i].script), &outlen_sighash);
         cstring* str = cstr_new_buf(script_data, outlen_sighash);
         uint256 hash;
-        dogecoin_tx_sighash(tx_sighash, str, txvalid_sighash[i].i, SIGHASH_ALL, txvalid_sighash[i].amount, SIGVERSION_BASE, hash);
+        dogecoin_tx_sighash(tx_sighash, str, txvalid_sighash[i].i, SIGHASH_ALL, hash);
 
         dogecoin_tx_free(tx_sighash);
         cstr_free(str, true);
@@ -863,7 +863,7 @@ void test_tx_sighash()
         cstring* script = cstr_new_buf(script_data, outlen);
         uint256 sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
-        dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, 0, SIGVERSION_BASE, sighash);
+        dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, sighash);
 
         vector* vec = vector_new(10, dogecoin_script_op_free_cb);
         dogecoin_script_get_ops(script, vec);
@@ -1062,7 +1062,7 @@ void test_script_parse()
 
     uint8_t sigdata[38] = {0x42, 0x49, 0x50, 0x00, 0x00, 0x00, 0x00};
 
-    dogecoin_hash(rev_code, DOGECOIN_HASH_LENGTH, &sigdata[7]);
+    dogecoin_hash(rev_code, DOGECOIN_HASH_LENGTH, &sigdata[7] - 1);
 
     dogecoin_hash(sigdata, sizeof(sigdata), sig_hash);
 
@@ -1139,7 +1139,6 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     const char* pkey_wif = "cRpSdivawavdAPgEYGXusWt64cJG9zLcgDPsEvnhHWtizVtmGk5b";
     const char* expected_sigder = "304402205d44c682a69da1ca10e1149548bf7e7b53f0ce8f2d2bd2ea74026cba57cd4fe702200e0f9d87aafa1c88697238aaf1059b7718a97ff681efe474097221d456eb7ea201";
     const char* expected_tx_signed = "02000000027409797c31feecc4e69b51c58b477b72c53355743a6f6124f9d78221672df370010000006a47304402205d44c682a69da1ca10e1149548bf7e7b53f0ce8f2d2bd2ea74026cba57cd4fe702200e0f9d87aafa1c88697238aaf1059b7718a97ff681efe474097221d456eb7ea2012102c5b9d2d528f13b7b745736f6fd198614a09200c3c5cb0554327e110b4a8efcf1ffffffff6e1709c1e2bdd85aed24dccfd48293993617f249d4d4381296a9c914be3e85e60100000000ffffffff01c07fdc0b0000000017a914ba277fd56b69177464fcb6a27a530f03740345ed8700000000";
-    uint64_t amount = 100000000;
     int sighashtype = SIGHASH_ALL;
     int inputindex = 0;
 
@@ -1164,7 +1163,7 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     uint8_t sigcomp[64] = {0};
     uint8_t sigder[76] = {0};
     int sigder_len = 0;
-    dogecoin_tx_sign_input(tx, script, amount, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
+    dogecoin_tx_sign_input(tx, script, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);
 
     cstring* tx_ser = cstr_new_sz(1024);
@@ -1186,7 +1185,6 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     const char* pkey_wif = "cS8Xxe3MNoeWp5SckUfVw3WuaCNZ9eeQ4awjwkkARQ4xmXS5B1VW";
     const char* expected_sigder = "304502210084181199e59f30ab947fa751662b20899a3c89a45f13b5aff8096eae56a68aa502204ea5d1b96c15099315be0a3583628a09d18530a9f937a88e74fa8c24a49449a401";
     const char* expected_tx_signed = "02000000027409797c31feecc4e69b51c58b477b72c53355743a6f6124f9d78221672df370010000006a47304402205d44c682a69da1ca10e1149548bf7e7b53f0ce8f2d2bd2ea74026cba57cd4fe702200e0f9d87aafa1c88697238aaf1059b7718a97ff681efe474097221d456eb7ea2012102c5b9d2d528f13b7b745736f6fd198614a09200c3c5cb0554327e110b4a8efcf1ffffffff6e1709c1e2bdd85aed24dccfd48293993617f249d4d4381296a9c914be3e85e6010000006b48304502210084181199e59f30ab947fa751662b20899a3c89a45f13b5aff8096eae56a68aa502204ea5d1b96c15099315be0a3583628a09d18530a9f937a88e74fa8c24a49449a401210228f47e13841624ec8669f71176558927105207c138a65772331b7fc19c117b64ffffffff01c07fdc0b0000000017a914ba277fd56b69177464fcb6a27a530f03740345ed8700000000";
-    uint64_t amount = 100000000;
     int sighashtype = SIGHASH_ALL;
     int inputindex = 1;
 
@@ -1211,11 +1209,11 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     uint8_t sigcomp[64] = {0};
     uint8_t sigder[76] = {0};
     int sigder_len = 0;
-    enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script_wrong, amount, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
+    enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script_wrong, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_int_eq(res, DOGECOIN_SIGN_NO_KEY_MATCH);
     dogecoin_tx_in* in = vector_idx(tx->vin, 1);
     cstr_resize(in->script_sig, 0);
-    res = dogecoin_tx_sign_input(tx, script, amount, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
+    res = dogecoin_tx_sign_input(tx, script, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_int_eq(res, DOGECOIN_SIGN_OK);
     //u_assert_mem_eq(sigcomp, expected_sigcomp_data, 64);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);

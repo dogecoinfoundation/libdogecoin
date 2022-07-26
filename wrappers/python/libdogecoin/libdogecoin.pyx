@@ -23,8 +23,8 @@ cdef extern from "libdogecoin.h":
     char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress)
     char* get_raw_transaction(int txindex) 
     void clear_transaction(int txindex)
-    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey)
-    int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey)
+    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey)
+    int sign_transaction(int txindex, char* script_pubkey, char* privkey)
     int store_raw_transaction(char* incomingrawtx)
 
 
@@ -320,7 +320,7 @@ def w_clear_transaction(tx_index):
     clear_transaction(tx_index)
 
 
-def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, privkey):
     """Sign a finalized raw transaction using the specified
     private key.
     Keyword arguments:
@@ -328,7 +328,6 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     incoming_raw_tx -- the serialized string of the transaction to sign
     script_hex -- the hex of the script to be signed
     sig_hash_type -- the type of signature hash to be used
-    amount -- the amount of dogecoin in the transaction being signed
     privkey -- the private key to sign with
     """
     # verify arguments are valid
@@ -336,7 +335,6 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     assert isinstance(incoming_raw_tx, (str, bytes))
     assert isinstance(script_hex, (str, bytes))
     assert isinstance(sig_hash_type, int)
-    assert isinstance(amount, (int, str))
     assert isinstance(privkey, (str, bytes))
 
     # prepare arguments
@@ -346,7 +344,6 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
         script_hex = script_hex.encode('utf-8')
     if not isinstance(privkey, bytes):
         privkey = privkey.encode('utf-8')
-    amount = str(amount).encode('utf-8')
 
     # allocate enough mem to cover extension of transaction hex
     cdef char c_incoming_raw_tx[1024*100] # max size for a valid signable transaction
@@ -354,44 +351,33 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     strncpy(c_incoming_raw_tx, incoming_raw_tx, len(incoming_raw_tx))
     
     # call c function and return result
-    if sign_raw_transaction(tx_index, c_incoming_raw_tx, script_hex, sig_hash_type, amount, privkey):
+    if sign_raw_transaction(tx_index, c_incoming_raw_tx, script_hex, sig_hash_type, privkey):
         res = c_incoming_raw_tx.decode('utf-8')
         return res
     else:
         return 0
 
 
-def w_sign_transaction(tx_index, amounts, script_pubkey, privkey):
+def w_sign_transaction(tx_index, script_pubkey, privkey):
     """Sign all the inputs of a working transaction using the
     specified private key and public key script.
     Keyword arguments:
     tx_index -- the index of the working transaction to sign
-    amounts -- an array of the input amounts in the specified transaction
     script_pubkey -- the pubkey script associated with the private key
     privkey -- the private key used to sign the specified transaction"""
     # verify arguments are valid
     assert isinstance(tx_index, int)
-    if not isinstance(amounts, list):
-        amounts = [amounts]
-    for amt in amounts:
-        assert isinstance(amt, (int, str))
     assert isinstance(script_pubkey, (str, bytes))
     assert isinstance(privkey, (str, bytes))
 
     # prepare arguments
-    cdef char **C_amount_list = []
-    cdef char *string = []
-    for i in range(len(amounts)):
-        bstring = str(amounts[i]).encode('utf-8')
-        string = <char*>bstring
-        C_amount_list[i]= string
     if not isinstance(script_pubkey, bytes):
         script_pubkey = script_pubkey.encode('utf-8')
     if not isinstance(privkey, bytes):
         privkey = privkey.encode('utf-8')
     
     # call c function
-    res = sign_transaction(tx_index, C_amount_list, script_pubkey, privkey)
+    res = sign_transaction(tx_index, script_pubkey, privkey)
 
     # return result
     return res    

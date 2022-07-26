@@ -978,13 +978,11 @@ void dogecoin_tx_outputs_hash(const dogecoin_tx* tx, uint256 hash)
  * @param fromPubKey The pointer to the cstring containing the public key of the sender.
  * @param in_num The index of the input being signed.
  * @param hashtype The type of signature hash to perform.
- * @param amount The amount to be sent over this transaction.
- * @param sigversion The signature version.
  * @param hash The generated signature hash.
  * 
  * @return 1 if signature hash is generated successfully, 0 otherwise.
  */
-dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, unsigned int in_num, int hashtype, const uint64_t amount, const enum dogecoin_sig_version sigversion, uint256 hash)
+dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, unsigned int in_num, int hashtype, uint256 hash)
 {
     if (in_num >= tx_to->vin->len || !tx_to->vout) {
         return false;
@@ -1289,7 +1287,6 @@ const char* dogecoin_tx_sign_result_to_str(const enum dogecoin_tx_sign_result re
  * 
  * @param tx_in_out The pointer to the transaction to be signed.
  * @param script The pointer to the cstring containing the script to be signed.
- * @param amount The amount that will be sent in the transaction.
  * @param privkey The pointer to the private key to be used to sign the transaction.
  * @param inputindex The index of the input in the transaction.
  * @param sighashtype The type of signature hash to use.
@@ -1299,7 +1296,7 @@ const char* dogecoin_tx_sign_result_to_str(const enum dogecoin_tx_sign_result re
  * 
  * @return The code denoting which errors occurred, if any.
  */
-enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, uint64_t amount, const dogecoin_key* privkey, int inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, int* sigder_len_out)
+enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, const dogecoin_key* privkey, int inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, int* sigder_len_out)
 {
     if (!tx_in_out || !script) {
         return DOGECOIN_SIGN_INVALID_TX_OR_SCRIPT;
@@ -1327,7 +1324,6 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
     vector* script_pushes = vector_new(1, free);
 
     enum dogecoin_tx_out_type type = dogecoin_script_classify(script, script_pushes);
-    enum dogecoin_sig_version sig_version = SIGVERSION_BASE;
     if (type == DOGECOIN_TX_PUBKEYHASH && script_pushes->len == 1) {
         // check if given private key matches the script
         uint160 hash160;
@@ -1344,7 +1340,7 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
 
     uint256 sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
-    if (!dogecoin_tx_sighash(tx_in_out, script_sign, inputindex, sighashtype, amount, sig_version, sighash)) {
+    if (!dogecoin_tx_sighash(tx_in_out, script_sign, inputindex, sighashtype, sighash)) {
         cstr_free(script_sign, true);
         return DOGECOIN_SIGN_SIGHASH_FAILED;
     }
