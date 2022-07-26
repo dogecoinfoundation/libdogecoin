@@ -89,6 +89,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/ctaes.c
     src/ecc.c
     src/key.c
+    src/koinu.c
     src/mem.c
     src/random.c
     src/rmd160.c
@@ -146,6 +147,7 @@ IF(USE_TESTS)
         test/ecc_tests.c
         test/hash_tests.c
         test/key_tests.c
+        test/koinu_tests.c
         test/mem_tests.c
         test/opreturn_tests.c
         test/random_tests.c
@@ -203,4 +205,3 @@ IF(WITH_TOOLS)
         TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
     ENDIF()
 ENDIF()
-
