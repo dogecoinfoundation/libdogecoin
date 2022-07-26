@@ -575,7 +575,7 @@ void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
     }
 }
 
-void sha256_finalize(sha256_context* context, sha2_byte digest[]) {
+void sha256_finalize(sha256_context* context, sha2_byte digest[SHA256_DIGEST_LENGTH]) {
     sha2_word32* d = (sha2_word32*)digest;
     unsigned int usedspace;
     sha2_word64* t;
@@ -892,7 +892,7 @@ static void sha512_last(sha512_context* context)
     sha512_transform(context, (sha2_word64*)context->buffer);
 }
 
-void sha512_finalize(sha512_context* context, sha2_byte digest[]) {
+void sha512_finalize(sha512_context* context, sha2_byte digest[SHA512_DIGEST_LENGTH]) {
     sha2_word64* d = (sha2_word64*)digest;
     /* If no digest buffer is passed, we don't bother doing this: */
     if (digest != (sha2_byte*)0) {
