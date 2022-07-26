@@ -31,12 +31,9 @@
 
 #include <stdarg.h>
 
-#include <dogecoin/buffer.h>
-#include <dogecoin/chainparams.h>
-#include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/protocol.h>
-#include <dogecoin/vector.h>
+#include <dogecoin/tx.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -164,6 +161,22 @@ LIBDOGECOIN_API void dogecoin_node_connection_state_changed(dogecoin_node* node)
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *group, const char *ips);
 LIBDOGECOIN_API int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
+
+struct broadcast_ctx {
+    const dogecoin_tx* tx;
+    unsigned int timeout;
+    int debuglevel;
+    int connected_to_peers;
+    int max_peers_to_connect;
+    int max_peers_to_inv;
+    int inved_to_peers;
+    int getdata_from_peers;
+    int found_on_non_inved_peers;
+    uint64_t start_time;
+};
+
+//!broadcast utilities
+LIBDOGECOIN_API dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx* tx, const char* ips, int maxpeers, int timeout, dogecoin_bool debug);
 
 LIBDOGECOIN_END_DECL
 

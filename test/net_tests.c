@@ -1,4 +1,12 @@
+/**********************************************************************
+ * Copyright (c) 2022 bluezr                                          *
+ * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
+
 #include "utest.h"
+
 #include <dogecoin/block.h>
 #include <dogecoin/net.h>
 #include <dogecoin/utils.h>
@@ -185,9 +193,6 @@ void handshake_done(struct dogecoin_node_ *node)
     cstr_free(p2p_msg, true);
 }
 
-/**
- * It connects to a node and downloads a block.
- */
 void test_net_basics_plus_download_block()
 {
 
@@ -202,48 +207,37 @@ void test_net_basics_plus_download_block()
     }
     vector_free(ips, true);
 
-    /* create a invalid node */
     dogecoin_node *node_wrong = dogecoin_node_new();
     u_assert_int_eq(dogecoin_node_set_ipport(node_wrong, "0.0.0.1:1"), true);
 
-    /* create a invalid node to will run directly into a timeout */
     dogecoin_node *node_timeout_direct = dogecoin_node_new();
     u_assert_int_eq(dogecoin_node_set_ipport(node_timeout_direct, "127.0.0.1:1234"), true);
 
-    /* create a invalid node to will run indirectly into a timeout */
     dogecoin_node *node_timeout_indirect = dogecoin_node_new();
     u_assert_int_eq(dogecoin_node_set_ipport(node_timeout_indirect, "8.8.8.8:44556"), true);
 
-    /* create a node */
     dogecoin_node *node = dogecoin_node_new();
     u_assert_int_eq(dogecoin_node_set_ipport(node, "138.201.55.219:44556"), true);
 
-    /* create a node group */
     dogecoin_node_group* group = dogecoin_node_group_new(NULL);
     group->desired_amount_connected_nodes = 1;
 
-    /* add the node to the group */
     dogecoin_node_group_add_node(group, node_wrong);
     dogecoin_node_group_add_node(group, node_timeout_direct);
     dogecoin_node_group_add_node(group, node_timeout_indirect);
     dogecoin_node_group_add_node(group, node);
 
-    /* set the timeout callback */
     group->periodic_timer_cb = timer_cb;
 
-    /* set a individual log print function */
     group->log_write_cb = net_write_log_null;
     group->parse_cmd_cb = parse_cmd;
     group->postcmd_cb = postcmd;
     group->node_connection_state_changed_cb = node_connection_state_changed;
     group->handshake_done_cb = handshake_done;
     
-    /* connect to the next node */
     dogecoin_node_group_connect_next_nodes(group);
 
-    /* start the event loop */
     dogecoin_node_group_event_loop(group);
 
-    /* cleanup */
     dogecoin_node_group_free(group); //will also free the nodes structures from the heap
 }

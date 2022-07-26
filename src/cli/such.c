@@ -25,6 +25,7 @@
  OTHER DEALINGS IN THE SOFTWARE.
 
 */
+
 #include <assert.h>
 #include <getopt.h>
 #ifdef HAVE_CONFIG_H
@@ -51,6 +52,7 @@
 
 // ******************************** SUCH -C TRANSACTION MENU ********************************
 #ifdef WITH_NET
+#include <dogecoin/net.h>
 void broadcasting_menu(int txindex, int is_testnet) {
     int running = 1;
     int selected = -1;
@@ -72,12 +74,14 @@ void broadcasting_menu(int txindex, int is_testnet) {
                 printf("2. no\n");
                 switch (atoi(getl("\ncommand"))) {
                         case 1:
+                            /* The above code is checking if the data is NULL, empty or larger than the maximum
+                            size of a p2p message. */
                             if (raw_hexadecimal_tx == NULL || strlen(raw_hexadecimal_tx) == 0 || strlen(raw_hexadecimal_tx) > DOGECOIN_MAX_P2P_MSG_SIZE) {
                                 printf("Transaction in invalid or to large.\n");
-                                }
-                            uint8_t* data_bin = dogecoin_malloc(sizeof(&raw_hexadecimal_tx) / 2 + 1);
+                            }
+                            uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_tx) / 2 + 1);
                             int outlen = 0;
-                            utils_hex_to_bin(raw_hexadecimal_tx, data_bin, sizeof(&raw_hexadecimal_tx), &outlen);
+                            utils_hex_to_bin(raw_hexadecimal_tx, data_bin, strlen(raw_hexadecimal_tx), &outlen);
 
                             /* Deserializing the transaction and broadcasting it to the network. */
                             if (dogecoin_tx_deserialize(data_bin, outlen, tx->transaction, NULL)) {
@@ -85,7 +89,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                                 }
                             else {
                                 printf("Transaction is invalid\n");
-                                }
+                            }
                             dogecoin_free(data_bin);
                             selected = -1; // set selected to number out of bounds for i
                             i = length; // reset loop to start
@@ -108,7 +112,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                 switch (atoi(getl("\ncommand"))) {
                         case 1:
                             // tx_input submenu
-
+                            
                             selected = i;
                             i = i - i - 1;
                             break;

@@ -38,12 +38,6 @@
 #include <dogecoin/script.h>
 #include <dogecoin/vector.h>
 
-#ifdef WITH_NET
-#include <event2/event.h>
-#include <dogecoin/net.h>
-#include <dogecoin/protocol.h>
-#endif
-
 LIBDOGECOIN_BEGIN_DECL
 
 typedef struct dogecoin_script_ {
@@ -74,24 +68,6 @@ typedef struct dogecoin_tx_ {
     vector* vout;
     uint32_t locktime;
 } dogecoin_tx;
-
-#ifdef WITH_NET
-struct broadcast_ctx {
-    const dogecoin_tx* tx;
-    unsigned int timeout;
-    int debuglevel;
-    int connected_to_peers;
-    int max_peers_to_connect;
-    int max_peers_to_inv;
-    int inved_to_peers;
-    int getdata_from_peers;
-    int found_on_non_inved_peers;
-    uint64_t start_time;
-};
-
-//!broadcast utilities
-LIBDOGECOIN_API dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx* tx, const char* ips, int maxpeers, int timeout, dogecoin_bool debug);
-#endif
 
 //!p2pkh utilities
 LIBDOGECOIN_API int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet);

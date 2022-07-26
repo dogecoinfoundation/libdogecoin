@@ -104,6 +104,7 @@ tests_SOURCES = \
 
 tests_CFLAGS = $(libdogecoin_la_CFLAGS)
 tests_CPPFLAGS = -I$(top_srcdir)/src
+tests_LDADD +=  $(LIBSECP256K1)
 tests_LDFLAGS = -static
 TESTS = tests
 endif
@@ -124,7 +125,7 @@ if USE_TESTS
 tests_SOURCES += \
     test/net_tests.c \
     test/protocol_tests.c
-tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBSECP256K1)
+tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 endif
 endif
 
