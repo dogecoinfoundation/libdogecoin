@@ -57,25 +57,50 @@ LIBS_TO_APPEND=""
 LIBS=""
 
 if has_param '--target' "$@"; then
-    TARGET_LIB="OPEN $2"
+    TARGET_LIB="$2"
 fi
 
+detect_os() {
+    uname_out="$(uname -s)"
+    case "${uname_out}" in
+        Linux*)     machine=linux;;
+        Darwin*)    machine=mac;;
+        CYGWIN*)    machine=cygwin;;
+        MINGW*)     machine=mingw;;
+        *)          machine="unknown:${uname_out}"
+    esac
+}
+
+detect_os
+OS=$machine
+echo $OS
 if has_param '--append' "$@"; then
     LIBS_TO_APPEND=($4)
     END=$((${#LIBS_TO_APPEND[@]} - 1))
     for i in "${!LIBS_TO_APPEND[@]}"
     do
     :
-        LIBS+="ADDLIB ${LIBS_TO_APPEND[$i]}"
-        if [ "$i" != "$END" ]; then
-            LIBS+="\n"
+        if [ $OS == "mac" ]; then
+            LIBS+="${LIBS_TO_APPEND[$i]} "
+        else
+            LIBS+="ADDLIB ${LIBS_TO_APPEND[$i]}"
+            if [ "$i" != "$END" ]; then
+                LIBS+="\n"
+            fi
         fi
     done
 fi
 
-ar -M <<EOM 
-$(echo $TARGET_LIB)
-$(echo -e $LIBS)
-SAVE
-END
+case $OS in 
+"mac")
+libtool -static -o $TARGET_LIB $TARGET_LIB $LIBS
+;;
+"linux") 
+ar -M << EOM 
+    OPEN $(echo $TARGET_LIB)
+    $(echo -e $LIBS)
+    SAVE
+    END
 EOM
+;;
+esac

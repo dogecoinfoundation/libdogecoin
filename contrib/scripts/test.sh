@@ -2,9 +2,7 @@
 export LC_ALL=C
 set -e -o pipefail
 
-# please note that this script should be ran as the current user but with sudo privileges as seen below:
-# sudo -u $(whoami) -H bash -c "./contrib/scripts/setup.sh --host <host triplet> --depends"
-# unless of course you are targetting docker which will not allow and should not be used with 'sudo'.
+# ./contrib/scripts/test.sh --host <target host triplet>
 
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2> /dev/null)
 $PROJECT_ROOT/contrib/scripts/check_dir.sh
@@ -42,10 +40,18 @@ TARGET_ARCH=""
 if has_param '--host' "$@"; then
     case "$2" in
         "arm-linux-gnueabihf")
-            qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./tests
+            if has_param '--docker' "$@"; then
+                make check
+            else
+                qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./tests
+            fi
         ;;
         "aarch64-linux-gnu")
-            qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./tests
+            if has_param '--docker' "$@"; then
+                make check
+            else
+                qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./tests
+            fi
         ;;
         "x86_64-w64-mingw32")
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
@@ -60,12 +66,22 @@ if has_param '--host' "$@"; then
         ;;
         "x86_64-pc-linux-gnu") 
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-            python3 tooltests.py
-            ./wrappers/python/pytest/cython_tests.sh
-            ./wrappers/golang/libdogecoin/build.sh
         ;;
         "i686-pc-linux-gnu")
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
         ;;
     esac
+    export TARGET_HOST_TRIPLET=$2
+fi
+
+if has_param '--extended' "$@"; then
+    if has_param '--valgrind' "$@"; then
+        python3 tooltests.py
+    fi
+    if has_param '--cython' "$@"; then
+        ./wrappers/python/pytest/cython_tests.sh --host $TARGET_HOST_TRIPLET
+    fi
+    if has_param '--go' "$@"; then
+        ./wrappers/golang/libdogecoin/build.sh
+    fi
 fi

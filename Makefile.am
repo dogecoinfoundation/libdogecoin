@@ -11,8 +11,8 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 lib_LTLIBRARIES = libdogecoin.la
-libdogecoinincludedir = $(includedir)/dogecoin
-libdogecoininclude_HEADERS = \
+include_HEADERS = include/dogecoin/libdogecoin.h
+noinst_HEADERS = \
     include/dogecoin/address.h \
     include/dogecoin/aes.h \
     include/dogecoin/base58.h \
@@ -104,13 +104,13 @@ tests_SOURCES = \
 
 tests_CFLAGS = $(libdogecoin_la_CFLAGS)
 tests_CPPFLAGS = -I$(top_srcdir)/src
-tests_LDADD +=  $(LIBSECP256K1)
+tests_LDADD += $(LIBSECP256K1)
 tests_LDFLAGS = -static
 TESTS = tests
 endif
 
 if WITH_NET
-libdogecoininclude_HEADERS += \
+noinst_HEADERS += \
     include/dogecoin/protocol.h \
     include/dogecoin/net.h
 
@@ -153,6 +153,8 @@ sendtx_CPPFLAGS = -I$(top_srcdir)/src
 sendtx_LDFLAGS = -static
 endif
 endif
+
+libdogecoin_la_LDFLAGS = -no-undefined -version-info $(LIB_VERSION_CURRENT):$(LIB_VERSION_REVISION):$(LIB_VERSION_AGE)
 
 clean-local:
 	-$(MAKE) -C src/secp256k1 clean
