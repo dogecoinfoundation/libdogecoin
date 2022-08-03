@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <uthash/uthash.h>
 
+#include <dogecoin/address.h>
 #include <dogecoin/bip32.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/chainparams.h>
@@ -345,21 +346,23 @@ void transaction_output_menu(int txindex, int is_testnet) {
     int running_transaction_output_menu = 1;
     while (running_transaction_output_menu) {
         char* destinationaddress;
-        char* coin_amount = NULL;
+        char* coin_amount[21];
+        dogecoin_mem_zero(coin_amount, 21);
         uint64_t koinu_amount;
         uint64_t tx_out_total = 0;
         const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
         working_transaction* tx = find_transaction(txindex);
         int length = tx->transaction->vout->len;
         int selected = -1;
+        printf("length: %d\n", length);
         for (int i = 0; i < length; i++) {
             dogecoin_tx_out* tx_out = vector_idx(tx->transaction->vout, i);
             tx_out_total += tx_out->value;
             printf("\n--------------------------------\n");
             printf("output index:       %d\n", i);
             printf("script public key:  %s\n", utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len));
-            koinu_to_coins_str(tx_out->value, coin_amount);
-            printf("amount:             %s\n", coin_amount);
+            koinu_to_coins_str(tx_out->value, (char*)coin_amount);
+            printf("amount:             %s\n", (char*)coin_amount);
             // selected should only equal anything other than -1 upon setting
             // loop index in conditional targetting last iteration:
             selected == i ? printf("selected:           [X]\n") : 0;
@@ -375,14 +378,23 @@ void transaction_output_menu(int txindex, int is_testnet) {
                             switch (atoi(getl("field to edit"))) {
                                     case 1:
                                         destinationaddress = (char*)getl("new destination address");
-                                        koinu_amount = coins_to_koinu_str(coin_amount);
-                                        vector_remove_idx(tx->transaction->vout, i);
-                                        dogecoin_tx_add_address_out(tx->transaction, chain, koinu_amount, destinationaddress);
+                                        if (!verifyP2pkhAddress(destinationaddress, strlen(destinationaddress))) {
+                                            printf("\ninvalid destination address!\n");
+                                            break;
+                                        } else {
+                                            koinu_amount = coins_to_koinu_str((char*)coin_amount);
+                                            vector_remove_idx(tx->transaction->vout, i);
+                                            dogecoin_tx_add_address_out(tx->transaction, chain, koinu_amount, destinationaddress);
+                                        }
                                         break;
                                     case 2:
-                                        coin_amount = (char*)getl("new amount");
-                                        koinu_amount = coins_to_koinu_str(coin_amount);
-                                        tx_out->value = koinu_amount;
+                                        memcpy_safe(coin_amount, (char*)getl("new amount"), 21);
+                                        if(strspn((char*)coin_amount, "0123456789") == strlen((char*)coin_amount)) {
+                                            koinu_amount = coins_to_koinu_str((char*)coin_amount);
+                                            tx_out->value = koinu_amount;
+                                        } else {
+                                            printf("\namount is not a number!\n");
+                                        }
                                         break;
                                 }
                             tx_out_total = 0;
