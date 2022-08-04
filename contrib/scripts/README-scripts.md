@@ -12,7 +12,7 @@ These scripts are partitioned to support different phases of the development pro
  - i686-w64-mingw32
  - x86_64-apple-darwin14
 
-Please take note of these host triplets as they're required when using these scripts!
+Please take note of these target host triplets as they're required when using these scripts!
 
 #### Setup
 
@@ -47,7 +47,24 @@ Assuming you've completed the preceeding steps successfully you can run tests by
 ./contrib/scripts/test.sh --host x86_64-pc-linux-gnu
 ```
 
-Note that this was an example for setting up, building and testing the host-triplet `x86_64-pc-linux-gnu`.
+##### Below are instructions for running extended tests
+
+To run the python valgrind tooltests run:
+```
+./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --valgrind
+```
+
+To run the python wrappers test suite run (only available for `x86_64-pc-linux-gnu`):
+```
+./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --cython
+```
+
+To run the golang wrappers test suite run (only available for `x86_64-pc-linux-gnu`):
+```
+./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --go
+```
+
+Note that this was an example for setting up, building and testing the target-host-triplet `x86_64-pc-linux-gnu`.
 
 -----------
 
@@ -57,7 +74,7 @@ To automate running all the aforementioned tests, for your convenience there is 
 
 Required flag needed to specify host platform triplet:
 ```
---host <host-platfrom-triplet>
+--host <target-host-platfrom-triplet>
 ```
 
 Optional flag to build libdogecoin using depends:
@@ -66,7 +83,7 @@ Optional flag to build libdogecoin using depends:
 --depends
 ```
 
-Option flag to purge cached dependencies and previously built files:
+Optional flag to purge cached dependencies and previously built files:
 
 ```
 --clean

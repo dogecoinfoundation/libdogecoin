@@ -3,8 +3,8 @@ export LC_ALL=C
 set -e -o pipefail
 
 # please note that this script should be ran as the current user but with sudo privileges as seen below:
-# sudo -u $(whoami) -H bash -c "./contrib/scripts/setup.sh --host <host triplet> --depends"
-# unless of course you are targetting docker which will not allow and should not be used with 'sudo'.
+# ./contrib/scripts/setup.sh --host <host triplet> --depends
+# unless of course you are targeting docker which will not allow and should not be used with 'sudo'.
 
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2> /dev/null)
 $PROJECT_ROOT/contrib/scripts/check_dir.sh
@@ -25,7 +25,7 @@ has_param() {
     return 1
 }
 
-COMMON_PACKAGES="autoconf automake autotools-dev bison build-essential curl ca-certificates libtool libtool-bin pkg-config procps python3 rsync valgrind"
+COMMON_PACKAGES="autoconf automake autotools-dev bison build-essential curl ca-certificates golang libtool libtool-bin pkg-config procps python3 python3-venv qemu-user rsync valgrind"
 ARCH_PACKAGES=""
 OS_PACKAGES=""
 DEPENDS=""
@@ -40,8 +40,9 @@ else
 fi
 
 if has_param '--docker' "$@"; then
-    DOCKER=1
-    COMMON_PACKAGES+=" git"
+    USE_SUDO=
+else
+    USE_SUDO="sudo"
 fi
 
 if has_param '--host' "$@"; then
@@ -66,29 +67,23 @@ if has_param '--host' "$@"; then
             fi
             ARCH_PACKAGES+="nsis wine64 wine-stable bc wine-binfmt"
             TARGET_ARCH="amd64"
-            sudo dpkg --add-architecture $TARGET_ARCH
-            sudo update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
-            sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
-            sudo update-binfmts --import /usr/share/binfmts/wine
+            $USE_SUDO dpkg --add-architecture $TARGET_ARCH
         ;;
         "i686-w64-mingw32")
             if [ $DEPENDS ]; then
                 ARCH_PACKAGES+="g++-mingw-w64 "
             fi
-            ARCH_PACKAGES+="nsis wine32 wine-stable bc wine-binfmt"
+            ARCH_PACKAGES+="nsis wine32 wine-stable bc wine-binfmt zip"
             TARGET_ARCH="i386"
-            sudo dpkg --add-architecture $TARGET_ARCH
-            sudo update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix
-            sudo update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
-            sudo update-binfmts --import /usr/share/binfmts/wine
+            $USE_SUDO dpkg --add-architecture $TARGET_ARCH
         ;;
         "x86_64-apple-darwin14")
-            OS_PACKAGES="cmake zlib xorriso"
-            ARCH_PACKAGES+="g++ cmake libz-dev libcap-dev libtinfo5 libplist-utils librsvg2-bin libz-dev libtiff-tools libncurses-dev lld python python-dev python-setuptools"
+            OS_PACKAGES="cmake zlib xorriso go"
+            ARCH_PACKAGES+="g++ cmake libz-dev libcap-dev libtinfo5 libplist-utils librsvg2-bin libz-dev libtiff-tools libncurses-dev lld python2-minimal golang"
             TARGET_ARCH="amd64"
         ;;
         "x86_64-pc-linux-gnu") 
-            ARCH_PACKAGES="python3-dev python3-dbg python"
+            ARCH_PACKAGES="python3-dev python3-dbg python2-minimal zip"
             TARGET_ARCH="amd64"
         ;;
         "i686-pc-linux-gnu")
@@ -97,7 +92,7 @@ if has_param '--host' "$@"; then
             fi
             ARCH_PACKAGES+="bc"
             TARGET_ARCH="i386"
-            sudo dpkg --add-architecture $TARGET_ARCH
+            $USE_SUDO dpkg --add-architecture $TARGET_ARCH
         ;;
     esac
     TARGET_HOST_TRIPLET=$2
@@ -131,34 +126,12 @@ setup_brew() {
 }
 
 setup_linux() {
-    USE_SUDO=
-    if [[ $DOCKER != 1 ]]; then
-        USE_SUDO="sudo"
-    fi
     $USE_SUDO apt-get update
-    DEBIAN_FRONTEND=noninteractive $USE_SUDO apt-get install --no-install-recommends -y $COMMON_PACKAGES $ARCH_PACKAGES
+    DEBIAN_FRONTEND=noninteractive $USE_SUDO apt-get install -y $COMMON_PACKAGES $ARCH_PACKAGES
 }
 
 OPTIONS=""
 case "$TARGET_HOST_TRIPLET" in
-    "x86_64-w64-mingw32")
-        setup_linux
-        if [[ $EUID == 0 ]] || [[ $DOCKER == 1 ]]; then
-            dpkg -s mono-runtime && sudo apt-get remove mono-runtime || echo "Very nothing to uninstall."
-            update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix
-            update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
-            update-binfmts --import /usr/share/binfmts/wine
-        fi
-    ;;
-    "i686-w64-mingw32")
-        setup_linux
-        if [[ $EUID == 0 ]] || [[ $DOCKER == 1 ]]; then
-            dpkg -s mono-runtime && sudo apt-get remove mono-runtime || echo "Very nothing to uninstall."
-            update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix
-            update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
-            update-binfmts --import /usr/share/binfmts/wine
-        fi
-    ;;
     "x86_64-apple-darwin14")
         detect_os
         case $machine in

@@ -1,10 +1,7 @@
 # Getting Started with Libdogecoin
 
 ## Download Pre-built Binaries
-To use Libdogecoin directly out of the box without making any modifications to the source code, you can download the pre-made binaries from [LINK HERE](). 
-```
-wget {url of binary file}
-```
+To use Libdogecoin directly out of the box without making any modifications to the source code, you can download the pre-made binaries from [https://github.com/dogecoinfoundation/libdogecoin/releases](https://github.com/dogecoinfoundation/libdogecoin/releases). 
 This is the easiest to start with for new developers, but does not enable customization of the library. In order increase control over installation, refer to the section below on manually building Libdogecoin. 
 
 ## Building Manually
@@ -72,11 +69,7 @@ make[2]: Leaving directory '/home/username/libdogecoin'
 make[1]: Leaving directory '/home/username/libdogecoin'
 ``` 
 
-### Step 3: Combine Libraries
-
-todo once auto combine scripts work
-
-### Step 4: Integrate in Your Project
+### Step 3: Integrate in Your Project
 
 At this point, the library file `libdogecoin.a` located in the `/.libs` folder is now fully built and can be moved to any location on your file system. To integrate into your project, you will want to move this file by whatever means (copy-paste, drag-and-drop, `mv` command, etc.) to a location inside of your project where the linker can find it. If it is not directly in your project folder, you will need to specify the path by using the `-L` flag during compilation.
 
@@ -109,7 +102,6 @@ int main() {
     char *oldScriptPubKey = "76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
     char* utxo_id = "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
     int utxo_vout = 1;
-    char* amounts[] = {"2.0"};
     char* amt_total = "2.0";
 
     // generate new key pair to send to
@@ -122,7 +114,7 @@ int main() {
     add_utxo(idx, utxo_id, utxo_vout);
     add_output(idx, newPubKey, "0.69");
     finalize_transaction(idx, newPubKey, "0.00226", amt_total, oldPubKey);
-    sign_transaction(idx, amounts, oldScriptPubKey, oldPrivKey);
+    sign_transaction(idx, oldScriptPubKey, oldPrivKey);
 
     // print result
     printf("\nFinal signed transaction hex: %s\n\n", get_raw_transaction(idx));
@@ -173,6 +165,3 @@ go mod tidy
 ```
 
 For more information on integrating these into your project or building the wrappers manually, please refer to [bindings.md](bindings.md).
-
-## SDK Instructions?
-todo maybe idk
