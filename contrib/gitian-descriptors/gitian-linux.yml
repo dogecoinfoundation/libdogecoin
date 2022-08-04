@@ -129,7 +129,7 @@ script: |
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
-  git archive --format=tar --prefix=libdogecoin-0.1.0/ HEAD | gzip -9n > libdogecoin-0.1.0.tar.gz
+  git archive --format=tar --prefix=libdogecoin-0.1.0-source/ HEAD | gzip -9n > libdogecoin-0.1.0-source.tar.gz
   SOURCEDIST=`echo libdogecoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order

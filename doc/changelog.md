@@ -38,6 +38,7 @@
 * trivial: fix remaining GCC warnings/errors by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/53
 * contrib: update expired signing key for xanimo by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/55
 * build: backport autotools/gitian build system by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/54
+* fixate v0.1.0 by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/56
 
 ## Contributors
 * @DrinoSan
