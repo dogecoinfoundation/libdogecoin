@@ -192,7 +192,11 @@ void write_cb(struct bufferevent* ev, void* ctx)
  * 
  * @return dogecoin_bool (uint8_t)
  */
-void node_periodical_timer(int fd, short event, void* ctx)
+#if defined(_WIN32) && defined(__x86_64__)
+void node_periodical_timer(long long int fd, short int event, void* ctx)
+#else
+void node_periodical_timer(int fd, short int event, void* ctx)
+#endif
 {
     UNUSED(fd);
     UNUSED(event);

@@ -83,10 +83,10 @@ if [ $DEPENDS ]; then
     --prefix=$PREFIX \
     --disable-maintainer-mode \
     --disable-dependency-tracking \
-    --enable-reduce-exports \
     --enable-static \
     --disable-shared
 else
     ./configure
 fi
 make
+./contrib/scripts/combine.sh --target .libs/libdogecoin.a --append "src/secp256k1/.libs/libsecp256k1.a"

@@ -121,7 +121,8 @@ int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b5
 
 int dogecoin_b58check(const void* bin, size_t binsz, const char* base58str)
 {
-    uint256 buf[32] = {0};
+    uint256 buf[32];
+    dogecoin_mem_zero(buf, 32);
     const uint8_t* binc = bin;
     unsigned i = 0;
     if (binsz < 4) {

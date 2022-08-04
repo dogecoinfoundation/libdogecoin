@@ -1,0 +1,153 @@
+---
+name: "libdogecoin-linux-0.1.0"
+enable_cache: true
+suites:
+- "bionic"
+architectures:
+- "amd64"
+packages:
+- "curl"
+- "shellcheck"
+- "g++-aarch64-linux-gnu"
+- "g++-7-aarch64-linux-gnu"
+- "gcc-7-aarch64-linux-gnu"
+- "binutils-aarch64-linux-gnu"
+- "g++-arm-linux-gnueabihf"
+- "g++-7-arm-linux-gnueabihf"
+- "gcc-7-arm-linux-gnueabihf"
+- "binutils-arm-linux-gnueabihf"
+- "g++-7-multilib"
+- "gcc-7-multilib"
+- "binutils-gold"
+- "git-core"
+- "pkg-config"
+- "autoconf"
+- "libtool"
+- "automake"
+- "faketime"
+- "bsdmainutils"
+- "ca-certificates"
+- "python"
+remotes:
+- "url": "${URL}"
+  "dir": "libdogecoin"
+files: []
+script: |
+  WRAP_DIR=$HOME/wrapped
+  HOSTS="i686-pc-linux-gnu x86_64-pc-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  FAKETIME_HOST_PROGS=""
+  FAKETIME_PROGS="date ar ranlib nm"
+
+  export GZIP="-9n"
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export TZ="UTC"
+  export BUILD_DIR=`pwd`
+  mkdir -p ${WRAP_DIR}
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+  fi
+
+  function create_global_faketime_wrappers {
+  for prog in ${FAKETIME_PROGS}; do
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+  done
+  }
+
+  function create_per-host_faketime_wrappers {
+  for i in $HOSTS; do
+    for prog in ${FAKETIME_HOST_PROGS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+  done
+  }
+
+  # Faketime for depends so intermediate results are comparable
+  export PATH_orig=${PATH}
+  create_global_faketime_wrappers "2000-01-01 12:00:00"
+  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
+  export PATH=${WRAP_DIR}:${PATH}
+
+  EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
+  mkdir -p $EXTRA_INCLUDES_BASE
+
+  # x86 needs /usr/include/i386-linux-gnu/asm pointed to /usr/include/x86_64-linux-gnu/asm,
+  # but we can't write there. Instead, create a link here and force it to be included in the
+  # search paths by wrapping gcc/g++.
+
+  mkdir -p $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu
+  rm -f $WRAP_DIR/extra_includes/i686-pc-linux-gnu/asm
+  ln -s /usr/include/x86_64-linux-gnu/asm $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu/asm
+
+  for prog in gcc g++; do
+  rm -f ${WRAP_DIR}/${prog}
+  cat << EOF > ${WRAP_DIR}/${prog}
+  #!/bin/bash
+  REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
+  for var in "\$@"
+  do
+    if [ "\$var" = "-m32" ]; then
+      export C_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-pc-linux-gnu"
+      export CPLUS_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-pc-linux-gnu"
+      break
+    fi
+  done
+  \$REAL \$@
+  EOF
+  chmod +x ${WRAP_DIR}/${prog}
+  done
+
+  cd libdogecoin
+  BASEPREFIX=`pwd`/depends
+  # Build dependencies for each host
+  for i in $HOSTS; do
+    EXTRA_INCLUDES="$EXTRA_INCLUDES_BASE/$i"
+    if [ -d "$EXTRA_INCLUDES" ]; then
+      export HOST_ID_SALT="$EXTRA_INCLUDES"
+    fi
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+    unset HOST_ID_SALT
+  done
+
+  # Faketime for binaries
+  export PATH=${PATH_orig}
+  create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+  export PATH=${WRAP_DIR}:${PATH}
+
+  # Create the release tarball using (arbitrarily) the first host
+  ./autogen.sh
+  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
+  git archive --format=tar --prefix=libdogecoin-0.1.0-source/ HEAD | gzip -9n > libdogecoin-0.1.0-source.tar.gz
+  SOURCEDIST=`echo libdogecoin-*.tar.gz`
+  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf ../$SOURCEDIST
+  find libdogecoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  popd
+
+  ORIGPATH="$PATH"
+  # Build and archive each architecture
+  for i in ${HOSTS}; do
+    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    ./contrib/scripts/build.sh --host ${i} --depends
+    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.0"
+  done
+
+  # Move them to gitian-builder/build/out/src
+  mv $SOURCEDIST `pwd`/output
+  mkdir -p $OUTDIR/src
+  mv ~/build/libdogecoin/output/*.tar.gz $OUTDIR/src

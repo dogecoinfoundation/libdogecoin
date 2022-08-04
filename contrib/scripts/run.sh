@@ -45,22 +45,56 @@ if [[ "$TARGET_HOST_TRIPLET" == "" && "$ALL_HOST_TRIPLETS" != "" ]]; then
     do
     :
         TARGET_HOST_TRIPLET="${ALL_HOST_TRIPLETS[$i]}"
+        CLEAN=""
+        # clean previously built files in libdogecoin and libsecp256k1
+        if has_param '--clean' "$@"; then
+            FILE=Makefile
+            if test -f "$FILE"; then
+                make clean
+                make clean-local
+            fi
+            CLEAN=1
+        fi
+        
+        # clean MacOS SDKs
         if [ "$DEPENDS" = "1" ]; then
-            if has_param '--clean' "$@"; then
-                FILE=Makefile
-                if test -f "$FILE"; then
-                    make clean
-                    make clean-local
-                fi
+            if [ "$CLEAN" = "1" ]; then
                 git clean -xdff --exclude='/depends/SDKs/*'
             fi
-            ./contrib/scripts/setup.sh --host $TARGET_HOST_TRIPLET --depends
-            ./contrib/scripts/build.sh --host $TARGET_HOST_TRIPLET --depends
-            ./contrib/scripts/test.sh --host $TARGET_HOST_TRIPLET --depends
-        else
-            ./contrib/scripts/setup.sh --host $TARGET_HOST_TRIPLET
-            ./contrib/scripts/build.sh --host $TARGET_HOST_TRIPLET
-            ./contrib/scripts/test.sh --host $TARGET_HOST_TRIPLET
+            DEPENDS="--depends"
+        fi
+
+        DOCKER=""
+        if has_param '--docker' "$@"; then
+            DOCKER="--docker"
+        fi
+
+        if has_param '--setup' "$@"; then
+            ./contrib/scripts/setup.sh --host $TARGET_HOST_TRIPLET $DEPENDS $DOCKER
+        fi
+
+        if has_param '--build' "$@"; then
+            ./contrib/scripts/build.sh --host $TARGET_HOST_TRIPLET $DEPENDS
+        fi
+        
+        if has_param '--test' "$@"; then
+            GO=""
+            CYTHON=""
+            VALGRIND=""
+            EXTENDED=""
+            if has_param '--go' "$@"; then
+                GO="--go"
+            fi
+            if has_param '--cython' "$@"; then
+                CYTHON="--cython"
+            fi
+            if has_param '--valgrind' "$@"; then
+                VALGRIND="--valgrind"
+            fi
+            if has_param '--extended' "$@"; then
+                EXTENDED="--extended"
+            fi
+            ./contrib/scripts/test.sh --host $TARGET_HOST_TRIPLET $EXTENDED $VALGRIND $CYTHON $GO $DOCKER
         fi
     done
 fi
