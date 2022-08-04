@@ -68,10 +68,12 @@ extern NTSTATUS WINAPI BCryptGenRandom(BCRYPT_ALG_HANDLE, UCHAR*, ULONG, ULONG);
 #define CryptAcquireContext CryptAcquireContextA
 
 #if !HAVE_LIB_BCRYPT
-
 /* Avoid warnings from gcc -Wcast-function-type.  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #define GetProcAddress \
-    (void *) GetProcAddress
+     (void *)GetProcAddress
+#pragma GCC diagnostic pop
 
 /* BCryptGenRandom with the BCRYPT_USE_SYSTEM_PREFERRED_RNG flag works only
    starting with Windows 7.  */
@@ -85,8 +87,11 @@ initialize(void)
     HMODULE bcrypt = LoadLibrary("bcrypt.dll");
     if (bcrypt != NULL)
         {
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpedantic"
         BCryptGenRandomFunc =
-            (BCryptGenRandomFuncType)GetProcAddress(bcrypt, "BCryptGenRandom");
+            (BCryptGenRandomFuncType)GetProcAddress(bcrypt, "BCryptGenRandom"); // TODO: find specific type to cast to when building mingw32
+        #pragma GCC diagnostic pop
         }
     initialized = TRUE;
     }
@@ -128,7 +133,7 @@ void dogecoin_random_init_internal(void)
     srand(time(NULL));
     }
 
-dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, uint8_t update_seed)
+dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const uint8_t update_seed)
     {
     (void)update_seed;
     for (uint32_t i = 0; i < len; i++)
@@ -142,6 +147,7 @@ void dogecoin_random_init_internal(void)
 dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const uint8_t update_seed)
     {
 #ifdef WIN32
+    (void)update_seed;
     /* BCryptGenRandom, defined in <bcrypt.h>
          <https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom>
          with the BCRYPT_USE_SYSTEM_PREFERRED_RNG flag
