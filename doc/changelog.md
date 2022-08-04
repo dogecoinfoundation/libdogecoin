@@ -2,7 +2,7 @@
 
 ## [Released]
 
-## [0.1.0] - 2022-08-03
+## [0.1.0] - 2022-08-04
 
 ## What's Changed
 * docs: mv diagrams/ to doc/ and amend README.md by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/6
@@ -47,4 +47,4 @@
 * @tjstebbing
 * @xanimo
 
-**Full Changelog**: https://github.com/dogecoinfoundation/libdogecoin/commits/0.1.0
+**Full Changelog**: https://github.com/dogecoinfoundation/libdogecoin/commits/main
