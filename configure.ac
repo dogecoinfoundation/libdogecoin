@@ -45,16 +45,13 @@ AM_PROG_AR
 AS_UNSET(ac_cv_prog_AR)
 AS_UNSET(ac_cv_prog_ac_ct_AR)
 
-LT_INIT([win32-dll])
+LT_INIT([pic-only win32-dll])
 
 build_windows=no
 
-LIBTOOL_APP_LDFLAGS="-all-static"
-
-CFLAGS="$CFLAGS -W -fPIC"
+CFLAGS="$CFLAGS -W"
 case $host in
   *mingw*)
-    CFLAGS="$CFLAGS -s -static --static"
     build_windows=yes    
     TARGET_OS=windows
     AC_CHECK_LIB([pthread],      [main],, AC_MSG_ERROR(lib missing))
@@ -69,12 +66,13 @@ case $host in
     # -static is interpreted by libtool, where it has a different meaning.
     # In libtool-speak, it's -all-static.
     AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static -no-undefined"])
+    LDFLAGS="-s -static --static $LDFLAGS"
   ;;
   *darwin*)
-     TARGET_OS=darwin
+    TARGET_OS=darwin
   ;;
   *linux*)
-     TARGET_OS=linux
+    TARGET_OS=linux
   ;;
 esac
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"
