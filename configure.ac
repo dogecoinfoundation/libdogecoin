@@ -7,7 +7,7 @@ AC_PREREQ([2.68])
 define(_PKG_VERSION_MAJOR, 0)
 define(_PKG_VERSION_MINOR, 1)
 define(_PKG_VERSION_BUILD, 0)
-define(_PKG_VERSION_IS_RELEASE, false)
+define(_PKG_VERSION_IS_RELEASE, true)
 
 # The library version is based on libtool versioning of the ABI. The set of
 # rules for updating the version can be found here:
@@ -15,7 +15,7 @@ define(_PKG_VERSION_IS_RELEASE, false)
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 define(_LIB_VERSION_CURRENT, 0)
-define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_REVISION, 1)
 define(_LIB_VERSION_AGE, 0)
 AC_INIT([libdogecoin],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/dogecoinfoundation/libdogecoin/issues],[libdogecoin],[https://github.com/dogecoinfoundation/libdogecoin])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -45,16 +45,13 @@ AM_PROG_AR
 AS_UNSET(ac_cv_prog_AR)
 AS_UNSET(ac_cv_prog_ac_ct_AR)
 
-LT_INIT([win32-dll])
+LT_INIT([pic-only win32-dll])
 
 build_windows=no
 
-LIBTOOL_APP_LDFLAGS="-all-static"
-
-CFLAGS="$CFLAGS -W -fPIC"
+CFLAGS="$CFLAGS -W"
 case $host in
   *mingw*)
-    CFLAGS="$CFLAGS -s -static --static"
     build_windows=yes    
     TARGET_OS=windows
     AC_CHECK_LIB([pthread],      [main],, AC_MSG_ERROR(lib missing))
@@ -69,12 +66,13 @@ case $host in
     # -static is interpreted by libtool, where it has a different meaning.
     # In libtool-speak, it's -all-static.
     AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static -no-undefined"])
+    LDFLAGS="-s -static --static $LDFLAGS"
   ;;
   *darwin*)
-     TARGET_OS=darwin
+    TARGET_OS=darwin
   ;;
   *linux*)
-     TARGET_OS=linux
+    TARGET_OS=linux
   ;;
 esac
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"

@@ -26,11 +26,28 @@ DEPENDS=""
 TARGET_HOST_TRIPLET=""
 TARGET_ARCH=""
 CONFIGURE_OPTIONS=""
-PREFIX="/usr/local"
+PREFIX=""
+
+if [ -f "`pwd`/such*" ]; then
+    rm "`pwd`/such*"
+fi
+
+if [ -f "`pwd`/sendtx*" ]; then
+    rm "`pwd`/sendtx*"
+fi
+
+if [ -f "`pwd`/tests*" ]; then
+    rm "`pwd`/tests*"
+fi
+
+if [ -d "`pwd`/.libs" ]; then
+    rm -rf "`pwd`/.libs"
+    make clean
+    make clean-local
+fi
 
 if has_param '--host' "$@"; then
     TARGET_HOST_TRIPLET=$2
-    LIBS+="-levent -levent_core"
     case "$2" in
         "arm-linux-gnueabihf") 
             TARGET_ARCH="armhf"
@@ -40,19 +57,9 @@ if has_param '--host' "$@"; then
         ;;
         "x86_64-w64-mingw32")
             TARGET_ARCH="amd64"
-            CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
-            LDFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/lib/ -s -static --static -static-libgcc -static-libstdc++"
-            LD_LIBRARY_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib
-            PKG_CONFIG_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig
-            LIBS+=" -lpthread -lwinpthread"
         ;;
         "i686-w64-mingw32")
             TARGET_ARCH="i386"
-            CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
-            LDFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/lib/ -s -static --static -static-libgcc -static-libstdc++"
-            LD_LIBRARY_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib
-            PKG_CONFIG_PATH+=`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig
-            LIBS+=" -lpthread -lwinpthread -lshell32 -ladvapi32 -liphlpapi -lws2_32 -lbcrypt -lcrypt32 -DWIN32"
         ;;
         "x86_64-apple-darwin14")
             TARGET_ARCH="amd64"
@@ -68,19 +75,17 @@ fi
 
 if has_param '--depends' "$@"; then
     DEPENDS=1
-    PREFIX=`pwd`/depends/$TARGET_HOST_TRIPLET
-    export CFLAGS
-    export LDFLAGS
-    export LIBS
-    export LD_LIBRARY_PATH
-    export LIBTOOL_APP_LDFLAGS="-all-static"
-    export PKG_CONFIG_PATH
+    export PREFIX=`pwd`/depends/$TARGET_HOST_TRIPLET
+    export CFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/include/"
+    export LDFLAGS+="-I`pwd`/depends/$TARGET_HOST_TRIPLET/lib/"
+    export LD_LIBRARY_PATH+="`pwd`/depends/$TARGET_HOST_TRIPLET/lib"
+    export PKG_CONFIG_PATH+="`pwd`/depends/$TARGET_HOST_TRIPLET/lib/pkgconfig"
 fi
 
 ./autogen.sh
-if [ $DEPENDS ]; then
+if [ "$DEPENDS" ]; then
     ./configure \
-    --prefix=$PREFIX \
+    --prefix="${PREFIX}" \
     --disable-maintainer-mode \
     --disable-dependency-tracking \
     --enable-static \
@@ -89,4 +94,3 @@ else
     ./configure
 fi
 make
-./contrib/scripts/combine.sh --target .libs/libdogecoin.a --append "src/secp256k1/.libs/libsecp256k1.a"

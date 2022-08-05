@@ -10,87 +10,84 @@ int main() {
 
 	// CALLING ADDRESS FUNCTIONS
 	// create variables
-	char wif_privkey[53];
-	char p2pkh_pubkey[35];
-	char wif_master_privkey[200];
-	char p2pkh_master_pubkey[35];
-	char p2pkh_child_pubkey[35];
+	size_t privkeywiflen = 53;
+	size_t masterkeylen = 200;
+    size_t pubkeylen = 35;
+	char wif_privkey[privkeywiflen];
+	char p2pkh_pubkey[pubkeylen];
+	char wif_master_privkey[masterkeylen];
+	char p2pkh_master_pubkey[pubkeylen];
+	char p2pkh_child_pubkey[pubkeylen];
 	
 	// keypair generation
 	if (generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
-		printf("Mainnet keypair:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_privkey, p2pkh_pubkey);
+		printf("Mainnet keypair 1:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_privkey, p2pkh_pubkey);
 	}
 	else {
-		printf("Error occurred.\n");
+		printf("Error occurred 1.\n");
 		return -1;
 	}
 
 	if (generateHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-		printf("Mainnet master keypair:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_master_pubkey);
+		printf("Mainnet master keypair 2:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_master_pubkey);
 	}
 	else {
-		printf("Error occurred.\n");
+		printf("Error occurred 2.\n");
 		return -1;
 	}
 
-	if (generateDerivedHDPubkey((const char*)wif_master_privkey, p2pkh_child_pubkey)) {
-		printf("Mainnet master derived keypair:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_child_pubkey);
+	if (generateDerivedHDPubkey((const char*)wif_master_privkey, (char*)p2pkh_child_pubkey)) {
+		printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_child_pubkey);
 	}
 	else {
-		printf("Error occurred.\n");
+		printf("Error occurred 3.\n");
 		return -1;
 	}
 	printf("\n\n");
 
 	// keypair verification
 	if (verifyPrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet.\n", wif_privkey, p2pkh_pubkey);
+		printf("Keypair (%s, %s) is valid for mainnet 4.\n", wif_privkey, p2pkh_pubkey);
 	}
 	else {
-		printf("Keypair (%s, %s) is not valid for mainnet.\n", wif_privkey, p2pkh_pubkey);
-		return -1;
+		printf("Keypair (%s, %s) is not valid for mainnet 4.\n", wif_privkey, p2pkh_pubkey);
 	}
 
 	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet.\n", wif_master_privkey, p2pkh_master_pubkey);
+		printf("Keypair (%s, %s) is valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
 	}
 	else {
-		printf("Keypair (%s, %s) is not valid for mainnet.\n", wif_master_privkey, p2pkh_master_pubkey);
-		return -1;
+		printf("Keypair (%s, %s) is not valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
 	}
 
 	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_child_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet.\n", wif_master_privkey, p2pkh_child_pubkey);
+		printf("Keypair (%s, %s) is valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
 	}
 	else {
-		printf("Keypair (%s, %s) is not valid for mainnet.\n", wif_master_privkey, p2pkh_child_pubkey);
-		return -1;
+		printf("Keypair (%s, %s) is not valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
 	}
 	printf("\n\n");
 
 	// address verification
 	if (verifyP2pkhAddress(p2pkh_pubkey, strlen(p2pkh_pubkey))) {
-		printf("Address %s is valid for mainnet.\n", p2pkh_pubkey);
+		printf("Address %s is valid for mainnet 7.\n", p2pkh_pubkey);
 	}
 	else {
-		printf("Address %s is not valid for mainnet.\n", p2pkh_pubkey);
-		return -1;
+		printf("Address %s is not valid for mainnet 7.\n", p2pkh_pubkey);
 	}
 
 	if (verifyP2pkhAddress(p2pkh_master_pubkey, strlen(p2pkh_master_pubkey))) {
-		printf("Address %s is valid for mainnet.\n", p2pkh_master_pubkey);
+		printf("Address %s is valid for mainnet 8.\n", p2pkh_master_pubkey);
 	}
 	else {
-		printf("Address %s is not valid for mainnet.\n", p2pkh_master_pubkey);
-		return -1;
+		printf("Address %s is not valid for mainnet 8.\n", p2pkh_master_pubkey);
 	}
 
 	if (verifyP2pkhAddress(p2pkh_child_pubkey, strlen(p2pkh_child_pubkey))) {
-		printf("Address %s is valid for mainnet.\n", p2pkh_child_pubkey);
+		printf("Address %s is valid for mainnet 9.\n", p2pkh_child_pubkey);
 	}
 	else {
-		printf("Address %s is not valid for mainnet.\n", p2pkh_child_pubkey);
-		return -1;
+		printf("Address %s is not valid for mainnet 9.\n", p2pkh_child_pubkey);
 	}
 	printf("\n\n");
 
