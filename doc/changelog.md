@@ -2,7 +2,7 @@
 
 ## [Released]
 
-## [0.1.0] - 2022-08-03
+## [0.1.0] - 2022-08-05
 
 ## What's Changed
 * docs: mv diagrams/ to doc/ and amend README.md by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/6
@@ -38,6 +38,7 @@
 * trivial: fix remaining GCC warnings/errors by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/53
 * contrib: update expired signing key for xanimo by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/55
 * build: backport autotools/gitian build system by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/54
+* doc: update changelog by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/58
 
 ## Contributors
 * @DrinoSan
@@ -46,4 +47,4 @@
 * @tjstebbing
 * @xanimo
 
-**Full Changelog**: https://github.com/dogecoinfoundation/libdogecoin/commits/0.1.0
+**Full Changelog**: https://github.com/dogecoinfoundation/libdogecoin/commits/main
