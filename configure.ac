@@ -7,7 +7,7 @@ AC_PREREQ([2.68])
 define(_PKG_VERSION_MAJOR, 0)
 define(_PKG_VERSION_MINOR, 1)
 define(_PKG_VERSION_BUILD, 0)
-define(_PKG_VERSION_IS_RELEASE, false)
+define(_PKG_VERSION_IS_RELEASE, true)
 
 # The library version is based on libtool versioning of the ABI. The set of
 # rules for updating the version can be found here:
@@ -15,7 +15,7 @@ define(_PKG_VERSION_IS_RELEASE, false)
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 define(_LIB_VERSION_CURRENT, 0)
-define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_REVISION, 1)
 define(_LIB_VERSION_AGE, 0)
 AC_INIT([libdogecoin],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/dogecoinfoundation/libdogecoin/issues],[libdogecoin],[https://github.com/dogecoinfoundation/libdogecoin])
 AC_CONFIG_AUX_DIR([build-aux])
