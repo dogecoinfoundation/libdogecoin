@@ -160,7 +160,7 @@ pip3 install libdogecoin
 ```
 Or download the Golang wrappers through `go get`:
 ```
-go get -u github.com/jaxlotl/go-libdogecoin-sandbox
+go get -u github.com/jaxlotl/go-libdogecoin
 go mod tidy
 ```
 
