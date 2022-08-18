@@ -100,7 +100,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -160,7 +160,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -225,7 +225,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -293,7 +293,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -362,7 +362,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -431,7 +431,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {

@@ -131,7 +131,7 @@ _Golang usage:_
 ```go
 package main
 
-import "github.com/jaxlotl/go-libdogecoin-sandbox"
+import "github.com/jaxlotl/go-libdogecoin"
 
 func main() {
     index := libdogecoin.W_start_transaction()
@@ -180,7 +180,7 @@ _Golang usage:_
 ```go
 package main
 
-import "github.com/jaxlotl/go-libdogecoin-sandbox"
+import "github.com/jaxlotl/go-libdogecoin"
 
 func main() {
     previous_output_txid := "b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074"
@@ -238,7 +238,7 @@ _Golang usage:_
 ```go
 package main
 
-import "github.com/jaxlotl/go-libdogecoin-sandbox"
+import "github.com/jaxlotl/go-libdogecoin"
 
 func main() {
     prev_output_txid := "42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2"
@@ -312,7 +312,7 @@ package main
 
 import (
     "fmt"
-    "github.com/jaxlotl/go-libdogecoin-sandbox"
+    "github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -369,7 +369,7 @@ package main
 
 import (
     "fmt"
-    "github.com/jaxlotl/go-libdogecoin-sandbox"
+    "github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -415,7 +415,7 @@ package main
 
 import (
     "fmt"
-    "github.com/jaxlotl/go-libdogecoin-sandbox"
+    "github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -500,7 +500,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jaxlotl/go-libdogecoin-sandbox"
+	"github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -605,7 +605,7 @@ package main
 
 import (
     "fmt"
-    "github.com/jaxlotl/go-libdogecoin-sandbox"
+    "github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {
@@ -668,7 +668,7 @@ package main
 
 import (
     "fmt"
-    "github.com/jaxlotl/go-libdogecoin-sandbox"
+    "github.com/jaxlotl/go-libdogecoin"
 )
 
 func main() {

@@ -100,18 +100,18 @@ If you are interested in making your own modifications to these wrappers, you ca
 
 
 ## Golang Wrappers
-The Go Libdogecoin module uses cgo to build wrappers call the functions in the C library, and this module can be downloaded from Github at https://github.com/jaxlotl/go-libdogecoin-sandbox. Unlike Python, this module does not require building and can be used directly out of the box; **however, the library module for Go currently only supports Linux 64-bit architecture.**
+The Go Libdogecoin module uses cgo to build wrappers call the functions in the C library, and this module can be downloaded from Github at https://github.com/jaxlotl/go-libdogecoin. Unlike Python, this module does not require building and can be used directly out of the box; **however, the library module for Go currently only supports Linux 64-bit architecture.**
 
 ### Integration
 To use these wrappers inside of your own project, you must first include the correct import statement in your source code:
 ```go
 package main
 
-import "github.com/jaxlotl/go-libdogecoin-sandbox"
+import "github.com/jaxlotl/go-libdogecoin"
 ```
 If a module has not yet been created for your project, create it with `go mod init myproject`. From there, the following commands will make sure you are up to date with the most recent MINOR.PATCH:
 ```
-go get -u github.com/jaxlotl/go-libdogecoin-sandbox
+go get -u github.com/jaxlotl/go-libdogecoin
 go mod tidy
 ```
 The output, if any, should tell you which version of go-libdogecoin you have downloaded. Now you are ready to call the functions from inside your project!
@@ -122,7 +122,7 @@ _Example:_
 ```go
 package main
 
-import "github.com/jaxlotl/go-libdogecoin-sandbox"
+import "github.com/jaxlotl/go-libdogecoin"
 
 func main() {
     index := libdogecoin.W_start_transaction()
