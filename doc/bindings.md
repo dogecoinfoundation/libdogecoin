@@ -74,15 +74,15 @@ _Example:_
 import libdogecoin
 
 if __name__ == "__main__":
-    libdogecoin.context_start()
+    libdogecoin.w_context_start()
 
-    my_keypair = libdogecoin.generate_priv_pub_key_pair()
+    my_keypair = libdogecoin.w_generate_priv_pub_key_pair()
     print(f"My wif-encoded private key is {my_keypair[0]}.")
     print(f"My public p2pkh address is {my_keypair[1]}.")
     
     # your code here
 
-    libdogecoin.context_stop()
+    libdogecoin.w_context_stop()
 ```
 Keep in mind that any time a function related to a private key is called, it must be from within a secp256k1 context. Only one context should be started per session using `libdogecoin.context_start()`, and should be stopped when the session is done using `libdogecoin.context_stop()`. If a function is called outside of a secp256k1 context, you will receive an error resembling the following:
 ```
