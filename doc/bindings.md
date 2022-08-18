@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     libdogecoin.w_context_stop()
 ```
-Keep in mind that any time a function related to a private key is called, it must be from within a secp256k1 context. Only one context should be started per session using `libdogecoin.context_start()`, and should be stopped when the session is done using `libdogecoin.context_stop()`. If a function is called outside of a secp256k1 context, you will receive an error resembling the following:
+Keep in mind that any time a function related to a private key is called, it must be from within a secp256k1 context. Only one context should be started per session using `libdogecoin.w_context_start()`, and should be stopped when the session is done using `libdogecoin.w_context_stop()`. If a function is called outside of a secp256k1 context, you will receive an error resembling the following:
 ```
 python3: src/ecc.c:73: dogecoin_ecc_verify_privatekey: Assertion `secp256k1_ctx' failed.
 Aborted (core dumped)
