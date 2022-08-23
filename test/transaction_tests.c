@@ -379,7 +379,9 @@ void test_transaction()
     // ----------------------------------------------------------------
     // test conversion from p2pkh to script hash
 
-    char* res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
+    //need to figure out why segfaulting.
+    char* res = dogecoin_char_vla(51); // segfaulting because its not allocated? this is basically a vla.
+    res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
     u_assert_str_eq(res, utxo_scriptpubkey);
     dogecoin_free(res);
     
@@ -389,7 +391,6 @@ void test_transaction()
 
     // ----------------------------------------------------------------
     // test conversion from private key (wif) to script hash
-
     res = dogecoin_private_key_wif_to_script_hash(private_key_wif);
 
     u_assert_str_eq(res, utxo_scriptpubkey);

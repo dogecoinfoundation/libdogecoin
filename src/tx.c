@@ -204,7 +204,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     dogecoin_tx_out_copy(copy, txout);
     size_t length = 2;
     uint8_t* stripped_array = dogecoin_uint8_vla(txout->script_pubkey->len);
-    dogecoin_mem_zero(stripped_array, sizeof(stripped_array));
+    dogecoin_mem_zero(stripped_array, txout->script_pubkey->len * sizeof(stripped_array[0]));
     // loop through 20 bytes of the script hash while stripping op codes
     // and copy from index 2 to 21 after prefixing with version
     // from chainparams:
@@ -252,7 +252,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     debug_print("scripthash2p2pkh:  %s\n", script_hash_to_p2pkh);
     
     // copy to out variable p2pkh, free tx_out copy and return true:
-    memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh[0]) * strsize);
+    memcpy(p2pkh, script_hash_to_p2pkh, strsize * sizeof(script_hash_to_p2pkh[0]));
     dogecoin_tx_out_free(copy);
     return memcmp(p2pkh, script_hash_to_p2pkh, strlen(script_hash_to_p2pkh)) == 0;
 }
@@ -268,24 +268,26 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
  */
 char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     if (!p2pkh) return false;
-    size_t len = 25;
-    unsigned char* dec = dogecoin_uchar_vla(len);
+ 
+    unsigned char dec[25]; //problem is here, it works if its char**
+    size_t len = sizeof(dec)/sizeof(dec[0]);
+    // MLUMIN: MSVC
     if (!dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, 35)) {
         printf("failed base58 decode\n");
         return false;
     }
-    char* b58_decode_hex = utils_uint8_to_hex((const uint8_t*)dec, len - 4);
-    char* tmp = dogecoin_malloc(51);
+    char* b58_decode_hex =utils_uint8_to_hex((const uint8_t*)dec, len - 4);
+	char* tmp = dogecoin_malloc(51);
     char opcodes_and_pubkey_length_to_prepend[7], opcodes_to_append[5];
     sprintf(opcodes_and_pubkey_length_to_prepend, "%x%x%x", OP_DUP, OP_HASH160, 20);
     sprintf(opcodes_to_append, "%x%x", OP_EQUALVERIFY, OP_CHECKSIG);
-    for (size_t l = 0; l < 4; l += 2) {
-        if (l == 2) {
-            memccpy(tmp, &b58_decode_hex[l], 3, 48);
+    //for (size_t l = 0; l < 4; l += 2) {
+    //    if (l == 2) {
+            memccpy(tmp, &b58_decode_hex[2], 3, 48);
             prepend(tmp, opcodes_and_pubkey_length_to_prepend);
             append(tmp, opcodes_to_append);
-        }
-    }
+     //   }
+    //}
     return tmp;
 }
 

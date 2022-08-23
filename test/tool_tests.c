@@ -31,7 +31,7 @@ void test_tool()
     u_assert_int_eq(gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, privkeyhex), true);
 
     uint8_t* privkey_data=dogecoin_uint8_vla(strlen(privkeywif));
-    dogecoin_base58_decode_check(privkeywif, privkey_data, sizeof(privkey_data));
+    dogecoin_base58_decode_check(privkeywif, privkey_data, strlen(privkeywif) * sizeof(privkey_data[0]));
     u_assert_int_eq(privkey_data[0] == dogecoin_chainparams_main.b58prefix_secret_address, true);
 
     char privkey_hex_or_null[65];

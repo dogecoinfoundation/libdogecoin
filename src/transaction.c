@@ -397,9 +397,10 @@ char* finalize_transaction(int txindex, char* destinationaddress, char* subtract
     for (i = 0; i < length; i++) {
         dogecoin_tx_out* tx_out_tmp = vector_idx(tx->transaction->vout, i);
         tx_out_total += tx_out_tmp->value;
-        size_t len = 17;
+        size_t len = 36; //mlumin: this was originally 17, caused problems if < 25.  p2pkh len is 24-36.
         char* p2pkh = dogecoin_char_vla(len);
-        dogecoin_mem_zero(p2pkh, sizeof(p2pkh));
+        //MLUMIN:MSVC
+        dogecoin_mem_zero(p2pkh, len * sizeof(p2pkh[0]));
         p2pkh_count = dogecoin_script_hash_to_p2pkh(tx_out_tmp, (char *)p2pkh, is_testnet);
         if (i == length - 1 && changeaddress) {
             // manually make change and send back to our public key address
