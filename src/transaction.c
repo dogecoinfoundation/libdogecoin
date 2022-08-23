@@ -398,7 +398,7 @@ char* finalize_transaction(int txindex, char* destinationaddress, char* subtract
         dogecoin_tx_out* tx_out_tmp = vector_idx(tx->transaction->vout, i);
         tx_out_total += tx_out_tmp->value;
         size_t len = 17;
-        char* p2pkh[len];
+        char* p2pkh = dogecoin_char_vla(len);
         dogecoin_mem_zero(p2pkh, sizeof(p2pkh));
         p2pkh_count = dogecoin_script_hash_to_p2pkh(tx_out_tmp, (char *)p2pkh, is_testnet);
         if (i == length - 1 && changeaddress) {
@@ -513,7 +513,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     }
 
     // initialize byte array with length equal to account for byte size 
-    uint8_t script_data[strlen(scripthex)];
+    uint8_t* script_data = dogecoin_uint8_vla(strlen(scripthex));
     // convert hex string to byte array
     utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlength);
     cstring* script = cstr_new_buf(script_data, outlength);
@@ -570,7 +570,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         cstring* signed_tx = cstr_new_sz(1024);
         dogecoin_tx_serialize(signed_tx, txtmp);
 
-        char signed_tx_hex[signed_tx->len*2+1];
+        char* signed_tx_hex = dogecoin_char_vla(signed_tx->len * 2 + 1);
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
         memcpy(incomingrawtx, signed_tx_hex, strlen(signed_tx_hex));
         printf("signed TX: %s\n", incomingrawtx);

@@ -47,7 +47,7 @@ void test_op_return() {
     u_assert_int_eq(memcmp(msg_hex, expected_hexmsg, strlen(expected_hexmsg)), 0);
 
     int outlen;
-    uint8_t script_data[strlen((char*)msg_hex)];
+    uint8_t* script_data=dogecoin_uint8_vla(strlen((char*)msg_hex));
     utils_hex_to_bin((char*)msg_hex, script_data, strlen((char*)msg_hex), &outlen);
 
     /* creating a new transaction output. */

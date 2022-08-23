@@ -61,7 +61,7 @@ int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b5
 	b58_almostmaxint_t c;
     size_t i, j = 0;
     uint8_t bytesleft = binsz % sizeof(b58_almostmaxint_t);
-    b58_almostmaxint_t outi[outisz];
+    b58_almostmaxint_t* outi = dogecoin_uint32_vla(outisz);
     uint32_t zeromask = bytesleft ? (b58_almostmaxint_mask << (bytesleft * 8)) : 0;
     unsigned zerocount = 0;
 
@@ -156,7 +156,7 @@ int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t bi
         ++zcount;
     }
     size = (binsz - zcount) * 138 / 100 + 1;
-    uint8_t buf[size];
+    uint8_t* buf = dogecoin_uint8_vla(size);
     dogecoin_mem_zero(buf, size);
     for (i = zcount, high = size - 1; i < (ssize_t)binsz; ++i, high = j) {
         for (carry = bin[i], j = size - 1; (j > high) || carry; --j) {
@@ -192,7 +192,7 @@ int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, in
     if (datalen > 128) {
         return 0;
     }
-    uint8_t buf[1 + datalen + 0x20];
+    uint8_t* buf = dogecoin_uint8_vla(1 + datalen + 0x20);
     uint8_t* hash = buf + datalen;
     memcpy_safe(buf, data, datalen);
     if (!dogecoin_dblhash(data, datalen, hash)) {

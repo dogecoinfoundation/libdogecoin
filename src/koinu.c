@@ -148,7 +148,7 @@ int koinu_to_coins_str(uint64_t koinu, char* str) {
     if (length < 9) {
         string(koinu, str);
         int l = str ? strlen(str) : 0;
-        char swap[l + 1];
+        char* swap = dogecoin_char_vla(l + 1);
         memcpy_safe(swap, str, l + 1);
         for (; i < target; i++) {
             if (i == 0 || i == 1) {

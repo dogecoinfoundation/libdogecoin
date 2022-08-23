@@ -245,7 +245,7 @@ void test_transaction()
 
     // prove internal p2pkh address was derived from public key hex:
     size_t sizeout = 33; // public hexadecimal keys are 66 characters long (divided by 2 for byte size)
-    char* p2pkh_pubkey_internal[sizeout];
+    char* p2pkh_pubkey_internal=dogecoin_char_vla(sizeout);
     dogecoin_pubkey pubkeytx;
     dogecoin_pubkey_init(&pubkeytx);
     pubkeytx.compressed = true;

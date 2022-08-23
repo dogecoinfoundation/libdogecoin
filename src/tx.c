@@ -203,7 +203,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     dogecoin_tx_out* copy = dogecoin_tx_out_new();
     dogecoin_tx_out_copy(copy, txout);
     size_t length = 2;
-    uint8_t* stripped_array[txout->script_pubkey->len];
+    uint8_t* stripped_array = dogecoin_uint8_vla(txout->script_pubkey->len);
     dogecoin_mem_zero(stripped_array, sizeof(stripped_array));
     // loop through 20 bytes of the script hash while stripping op codes
     // and copy from index 2 to 21 after prefixing with version
@@ -240,7 +240,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     unencoded_address[24] = checksum[3];
 
     size_t strsize = 35;
-    char script_hash_to_p2pkh[strsize];
+    char* script_hash_to_p2pkh = dogecoin_char_vla(strsize);
     // base 58 encode check our unencoded_address into the script_hash_to_p2pkh:
     if (!dogecoin_base58_encode_check(unencoded_address, 21, script_hash_to_p2pkh, strsize)) {
         return false;
@@ -252,7 +252,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     debug_print("scripthash2p2pkh:  %s\n", script_hash_to_p2pkh);
     
     // copy to out variable p2pkh, free tx_out copy and return true:
-    memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh));
+    memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh[0]) * strsize);
     dogecoin_tx_out_free(copy);
     return memcmp(p2pkh, script_hash_to_p2pkh, strlen(script_hash_to_p2pkh)) == 0;
 }
@@ -269,7 +269,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
 char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     if (!p2pkh) return false;
     size_t len = 25;
-    unsigned char* dec[len];
+    unsigned char* dec = dogecoin_uchar_vla(len);
     if (!dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, 35)) {
         printf("failed base58 decode\n");
         return false;
@@ -317,7 +317,7 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
         debug_print("private key is not valid!\nchain: %s\n", chain->chainname);
         return false;
     }
-    char new_wif_privkey[sizeout];
+    char* new_wif_privkey = dogecoin_char_vla(sizeout);
     dogecoin_privkey_encode_wif(&key, chain, new_wif_privkey, &sizeout);
 
     /* public key */
@@ -329,7 +329,7 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
         return false;
     }
 
-    char new_p2pkh_pubkey[sizeout];
+    char* new_p2pkh_pubkey = dogecoin_char_vla(sizeout);
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_cleanse(&pubkey);
