@@ -836,7 +836,7 @@ void test_tx_sighash_ext()
         dogecoin_tx_free(tx_sighash);
         cstr_free(str, true);
  
-        char sighash_hex[64];
+        char sighash_hex[sizeof(hash) * 2 + 1];
         memset(sighash_hex, 0, sizeof(sighash_hex));
         utils_bin_to_hex(hash, sizeof(hash), sighash_hex);
         utils_reverse_hex(sighash_hex, strlen(sighash_hex));
@@ -875,9 +875,9 @@ void test_tx_sighash()
 
         cstr_free(script, true);
 
-        char hexbuf[sizeof(sighash) * 2];
+        char hexbuf[sizeof(sighash) * 2 + 1];
         utils_bin_to_hex(sighash, sizeof(sighash), hexbuf);
-        utils_reverse_hex(hexbuf, sizeof(hexbuf));
+        utils_reverse_hex(hexbuf, strlen(hexbuf));
 
         assert(memcmp(hexbuf, test->hashhex, sizeof(test->hashhex) - 1) == 0);
 
@@ -1003,7 +1003,7 @@ void test_script_parse()
 
     uint256 txhash;
     dogecoin_tx_hash(tx, txhash);
-    char txhashhex[sizeof(txhash) * 2];
+    char txhashhex[sizeof(txhash) * 2 + 1];
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
     utils_reverse_hex(txhashhex, strlen(txhashhex));
 
@@ -1020,7 +1020,7 @@ void test_script_parse()
     u_assert_str_eq(hexbuf2, "01000000000200ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088ac00000000");
 
     dogecoin_tx_hash(tx, txhash);
-    utils_bin_to_hex((unsigned char*)txhash, 32, txhashhex);
+    utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
     utils_reverse_hex(txhashhex, 64);
 
     u_assert_str_eq(txhashhex, "6a56c7415dc6e3695b4b6b27bdfec5124ed70e0a615d5aa0d8cf0b5e8b72fd76");

@@ -158,7 +158,7 @@ void dogecoin_pubkey_get_hash160(const dogecoin_pubkey* pubkey, uint160 hash160)
 
 dogecoin_bool dogecoin_pubkey_get_hex(const dogecoin_pubkey* pubkey, char* str, size_t* strsize)
 {
-    if (*strsize < DOGECOIN_ECKEY_COMPRESSED_LENGTH * 2)
+    if (*strsize < DOGECOIN_ECKEY_COMPRESSED_LENGTH * 2 + 1)
         return false;
     utils_bin_to_hex((unsigned char*)pubkey->pubkey, DOGECOIN_ECKEY_COMPRESSED_LENGTH, str);
     *strsize = DOGECOIN_ECKEY_COMPRESSED_LENGTH * 2;
