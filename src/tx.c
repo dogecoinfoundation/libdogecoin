@@ -269,7 +269,9 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
 char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     if (!p2pkh) return false;
  
-    unsigned char dec[25]; //problem is here, it works if its char**
+    // strlen(p2pkh) + 1 = 35
+    unsigned char dec[35]; //problem is here, it works if its char**
+
     size_t len = sizeof(dec)/sizeof(dec[0]);
     // MLUMIN: MSVC
     if (!dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, 35)) {
@@ -277,17 +279,21 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
         return false;
     }
     char* b58_decode_hex =utils_uint8_to_hex((const uint8_t*)dec, len - 4);
-	char* tmp = dogecoin_malloc(51);
-    char opcodes_and_pubkey_length_to_prepend[7], opcodes_to_append[5];
-    sprintf(opcodes_and_pubkey_length_to_prepend, "%x%x%x", OP_DUP, OP_HASH160, 20);
-    sprintf(opcodes_to_append, "%x%x", OP_EQUALVERIFY, OP_CHECKSIG);
-    //for (size_t l = 0; l < 4; l += 2) {
-    //    if (l == 2) {
-            memccpy(tmp, &b58_decode_hex[2], 3, 48);
-            prepend(tmp, opcodes_and_pubkey_length_to_prepend);
-            append(tmp, opcodes_to_append);
-     //   }
-    //}
+    char* tmp = dogecoin_malloc(48 + 6 + 4 + 1);
+
+    //char opcodes_and_pubkey_length_to_prepend[7], opcodes_to_append[5];
+    //sprintf(opcodes_and_pubkey_length_to_prepend, "%x%x%x", OP_DUP, OP_HASH160, 20);
+    //sprintf(opcodes_to_append, "%x%x", OP_EQUALVERIFY, OP_CHECKSIG);
+    ////for (size_t l = 0; l < 4; l += 2) {
+    ////    if (l == 2) {
+    //        memccpy(tmp, &b58_decode_hex[2], 3, 48); // b58_decoded_hex cannot possibly have 0x03 in it. why is 3 being passed?
+    //        prepend(tmp, opcodes_and_pubkey_length_to_prepend);
+    //        append(tmp, opcodes_to_append);
+    // //   }
+    ////}
+
+    // TODO: FIXME: length 20 and b58_decode_hex[2..50] doesn't seem right... double check the original logic above to make sure it's doing what is expected
+    sprintf(tmp, "%x%x%x%.48s%x%x", OP_DUP, OP_HASH160, 20, &b58_decode_hex[2], OP_EQUALVERIFY, OP_CHECKSIG);
     return tmp;
 }
 

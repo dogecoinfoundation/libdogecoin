@@ -34,7 +34,7 @@ void test_tool()
     dogecoin_base58_decode_check(privkeywif, privkey_data, strlen(privkeywif) * sizeof(privkey_data[0]));
     u_assert_int_eq(privkey_data[0] == dogecoin_chainparams_main.b58prefix_secret_address, true);
 
-    char privkey_hex_or_null[65];
+    char privkey_hex_or_null[DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1];
     utils_bin_to_hex(privkey_data + 1, DOGECOIN_ECKEY_PKEY_LENGTH, privkey_hex_or_null);
     u_assert_str_eq(privkeyhex, privkey_hex_or_null);
 
