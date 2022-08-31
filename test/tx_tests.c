@@ -1049,9 +1049,8 @@ void test_script_parse()
     dogecoin_tx_free(tx);
 
     // op_return test
-    size_t masterkeysize = 200;
-    char* masterkey=dogecoin_char_vla(masterkeysize);
-    u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, masterkeysize), true);
+    char masterkey[200];
+    u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, sizeof(masterkey)), true);
 
     dogecoin_hdnode node;
     u_assert_int_eq(dogecoin_hdnode_deserialize(masterkey, &dogecoin_chainparams_main, &node), true);
