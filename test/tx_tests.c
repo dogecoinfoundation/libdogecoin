@@ -905,13 +905,15 @@ void test_tx_negative_version()
 
 struct script_test {
     char script[32];
+    uint8_t expected[16];
+    size_t expected_length;
 };
 
 const struct script_test script_tests[] =
     {
-        {"0x4c01"},
-        {"0x4d0200ff"},
-        {"0x4e03000000ffff"}};
+        {"4c0112", {0x4c, 0x01, 0x12}, 3},
+        {"4d02001234", {0x4d, 0x02, 0x00, 0x12, 0x34}, 5},
+        {"4e03000000123456", {0x4e, 0x03, 0x00, 0x00, 0x00, 0x12, 0x34, 0x56}, 8}};
 
 void test_script_parse()
 {
@@ -942,10 +944,13 @@ void test_script_parse()
 
         cstring* script = cstr_new_buf(script_data, outlen);
         vector* vec = vector_new(10, dogecoin_script_op_free_cb);
-        dogecoin_script_get_ops(script, vec);
+        u_assert_int_eq(dogecoin_script_get_ops(script, vec), true);
 
         cstring* new_script = cstr_new_sz(script->len);
-        dogecoin_script_copy_without_op_codeseperator(script, new_script);
+        u_assert_int_eq(dogecoin_script_copy_without_op_codeseperator(script, new_script), true);
+        u_assert_int_eq(test->expected_length, new_script->len);
+        u_assert_mem_eq(test->expected, script->str, new_script->len);
+
         cstr_free(new_script, true);
         cstr_free(script, true);
         vector_free(vec, true);
