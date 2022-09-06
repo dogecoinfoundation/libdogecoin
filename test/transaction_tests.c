@@ -244,8 +244,8 @@ void test_transaction()
     u_assert_int_eq(verifyPrivPubKeypair(private_key_wif, internal_p2pkh_address, true), 1);
 
     // prove internal p2pkh address was derived from public key hex:
-    size_t sizeout = 33; // public hexadecimal keys are 66 characters long (divided by 2 for byte size)
-    char* p2pkh_pubkey_internal=dogecoin_char_vla(sizeout);
+
+    char p2pkh_pubkey_internal[35];
     dogecoin_pubkey pubkeytx;
     dogecoin_pubkey_init(&pubkeytx);
     pubkeytx.compressed = true;
@@ -254,7 +254,7 @@ void test_transaction()
     uint8_t* pubkeydat = utils_hex_to_uint8(public_key_hex);
 
     // copy byte array pubkeydat to dogecoin_pubkey.pubkey:
-    memcpy(&pubkeytx.pubkey, pubkeydat, sizeout);
+    memcpy(pubkeytx.pubkey, pubkeydat, strlen(public_key_hex) / 2);
 
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     dogecoin_pubkey_getaddr_p2pkh(&pubkeytx, &dogecoin_chainparams_test, (char*)p2pkh_pubkey_internal);
