@@ -1195,6 +1195,7 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
 
+    free(hexbuf);
     cstr_free(tx_ser, true);
     cstr_free(script, true);
 }
