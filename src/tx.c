@@ -285,17 +285,7 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     //2* (3-byte header + 20-byte hash + 2-byte footer) + 1-byte null terminator
     char* tmp = dogecoin_malloc(40 + 6 + 4 + 1);
 
-    //char opcodes_and_pubkey_length_to_prepend[7], opcodes_to_append[5];
-    //sprintf(opcodes_and_pubkey_length_to_prepend, "%x%x%x", OP_DUP, OP_HASH160, 20);
-    //sprintf(opcodes_to_append, "%x%x", OP_EQUALVERIFY, OP_CHECKSIG);
-    ////for (size_t l = 0; l < 4; l += 2) {
-    ////    if (l == 2) {
-    //        memccpy(tmp, &b58_decode_hex[2], 3, 48); // b58_decoded_hex cannot possibly have 0x03 in it. why is 3 being passed?
-    //        prepend(tmp, opcodes_and_pubkey_length_to_prepend);
-    //        append(tmp, opcodes_to_append);
-    // //   }
-    ////}
-
+    //concatenate the fields
     sprintf(tmp, "%02x%02x%02x%.40s%02x%02x", OP_DUP, OP_HASH160, 20, &b58_decode_hex[2], OP_EQUALVERIFY, OP_CHECKSIG);
     return tmp;
 }
