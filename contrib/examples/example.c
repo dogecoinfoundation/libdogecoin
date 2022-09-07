@@ -2,22 +2,26 @@
 #include <stdio.h>
 #include <string.h>
 
+#define PRIVKEYWIFLEN 53
+#define MASTERKEYLEN 200
+#define PUBKEYLEN 35
+
 // Example of how to use libdogecoin API functions:
 // gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
+
+
 
 int main() {
 	dogecoin_ecc_start();
 
 	// CALLING ADDRESS FUNCTIONS
 	// create variables
-	size_t privkeywiflen = 53;
-	size_t masterkeylen = 200;
-    size_t pubkeylen = 35;
-	char wif_privkey[privkeywiflen];
-	char p2pkh_pubkey[pubkeylen];
-	char wif_master_privkey[masterkeylen];
-	char p2pkh_master_pubkey[pubkeylen];
-	char p2pkh_child_pubkey[pubkeylen];
+	
+	char wif_privkey[PRIVKEYWIFLEN];
+	char p2pkh_pubkey[PUBKEYLEN];
+	char wif_master_privkey[MASTERKEYLEN];
+	char p2pkh_master_pubkey[PUBKEYLEN];
+	char p2pkh_child_pubkey[PUBKEYLEN];
 	
 	// keypair generation
 	if (generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
