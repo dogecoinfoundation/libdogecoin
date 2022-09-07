@@ -720,6 +720,7 @@ int main(int argc, char* argv[])
         /* clean memory */
         dogecoin_mem_zero(pubkey_hex, strlen(pubkey_hex));
         dogecoin_mem_zero(address_p2pkh, strlen(address_p2pkh));
+        free(address_p2pkh);
     /* Creating a new address from a public key. */
     } else if (strcmp(cmd, "p2pkh") == 0) {
         char address_p2pkh[128];
@@ -820,9 +821,15 @@ int main(int argc, char* argv[])
                 memcpy_safe(keypathnew+posanum-1+strlen(index), &derived_path[end], strlen(derived_path)-end);
 
                 if (!hd_derive(chain, pkey, keypathnew, newextkey, sizeof(newextkey)))
+                {
+                    free(keypathnew);
                     return showError("Deriving child key failed\n");
+                }
                 else
+                {
+                    free(keypathnew);
                     hd_print_node(chain, newextkey);
+                }
             }
         }
         else {
@@ -862,6 +869,7 @@ int main(int argc, char* argv[])
         uint8_t* script_data=dogecoin_uint8_vla(strlen(scripthex) / 2 + 1);
         utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
+        free(script_data); 
 
         uint256 sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
@@ -923,6 +931,7 @@ int main(int argc, char* argv[])
             utils_bin_to_hex((unsigned char*)signed_tx->str, signed_tx->len, signed_tx_hex);
             printf("signed TX: %s\n", signed_tx_hex);
             cstr_free(signed_tx, true);
+            free(signed_tx_hex);
             }
         dogecoin_tx_free(tx);
         }
@@ -944,6 +953,7 @@ int main(int argc, char* argv[])
         char* hexbuf=dogecoin_char_vla(sigderlen * 2 + 1);
         utils_bin_to_hex(sigder, sigderlen, hexbuf);
         printf("DER: %s\n", hexbuf);
+        free(hexbuf);
         }
     else if (strcmp(cmd, "bip32maintotest") == 0) { /* Creating a bip32 master key from a private key. */
         dogecoin_hdnode node;

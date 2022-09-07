@@ -104,4 +104,13 @@ void test_address()
     u_assert_int_eq(verifyHDMasterPubKeypair(masterkey_test, child_key_test, true), true);
     u_assert_int_eq(verifyP2pkhAddress(child_key_main, strlen(child_key_main)), true);
     u_assert_int_eq(verifyP2pkhAddress(child_key_test, strlen(child_key_test)), true);
+    
+    /*free up VLAs*/
+    free(masterkey_main);
+    free(masterkey_test);
+    free(p2pkh_master_pubkey_main);
+    free(p2pkh_master_pubkey_test);
+    free(child_key_main);
+    free(child_key_test);
+    free(str);
 }

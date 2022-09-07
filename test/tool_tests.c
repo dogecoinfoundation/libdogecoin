@@ -24,6 +24,8 @@ void test_tool()
     u_assert_int_eq(pubkey_from_privatekey(&dogecoin_chainparams_main, "QUaohmokNWroj71dRtmPSses5eRw5SGLKsYSRSVisJHyZdxhdDCZ", pubkey, &pubkeylen), true);
     u_assert_str_eq(pubkey, "024c33fbb2f6accde1db907e88ebf5dd1693e31433c62aaeef42f7640974f602ba");
 
+    free(pubkey);
+
     size_t privkeywiflen = 100;
     char* privkeywif=dogecoin_char_vla(privkeywiflen);
     char privkeyhex[100];
@@ -38,10 +40,14 @@ void test_tool()
     utils_bin_to_hex(privkey_data + 1, DOGECOIN_ECKEY_PKEY_LENGTH, privkey_hex_or_null);
     u_assert_str_eq(privkeyhex, privkey_hex_or_null);
 
+    free(privkey_data);
+
     size_t masterkeysize = 200;
     char* masterkey=dogecoin_char_vla(masterkeysize);
     u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, masterkeysize), true);
     u_assert_int_eq(hd_print_node(&dogecoin_chainparams_main, masterkey), true);
+
+    free(masterkey);
 
     size_t extoutsize = 200;
     char* extout=dogecoin_char_vla(extoutsize);
@@ -51,4 +57,6 @@ void test_tool()
     u_assert_str_eq(extout, "dgpv544MJMFeoz5LXkwbZTWwouwFje2Yp9c1A8ReNaapDFjW44jEcLXv3B3KQg3fjWXWVC9FGRyxLaCHjN1DUeGgoYJxMYM723wrLN6BArKUxe3");
 
     u_assert_int_eq(hd_derive(&dogecoin_chainparams_main, "dgpv51eADS3spNJh9gCpE1AyQ9NpMGkGh6MJKxM84Tf87KVLNeodEW76V2nJJRPorYLGnvZGJKTgEgvqGCtf9VS9RqhfJaTxV7iqm86VpMUNi5G", "m/3", extout, extoutsize), true);
+
+    free(extout);
 }

@@ -232,7 +232,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     memcpy(checksum, d1, 4);
     // copy stripped array into final var before passing to out variable:
     memcpy(unencoded_address, stripped_array, 21);
-
+    free(stripped_array);
     // copy checksum to the last 4 bytes of our unencoded_address:
     unencoded_address[21] = checksum[0];
     unencoded_address[22] = checksum[1];
@@ -271,14 +271,19 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     // strlen(p2pkh) + 1 = 35
     unsigned char dec[35]; //problem is here, it works if its char**
 
-    size_t len = sizeof(dec)/sizeof(dec[0]);
     // MLUMIN: MSVC
-    if (!dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, 35)) {
+    int decoded_length = dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, sizeof(dec)/sizeof(dec[0]));
+    if (decoded_length==0)
+    {
         printf("failed base58 decode\n");
         return false;
     }
-    char* b58_decode_hex =utils_uint8_to_hex((const uint8_t*)dec, len - 4);
-    char* tmp = dogecoin_malloc(48 + 6 + 4 + 1);
+    
+    //decoded bytes = [1-byte versionbits][20-byte hash][4-byte checksum]
+    char* b58_decode_hex =utils_uint8_to_hex((const uint8_t*)dec, decoded_length - 4);
+    
+    //2* (3-byte header + 20-byte hash + 2-byte footer) + 1-byte null terminator
+    char* tmp = dogecoin_malloc(40 + 6 + 4 + 1);
 
     //char opcodes_and_pubkey_length_to_prepend[7], opcodes_to_append[5];
     //sprintf(opcodes_and_pubkey_length_to_prepend, "%x%x%x", OP_DUP, OP_HASH160, 20);
@@ -291,7 +296,7 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     // //   }
     ////}
 
-    sprintf(tmp, "%x%x%x%.48s%x%x", OP_DUP, OP_HASH160, 20, &b58_decode_hex[2], OP_EQUALVERIFY, OP_CHECKSIG);
+    sprintf(tmp, "%02x%02x%02x%.40s%02x%02x", OP_DUP, OP_HASH160, 20, &b58_decode_hex[2], OP_EQUALVERIFY, OP_CHECKSIG);
     return tmp;
 }
 

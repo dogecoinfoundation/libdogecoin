@@ -827,9 +827,14 @@ void test_tx_sighash_ext()
         dogecoin_tx* tx_sighash = dogecoin_tx_new();
         dogecoin_tx_deserialize(tx_data_sighash, outlen_sighash, tx_sighash, NULL);
 
+        free(tx_data_sighash);
+
         uint8_t* script_data=dogecoin_uint8_vla(strlen(txvalid_sighash[i].script) / 2);
         utils_hex_to_bin(txvalid_sighash[i].script, script_data, strlen(txvalid_sighash[i].script), &outlen_sighash);
         cstring* str = cstr_new_buf(script_data, outlen_sighash);
+        
+        free(script_data);
+        
         uint256 hash;
         dogecoin_tx_sighash(tx_sighash, str, txvalid_sighash[i].i, SIGHASH_ALL, hash);
 
@@ -861,6 +866,9 @@ void test_tx_sighash()
         uint8_t* script_data=dogecoin_uint8_vla(strlen(test->script) / 2);
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
+        
+        free(script_data);
+        
         uint256 sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, sighash);
@@ -1000,6 +1008,7 @@ void test_script_parse()
 
     u_assert_str_eq(hexbuf, "01000000000100ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac00000000");
     cstr_free(txser, true);
+    free(hexbuf);
 
     uint256 txhash;
     dogecoin_tx_hash(tx, txhash);
@@ -1019,6 +1028,8 @@ void test_script_parse()
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf2);
     u_assert_str_eq(hexbuf2, "01000000000200ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088ac00000000");
 
+    free(hexbuf2);
+    
     dogecoin_tx_hash(tx, txhash);
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
     utils_reverse_hex(txhashhex, 64);
@@ -1035,6 +1046,8 @@ void test_script_parse()
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf3);
     u_assert_str_eq(hexbuf3, "01000000000300ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088aceafc3e340000000017a914f763f798ede75a6ebf4e061b9e68ddb6df0442928700000000");
 
+    free(hexbuf3);
+    
     cstr_free(txser, true);
 
     dogecoin_tx_add_address_out(tx, &dogecoin_chainparams_regtest, 100000000, "dcrt1qfupfj4yx83dz8vhcpcahhxyg4sfqr8pvx8l6l2");
@@ -1044,6 +1057,8 @@ void test_script_parse()
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf4);
     u_assert_str_eq(hexbuf4, "01000000000300ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088aceafc3e340000000017a914f763f798ede75a6ebf4e061b9e68ddb6df0442928700000000");
     cstr_free(txser, true);
+    free(hexbuf4);
+    
 
     vector_free(pubkeys, true);
     dogecoin_tx_free(tx);
@@ -1087,7 +1102,8 @@ void test_script_parse()
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf5);
     // TODO: test
     cstr_free(txser, true);
-
+    free(hexbuf5);
+    
     dogecoin_tx_free(tx);
 }
 
@@ -1107,6 +1123,7 @@ void test_script_op_codeseperator()
     char* hexbuf=dogecoin_char_vla(new_script->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)new_script->str, new_script->len, hexbuf);
     assert(strcmp(hexbuf, scripthexGoal) == 0);
+    free(hexbuf);
     cstr_free(new_script, true);
     cstr_free(script, true);
 }
@@ -1152,12 +1169,16 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     uint8_t* expected_tx_signed_data=dogecoin_uint8_vla(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
 
+    free(expected_tx_signed_data);
+    free(script_data);
+
     dogecoin_key pkey;
     dogecoin_privkey_init(&pkey);
     dogecoin_privkey_decode_wif(pkey_wif, &dogecoin_chainparams_regtest, &pkey);
 
     dogecoin_tx_deserialize(tx_data, outlen, tx, NULL);
 
+    free(tx_data);
 
     uint8_t sigcomp[64] = {0};
     uint8_t sigder[76] = {0};
@@ -1165,6 +1186,8 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     dogecoin_tx_sign_input(tx, script, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);
 
+    free(expected_sigder_data);
+    
     cstring* tx_ser = cstr_new_sz(1024);
     dogecoin_tx_serialize(tx_ser, tx);
 
@@ -1190,6 +1213,9 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     int outlen;
     uint8_t* tx_data=dogecoin_uint8_vla(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
+    
+    free(tx_data);
+    
     uint8_t* script_data=dogecoin_uint8_vla(strlen(script_hex_correct) / 2);
     utils_hex_to_bin(script_hex_correct, script_data, strlen(script_hex_correct), &outlen);
     cstring* script = cstr_new_buf(script_data, outlen);
@@ -1200,6 +1226,9 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     utils_hex_to_bin(expected_sigder, expected_sigder_data, strlen(expected_sigder), &outlen);
     uint8_t* expected_tx_signed_data=dogecoin_uint8_vla(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
+
+    free(script_data);
+    free(script_data_wrong);
 
     dogecoin_key pkey;
     dogecoin_privkey_init(&pkey);
@@ -1216,6 +1245,8 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     u_assert_int_eq(res, DOGECOIN_SIGN_OK);
     //u_assert_mem_eq(sigcomp, expected_sigcomp_data, 64);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);
+    
+    free(expected_sigder_data);
 
     cstring* tx_ser = cstr_new_sz(1024);
     dogecoin_tx_serialize(tx_ser, tx);
@@ -1223,7 +1254,10 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     char* hexbuf=dogecoin_char_vla(tx_ser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
-
+    
+    free(expected_tx_signed_data);
+    free(hexbuf);
+    
     cstr_free(tx_ser, true);
     cstr_free(script, true);
     cstr_free(script_wrong, true);

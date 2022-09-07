@@ -61,7 +61,7 @@ void test_op_return() {
     dogecoin_script_append_op(tx_out->script_pubkey, OP_RETURN);
     tx_out->value = 0;
     cstr_append_buf(tx_out->script_pubkey, script_data, outlen);
-    
+    free(script_data);
     /* adding a new output to the transaction. */
     vector_add(tx->transaction->vout, tx_out);
     remove_all();

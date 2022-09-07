@@ -157,6 +157,7 @@ int koinu_to_coins_str(uint64_t koinu, char* str) {
             } else str[i] = '0';
         }
         for (; i < 10; i++, j++) str[i] = swap[j];
+        free(swap);
     } else {
         char tmp[21];
         string(koinu, tmp);
