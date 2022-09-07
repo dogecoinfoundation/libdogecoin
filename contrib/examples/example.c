@@ -9,7 +9,10 @@
 // Example of how to use libdogecoin API functions:
 // gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
 
-
+//(or in the case of this project's directory structure, and if you want to build statically):
+//(after build, from the /libdogecoin project root directory)
+//gcc ./contrib/examples/example.c ./.libs/libdogecoin.a -I./include/dogecoin -L./.libs -ldogecoin -o example
+//then run 'example'. 
 
 int main() {
 	dogecoin_ecc_start();
@@ -39,6 +42,7 @@ int main() {
 		printf("Error occurred 2.\n");
 		return -1;
 	}
+
 
 	if (generateDerivedHDPubkey((const char*)wif_master_privkey, (char*)p2pkh_child_pubkey)) {
 		printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_child_pubkey);
