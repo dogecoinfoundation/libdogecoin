@@ -64,8 +64,8 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
 {
     /* internal variables */
 
-    char wif_privkey_internal[53];
-    char p2pkh_pubkey_internal[35];
+    char wif_privkey_internal[53]; //MLUMIN: Keylength (51 or 52 chars, depending on uncompressed or compressed) +1 for string termination 'internally'? 
+    char p2pkh_pubkey_internal[35]; //MLUMIN: no magic numbers. p2pkh address should be 34 characters, +1 though for string termination 'internally'?
     size_t privkey_len = sizeof(wif_privkey_internal);
 
 
