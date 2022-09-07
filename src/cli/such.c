@@ -698,8 +698,9 @@ int main(int argc, char* argv[])
     if (strcmp(cmd, "generate_public_key") == 0) {
         /* output compressed hex pubkey from hex privkey */
 
-        size_t sizeout = 128;
-        char pubkey_hex[sizeout];
+        char pubkey_hex[128];
+        size_t sizeout = sizeof(pubkey_hex);
+
         if (!pkey)
             return showError(pkey_error);
         if (!pubkey_from_privatekey(chain, pkey, pubkey_hex, &sizeout))
@@ -712,17 +713,17 @@ int main(int argc, char* argv[])
         printf("public key hex: %s\n", pubkey_hex);
 
         /* give out p2pkh address */
-        char address_p2pkh[sizeout];
+        char* address_p2pkh=dogecoin_char_vla(sizeout);
         addresses_from_pubkey(chain, pubkey_hex, address_p2pkh);
         printf("p2pkh address: %s\n", address_p2pkh);
 
         /* clean memory */
         dogecoin_mem_zero(pubkey_hex, strlen(pubkey_hex));
         dogecoin_mem_zero(address_p2pkh, strlen(address_p2pkh));
+        free(address_p2pkh);
     /* Creating a new address from a public key. */
     } else if (strcmp(cmd, "p2pkh") == 0) {
-        size_t sizeout = 128;
-        char address_p2pkh[sizeout];
+        char address_p2pkh[128];
         if (!pubkey)
             return showError("Missing public key (use -k)");
         if (!addresses_from_pubkey(chain, pubkey, address_p2pkh))
@@ -733,23 +734,21 @@ int main(int argc, char* argv[])
         dogecoin_mem_zero(address_p2pkh, strlen(address_p2pkh));
     /* Generating a new private key and printing it out. */
     } else if (strcmp(cmd, "generate_private_key") == 0) {
-        size_t sizeout = 128;
-        char newprivkey_wif[sizeout];
-        char newprivkey_hex[sizeout];
+        char newprivkey_wif[128];
+        char newprivkey_hex[128];
 
         /* generate a new private key */
-        gen_privatekey(chain, newprivkey_wif, sizeout, newprivkey_hex);
+        gen_privatekey(chain, newprivkey_wif, sizeof(newprivkey_wif), newprivkey_hex);
         printf("private key wif: %s\n", newprivkey_wif);
         printf("private key hex: %s\n", newprivkey_hex);
         dogecoin_mem_zero(newprivkey_wif, strlen(newprivkey_wif));
         dogecoin_mem_zero(newprivkey_hex, strlen(newprivkey_hex));
     /* Generating a new master key. */
     } else if (strcmp(cmd, "bip32_extended_master_key") == 0) {
-        size_t sizeout = 128;
-        char masterkey[sizeout];
+        char masterkey[128];
 
         /* generate a new hd master key */
-        hd_gen_master(chain, masterkey, sizeout);
+        hd_gen_master(chain, masterkey, sizeof(masterkey));
         printf("bip32 extended master key: %s\n", masterkey);
         dogecoin_mem_zero(masterkey, strlen(masterkey));
     } else if (strcmp(cmd, "print_keys") == 0) {
@@ -763,8 +762,7 @@ int main(int argc, char* argv[])
             return showError("no extended key (-p)");
         if (!derived_path)
             return showError("no derivation path (-m)");
-        size_t sizeout = 128;
-        char newextkey[sizeout];
+        char newextkey[128];
 
         //check if we derive a range of keys
         unsigned int maxlen = 1024;
@@ -815,21 +813,27 @@ int main(int argc, char* argv[])
 
         if (end > -1 && from <= to) {
             for (i = from; i <= to; i++) {
-                char keypathnew[strlen(derived_path)+16];
+                char* keypathnew=dogecoin_char_vla(strlen(derived_path) + 16);
                 memcpy_safe(keypathnew, derived_path, posanum-1);
                 char index[11] = {0};
                 sprintf(index, "%lld", (long long)i);
                 memcpy_safe(keypathnew+posanum-1, index, strlen(index));
                 memcpy_safe(keypathnew+posanum-1+strlen(index), &derived_path[end], strlen(derived_path)-end);
 
-                if (!hd_derive(chain, pkey, keypathnew, newextkey, sizeout))
+                if (!hd_derive(chain, pkey, keypathnew, newextkey, sizeof(newextkey)))
+                {
+                    free(keypathnew);
                     return showError("Deriving child key failed\n");
+                }
                 else
+                {
+                    free(keypathnew);
                     hd_print_node(chain, newextkey);
+                }
             }
         }
         else {
-            if (!hd_derive(chain, pkey, derived_path, newextkey, sizeout))
+            if (!hd_derive(chain, pkey, derived_path, newextkey, sizeof(newextkey)))
                 return showError("Deriving child key failed\n");
             else
                 hd_print_node(chain, newextkey);
@@ -862,9 +866,10 @@ int main(int argc, char* argv[])
             return showError("Inputindex out of range");
             }
 
-        uint8_t script_data[strlen(scripthex) / 2 + 1];
+        uint8_t* script_data=dogecoin_uint8_vla(strlen(scripthex) / 2 + 1);
         utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
+        free(script_data); 
 
         uint256 sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
@@ -922,10 +927,11 @@ int main(int argc, char* argv[])
             cstring* signed_tx = cstr_new_sz(1024);
             dogecoin_tx_serialize(signed_tx, tx);
 
-            char signed_tx_hex[signed_tx->len * 2 + 1];
+            char* signed_tx_hex=dogecoin_char_vla(signed_tx->len * 2 + 1);
             utils_bin_to_hex((unsigned char*)signed_tx->str, signed_tx->len, signed_tx_hex);
             printf("signed TX: %s\n", signed_tx_hex);
             cstr_free(signed_tx, true);
+            free(signed_tx_hex);
             }
         dogecoin_tx_free(tx);
         }
@@ -936,17 +942,18 @@ int main(int argc, char* argv[])
             }
 
         int outlen = 0;
-        uint8_t sig_comp[strlen(scripthex) / 2 + 1];
+        uint8_t sig_comp[65];
         printf("%s\n", scripthex);
-        utils_hex_to_bin(scripthex, sig_comp, strlen(scripthex), &outlen);
+        utils_hex_to_bin(scripthex, sig_comp, 128, &outlen);
 
         unsigned char sigder[74];
-        size_t sigderlen = 74;
+        size_t sigderlen = sizeof(sigder);
 
         dogecoin_ecc_compact_to_der_normalized(sig_comp, sigder, &sigderlen);
-        char hexbuf[sigderlen * 2 + 1];
+        char* hexbuf=dogecoin_char_vla(sigderlen * 2 + 1);
         utils_bin_to_hex(sigder, sigderlen, hexbuf);
         printf("DER: %s\n", hexbuf);
+        free(hexbuf);
         }
     else if (strcmp(cmd, "bip32maintotest") == 0) { /* Creating a bip32 master key from a private key. */
         dogecoin_hdnode node;

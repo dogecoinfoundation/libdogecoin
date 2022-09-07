@@ -822,21 +822,26 @@ void test_tx_sighash_ext()
     unsigned int i;
     for (i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
         int outlen_sighash = 0;
-        uint8_t tx_data_sighash[strlen(txvalid_sighash[i].sertx) / 2];
+        uint8_t* tx_data_sighash=dogecoin_uint8_vla(strlen(txvalid_sighash[i].sertx) / 2);
         utils_hex_to_bin(txvalid_sighash[i].sertx, tx_data_sighash, strlen(txvalid_sighash[i].sertx), &outlen_sighash);
         dogecoin_tx* tx_sighash = dogecoin_tx_new();
         dogecoin_tx_deserialize(tx_data_sighash, outlen_sighash, tx_sighash, NULL);
 
-        uint8_t script_data[strlen(txvalid_sighash[i].script) / 2];
+        free(tx_data_sighash);
+
+        uint8_t* script_data=dogecoin_uint8_vla(strlen(txvalid_sighash[i].script) / 2);
         utils_hex_to_bin(txvalid_sighash[i].script, script_data, strlen(txvalid_sighash[i].script), &outlen_sighash);
         cstring* str = cstr_new_buf(script_data, outlen_sighash);
+        
+        free(script_data);
+        
         uint256 hash;
         dogecoin_tx_sighash(tx_sighash, str, txvalid_sighash[i].i, SIGHASH_ALL, hash);
 
         dogecoin_tx_free(tx_sighash);
         cstr_free(str, true);
  
-        char sighash_hex[64];
+        char sighash_hex[sizeof(hash) * 2 + 1];
         memset(sighash_hex, 0, sizeof(sighash_hex));
         utils_bin_to_hex(hash, sizeof(hash), sighash_hex);
         utils_reverse_hex(sighash_hex, strlen(sighash_hex));
@@ -858,9 +863,12 @@ void test_tx_sighash()
         dogecoin_tx* tx = dogecoin_tx_new();
         dogecoin_tx_deserialize(tx_data, outlen, tx, NULL);
 
-        uint8_t script_data[strlen(test->script) / 2];
+        uint8_t* script_data=dogecoin_uint8_vla(strlen(test->script) / 2);
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
+        
+        free(script_data);
+        
         uint256 sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, sighash);
@@ -875,9 +883,9 @@ void test_tx_sighash()
 
         cstr_free(script, true);
 
-        char hexbuf[sizeof(sighash) * 2];
+        char hexbuf[sizeof(sighash) * 2 + 1];
         utils_bin_to_hex(sighash, sizeof(sighash), hexbuf);
-        utils_reverse_hex(hexbuf, sizeof(hexbuf));
+        utils_reverse_hex(hexbuf, strlen(hexbuf));
 
         assert(memcmp(hexbuf, test->hashhex, sizeof(test->hashhex) - 1) == 0);
 
@@ -1000,15 +1008,16 @@ void test_script_parse()
     cstring* txser = cstr_new_sz(1024);
     dogecoin_tx_serialize(txser, tx);
 
-    char hexbuf[txser->len * 2 + 1];
+    char* hexbuf=dogecoin_char_vla(txser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf);
 
     u_assert_str_eq(hexbuf, "01000000000100ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac00000000");
     cstr_free(txser, true);
+    free(hexbuf);
 
     uint256 txhash;
     dogecoin_tx_hash(tx, txhash);
-    char txhashhex[sizeof(txhash) * 2];
+    char txhashhex[sizeof(txhash) * 2 + 1];
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
     utils_reverse_hex(txhashhex, strlen(txhashhex));
 
@@ -1020,12 +1029,14 @@ void test_script_parse()
 
     txser = cstr_new_sz(1024);
     dogecoin_tx_serialize(txser, tx);
-    char hexbuf2[txser->len * 2 + 1];
+    char* hexbuf2=dogecoin_char_vla(txser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf2);
     u_assert_str_eq(hexbuf2, "01000000000200ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088ac00000000");
 
+    free(hexbuf2);
+    
     dogecoin_tx_hash(tx, txhash);
-    utils_bin_to_hex((unsigned char*)txhash, 32, txhashhex);
+    utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
     utils_reverse_hex(txhashhex, 64);
 
     u_assert_str_eq(txhashhex, "6a56c7415dc6e3695b4b6b27bdfec5124ed70e0a615d5aa0d8cf0b5e8b72fd76");
@@ -1036,27 +1047,30 @@ void test_script_parse()
     dogecoin_tx_add_address_out(tx, &dogecoin_chainparams_regtest, 876543210, "2NFoJeWNrABZQ3YCWdbX9wGEnRge7kDeGzQ");
     txser = cstr_new_sz(1024);
     dogecoin_tx_serialize(txser, tx);
-    char hexbuf3[txser->len * 2 + 1];
+    char* hexbuf3=dogecoin_char_vla(txser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf3);
     u_assert_str_eq(hexbuf3, "01000000000300ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088aceafc3e340000000017a914f763f798ede75a6ebf4e061b9e68ddb6df0442928700000000");
 
+    free(hexbuf3);
+    
     cstr_free(txser, true);
 
     dogecoin_tx_add_address_out(tx, &dogecoin_chainparams_regtest, 100000000, "dcrt1qfupfj4yx83dz8vhcpcahhxyg4sfqr8pvx8l6l2");
     txser = cstr_new_sz(1024);
     dogecoin_tx_serialize(txser, tx);
-    char hexbuf4[txser->len * 2 + 1];
+    char* hexbuf4=dogecoin_char_vla(txser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf4);
     u_assert_str_eq(hexbuf4, "01000000000300ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088aceafc3e340000000017a914f763f798ede75a6ebf4e061b9e68ddb6df0442928700000000");
     cstr_free(txser, true);
+    free(hexbuf4);
+    
 
     vector_free(pubkeys, true);
     dogecoin_tx_free(tx);
 
     // op_return test
-    size_t masterkeysize = 200;
-    char masterkey[masterkeysize];
-    u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, masterkeysize), true);
+    char masterkey[200];
+    u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, sizeof(masterkey)), true);
 
     dogecoin_hdnode node;
     u_assert_int_eq(dogecoin_hdnode_deserialize(masterkey, &dogecoin_chainparams_main, &node), true);
@@ -1089,11 +1103,12 @@ void test_script_parse()
 
     txser = cstr_new_sz(1024);
     dogecoin_tx_serialize(txser, tx);
-    char hexbuf5[txser->len * 2 + 1];
+    char* hexbuf5=dogecoin_char_vla(txser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf5);
     // TODO: test
     cstr_free(txser, true);
-
+    free(hexbuf5);
+    
     dogecoin_tx_free(tx);
 }
 
@@ -1110,9 +1125,10 @@ void test_script_op_codeseperator()
     cstring* new_script = cstr_new_sz(script->len);
     dogecoin_script_copy_without_op_codeseperator(script, new_script);
 
-    char hexbuf[new_script->len * 2 + 1];
+    char* hexbuf=dogecoin_char_vla(new_script->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)new_script->str, new_script->len, hexbuf);
     assert(strcmp(hexbuf, scripthexGoal) == 0);
+    free(hexbuf);
     cstr_free(new_script, true);
     cstr_free(script, true);
 }
@@ -1148,15 +1164,18 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     int inputindex = 0;
 
     int outlen;
-    uint8_t tx_data[strlen(tx_hex) / 2];
+    uint8_t* tx_data=dogecoin_uint8_vla(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
-    uint8_t script_data[strlen(script_hex) / 2];
+    uint8_t* script_data=dogecoin_uint8_vla(strlen(script_hex) / 2);
     utils_hex_to_bin(script_hex, script_data, strlen(script_hex), &outlen);
     cstring* script = cstr_new_buf(script_data, outlen);
-    uint8_t expected_sigder_data[strlen(expected_sigder) / 2];
+    uint8_t* expected_sigder_data=dogecoin_uint8_vla(strlen(expected_sigder) / 2);
     utils_hex_to_bin(expected_sigder, expected_sigder_data, strlen(expected_sigder), &outlen);
-    uint8_t expected_tx_signed_data[strlen(expected_tx_signed) / 2];
+    uint8_t* expected_tx_signed_data=dogecoin_uint8_vla(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
+
+    free(expected_tx_signed_data);
+    free(script_data);
 
     dogecoin_key pkey;
     dogecoin_privkey_init(&pkey);
@@ -1164,6 +1183,7 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
 
     dogecoin_tx_deserialize(tx_data, outlen, tx, NULL);
 
+    free(tx_data);
 
     uint8_t sigcomp[64] = {0};
     uint8_t sigder[76] = {0};
@@ -1171,13 +1191,16 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     dogecoin_tx_sign_input(tx, script, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);
 
+    free(expected_sigder_data);
+    
     cstring* tx_ser = cstr_new_sz(1024);
     dogecoin_tx_serialize(tx_ser, tx);
 
-    char hexbuf[tx_ser->len * 2 + 1];
+    char* hexbuf=dogecoin_char_vla(tx_ser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
 
+    free(hexbuf);
     cstr_free(tx_ser, true);
     cstr_free(script, true);
 }
@@ -1194,18 +1217,24 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     int inputindex = 1;
 
     int outlen;
-    uint8_t tx_data[strlen(tx_hex) / 2];
+    uint8_t* tx_data=dogecoin_uint8_vla(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
-    uint8_t script_data[strlen(script_hex_correct) / 2];
+    
+    free(tx_data);
+    
+    uint8_t* script_data=dogecoin_uint8_vla(strlen(script_hex_correct) / 2);
     utils_hex_to_bin(script_hex_correct, script_data, strlen(script_hex_correct), &outlen);
     cstring* script = cstr_new_buf(script_data, outlen);
-    uint8_t script_data_wrong[strlen(script_hex_wrong) / 2];
+    uint8_t* script_data_wrong=dogecoin_uint8_vla(strlen(script_hex_wrong) / 2);
     utils_hex_to_bin(script_hex_wrong, script_data_wrong, strlen(script_hex_wrong), &outlen);
     cstring* script_wrong = cstr_new_buf(script_data_wrong, outlen);
-    uint8_t expected_sigder_data[strlen(expected_sigder) / 2];
+    uint8_t* expected_sigder_data=dogecoin_uint8_vla(strlen(expected_sigder) / 2);
     utils_hex_to_bin(expected_sigder, expected_sigder_data, strlen(expected_sigder), &outlen);
-    uint8_t expected_tx_signed_data[strlen(expected_tx_signed) / 2];
+    uint8_t* expected_tx_signed_data=dogecoin_uint8_vla(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
+
+    free(script_data);
+    free(script_data_wrong);
 
     dogecoin_key pkey;
     dogecoin_privkey_init(&pkey);
@@ -1222,14 +1251,19 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     u_assert_int_eq(res, DOGECOIN_SIGN_OK);
     //u_assert_mem_eq(sigcomp, expected_sigcomp_data, 64);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);
+    
+    free(expected_sigder_data);
 
     cstring* tx_ser = cstr_new_sz(1024);
     dogecoin_tx_serialize(tx_ser, tx);
 
-    char hexbuf[tx_ser->len * 2 + 1];
+    char* hexbuf=dogecoin_char_vla(tx_ser->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
-
+    
+    free(expected_tx_signed_data);
+    free(hexbuf);
+    
     cstr_free(tx_ser, true);
     cstr_free(script, true);
     cstr_free(script_wrong, true);

@@ -182,7 +182,7 @@ dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodes
     }
     printf("depth:               %d\n", node.depth);
     printf("child index:         %d\n", node.child_num);
-    char addr[34];
+    char addr[34 + 1];
     addresses_from_pubkey(&dogecoin_chainparams_main, str, addr);
     printf("p2pkh address:       %s\n", addr);
     return true;

@@ -210,6 +210,7 @@ char* utils_uint8_to_hex(const uint8_t* bin, size_t l)
     if (l > (TO_UINT8_HEX_BUF_LEN / 2 - 1)) {
         return NULL;
     }
+
     dogecoin_mem_zero(buffer_uint8_to_hex, TO_UINT8_HEX_BUF_LEN);
     for (i = 0; i < l; i++) {
         buffer_uint8_to_hex[i * 2] = digits[(bin[i] >> 4) & 0xF];

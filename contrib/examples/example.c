@@ -2,22 +2,35 @@
 #include <stdio.h>
 #include <string.h>
 
+//#define PRIVKEYWIFLEN 51 //WIF length for uncompressed keys is 51 and should start with Q. This can be 52 also for compressed keys. 53 internally to lib (+stringterm)
+#define PRIVKEYWIFLEN 53 //Function takes 53 but needs to be fixed to take 51.
+
+//#define MASTERKEYLEN 111 //should be chaincode + privkey; starts with dgpv51eADS3spNJh8 or dgpv51eADS3spNJh9 (112 internally including stringterm? often 128. check this.)
+#define MASTERKEYLEN 128 // Function expects 128 but needs to be fixed to take 111.
+
+//#define PUBKEYLEN 34 //our mainnet addresses are 34 chars if p2pkh and start with D.  Internally this is cited as 35 for strings that represent it because +stringterm.
+#define PUBKEYLEN 35 // Function expects 35, but needs to be fixed to take 34.
+
+
 // Example of how to use libdogecoin API functions:
 // gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
+
+//(or in the case of this project's directory structure, and if you want to build statically):
+//(after build, from the /libdogecoin project root directory)
+//gcc ./contrib/examples/example.c ./.libs/libdogecoin.a -I./include/dogecoin -L./.libs -ldogecoin -o example
+//then run 'example'. 
 
 int main() {
 	dogecoin_ecc_start();
 
 	// CALLING ADDRESS FUNCTIONS
 	// create variables
-	size_t privkeywiflen = 53;
-	size_t masterkeylen = 200;
-    size_t pubkeylen = 35;
-	char wif_privkey[privkeywiflen];
-	char p2pkh_pubkey[pubkeylen];
-	char wif_master_privkey[masterkeylen];
-	char p2pkh_master_pubkey[pubkeylen];
-	char p2pkh_child_pubkey[pubkeylen];
+	
+	char wif_privkey[PRIVKEYWIFLEN];
+	char p2pkh_pubkey[PUBKEYLEN];
+	char wif_master_privkey[MASTERKEYLEN];
+	char p2pkh_master_pubkey[PUBKEYLEN];
+	char p2pkh_child_pubkey[PUBKEYLEN];
 	
 	// keypair generation
 	if (generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
@@ -35,6 +48,7 @@ int main() {
 		printf("Error occurred 2.\n");
 		return -1;
 	}
+
 
 	if (generateDerivedHDPubkey((const char*)wif_master_privkey, (char*)p2pkh_child_pubkey)) {
 		printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_child_pubkey);

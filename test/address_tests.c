@@ -15,14 +15,12 @@
 void test_address()
 {
     /* initialize testing variables for simple keypair gen */
-    size_t privkeywiflen = 53;
-    size_t p2pkhpubkeylen = 35;
-    char privkeywif_main[privkeywiflen];
-    char privkeywif_test[privkeywiflen];
-    char p2pkh_pubkey_main[p2pkhpubkeylen];
-    char p2pkh_pubkey_test[p2pkhpubkeylen];
-    dogecoin_mem_zero(privkeywif_main, privkeywiflen);
-    dogecoin_mem_zero(privkeywif_test, privkeywiflen);
+    char privkeywif_main[53];
+    char privkeywif_test[53];
+    char p2pkh_pubkey_main[35];
+    char p2pkh_pubkey_test[35];
+    dogecoin_mem_zero(privkeywif_main, sizeof(privkeywif_main));
+    dogecoin_mem_zero(privkeywif_test, sizeof(privkeywif_test));
     // test generation ability
     u_assert_int_eq(generatePrivPubKeypair(privkeywif_main, NULL, false), true)
     u_assert_int_eq(generatePrivPubKeypair(privkeywif_main, p2pkh_pubkey_main, false), true)
@@ -53,10 +51,11 @@ void test_address()
     /* initialize testing variables for hd keypair gen */
     size_t masterkeylen = 200;
     size_t pubkeylen = 35;
-    char masterkey_main[masterkeylen];
-    char masterkey_test[masterkeylen];
-    char p2pkh_master_pubkey_main[pubkeylen];
-    char p2pkh_master_pubkey_test[pubkeylen];
+
+    char* masterkey_main = dogecoin_char_vla(masterkeylen);
+    char* masterkey_test=dogecoin_char_vla(masterkeylen);
+    char* p2pkh_master_pubkey_main=dogecoin_char_vla(pubkeylen);
+    char* p2pkh_master_pubkey_test=dogecoin_char_vla(pubkeylen);
     dogecoin_mem_zero(masterkey_main, masterkeylen);
     dogecoin_mem_zero(masterkey_test, masterkeylen);
     dogecoin_mem_zero(p2pkh_master_pubkey_main, pubkeylen);
@@ -86,10 +85,10 @@ void test_address()
 
 
     /* initialize testing variables for derived pubkeys */
-    char child_key_main[masterkeylen];
-    char child_key_test[masterkeylen];
-    char str[pubkeylen];
 
+    char* child_key_main=dogecoin_char_vla(masterkeylen);
+    char* child_key_test=dogecoin_char_vla(masterkeylen);
+    char* str=dogecoin_char_vla(pubkeylen);
     /* test child key derivation ability */
     u_assert_int_eq(generateDerivedHDPubkey(masterkey_main, NULL), true)
     u_assert_int_eq(generateDerivedHDPubkey(NULL, NULL), false)
@@ -105,4 +104,13 @@ void test_address()
     u_assert_int_eq(verifyHDMasterPubKeypair(masterkey_test, child_key_test, true), true);
     u_assert_int_eq(verifyP2pkhAddress(child_key_main, strlen(child_key_main)), true);
     u_assert_int_eq(verifyP2pkhAddress(child_key_test, strlen(child_key_test)), true);
+    
+    /*free up VLAs*/
+    free(masterkey_main);
+    free(masterkey_test);
+    free(p2pkh_master_pubkey_main);
+    free(p2pkh_master_pubkey_test);
+    free(child_key_main);
+    free(child_key_test);
+    free(str);
 }
