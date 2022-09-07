@@ -41,7 +41,8 @@ void test_tool()
     u_assert_str_eq(privkeyhex, privkey_hex_or_null);
 
     free(privkey_data);
-
+    free(privkeywif);
+    
     size_t masterkeysize = 200;
     char* masterkey=dogecoin_char_vla(masterkeysize);
     u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, masterkeysize), true);

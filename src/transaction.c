@@ -520,6 +520,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
     uint256 sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
+    free(script_data);
 
     dogecoin_tx_sighash(txtmp, script, inputindex, sighashtype, sighash);
 
@@ -576,6 +577,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         printf("signed TX: %s\n", incomingrawtx);
         cstr_free(signed_tx, true);
         dogecoin_tx_free(txtmp);
+        free(signed_tx_hex);
     }
     return true;
 }
