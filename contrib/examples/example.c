@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PRIVKEYWIFLEN 53
-#define MASTERKEYLEN 200
-#define PUBKEYLEN 35
+#define PRIVKEYWIFLEN 51 //WIF length for uncompressed keys is 51 and should start with Q
+#define MASTERKEYLEN 111 //should be chaincode + privkey; starts with dgpv51eADS3spNJh8 or dgpv51eADS3spNJh9
+#define PUBKEYLEN 34 //our mainnet addresses are 34 chars if p2pkh and start with D
 
 // Example of how to use libdogecoin API functions:
 // gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
