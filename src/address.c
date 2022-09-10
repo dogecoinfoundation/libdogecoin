@@ -26,6 +26,7 @@
  */
 
 #include <assert.h>
+#include <inttypes.h>
 #ifdef HAVE_CONFIG_H
 #  include "libdogecoin-config.h"
 #endif
@@ -313,4 +314,71 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len)
     }
     free(dec);
     return true;
+}
+
+/**
+ * @brief This function generates a derived child key from a masterkey using
+ * a custom derived path in string format.
+ * 
+ * @param masterkey The master key from which children are derived from.
+ * @param derived_path The path to derive an address from according to BIP-44.
+ * e.g. m/44h/3h/1/1/1 representing m/44h/3h/account/ischange/index
+ * @param outaddress The derived address.
+ * @param outprivkey The boolean value used to derive either a public or 
+ * private address. 'true' for private, 'false' for public
+ * 
+ * @return 1 if a derived address was successfully generated, 0 otherwise
+ */
+int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
+    if (!masterkey || !derived_path || !outaddress) {
+        debug_print("%s", "missing input\n");
+        return false;
+    }
+
+    debug_print("derived_path: %s\n", derived_path);
+    /* determine if mainnet or testnet/regtest */
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
+    bool ret = true;
+    dogecoin_hdnode node, nodenew;
+    if (!dogecoin_hdnode_deserialize(masterkey, chain, &node)) ret = false;
+    /* derive child key, use pubckd or privckd */
+    if (!dogecoin_hd_generate_key(&nodenew, derived_path, outprivkey ? node.private_key : node.public_key, node.chain_code, !outprivkey)) ret = false;
+    if (outprivkey) dogecoin_hdnode_serialize_private(&nodenew, chain, outaddress, 200);
+    else dogecoin_hdnode_serialize_public(&nodenew, chain, outaddress, 200);
+    return ret;
+}
+
+/**
+ * @brief This function generates a derived child address from a masterkey using
+ * a BIP44 standardized static, non hardened path comprised of an account, a change or
+ * receiving address and an address index.
+ * 
+ * @param masterkey The master key from which children are derived from.
+ * @param account The account that the derived address would belong to.
+ * @param ischange Boolean value representing either a change or receiving address.
+ * @param addressindex The index of the receiving/change address per account.
+ * @param outaddress The derived address.
+ * @param outprivkey The boolean value used to derive either a public or 
+ * private address. 'true' for private, 'false' for public
+ * 
+ * @return 1 if a derived address was successfully generated, 0 otherwise.
+ */
+int getDerivedHDAddress(char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey) {
+        if (!masterkey) {
+            debug_print("%s", "no extended key\n");
+            return false;
+        }
+        char* account_str = dogecoin_char_vla(sizeof(account));
+        char* addressindex_str = dogecoin_char_vla(sizeof(addressindex));
+        char* ischange_str = ischange ? "1" : "0";
+        char* derived_path = dogecoin_char_vla(strlen("m/44/3/") + strlen(account_str) + strlen(addressindex_str) + strlen(ischange_str));
+        snprintf(account_str, strlen(account_str), "%"PRIu32, account);
+        snprintf(addressindex_str, strlen(addressindex_str), "%"PRIu32, addressindex);
+        sprintf(derived_path, "m/44/3/%s/%s/%s", account_str, ischange_str, addressindex_str);
+        if (!derived_path) {
+            debug_print("%s", "no derivation path\n");
+            return false;
+        }
+        
+        return getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
 }
