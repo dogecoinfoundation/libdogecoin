@@ -125,7 +125,7 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
  */
 int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
 {
-    char hd_privkey_master[128];
+    char hd_privkey_master[112];
     char hd_pubkey_master[35];
 
     /* if nothing is passed use internal variables */
@@ -179,7 +179,7 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     /* determine address prefix for network chainparams */
     const dogecoin_chainparams* chain = chain_from_b58_prefix(wif_privkey_master);
 
-    char str[128];
+    char str[35];
 
     /* if nothing is passed in use internal variables */
     if (p2pkh_pubkey) {
@@ -227,7 +227,7 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
     dogecoin_privkey_decode_wif(wif_privkey, chain, &key);
     if (!dogecoin_privkey_is_valid(&key)) return false;
 
-    char new_wif_privkey[100];
+    char new_wif_privkey[53];
     size_t sizeout = sizeof(new_wif_privkey);
     dogecoin_privkey_encode_wif(&key, chain, new_wif_privkey, &sizeout);
 
@@ -273,7 +273,7 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
     /* calculate master pubkey from master privkey */
     dogecoin_hdnode node;
     dogecoin_hdnode_deserialize(wif_privkey_master, chain, &node);
-    char new_p2pkh_pubkey_master[128];
+    char new_p2pkh_pubkey_master[112];
     dogecoin_hdnode_get_p2pkh_address(&node, chain, new_p2pkh_pubkey_master, sizeof(new_p2pkh_pubkey_master));
 
     /* compare derived and given pubkeys */
