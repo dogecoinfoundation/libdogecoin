@@ -140,21 +140,21 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
 
     /* generate a new hd master key */
-    hd_gen_master(chain, hd_privkey_master, sizeof(hd_privkey_master));
+    if (!hd_gen_master(chain, hd_privkey_master, sizeof(hd_privkey_master))) {
+        return false;
+    }
 
-    generateDerivedHDPubkey(hd_privkey_master, hd_pubkey_master);
+    if (!generateDerivedHDPubkey(hd_privkey_master, hd_pubkey_master)) {
+        return false;
+    }
 
     if (wif_privkey_master) {
-        memcpy_safe(wif_privkey_master, hd_privkey_master, strlen(hd_privkey_master));
+        memcpy_safe(wif_privkey_master, hd_privkey_master, sizeof(hd_privkey_master));
     }
     if (p2pkh_pubkey_master) {
-        memcpy_safe(p2pkh_pubkey_master, hd_pubkey_master, strlen(hd_pubkey_master));
+        memcpy_safe(p2pkh_pubkey_master, hd_pubkey_master, sizeof(hd_pubkey_master));
     }
 
-    /* reset internal variables */
-    dogecoin_mem_zero(hd_privkey_master, strlen(hd_privkey_master));
-    dogecoin_mem_zero(hd_privkey_master, strlen(hd_privkey_master));
-    
     return true;
 }
 
