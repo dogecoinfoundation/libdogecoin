@@ -371,9 +371,9 @@ int getDerivedHDAddress(char* masterkey, uint32_t account, bool ischange, uint32
         char* account_str = dogecoin_char_vla(sizeof(account));
         char* addressindex_str = dogecoin_char_vla(sizeof(addressindex));
         char* ischange_str = ischange ? "1" : "0";
+        dogecoin_uitoa(account, account_str);
+        dogecoin_uitoa(addressindex, addressindex_str);
         char* derived_path = dogecoin_char_vla(strlen("m/44/3/") + strlen(account_str) + strlen(addressindex_str) + strlen(ischange_str));
-        snprintf(account_str, strlen(account_str), "%"PRIu32, account);
-        snprintf(addressindex_str, strlen(addressindex_str), "%"PRIu32, addressindex);
         sprintf(derived_path, "m/44/3/%s/%s/%s", account_str, ischange_str, addressindex_str);
         if (!derived_path) {
             debug_print("%s", "no derivation path\n");
