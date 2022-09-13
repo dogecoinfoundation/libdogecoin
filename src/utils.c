@@ -542,9 +542,9 @@ void dogecoin_str_reverse(char s[])
 }  
 
 /* itoa:  convert n to characters in s */
-void dogecoin_uitoa(uint32_t n, char s[])
+void dogecoin_uitoa(int n, char s[])
 {
-    uint32_t i, sign;
+    int i, sign;
 
     if ((sign = n) < 0)  /* record sign */
         n = -n;          /* make n positive */

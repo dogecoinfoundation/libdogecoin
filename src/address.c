@@ -335,14 +335,20 @@ int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, c
         return false;
     }
 
-    debug_print("derived_path: %s\n", derived_path);
     /* determine if mainnet or testnet/regtest */
     const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
     bool ret = true;
     dogecoin_hdnode node, nodenew;
-    if (!dogecoin_hdnode_deserialize(masterkey, chain, &node)) ret = false;
+    
+    if (!dogecoin_hdnode_deserialize(masterkey, chain, &node)) {
+        ret = false;
+    }
+    
     /* derive child key, use pubckd or privckd */
-    if (!dogecoin_hd_generate_key(&nodenew, derived_path, outprivkey ? node.private_key : node.public_key, node.chain_code, !outprivkey)) ret = false;
+    if (!dogecoin_hd_generate_key(&nodenew, derived_path, outprivkey ? node.private_key : node.public_key, node.chain_code, !outprivkey)) {
+        ret = false;
+    }
+
     if (outprivkey) dogecoin_hdnode_serialize_private(&nodenew, chain, outaddress, 200);
     else dogecoin_hdnode_serialize_public(&nodenew, chain, outaddress, 200);
     return ret;
@@ -371,14 +377,18 @@ int getDerivedHDAddress(char* masterkey, uint32_t account, bool ischange, uint32
         char* account_str = dogecoin_char_vla(sizeof(account));
         char* addressindex_str = dogecoin_char_vla(sizeof(addressindex));
         char* ischange_str = ischange ? "1" : "0";
-        dogecoin_uitoa(account, account_str);
-        dogecoin_uitoa(addressindex, addressindex_str);
-        char* derived_path = dogecoin_char_vla(strlen("m/44/3/") + strlen(account_str) + strlen(addressindex_str) + strlen(ischange_str));
+        dogecoin_uitoa((int)account, account_str);
+        dogecoin_uitoa((int)addressindex, addressindex_str);
+        char* derived_path = dogecoin_char_vla(strlen("m/44/3/") + strlen(account_str) + strlen(addressindex_str) + strlen(ischange_str) + 3);
         sprintf(derived_path, "m/44/3/%s/%s/%s", account_str, ischange_str, addressindex_str);
+        free(account_str);
+        free(addressindex_str);
         if (!derived_path) {
             debug_print("%s", "no derivation path\n");
             return false;
         }
         
-        return getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
+        int ret = getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
+        free(derived_path);
+        return ret;
 }
