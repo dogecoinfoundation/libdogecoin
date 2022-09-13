@@ -65,6 +65,7 @@ int main() {
 	}
 	else {
 		printf("Keypair (%s, %s) is not valid for mainnet 4.\n", wif_privkey, p2pkh_pubkey);
+		return -1;
 	}
 
 	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
@@ -72,6 +73,7 @@ int main() {
 	}
 	else {
 		printf("Keypair (%s, %s) is not valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
+		return -1;
 	}
 
 	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_child_pubkey, 0)) {
@@ -79,6 +81,7 @@ int main() {
 	}
 	else {
 		printf("Keypair (%s, %s) is not valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
+		return -1;
 	}
 	printf("\n\n");
 
@@ -88,6 +91,7 @@ int main() {
 	}
 	else {
 		printf("Address %s is not valid for mainnet 7.\n", p2pkh_pubkey);
+		return -1;
 	}
 
 	if (verifyP2pkhAddress(p2pkh_master_pubkey, strlen(p2pkh_master_pubkey))) {
@@ -95,6 +99,7 @@ int main() {
 	}
 	else {
 		printf("Address %s is not valid for mainnet 8.\n", p2pkh_master_pubkey);
+		return -1;
 	}
 
 	if (verifyP2pkhAddress(p2pkh_child_pubkey, strlen(p2pkh_child_pubkey))) {
@@ -102,6 +107,7 @@ int main() {
 	}
 	else {
 		printf("Address %s is not valid for mainnet 9.\n", p2pkh_child_pubkey);
+		return -1;
 	}
 	printf("\n\n");
 
@@ -161,6 +167,7 @@ int main() {
 	}
 	else {
 		printf("Error occurred.\n");
+		return -1;
 	}
 
 	dogecoin_ecc_stop();
