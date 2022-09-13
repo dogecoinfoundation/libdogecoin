@@ -26,7 +26,6 @@
  */
 
 #include <assert.h>
-#include <inttypes.h>
 #ifdef HAVE_CONFIG_H
 #  include "libdogecoin-config.h"
 #endif
