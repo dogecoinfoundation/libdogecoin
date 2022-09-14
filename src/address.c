@@ -49,6 +49,7 @@
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
 
+#define MAX_INT32_STRINGLEN 12
 
 /**
  * @brief This function generates a new basic public-private
@@ -321,7 +322,7 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len)
  * 
  * @param masterkey The master key from which children are derived from.
  * @param derived_path The path to derive an address from according to BIP-44.
- * e.g. m/44h/3h/1/1/1 representing m/44h/3h/account/ischange/index
+ * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
  * @param outaddress The derived address.
  * @param outprivkey The boolean value used to derive either a public or 
  * private address. 'true' for private, 'false' for public
@@ -368,25 +369,23 @@ int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, c
  * 
  * @return 1 if a derived address was successfully generated, 0 otherwise.
  */
-int getDerivedHDAddress(char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey) {
+int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey) {
         if (!masterkey) {
             debug_print("%s", "no extended key\n");
             return false;
         }
-        char* account_str = dogecoin_char_vla(sizeof(account));
-        char* addressindex_str = dogecoin_char_vla(sizeof(addressindex));
+        char account_str[MAX_INT32_STRINGLEN];
+        char addressindex_str[MAX_INT32_STRINGLEN];
         char* ischange_str = ischange ? "1" : "0";
-        dogecoin_uitoa((int)account, account_str);
-        dogecoin_uitoa((int)addressindex, addressindex_str);
+        dogecoin_uitoa(account, account_str);
+        dogecoin_uitoa(addressindex, addressindex_str);
         char* derived_path = dogecoin_char_vla(strlen("m/44/3/") + strlen(account_str) + strlen(addressindex_str) + strlen(ischange_str) + 3);
         sprintf(derived_path, "m/44/3/%s/%s/%s", account_str, ischange_str, addressindex_str);
-        free(account_str);
-        free(addressindex_str);
         if (!derived_path) {
             debug_print("%s", "no derivation path\n");
             return false;
         }
-        
+
         int ret = getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
         free(derived_path);
         return ret;
