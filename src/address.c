@@ -53,6 +53,8 @@
 #define HD_MASTERKEY_STRINGLEN 112
 #define P2PKH_ADDR_STRINGLEN 35
 #define WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN 53
+#define DERIVED_PATH_STRINGLEN 33 
+/* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
 
 /**
  * @brief This function generates a new basic public-private
@@ -377,19 +379,15 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
             debug_print("%s", "no extended key\n");
             return false;
         }
-        char account_str[MAX_INT32_STRINGLEN];
-        char addressindex_str[MAX_INT32_STRINGLEN];
-        char* ischange_str = ischange ? "1" : "0";
-        dogecoin_uitoa(account, account_str);
-        dogecoin_uitoa(addressindex, addressindex_str);
-        char* derived_path = dogecoin_char_vla(strlen("m/44/3/") + strlen(account_str) + strlen(addressindex_str) + strlen(ischange_str) + 3);
-        sprintf(derived_path, "m/44/3/%s/%s/%s", account_str, ischange_str, addressindex_str);
-        if (!derived_path) {
-            debug_print("%s", "no derivation path\n");
+
+        char derived_path[DERIVED_PATH_STRINGLEN];
+        int derived_path_size = snprintf(derived_path, sizeof(derived_path), "m/44/3/%u/%u/%u", account, ischange, addressindex);
+
+        if (derived_path_size >= (int)sizeof(derived_path)) {
+            debug_print("%s", "derivation path overflow\n");
             return false;
         }
-
+        
         int ret = getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
-        free(derived_path);
         return ret;
 }
