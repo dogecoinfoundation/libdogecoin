@@ -200,7 +200,8 @@ int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, in
     if (datalen > 128) {
         return 0;
     }
-    uint8_t* buf = dogecoin_uint8_vla(1 + datalen + 0x20);
+    size_t buf_size = datalen + sizeof(uint256);
+    uint8_t* buf = dogecoin_uint8_vla(buf_size);
     uint8_t* hash = buf + datalen;
     memcpy_safe(buf, data, datalen);
     if (!dogecoin_dblhash(data, datalen, hash)) {
@@ -213,7 +214,7 @@ int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, in
     } else {
         ret = res;
     }
-    dogecoin_mem_zero(buf, sizeof(buf));
+    dogecoin_mem_zero(buf, buf_size);
     free(buf);
     return ret;
 }

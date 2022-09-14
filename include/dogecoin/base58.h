@@ -33,7 +33,7 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-LIBDOGECOIN_API int dogecoin_base58_encode_check(const uint8_t* data, int len, char* str, int base58_length);
+LIBDOGECOIN_API int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, int strsize);
 LIBDOGECOIN_API int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen);
 
 LIBDOGECOIN_API int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t binsz);
