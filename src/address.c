@@ -349,8 +349,10 @@ int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, c
         ret = false;
     }
     
+    // dogecoin_hdnode_has_privkey
+    bool pubckd = !dogecoin_hdnode_has_privkey(&node);
     /* derive child key, use pubckd or privckd */
-    if (!dogecoin_hd_generate_key(&nodenew, derived_path, outprivkey ? node.private_key : node.public_key, node.chain_code, !outprivkey)) {
+    if (!dogecoin_hd_generate_key(&nodenew, derived_path, pubckd ? node.public_key : node.private_key, node.chain_code, pubckd)) {
         ret = false;
     }
 
@@ -381,13 +383,13 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
         }
 
         char derived_path[DERIVED_PATH_STRINGLEN];
-        int derived_path_size = snprintf(derived_path, sizeof(derived_path), "m/44/3/%u/%u/%u", account, ischange, addressindex);
+        int derived_path_size = snprintf(derived_path, sizeof(derived_path), "m/44'/3'/%u'/%u/%u", account, ischange, addressindex);
 
         if (derived_path_size >= (int)sizeof(derived_path)) {
             debug_print("%s", "derivation path overflow\n");
             return false;
         }
-        
+
         int ret = getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
         return ret;
 }
