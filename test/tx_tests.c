@@ -37,7 +37,7 @@ struct txtest_input {
 };
 
 struct txtest {
-    int num_ins;
+    size_t num_ins;
     struct txtest_input inputs[10];
     char hextx[2048];
     char txtype[32];
@@ -752,7 +752,7 @@ static const struct sighashtest sighash_tests[] =
 
 struct txoptest {
     char scripthex[1024];
-    int opcodes;
+    size_t opcodes;
     int type;
 };
 
@@ -776,7 +776,7 @@ void test_tx_serialization()
     for (i = 0; i < (sizeof(txvalid) / sizeof(txvalid[0])); i++) {
         const struct txtest* one_test = &txvalid[i];
         uint8_t tx_data[sizeof(one_test->hextx) / 2];
-        int outlen;
+        size_t outlen;
         utils_hex_to_bin(one_test->hextx, tx_data, strlen(one_test->hextx), &outlen);
 
         dogecoin_tx* tx = dogecoin_tx_new();
@@ -786,7 +786,7 @@ void test_tx_serialization()
         dogecoin_tx_copy(tx_copy, tx);
 
 
-        assert(tx->vin->len == (size_t)one_test->num_ins);
+        assert(tx->vin->len == one_test->num_ins);
         size_t victx;
         for (victx = 0; victx < tx->vin->len; victx++) {
             /* hex prevout hash */
@@ -821,7 +821,7 @@ void test_tx_sighash_ext()
     //extended sighash tests
     unsigned int i;
     for (i = 0; i < (sizeof(txvalid_sighash) / sizeof(txvalid_sighash[0])); i++) {
-        int outlen_sighash = 0;
+        size_t outlen_sighash = 0;
         uint8_t* tx_data_sighash=dogecoin_uint8_vla(strlen(txvalid_sighash[i].sertx) / 2);
         utils_hex_to_bin(txvalid_sighash[i].sertx, tx_data_sighash, strlen(txvalid_sighash[i].sertx), &outlen_sighash);
         dogecoin_tx* tx_sighash = dogecoin_tx_new();
@@ -852,12 +852,12 @@ void test_tx_sighash_ext()
 
 void test_tx_sighash()
 {
-    unsigned int i;
+    size_t i;
 
     for (i = 0; i < (sizeof(sighash_tests) / sizeof(sighash_tests[0])); i++) {
         const struct sighashtest* test = &sighash_tests[i];
         uint8_t tx_data[sizeof(test->txhex) / 2];
-        int outlen;
+        size_t outlen;
         utils_hex_to_bin(test->txhex, tx_data, strlen(test->txhex), &outlen);
 
         dogecoin_tx* tx = dogecoin_tx_new();
@@ -900,7 +900,7 @@ void test_tx_negative_version()
     int32_t versionGoal = -1;
 
     uint8_t tx_data[sizeof(txhex) / 2];
-    int outlen;
+    size_t outlen;
     utils_hex_to_bin(txhex, tx_data, strlen(txhex), &outlen);
 
     dogecoin_tx* tx = dogecoin_tx_new();
@@ -925,11 +925,11 @@ const struct script_test script_tests[] =
 
 void test_script_parse()
 {
-    unsigned int i;
+    size_t i;
     for (i = 0; i < (sizeof(txoptests) / sizeof(txoptests[0])); i++) {
         const struct txoptest* test = &txoptests[i];
         uint8_t script_data[sizeof(test->scripthex) / 2];
-        int outlen;
+        size_t outlen;
         utils_hex_to_bin(test->scripthex, script_data, strlen(test->scripthex), &outlen);
 
         cstring* script = cstr_new_buf(script_data, outlen);
@@ -938,7 +938,7 @@ void test_script_parse()
         enum dogecoin_tx_out_type type = dogecoin_script_classify_ops(vec);
 
         assert((int)type == test->type);
-        assert(vec->len == (size_t)test->opcodes);
+        assert(vec->len == test->opcodes);
 
         vector_free(vec, true);
         cstr_free(script, true);
@@ -947,7 +947,7 @@ void test_script_parse()
     for (i = 0; i < (sizeof(script_tests) / sizeof(script_tests[0])); i++) {
         const struct script_test* test = &script_tests[i];
         uint8_t script_data[sizeof(test->script) / 2];
-        int outlen;
+        size_t outlen;
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
 
         cstring* script = cstr_new_buf(script_data, outlen);
@@ -956,7 +956,7 @@ void test_script_parse()
 
         cstring* new_script = cstr_new_sz(script->len);
         u_assert_int_eq(dogecoin_script_copy_without_op_codeseperator(script, new_script), true);
-        u_assert_int_eq(test->expected_length, new_script->len);
+        u_assert_uint32_eq(test->expected_length, new_script->len);
         u_assert_mem_eq(test->expected, script->str, new_script->len);
 
         cstr_free(new_script, true);
@@ -1117,7 +1117,7 @@ void test_script_op_codeseperator()
     char scripthex[] = "ab00270025512102e485fdaa062387c0bbb5ab711a093b6635299ec155b7b852fce6b992d5adbfec51ae";
     char scripthexGoal[] = "00270025512102e485fdaa062387c0bbb5ab711a093b6635299ec155b7b852fce6b992d5adbfec51ae";
     uint8_t script_data[sizeof(scripthex) / 2];
-    int outlen;
+    size_t outlen;
     utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlen);
 
     cstring* script = cstr_new_buf(script_data, outlen);
@@ -1137,7 +1137,7 @@ void test_invalid_tx_deser()
 {
     char txstr[] = "asadasdadad";
     uint8_t tx_data_txstr[sizeof(txstr) / 2 + 1];
-    int outlen;
+    size_t outlen;
     utils_hex_to_bin(txstr, tx_data_txstr, strlen(txstr), &outlen);
 
     dogecoin_tx* tx = dogecoin_tx_new();
@@ -1163,7 +1163,7 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
     int sighashtype = SIGHASH_ALL;
     int inputindex = 0;
 
-    int outlen;
+    size_t outlen;
     uint8_t* tx_data=dogecoin_uint8_vla(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
     uint8_t* script_data=dogecoin_uint8_vla(strlen(script_hex) / 2);
@@ -1187,7 +1187,7 @@ void test_tx_sign_p2pkh(dogecoin_tx* tx)
 
     uint8_t sigcomp[64] = {0};
     uint8_t sigder[76] = {0};
-    int sigder_len = 0;
+    size_t sigder_len = 0;
     dogecoin_tx_sign_input(tx, script, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_mem_eq(sigder, expected_sigder_data, sigder_len);
 
@@ -1216,7 +1216,7 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
     int sighashtype = SIGHASH_ALL;
     int inputindex = 1;
 
-    int outlen;
+    size_t outlen;
     uint8_t* tx_data=dogecoin_uint8_vla(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
     
@@ -1242,7 +1242,7 @@ void test_tx_sign_p2pkh_i2(dogecoin_tx* tx)
 
     uint8_t sigcomp[64] = {0};
     uint8_t sigder[76] = {0};
-    int sigder_len = 0;
+    size_t sigder_len = 0;
     enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script_wrong, &pkey, inputindex, sighashtype, sigcomp, sigder, &sigder_len);
     u_assert_int_eq(res, DOGECOIN_SIGN_NO_KEY_MATCH);
     dogecoin_tx_in* in = vector_idx(tx->vin, 1);
@@ -1281,7 +1281,7 @@ void test_scripts()
 {
     const char* script_p2pk = "41042f462d3245d2f3a015f7f9505f763ee1080cab36191d07ae9e6509f71bb68818719e6fb41c019bf48ae11c45b024d476e19b6963103ce8647fc15fee513b15c7ac";
     const char* script_p2pkh = "76a91481edb497b5ba6eb9e67b7ed50fb220395f76f95088ac";
-    int outlen;
+    size_t outlen;
     cstring* script_data_p2pk = cstr_new_sz(strlen(script_p2pk) / 2);
     utils_hex_to_bin(script_p2pk, (unsigned char*)script_data_p2pk->str, strlen(script_p2pk), &outlen);
     script_data_p2pk->len = outlen;

@@ -552,16 +552,16 @@ void test_aes()
     for (i = 0; i < (sizeof(nist_aes_test_vectors_encrypt) / sizeof(nist_aes_test_vectors_encrypt[0])); i++) {
         struct nist_aes_test_vector tv = nist_aes_test_vectors_encrypt[i];
 
-        int outlen_key;
+        size_t outlen_key;
         utils_hex_to_bin(tv.key, key_bin, strlen(tv.key), &outlen_key);
 
-        int outlen_iv;
+        size_t outlen_iv;
         utils_hex_to_bin(tv.iv, iv_bin, strlen(tv.iv), &outlen_iv);
 
-        int outlen_plaintext;
+        size_t outlen_plaintext;
         utils_hex_to_bin(tv.in, plaintext_bin, strlen(tv.in), &outlen_plaintext);
 
-        int outlen_cipthertext;
+        size_t outlen_cipthertext;
         utils_hex_to_bin(tv.out, ciphertext_bin, strlen(tv.out), &outlen_cipthertext);
 
         aes256_cbc_encrypt(key_bin, iv_bin, plaintext_bin, outlen_plaintext, 1, ciphertext_bin);
@@ -577,16 +577,16 @@ void test_aes()
     for (i = 0; i < (sizeof(nist_aes_test_vectors_decrypt) / sizeof(nist_aes_test_vectors_decrypt[0])); i++) {
         struct nist_aes_test_vector tv = nist_aes_test_vectors_decrypt[i];
 
-        int outlen_key;
+        size_t outlen_key;
         utils_hex_to_bin(tv.key, key_bin, strlen(tv.key), &outlen_key);
 
-        int outlen_iv;
+        size_t outlen_iv;
         utils_hex_to_bin(tv.iv, iv_bin, strlen(tv.iv), &outlen_iv);
 
-        int outlen_plaintext;
+        size_t outlen_plaintext;
         utils_hex_to_bin(tv.in, plaintext_bin, strlen(tv.in), &outlen_plaintext);
 
-        int outlen_cipthertext;
+        size_t outlen_cipthertext;
         utils_hex_to_bin(tv.out, ciphertext_bin, strlen(tv.out), &outlen_cipthertext);
 
         aes256_cbc_decrypt(key_bin, iv_bin, plaintext_bin, outlen_plaintext, 1, ciphertext_bin);

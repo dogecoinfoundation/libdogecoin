@@ -85,9 +85,8 @@ void test_protocol()
 
     u_assert_mem_eq(hdr.netmagic, &dogecoin_chainparams_main.netmagic, 4);
     u_assert_str_eq(hdr.command, DOGECOIN_MSG_VERSION);
-    u_assert_int_eq(hdr.data_len, version_msg_cstr->len);
-    u_assert_int_eq(buf.len, hdr.data_len);
-    u_assert_int_eq(buf.len, hdr.data_len);
+    u_assert_uint32_eq(hdr.data_len, version_msg_cstr->len);
+    u_assert_uint32_eq(buf.len, hdr.data_len);
     u_assert_mem_eq(buf.p, version_msg_cstr->str, hdr.data_len);
 
     dogecoin_p2p_version_msg v_msg_check;
@@ -113,7 +112,7 @@ void test_protocol()
     buf.len = p2p_msg->len;
     dogecoin_p2p_deser_msghdr(&hdr, &buf);
     u_assert_str_eq(hdr.command, DOGECOIN_MSG_GETHEADERS);
-    u_assert_int_eq(hdr.data_len, getheader_msg->len);
+    u_assert_uint32_eq(hdr.data_len, getheader_msg->len);
 
 
     uint256 hashstop_check;

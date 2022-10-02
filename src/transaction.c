@@ -251,7 +251,7 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
     uint8_t* data_bin = dogecoin_malloc(strlen(hexadecimal_transaction));
-    int outlength = 0;
+    size_t outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(hexadecimal_transaction, data_bin, strlen(hexadecimal_transaction), &outlength);
     if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL)) {
@@ -287,7 +287,7 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     // guard against null pointer exceptions
     if (tx == NULL) return false;
 
-    int flag = tx->transaction->vin->len;
+    size_t flag = tx->transaction->vin->len;
 
     // instantiate empty dogecoin_tx_in object to set previous output txid and output n:
     dogecoin_tx_in* tx_in = dogecoin_tx_in_new();
@@ -304,7 +304,7 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     // free tx_in struct since it has been added to our working tx
     // ensure the length of our working tx inputs length has incremented by 1
     // which will return true if successful:
-    return flag + 1 == (int)tx->transaction->vin->len;
+    return flag + 1 == tx->transaction->vin->len;
 }
 
 /**
@@ -489,7 +489,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
     uint8_t* data_bin = dogecoin_malloc(strlen(incomingrawtx) / 2);
-    int outlength = 0;
+    size_t outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(incomingrawtx, data_bin, strlen(incomingrawtx), &outlength);
 
@@ -551,7 +551,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     }
     if (sign) {
         uint8_t sigcompact[64] = {0};
-        int sigderlen = 74+1; //&hashtype
+        size_t sigderlen = 74 + 1; //&hashtype
         uint8_t sigder_plus_hashtype[75] = {0};
         enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(txtmp, script, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
         cstr_free(script, true);
@@ -623,7 +623,7 @@ int sign_transaction(int txindex, char* script_pubkey, char* privkey) {
     // deserialize transaction
     dogecoin_tx* txtmp = dogecoin_tx_new();
     uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_transaction) / 2);
-    int outlength = 0;
+    size_t outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction, data_bin, strlen(raw_hexadecimal_transaction), &outlength);
     if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL)) {
@@ -667,7 +667,7 @@ int store_raw_transaction(char* incomingrawtx) {
     int txindex = start_transaction();
     working_transaction* tx_raw = find_transaction(txindex);
     uint8_t* data_bin = dogecoin_malloc(strlen(incomingrawtx));
-    int outlength = 0;
+    size_t outlength = 0;
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(incomingrawtx, data_bin, strlen(incomingrawtx), &outlength);
     if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL)) {

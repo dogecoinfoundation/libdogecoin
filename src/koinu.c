@@ -71,7 +71,7 @@ const char* conversion_type_to_str(const enum conversion_type type)
     }
 }
 
-int check_length(char* string) {
+size_t check_length(char* string) {
     // set max length for all string inputs to 20 to account for total supply in 2022
     // (currently 132.67 billion dogecoin) + 1e8 koinu passing UINT64_MAX 184467440737
     // in 9.854916426 years (2032) with output of 5,256,000,000 mined dogecoins per year
@@ -83,7 +83,7 @@ int check_length(char* string) {
     // set max length for all string inputs to 21 to account for total supply passing 
     // 1T in ~180 years from 2022. this limit will be valid for the next 1980 years so 
     // make sure to update in year 4002. :)
-    int integer_length = strlen(string);
+    size_t integer_length = strlen(string);
     if (integer_length > 22) return false;
     else return integer_length;
 }
@@ -147,7 +147,7 @@ int koinu_to_coins_str(uint64_t koinu, char* str) {
     
     if (length < 9) {
         string(koinu, str);
-        int l = str ? strlen(str) : 0;
+        size_t l = str ? strlen(str) : 0;
         char* swap = dogecoin_char_vla(l + 1);
         memcpy_safe(swap, str, l + 1);
         for (; i < target; i++) {
@@ -176,14 +176,14 @@ int koinu_to_coins_str(uint64_t koinu, char* str) {
 
 uint64_t coins_to_koinu_str(char* coins) {
     if (coins[0] == '-') return false;
-    int length = check_length(coins);
+    size_t length = check_length(coins);
     if (!length) return false;
 
     char *end, dogecoin_string[21], koinu_string[9];
     dogecoin_mem_zero(dogecoin_string, 21);
     dogecoin_mem_zero(koinu_string, 9);
     
-    int i = 0, j = 0, mantissa_length = 0;
+    size_t i = 0, j = 0, mantissa_length = 0;
     for (; i < length; i++) { 
         dogecoin_string[i] = coins[i];
         if (coins[i] == '.') {

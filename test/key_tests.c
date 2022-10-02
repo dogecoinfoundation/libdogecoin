@@ -69,7 +69,7 @@ void test_key()
     size_t size = sizeof(str);
     int r = dogecoin_pubkey_get_hex(&pubkey, str, &size);
     u_assert_int_eq(r, true);
-    u_assert_int_eq(size, 66);
+    u_assert_uint32_eq(size, 66);
     size = 50;
     r = dogecoin_pubkey_get_hex(&pubkey, str, &size);
     u_assert_int_eq(r, false);

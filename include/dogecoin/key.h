@@ -80,7 +80,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const d
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
 
 //verifies a DER encoded signature with given pubkey and return true if valid
-LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, int len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, size_t len);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
 

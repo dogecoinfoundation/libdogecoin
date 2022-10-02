@@ -42,8 +42,8 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-LIBDOGECOIN_API int aes256_cbc_encrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, int size, int pad, unsigned char* out);
-LIBDOGECOIN_API int aes256_cbc_decrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, int size, int pad, unsigned char* out);
+LIBDOGECOIN_API size_t aes256_cbc_encrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, size_t size, int pad, unsigned char* out);
+LIBDOGECOIN_API size_t aes256_cbc_decrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, size_t size, int pad, unsigned char* out);
 
 LIBDOGECOIN_END_DECL
 

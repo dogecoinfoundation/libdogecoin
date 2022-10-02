@@ -46,7 +46,7 @@ LIBDOGECOIN_API int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, 
 LIBDOGECOIN_API int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
 /* verify address based on length and checksum */
-LIBDOGECOIN_API int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len);
+LIBDOGECOIN_API int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
 
 /* generate an extended hd public/private child address */
 LIBDOGECOIN_API int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey);

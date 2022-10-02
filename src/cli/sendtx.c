@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
         return showError("Transaction in invalid or to large.\n");
         }
     uint8_t* data_bin = dogecoin_malloc(strlen(data) / 2 + 1);
-    int outlen = 0;
+    size_t outlen = 0;
     utils_hex_to_bin(data, data_bin, strlen(data), &outlen);
 
     dogecoin_tx* tx = dogecoin_tx_new();

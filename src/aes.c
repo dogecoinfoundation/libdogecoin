@@ -25,9 +25,9 @@
 #include <dogecoin/ctaes.h>
 #include <dogecoin/mem.h>
 
-int aes256_cbc_encrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, int size, int pad, unsigned char* out)
+size_t aes256_cbc_encrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, size_t size, int pad, unsigned char* out)
 {
-    int written = 0;
+    size_t written = 0;
     int padsize = size % AES_BLOCK_SIZE;
     unsigned char mixed[AES_BLOCK_SIZE];
 
@@ -64,10 +64,10 @@ int aes256_cbc_encrypt(const unsigned char aes_key[32], const unsigned char iv[A
     return written;
 }
 
-int aes256_cbc_decrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, int size, int pad, unsigned char* out)
+size_t aes256_cbc_decrypt(const unsigned char aes_key[32], const unsigned char iv[AES_BLOCK_SIZE], const unsigned char* data, size_t size, int pad, unsigned char* out)
 {
     unsigned char padsize = 0;
-    int written = 0;
+    size_t written = 0;
     int fail = 0;
     const unsigned char* prev = iv;
 

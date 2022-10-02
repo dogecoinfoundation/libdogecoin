@@ -81,7 +81,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                                 printf("Transaction in invalid or to large.\n");
                             }
                             uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_tx) / 2 + 1);
-                            int outlen = 0;
+                            size_t outlen = 0;
                             utils_hex_to_bin(raw_hexadecimal_tx, data_bin, strlen(raw_hexadecimal_tx), &outlen);
 
                             /* Deserializing the transaction and broadcasting it to the network. */
@@ -851,7 +851,7 @@ int main(int argc, char* argv[])
         //deserialize transaction
         dogecoin_tx* tx = dogecoin_tx_new();
         uint8_t* data_bin = dogecoin_malloc(strlen(txhex) / 2 + 1);
-        int outlen = 0;
+        size_t outlen = 0;
         utils_hex_to_bin(txhex, data_bin, strlen(txhex), &outlen);
         if (!dogecoin_tx_deserialize(data_bin, outlen, tx, NULL)) {
             dogecoin_free(data_bin);
@@ -904,7 +904,7 @@ int main(int argc, char* argv[])
         }
         if (sign) {
             uint8_t sigcompact[64] = { 0 };
-            int sigderlen = 74 + 1; //&hashtype
+            size_t sigderlen = 74 + 1; //&hashtype
             uint8_t sigder_plus_hashtype[75] = { 0 };
             enum dogecoin_tx_sign_result res = dogecoin_tx_sign_input(tx, script, &key, inputindex, sighashtype, sigcompact, sigder_plus_hashtype, &sigderlen);
             cstr_free(script, true);
@@ -941,7 +941,7 @@ int main(int argc, char* argv[])
             return showError("Missing signature or invalid length (use hex, 128 chars == 64 bytes)\n");
             }
 
-        int outlen = 0;
+        size_t outlen = 0;
         uint8_t sig_comp[65];
         printf("%s\n", scripthex);
         utils_hex_to_bin(scripthex, sig_comp, 128, &outlen);

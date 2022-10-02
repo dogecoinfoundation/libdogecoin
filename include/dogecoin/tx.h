@@ -101,7 +101,7 @@ LIBDOGECOIN_API void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx);
 
 LIBDOGECOIN_API void dogecoin_tx_hash(const dogecoin_tx* tx, uint256 hashout);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, unsigned int in_num, int hashtype, uint256 hash);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256 hash);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainparams* chain, int64_t amount, const char* address);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160 hash160);
@@ -125,7 +125,7 @@ enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_OK = 1,
 };
 const char* dogecoin_tx_sign_result_to_str(const enum dogecoin_tx_sign_result result);
-enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, const dogecoin_key* privkey, int inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, int* sigder_len);
+enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, const dogecoin_key* privkey, size_t inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, size_t* sigder_len);
 
 LIBDOGECOIN_END_DECL
 

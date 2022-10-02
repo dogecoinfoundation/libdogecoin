@@ -232,7 +232,7 @@ void test_bip32()
     r = dogecoin_hdnode_get_pub_hex(&node4, str, &sizeSmall);
     u_assert_int_eq(r, false);
     r = dogecoin_hdnode_get_pub_hex(&node4, str, &size);
-    u_assert_int_eq(size, 66);
+    u_assert_uint32_eq(size, 66);
     u_assert_int_eq(r, true);
     u_assert_str_eq(str, "0345717c8722bd243ec5c7109ce52e95a353588403684057c2664f7ad3d7065ed5");
     dogecoin_hdnode_serialize_public(&node4, &dogecoin_chainparams_test, str, sizeof(str));
