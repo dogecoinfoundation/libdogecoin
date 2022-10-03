@@ -14,7 +14,7 @@ cdef extern from "libdogecoin.h":
     int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
     int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bint is_testnet)
     int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bint is_testnet)
-    int verifyP2pkhAddress(char* p2pkh_pubkey, cy.uchar len)
+    int verifyP2pkhAddress(char* p2pkh_pubkey, cy.size_t len)
 
     # transaction.c
     int start_transaction()
