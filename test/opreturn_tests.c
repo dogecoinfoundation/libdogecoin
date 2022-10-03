@@ -41,7 +41,7 @@ void test_op_return() {
     size_t length = (strlen((char*)msg_hex) / 2) + 1; // 69
     
     char decimal[32];
-    sprintf(decimal, "%zx", length - 1);
+    sprintf(decimal, "%x", length - 1);
     prepend((char*)msg_hex, decimal);
 
     u_assert_int_eq(memcmp(msg_hex, expected_hexmsg, strlen(expected_hexmsg)), 0);

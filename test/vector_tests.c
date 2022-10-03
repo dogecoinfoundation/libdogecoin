@@ -72,7 +72,7 @@ void test_vector()
     char str[80];
     size_t i;
     for (i = 0; i < 20; i++) {
-        sprintf(str, "TEST%zu", i);
+        sprintf(str, "TEST%d", i);
         res = vector_add(vec, strdup(str));
         assert(res == true);
         assert(vec->len == i + 1);
