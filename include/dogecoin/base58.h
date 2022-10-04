@@ -33,14 +33,14 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-LIBDOGECOIN_API int dogecoin_base58_encode_check(const uint8_t* data, int datalen, char* str, int strsize);
-LIBDOGECOIN_API int dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen);
+LIBDOGECOIN_API size_t dogecoin_base58_encode_check(const uint8_t* data, size_t datalen, char* str, size_t strsize);
+LIBDOGECOIN_API size_t dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datalen);
 
 LIBDOGECOIN_API int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t binsz);
 LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b58sz);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout, int len);
-LIBDOGECOIN_API dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, int len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, size_t len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, size_t len);
 
 LIBDOGECOIN_END_DECL
 

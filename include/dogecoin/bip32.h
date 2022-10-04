@@ -56,12 +56,12 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout,
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogecoin_hdnode* out);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i);
 LIBDOGECOIN_API void dogecoin_hdnode_fill_public_key(dogecoin_hdnode* node);
-LIBDOGECOIN_API void dogecoin_hdnode_serialize_public(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, int strsize);
-LIBDOGECOIN_API void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, int strsize);
+LIBDOGECOIN_API void dogecoin_hdnode_serialize_public(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
+LIBDOGECOIN_API void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 
 /* gives out the raw sha256/ripemd160 hash */
 LIBDOGECOIN_API void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160 hash160_out);
-LIBDOGECOIN_API void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, int strsize);
+LIBDOGECOIN_API void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str, size_t* strsize);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node);
 

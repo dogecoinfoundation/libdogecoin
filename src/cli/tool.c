@@ -64,7 +64,7 @@ dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const cha
     dogecoin_pubkey_init(&pubkey);
     pubkey.compressed = 1;
     size_t outlen = 0;
-    utils_hex_to_bin(pubkey_hex, pubkey.pubkey, strlen(pubkey_hex), (int*)&outlen);
+    utils_hex_to_bin(pubkey_hex, pubkey.pubkey, strlen(pubkey_hex), &outlen);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 1);
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_address);
     return true;

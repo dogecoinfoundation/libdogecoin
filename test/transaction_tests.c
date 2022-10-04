@@ -49,7 +49,7 @@ void test_transaction()
     dogecoin_tx* tx_worth_2 = dogecoin_tx_new();
 
     uint8_t* data_bin_2 = dogecoin_malloc(strlen(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin) / 2 + 1);
-    int outlength_2 = 0;
+    size_t outlength_2 = 0;
     // convert raw_hexadecimal_transaction_from_tx_worth_2_dogecoin to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin, data_bin_2, strlen(raw_hexadecimal_transaction_from_tx_worth_2_dogecoin), &outlength_2);
 
@@ -149,7 +149,7 @@ void test_transaction()
 
     dogecoin_tx* tx_worth_10 = dogecoin_tx_new();
     uint8_t* data_bin_10 = dogecoin_malloc(strlen(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin));
-    int outlength_10 = 0;
+    size_t outlength_10 = 0;
 
     // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
     utils_hex_to_bin(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin, data_bin_10, strlen(raw_hexadecimal_transaction_from_tx_worth_10_dogecoin), &outlength_10);

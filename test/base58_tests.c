@@ -142,11 +142,11 @@ void test_base58()
     while (*raw && *str) {
         size_t len = strlen(*raw) / 2;
         memcpy_safe(rawn, utils_hex_to_uint8(*raw), len);
-        int r = dogecoin_base58_encode_check(rawn, len, strn, sizeof(strn));
-        assert(r == (int)strlen(*str) + 1);
+        size_t r = dogecoin_base58_encode_check(rawn, len, strn, sizeof(strn));
+        assert(r == strlen(*str) + 1);
         assert(strcmp(strn, *str) == 0);
         r = dogecoin_base58_decode_check(strn, rawn, sizeof(rawn));
-        assert(r == (int)len + 4);
+        assert(r == len + 4);
         raw += 2;
         str += 2;
     }
@@ -157,7 +157,7 @@ void test_base58()
         size_t len = strlen(*i_raw) / 2;
         memcpy_safe(i_rawn, utils_hex_to_uint8(*i_raw), len);
         unsigned char outbuf[1024];
-        int r = 0;
+        size_t r = 0;
         if (strncmp(*i_cmd, "ec", 2) == 0)
             r = dogecoin_base58_encode_check(i_rawn, len, strn, sizeof(strn));
         else

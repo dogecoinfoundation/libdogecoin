@@ -57,7 +57,7 @@ LIBDOGECOIN_API void* dogecoin_realloc(void* ptr, size_t size);
 LIBDOGECOIN_API void dogecoin_free(void* ptr);
 
 LIBDOGECOIN_API errno_t memset_safe(volatile void *v, rsize_t smax, int c, rsize_t n);
-LIBDOGECOIN_API void* memcpy_safe(void* destination, const void* source, unsigned int count);
+LIBDOGECOIN_API void* memcpy_safe(void* destination, const void* source, size_t count);
 LIBDOGECOIN_API volatile void* dogecoin_mem_zero(volatile void* dst, size_t len);
 
 LIBDOGECOIN_API uint32_t* dogecoin_uint32_vla(size_t size);

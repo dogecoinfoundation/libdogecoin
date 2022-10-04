@@ -210,7 +210,7 @@ void vector_remove_range(vector* vec, size_t pos, size_t len)
     }
 
     if (vec->elem_free_f) {
-        unsigned int i, count;
+        size_t i, count;
         for (i = pos, count = 0; count < len; i++, count++) {
             vec->elem_free_f(vec->data[i]);
         }
@@ -270,7 +270,7 @@ dogecoin_bool vector_remove(vector* vec, void* data)
  */
 dogecoin_bool vector_resize(vector* vec, size_t newsz)
 {
-    unsigned int i;
+    size_t i;
 
     /* same size */
     if (newsz == vec->len) {

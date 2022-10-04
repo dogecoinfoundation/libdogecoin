@@ -70,12 +70,12 @@ void test_vector()
     res = vector_resize(vec, 30);
     assert(res == true);
     char str[80];
-    int i;
+    size_t i;
     for (i = 0; i < 20; i++) {
         sprintf(str, "TEST%d", i);
         res = vector_add(vec, strdup(str));
         assert(res == true);
-        assert(vec->len == (size_t)i + 1);
+        assert(vec->len == i + 1);
     }
     res = vector_resize(vec, 5);
     assert(res == true);

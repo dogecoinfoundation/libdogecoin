@@ -206,7 +206,7 @@ void dogecoin_free_internal(void* ptr)
     free(ptr);
 }
 
-void* memcpy_safe(void* destination, const void* source, unsigned int count) {
+void* memcpy_safe(void* destination, const void* source, size_t count) {
     char *pszDest = (char *)destination;
     const char *pszSource =( const char*)source;
     if((pszDest!= NULL) && (pszSource!= NULL)) {

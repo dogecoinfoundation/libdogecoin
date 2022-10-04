@@ -80,7 +80,7 @@ func W_verify_hd_master_pub_keypair(wif_privkey_master string, p2pkh_pubkey_mast
 func W_verify_p2pkh_address(p2pkh_pubkey string) (result bool) {
 	c_p2pkh_pubkey := C.CString(p2pkh_pubkey)
 	len := len(p2pkh_pubkey)
-	c_len := C.uchar(len)
+	c_len := C.size_t(len)
 	if C.verifyP2pkhAddress(c_p2pkh_pubkey, c_len) == 1 {
 		result = true
 	} else {

@@ -297,7 +297,7 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
  * 
  * @return 1 if it is a valid Dogecoin address, 0 otherwise.
  */
-int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len) 
+int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
     {
         if (!p2pkh_pubkey || !len) return false;
         /* check length */

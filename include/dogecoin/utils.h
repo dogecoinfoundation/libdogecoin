@@ -42,14 +42,14 @@
 LIBDOGECOIN_BEGIN_DECL
 
 LIBDOGECOIN_API void utils_clear_buffers(void);
-LIBDOGECOIN_API void utils_hex_to_bin(const char* str, unsigned char* out, int inLen, int* outLen);
+LIBDOGECOIN_API void utils_hex_to_bin(const char* str, unsigned char* out, size_t inLen, size_t* outLen);
 LIBDOGECOIN_API void utils_bin_to_hex(unsigned char* bin_in, size_t inlen, char* hex_out);
 LIBDOGECOIN_API uint8_t* utils_hex_to_uint8(const char* str);
 LIBDOGECOIN_API char* utils_uint8_to_hex(const uint8_t* bin, size_t l);
-LIBDOGECOIN_API void utils_reverse_hex(char* h, int len);
+LIBDOGECOIN_API void utils_reverse_hex(char* h, size_t len);
 LIBDOGECOIN_API void utils_uint256_sethex(char* psz, uint8_t* out);
 LIBDOGECOIN_API void* safe_malloc(size_t size);
-LIBDOGECOIN_API void dogecoin_cheap_random_bytes(uint8_t* buf, uint32_t len);
+LIBDOGECOIN_API void dogecoin_cheap_random_bytes(uint8_t* buf, size_t len);
 LIBDOGECOIN_API void dogecoin_get_default_datadir(cstring* path_out);
 LIBDOGECOIN_API void dogecoin_file_commit(FILE* file);
 LIBDOGECOIN_API void print_image(FILE *fptr);

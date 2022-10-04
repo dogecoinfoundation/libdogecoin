@@ -724,9 +724,9 @@ int dogecoin_node_parse_message(dogecoin_node* node, dogecoin_p2p_msg_hdr* hdr, 
  * @param port The port to connect to.
  * @param family The address family of the socket. AF_INET or AF_INET6.
  * 
- * @return int
+ * @return size_t
  */
-int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family)
+size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family)
 {
     if (!seed || !ips_out || (family != AF_INET && family != AF_INET6) || port > 99999) {
         return 0;

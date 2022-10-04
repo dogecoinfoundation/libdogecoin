@@ -56,7 +56,7 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
 int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
 /* verify that a dogecoin address is valid. */
-int verifyP2pkhAddress(char* p2pkh_pubkey, uint8_t len);
+int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
 
 
 /*transaction creation functions - builds a dogecoin transaction

@@ -160,7 +160,7 @@ LIBDOGECOIN_API void dogecoin_node_connection_state_changed(dogecoin_node* node)
 /* =================================== */
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *group, const char *ips);
-LIBDOGECOIN_API int dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
+LIBDOGECOIN_API size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
 
 struct broadcast_ctx {
     const dogecoin_tx* tx;

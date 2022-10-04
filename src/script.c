@@ -550,11 +550,11 @@ void dogecoin_script_append_pushdata(cstring* script_in, const unsigned char* da
         cstr_append_buf(script_in, (unsigned char*)&datalen, 1);
     } else if (datalen <= 0xffff) {
         dogecoin_script_append_op(script_in, OP_PUSHDATA2);
-        uint16_t v = htole16(datalen);
+        uint16_t v = htole16((uint16_t)datalen);
         cstr_append_buf(script_in, &v, sizeof(v));
     } else {
         dogecoin_script_append_op(script_in, OP_PUSHDATA4);
-        uint32_t v = htole32(datalen);
+        uint32_t v = htole32((uint32_t)datalen);
         cstr_append_buf(script_in, &v, sizeof(v));
     }
     cstr_append_buf(script_in, data, datalen);

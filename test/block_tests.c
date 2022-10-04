@@ -42,7 +42,7 @@ static const struct blockheadertest block_header_tests[] =
 
 void test_block_header()
 {
-    int outlen;
+    size_t outlen;
     char hexbuf[161];
     unsigned int i;
     for (i = 0; i < (sizeof(block_header_tests) / sizeof(block_header_tests[0])); i++) {

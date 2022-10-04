@@ -272,7 +272,7 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     unsigned char dec[35]; //problem is here, it works if its char**
 
     // MLUMIN: MSVC
-    int decoded_length = dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, sizeof(dec)/sizeof(dec[0]));
+    size_t decoded_length = dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, sizeof(dec) / sizeof(dec[0]));
     if (decoded_length==0)
     {
         printf("failed base58 decode\n");
@@ -747,7 +747,7 @@ void dogecoin_tx_outputs_hash(const dogecoin_tx* tx, uint256 hash)
  * 
  * @return 1 if signature hash is generated successfully, 0 otherwise.
  */
-dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, unsigned int in_num, int hashtype, uint256 hash)
+dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256 hash)
 {
     if (in_num >= tx_to->vin->len || !tx_to->vout) {
         return false;
@@ -762,7 +762,7 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
     cstring* new_script = cstr_new_sz(fromPubKey->len);
     dogecoin_script_copy_without_op_codeseperator(fromPubKey, new_script);
 
-    unsigned int i;
+    size_t i;
     dogecoin_tx_in* tx_in;
     for (i = 0; i < tx_tmp->vin->len; i++) {
         tx_in = vector_idx(tx_tmp->vin, i);
@@ -788,7 +788,7 @@ dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromP
             }
         }
     } else if ((hashtype & 0x1f) == SIGHASH_SINGLE) {
-        unsigned int n_out = in_num;
+        size_t n_out = in_num;
         if (n_out >= tx_tmp->vout->len) {
             //TODO: set error code
             ret = false;
@@ -908,7 +908,7 @@ dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainp
 {
     const size_t buflen = sizeof(uint8_t) * strlen(address) * 2;
     uint8_t* buf = dogecoin_calloc(1, buflen);
-    int r = dogecoin_base58_decode_check(address, buf, buflen);
+    size_t r = dogecoin_base58_decode_check(address, buf, buflen);
     if (r > 0 && buf[0] == chain->b58prefix_pubkey_address) {
         dogecoin_tx_add_p2pkh_hash160_out(tx, amount, &buf[1]);
     } else if (r > 0 && buf[0] == chain->b58prefix_script_address) {
@@ -1061,13 +1061,13 @@ const char* dogecoin_tx_sign_result_to_str(const enum dogecoin_tx_sign_result re
  * 
  * @return The code denoting which errors occurred, if any.
  */
-enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, const dogecoin_key* privkey, int inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, int* sigder_len_out)
+enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, const dogecoin_key* privkey, size_t inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, size_t* sigder_len_out)
 {
     if (!tx_in_out || !script) {
         return DOGECOIN_SIGN_INVALID_TX_OR_SCRIPT;
     }
 
-    if ((size_t)inputindex >= tx_in_out->vin->len) {
+    if (inputindex >= tx_in_out->vin->len) {
         return DOGECOIN_SIGN_INPUTINDEX_OUT_OF_RANGE;
     }
 

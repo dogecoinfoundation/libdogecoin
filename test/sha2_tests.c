@@ -417,7 +417,7 @@ void test_sha_256()
     sha256_context context;
     uint8_t buf[SHA256_DIGEST_LENGTH];
     uint8_t* digest_out; /* use non thread save buffer (optimized for embedded systems) */
-    int oLen;
+    size_t oLen;
     unsigned char msg_buf[20480];
 
     unsigned int i;
@@ -433,7 +433,7 @@ void test_sha_256()
 
         sha256_init(&context);
         if (oLen == 3680 / 8) {
-            int j;
+            size_t j;
             for (j = 0; j < oLen; j += oLen / 10) {
                 sha256_write(&context, msg_buf + j, oLen / 10);
             }
@@ -451,7 +451,7 @@ void test_sha_512()
     sha512_context context;
     uint8_t buf[SHA512_DIGEST_LENGTH];
     uint8_t* digest_out; /* use non thread save buffer (optimized for embedded systems) */
-    int oLen;
+    size_t oLen;
     unsigned char msg_buf[20480];
 
     unsigned int i;
@@ -468,7 +468,7 @@ void test_sha_512()
         sha512_init(&context);
 
         if (oLen == 12800) {
-            int j;
+            size_t j;
             for (j = 0; j < oLen; j += oLen / 1280) {
                 sha512_write(&context, msg_buf + j, oLen / 1280);
             }
@@ -486,14 +486,14 @@ void test_sha_hmac()
 {
     uint8_t buf[SHA512_DIGEST_LENGTH];
     uint8_t* digest_out;
-    int oLenMsg;
-    int oLenKey;
+    size_t oLenMsg;
+    size_t oLenKey;
     unsigned char msg_buf[550];
     unsigned char key_buf[200];
 
     unsigned int i;
     for (i = 0; i < (sizeof(sha_hmac_test_vectors) / sizeof(sha_hmac_test_vectors[0])); i++) {
-        int msglen = strlen(sha_hmac_test_vectors[i].msg);
+        size_t msglen = strlen(sha_hmac_test_vectors[i].msg);
         utils_hex_to_bin((char*)sha_hmac_test_vectors[i].msg, msg_buf, msglen, &oLenMsg);
         utils_hex_to_bin((char*)sha_hmac_test_vectors[i].key, key_buf, sha_hmac_test_vectors[i].klen * 2, &oLenKey);
 
