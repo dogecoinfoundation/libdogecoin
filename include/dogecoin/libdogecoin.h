@@ -58,6 +58,11 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
 /* verify that a dogecoin address is valid. */
 int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
 
+/* get a derived hd address. */
+int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey);
+
+/* get a derived hd address with a custom path. e.g. m/44'/3'/0'/0/0 */
+int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
 
 /*transaction creation functions - builds a dogecoin transaction
 ----------------------------------------------------------------
