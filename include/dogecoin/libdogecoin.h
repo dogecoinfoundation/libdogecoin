@@ -32,6 +32,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include <dogecoin/cstr.h>
+#include <dogecoin/tx.h>
+
 /* basic address functions: return 1 if succesful 
    ----------------------------------------------
 *///!init static ecc context
