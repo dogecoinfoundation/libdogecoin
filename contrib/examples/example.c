@@ -171,4 +171,13 @@ int main() {
 	}
 
 	dogecoin_ecc_stop();
+	
+	//lil test for jackies stuff
+	char* incScripthex="47304402206598d424407abd04e2bc958eaba648b20fe49f31709e53b31ef9bd004d33eb0902206c743faacfca1bef59577027d1088f01ab7eac4624bcfc8794f88224337985ae0121035d507078aa3425e59e6a4d96cb4105d8d73363890adbe854e09905dae1cfb126";
+
+	char* returnaddr;
+	
+	returnaddr=scripthex_to_p2pkh(incScripthex,0);
+	
+	printf("Returned address from scripthex: \n\n %s \n\n is p2pkh address: %s\n",incScripthex,returnaddr);
 }
