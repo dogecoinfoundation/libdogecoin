@@ -39,6 +39,7 @@ extern void test_address();
 extern void test_aes();
 extern void test_base58();
 extern void test_bip32();
+extern void test_bip39();
 extern void test_block_header();
 extern void test_buffer();
 extern void test_cstr();
@@ -90,7 +91,8 @@ int main()
     u_run_test(test_aes);
     u_run_test(test_base58);
     u_run_test(test_bip32);
-    u_run_test(test_block_header);
+    u_run_test(test_bip39);
+/*    u_run_test(test_block_header);
     u_run_test(test_buffer);
     u_run_test(test_cstr);
     u_run_test(test_ecc);
@@ -128,5 +130,6 @@ int main()
 #endif
 
     dogecoin_ecc_stop();
+*/
     return U_TESTS_FAIL;
 }
