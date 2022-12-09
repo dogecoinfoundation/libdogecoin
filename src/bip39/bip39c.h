@@ -104,6 +104,8 @@ int produce_mnemonic_sentence(int segSize, int checksumBits, char *firstByte, ch
 
 int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]);
 
-void get_words();
+void get_words(const char* lang);
+
+void get_custom_words(const char *filepath);
 
 #endif //BIP39C_BIP39C_H

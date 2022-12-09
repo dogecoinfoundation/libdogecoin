@@ -178,66 +178,88 @@ void test_bip39()
 
     /* generate mnemonic(s) */
     /* todo: stub entropy and generate test mnemonics */
-    printf("%s: ", dogecoin_generate_mnemonic ("128", "eng", &length));
+
+    printf("%s: ", dogecoin_generate_mnemonic ("128", "eng", NULL, &length));
     printf ("%lu bytes \n", length);
-    dogecoin_generate_mnemonic ("160", "eng", &length);
-    dogecoin_generate_mnemonic ("192", "eng", &length);
-    dogecoin_generate_mnemonic ("224", "eng", &length);
-    dogecoin_generate_mnemonic ("256", "eng", &length);
+    printf("%s: ", dogecoin_generate_mnemonic ("160", "eng", NULL, &length));
+    printf ("%lu bytes \n", length);
+    printf("%s: ", dogecoin_generate_mnemonic ("192", "eng", NULL, &length));
+    printf ("%lu bytes \n", length);
+    printf("%s: ", dogecoin_generate_mnemonic ("224", "eng", NULL, &length));
+    printf ("%lu bytes \n", length);
+    printf("%s: ", dogecoin_generate_mnemonic ("256", "eng", NULL, &length));
+    printf ("%lu bytes \n", length);
 
-    dogecoin_generate_mnemonic ("128", "jpn", &length);
-    dogecoin_generate_mnemonic ("160", "jpn", &length);
-    dogecoin_generate_mnemonic ("192", "jpn", &length);
-    dogecoin_generate_mnemonic ("224", "jpn", &length);
-    dogecoin_generate_mnemonic ("256", "jpn", &length);
+    /* test custom word lists */
 
-    dogecoin_generate_mnemonic ("128", "spa", &length);
-    dogecoin_generate_mnemonic ("160", "spa", &length);
-    dogecoin_generate_mnemonic ("192", "spa", &length);
-    dogecoin_generate_mnemonic ("224", "spa", &length);
-    dogecoin_generate_mnemonic ("256", "spa", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/spanish.txt", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/english.txt", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/japanese.txt", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/italian.txt", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/french.txt", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/chinese_simplified.txt", &length);
+    dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/chinese_traditional.txt", &length);
 
-    dogecoin_generate_mnemonic ("128", "sc", &length);
-    dogecoin_generate_mnemonic ("160", "sc", &length);
-    dogecoin_generate_mnemonic ("192", "sc", &length);
-    dogecoin_generate_mnemonic ("224", "sc", &length);
-    dogecoin_generate_mnemonic ("256", "sc", &length);
+    /* test BIP39 languages and entropy sizes */
+    dogecoin_generate_mnemonic ("128", "eng", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "eng", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "eng", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "eng", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "eng", NULL, &length);
 
-    dogecoin_generate_mnemonic ("128", "tc", &length);
-    dogecoin_generate_mnemonic ("160", "tc", &length);
-    dogecoin_generate_mnemonic ("192", "tc", &length);
-    dogecoin_generate_mnemonic ("224", "tc", &length);
-    dogecoin_generate_mnemonic ("256", "tc", &length);
+    dogecoin_generate_mnemonic ("128", "jpn", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "jpn", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "jpn", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "jpn", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "jpn", NULL, &length);
 
-    dogecoin_generate_mnemonic ("128", "fra", &length);
-    dogecoin_generate_mnemonic ("160", "fra", &length);
-    dogecoin_generate_mnemonic ("192", "fra", &length);
-    dogecoin_generate_mnemonic ("224", "fra", &length);
-    dogecoin_generate_mnemonic ("256", "fra", &length);
+    dogecoin_generate_mnemonic ("128", "spa", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "spa", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "spa", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "spa", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "spa", NULL, &length);
 
-    dogecoin_generate_mnemonic ("128", "ita", &length);
-    dogecoin_generate_mnemonic ("160", "ita", &length);
-    dogecoin_generate_mnemonic ("192", "ita", &length);
-    dogecoin_generate_mnemonic ("224", "ita", &length);
-    dogecoin_generate_mnemonic ("256", "ita", &length);
+    dogecoin_generate_mnemonic ("128", "sc", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "sc", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "sc", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "sc", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "sc", NULL, &length);
 
-    dogecoin_generate_mnemonic ("128", "kor", &length);
-    dogecoin_generate_mnemonic ("160", "kor", &length);
-    dogecoin_generate_mnemonic ("192", "kor", &length);
-    dogecoin_generate_mnemonic ("224", "kor", &length);
-    dogecoin_generate_mnemonic ("256", "kor", &length);
+    dogecoin_generate_mnemonic ("128", "tc", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "tc", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "tc", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "tc", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "tc", NULL, &length);
 
-    dogecoin_generate_mnemonic ("128", "cze", &length);
-    dogecoin_generate_mnemonic ("160", "cze", &length);
-    dogecoin_generate_mnemonic ("192", "cze", &length);
-    dogecoin_generate_mnemonic ("224", "cze", &length);
-    dogecoin_generate_mnemonic ("256", "cze", &length);
+    dogecoin_generate_mnemonic ("128", "fra", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "fra", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "fra", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "fra", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "fra", NULL, &length);
 
-    dogecoin_generate_mnemonic ("128", "por", &length);
-    dogecoin_generate_mnemonic ("160", "por", &length);
-    dogecoin_generate_mnemonic ("192", "por", &length);
-    dogecoin_generate_mnemonic ("224", "por", &length);
-    dogecoin_generate_mnemonic ("256", "por", &length);
+    dogecoin_generate_mnemonic ("128", "ita", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "ita", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "ita", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "ita", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "ita", NULL, &length);
+
+    dogecoin_generate_mnemonic ("128", "kor", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "kor", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "kor", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "kor", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "kor", NULL, &length);
+
+    dogecoin_generate_mnemonic ("128", "cze", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "cze", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "cze", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "cze", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "cze", NULL, &length);
+
+    dogecoin_generate_mnemonic ("128", "por", NULL, &length);
+    dogecoin_generate_mnemonic ("160", "por", NULL, &length);
+    dogecoin_generate_mnemonic ("192", "por", NULL, &length);
+    dogecoin_generate_mnemonic ("224", "por", NULL, &length);
+    dogecoin_generate_mnemonic ("256", "por", NULL, &length);
 
     /* generate seed */
     /* mnemonic vectors */

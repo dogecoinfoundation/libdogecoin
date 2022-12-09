@@ -1,0 +1,10 @@
+#include <bip39/chinese_simplified.h>
+#include <bip39/chinese_traditional.h>
+#include <bip39/czech.h>
+#include <bip39/english.h>
+#include <bip39/french.h>
+#include <bip39/italian.h>
+#include <bip39/japanese.h>
+#include <bip39/korean.h>
+#include <bip39/portuguese.h>
+#include <bip39/spanish.h>

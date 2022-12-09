@@ -80,6 +80,8 @@
 
 #include <wchar.h>
 #include <wctype.h>
+
+#include <bip39/index.h>
 /*
  * Global variables
  */
@@ -417,43 +419,9 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
  * repeated use.
  */
 
-void get_words(char *lang) {
+void get_custom_words(const char *filepath) {
 
     char *source = NULL;
-    const char *filepath = NULL;
-
-    if (strcmp(lang,"spa") == 0) {
-        filepath = "src/bip39/spanish.txt";
-//        filepath = "/usr/local/data/spanish.txt";
-    } else if (strcmp(lang,"eng") == 0) {
-        filepath = "src/bip39/english.txt";
-//        filepath = "/usr/local/data/english.txt";
-    } else if (strcmp(lang,"jpn") == 0) {
-        filepath = "src/bip39/japanese.txt";
-//        filepath = "/usr/local/data/japanese.txt";
-    } else if (strcmp(lang,"ita") == 0) {
-        filepath = "src/bip39/italian.txt";
-//        filepath = "/usr/local/data/italian.txt";
-    } else if (strcmp(lang,"fra") == 0) {
-        filepath = "src/bip39/french.txt";
-//        filepath = "/usr/local/data/french.txt";
-    } else if (strcmp(lang,"kor") == 0) {
-        filepath = "src/bip39/korean.txt";
-//        filepath = "/usr/local/data/korean.txt";
-    } else if (strcmp(lang,"sc") == 0) {
-        filepath = "src/bip39/chinese_simplified.txt";
-//        filepath = "/usr/local/data/chinese-simplified.txt";
-    } else if (strcmp(lang,"tc") == 0) {
-        filepath = "src/bip39/chinese_traditional.txt";
-//        filepath = "/usr/local/data/chinese-traditional.txt";
-    } else if (strcmp(lang,"cze") == 0) {
-        filepath = "src/bip39/czech.txt";
-    } else if (strcmp(lang,"por") == 0) {
-        filepath = "src/bip39/portuguese.txt";
-    } else {
-        fprintf(stderr, "Language or language file does not exist.\n");
-        exit(EXIT_FAILURE);
-    }
 
     FILE *fp = fopen(filepath, "r");
 
@@ -490,6 +458,9 @@ void get_words(char *lang) {
             }
         }
         fclose(fp);
+    } else {
+        fprintf(stderr, "Custom words file does not exist.\n");
+        exit(EXIT_FAILURE);
     }
 
     char * word;
@@ -504,6 +475,36 @@ void get_words(char *lang) {
     }
 
     free(source);
+}
+
+void get_words(const char *lang) {
+    int i = 0;
+    for (; i < 2048; i++) {
+      if (strcmp(lang,"spa") == 0) {
+          words[i]=(char*)wordlist_spa[i];
+      } else if (strcmp(lang,"eng") == 0) {
+          words[i]=(char*)wordlist_eng[i];
+      } else if (strcmp(lang,"jpn") == 0) {
+          words[i]=(char*)wordlist_jpn[i];
+      } else if (strcmp(lang,"ita") == 0) {
+          words[i]=(char*)wordlist_ita[i];
+      } else if (strcmp(lang,"fra") == 0) {
+          words[i]=(char*)wordlist_fra[i];
+      } else if (strcmp(lang,"kor") == 0) {
+          words[i]=(char*)wordlist_kor[i];
+      } else if (strcmp(lang,"sc") == 0) {
+          words[i]=(char*)wordlist_sc[i];
+      } else if (strcmp(lang,"tc") == 0) {
+          words[i]=(char*)wordlist_tc[i];
+      } else if (strcmp(lang,"cze") == 0) {
+          words[i]=(char*)wordlist_cze[i];
+      } else if (strcmp(lang,"por") == 0) {
+          words[i]=(char*)wordlist_por[i];
+      } else {
+          fprintf(stderr, "Language or language file does not exist.\n");
+          exit(EXIT_FAILURE);
+      }
+    }
 }
 
 /*
@@ -565,7 +566,7 @@ int produce_mnemonic_sentence(int segSize, int checksumBits, char *firstByte, ch
 
     int elevenBitIndex = 0;
 
-    for (size_t i = 0; i < segSize; i++) {
+    for (int i = 0; i < segSize; i++) {
 
         if (elevenBitIndex == 11) {
             elevenBits[11] = '\0';
