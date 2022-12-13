@@ -39,6 +39,6 @@
 /*
  * Function declarations
  */
-unsigned char *hexstr_to_char(const char *hexstr);
+void hexstr_to_char(const char *hexstr, unsigned char *chrs);
 
 #endif //BIP39C_CONVERSION_H

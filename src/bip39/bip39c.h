@@ -2,6 +2,8 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2018 David L. Whitehurst
+ * Copyright (c) 2022 edtubbs
+ * Copyright (c) 2022 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,14 +100,19 @@
  * Function declarations
  */
 
-int get_mnemonic(int entropysize, char *mnemonic, size_t* mnemonic_len);
+/* Generates mnemonic phrase */
+int get_mnemonic(const int entropysize, const char* wordslist[], char *mnemonic, size_t* mnemonic_len);
 
-int produce_mnemonic_sentence(int segSize, int checksumBits, char *firstByte, char entropy[], char* mnemonic, size_t* mnemonic_len);
+/* Produces the mnemonic sentence */
+int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char entropy[], const char* wordlist[], char *mnemonic, size_t *mnemonic_len);
 
+/* Generates root seed for HD wallet */
 int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]);
 
-void get_words(const char* lang);
+/* Loads words into memory from specified language */
+void get_words(const char* lang, char* wordlist[]);
 
-void get_custom_words(const char *filepath);
+/* Returns custom words from specified file as a parameter */
+int get_custom_words(const char *filepath, char* wordlist[]);
 
 #endif //BIP39C_BIP39C_H

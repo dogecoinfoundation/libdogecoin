@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openssl/sha.h>
+#include <dogecoin/sha2.h>
 
 /*
  * This function implements a SHA256 checksum and fills a
@@ -47,11 +47,13 @@
  */
 
 int sha256(char *string, char outputBuffer[65]) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, string, strlen(string));
-    SHA256_Final(hash, &sha256);
+    sha256_context ctx;
+    uint8_t hash[SHA256_DIGEST_LENGTH];
+
+    sha256_init(&ctx);
+    sha256_write(&ctx, (const uint8_t*) string, strlen(string));
+    sha256_finalize(&ctx, hash);
+
     for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         sprintf(outputBuffer + (i * 2), "%02hhX ", hash[i]);
     }
@@ -59,3 +61,4 @@ int sha256(char *string, char outputBuffer[65]) {
     outputBuffer[64] = 0;
     return 0;
 }
+

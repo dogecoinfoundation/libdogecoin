@@ -66,7 +66,6 @@ libdogecoin_la_SOURCES = \
     src/bip39/bip39c.c \
     src/bip39/bip39.c \
     src/bip39/crypto.c \
-    src/bip39/print_util.c \
     src/bip39/conversion.c \
     src/block.c \
     src/buffer.c \
@@ -122,7 +121,7 @@ tests_SOURCES = \
 
 tests_CFLAGS = $(libdogecoin_la_CFLAGS) -O0
 tests_CPPFLAGS = -I$(top_srcdir)/src
-tests_LDADD += $(LIBSECP256K1) -lssl -lcrypto -licuuc
+tests_LDADD += $(LIBSECP256K1) -lssl -lcrypto -licuuc -licudata
 tests_LDFLAGS = -static
 TESTS = tests
 endif

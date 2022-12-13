@@ -43,18 +43,31 @@
  * to a pointer of unsigned character bytes
  */
 
-unsigned char *hexstr_to_char(const char *hexstr) {
+
+#include "conversion.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+/*
+ * This function converts a null terminated hex string
+ * to a pointer of unsigned character bytes
+ */
+
+void hexstr_to_char(const char *hexstr, unsigned char *chrs) {
+
+    /* Validate input string */
+    if (!hexstr || strlen(hexstr) % 2 != 0)
+        return;
 
     size_t len = strlen(hexstr);
     size_t final_len = len / 2;
-
-    unsigned char *chrs = (unsigned char *) malloc((final_len + 1) * sizeof(*chrs));
 
     size_t i, j;
 
     for (i = 0, j = 0; j < final_len; i += 2, j++)
         chrs[j] = (hexstr[i] % 32 + 9) % 25 * 16 + (hexstr[i + 1] % 32 + 9) % 25;
     chrs[final_len] = '\0';
-
-    return chrs;
 }
+

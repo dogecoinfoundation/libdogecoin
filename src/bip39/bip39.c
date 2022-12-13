@@ -34,34 +34,42 @@
  * @param entropy_size The 128, 160, 192, 224, or 256 bits of entropy
  * @param language The ISO 639-2 code for the mnemonic language
  * @param filepath The path to a custom word file (optional)
+ * @param wordlist The language word list as an array
  * @param length The length of the generated mnemonic in bytes
  *
  * @return mnemonic code words
 */
 const char* dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* filepath, size_t* length)
 {
+    char *wordlist[LANG_WORD_CNT] = {0};
     static char words[] = "";
-
     if (entropy_size != NULL) {
 
         /* load words into memory */
         if (language != NULL){
-            get_words(language);
+            get_words(language, wordlist);
         }
         /* load custom word file into memory */
 	else if (filepath != NULL) {
-            get_custom_words (filepath);
+            get_custom_words (filepath, (char **) wordlist);
         }
+        /* handle input validation errors */
         else {
             fprintf(stderr, "ERROR: Failed to get language or language file\n");
             return NULL;
         }
 
-        long entropyBits = strtol(entropy_size, NULL, 10);
-
         /* convert string value and get mnemonic */
-        if (get_mnemonic(entropyBits, words, length) == -1) {
-           return NULL;
+        if (get_mnemonic(strtol(entropy_size, NULL, 10), (const char **) wordlist, words, length) == -1) {
+            fprintf(stderr, "ERROR: Failed to get mnemonic\n");
+            return NULL;
+        }
+
+        /* Free memory for custom words */
+        if (language == NULL) {
+            for (int i = 0; i < LANG_WORD_CNT; i++) {
+                free(wordlist[i]);
+            }
         }
 
     }

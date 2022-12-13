@@ -191,7 +191,6 @@ void test_bip39()
     printf ("%lu bytes \n", length);
 
     /* test custom word lists */
-
     dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/spanish.txt", &length);
     dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/english.txt", &length);
     dogecoin_generate_mnemonic ("128", NULL, "test/wordlist/japanese.txt", &length);
@@ -266,6 +265,7 @@ void test_bip39()
     /* iancoleman.io/bip39 */
 
     /* English with passphrase */
+
     dogecoin_seed_from_mnemonic (test_mnemonic_12, "TREZOR", seed);
     memcpy_safe(seed_test,
            utils_hex_to_uint8("31113f96716b7d5b8d58a49c5e1f6d6300ff307b35eef3cecfdb97869e514ad330f0a7dcec4ed2feeebf8d2267ebfefeb149df84642ca091befd25ea15d36076"),
