@@ -36,6 +36,7 @@
 #include <dogecoin/sha2.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/options.h>
 
 /*
  * ASSERT NOTE:
@@ -923,6 +924,44 @@ void sha512_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA512_DIGEST_
     sha512_finalize(&context, digest);
 }
 
+/*** HMAC_SHA-*: *********************************************************/
+
+void hmac_sha256_init(hmac_sha256_context *hctx, const uint8_t *key, const uint32_t keylen)
+{
+	uint8_t i_key_pad[SHA256_BLOCK_LENGTH];
+	memset(i_key_pad, 0, SHA256_BLOCK_LENGTH);
+	if (keylen > SHA256_BLOCK_LENGTH) {
+		sha256_raw(key, keylen, i_key_pad);
+	} else {
+		memcpy(i_key_pad, key, keylen);
+	}
+    int i;
+	for (i = 0; i < SHA256_BLOCK_LENGTH; i++) {
+		hctx->o_key_pad[i] = i_key_pad[i] ^ 0x5c;
+		i_key_pad[i] ^= 0x36;
+	}
+	sha256_init(&(hctx->ctx));
+	sha256_write(&(hctx->ctx), i_key_pad, SHA256_BLOCK_LENGTH);
+	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
+}
+
+void hmac_sha256_write(hmac_sha256_context *hctx, const uint8_t *msg, const uint32_t msglen)
+{
+	sha256_write(&(hctx->ctx), msg, msglen);
+}
+
+void hmac_sha256_finalize(hmac_sha256_context *hctx, uint8_t *hmac)
+{
+	uint8_t hash[SHA256_DIGEST_LENGTH];
+	sha256_finalize(&(hctx->ctx), hash);
+	sha256_init(&(hctx->ctx));
+	sha256_write(&(hctx->ctx), hctx->o_key_pad, SHA256_BLOCK_LENGTH);
+	sha256_write(&(hctx->ctx), hash, SHA256_DIGEST_LENGTH);
+	sha256_finalize(&(hctx->ctx), hmac);
+	MEMSET_BZERO(hash, sizeof(hash));
+	MEMSET_BZERO(hctx, sizeof(hmac_sha256_context));
+}
+
 void hmac_sha256(const uint8_t* key, const size_t keylen, const uint8_t* msg, const size_t msglen, uint8_t* hmac)
 {
     int i;
@@ -950,6 +989,42 @@ void hmac_sha256(const uint8_t* key, const size_t keylen, const uint8_t* msg, co
     sha256_finalize(&ctx, hmac);
 }
 
+void hmac_sha512_init(hmac_sha512_context *hctx, const uint8_t *key, const uint32_t keylen)
+{
+	uint8_t i_key_pad[SHA512_BLOCK_LENGTH];
+	memset(i_key_pad, 0, SHA512_BLOCK_LENGTH);
+	if (keylen > SHA512_BLOCK_LENGTH) {
+		sha512_raw(key, keylen, i_key_pad);
+	} else {
+		memcpy(i_key_pad, key, keylen);
+	}
+    int i;
+	for (i = 0; i < SHA512_BLOCK_LENGTH; i++) {
+		hctx->o_key_pad[i] = i_key_pad[i] ^ 0x5c;
+		i_key_pad[i] ^= 0x36;
+	}
+	sha512_init(&(hctx->ctx));
+	sha512_write(&(hctx->ctx), i_key_pad, SHA512_BLOCK_LENGTH);
+	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
+}
+
+void hmac_sha512_write(hmac_sha512_context *hctx, const uint8_t *msg, const uint32_t msglen)
+{
+	sha512_write(&(hctx->ctx), msg, msglen);
+}
+
+void hmac_sha512_finalize(hmac_sha512_context *hctx, uint8_t *hmac)
+{
+	uint8_t hash[SHA512_DIGEST_LENGTH];
+	sha512_finalize(&(hctx->ctx), hash);
+	sha512_init(&(hctx->ctx));
+	sha512_write(&(hctx->ctx), hctx->o_key_pad, SHA512_BLOCK_LENGTH);
+	sha512_write(&(hctx->ctx), hash, SHA512_DIGEST_LENGTH);
+	sha512_finalize(&(hctx->ctx), hmac);
+	MEMSET_BZERO(hash, sizeof(hash));
+	MEMSET_BZERO(hctx, sizeof(hmac_sha512_context));
+}
+
 void hmac_sha512(const uint8_t* key, const size_t keylen, const uint8_t* msg, const size_t msglen, uint8_t* hmac)
 {
     int i;
@@ -973,4 +1048,86 @@ void hmac_sha512(const uint8_t* key, const size_t keylen, const uint8_t* msg, co
     sha512_write(&ctx, o_key_pad, SHA512_BLOCK_LENGTH);
     sha512_write(&ctx, buf, SHA512_DIGEST_LENGTH);
     sha512_finalize(&ctx, hmac);
+}
+
+/*** PBKDF2-*: *********************************************************/
+
+void pbkdf2_hmac_sha256_init(pbkdf2_hmac_sha256_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)
+{
+	hmac_sha256_context hctx;
+	hmac_sha256_init(&hctx, pass, passlen);
+	hmac_sha256_write(&hctx, salt, saltlen);
+	hmac_sha256_write(&hctx, (const uint8_t *)"\x00\x00\x00\x01", 4);
+	hmac_sha256_finalize(&hctx, pctx->g);
+	memcpy(pctx->f, pctx->g, SHA256_DIGEST_LENGTH);
+	pctx->pass = pass;
+	pctx->passlen = passlen;
+	pctx->first = 1;
+}
+
+void pbkdf2_hmac_sha256_write(pbkdf2_hmac_sha256_context *pctx, uint32_t iterations)
+{
+    uint32_t i;
+	for (i = pctx->first; i < iterations; i++) {
+		hmac_sha256(pctx->pass, pctx->passlen, pctx->g, SHA256_DIGEST_LENGTH, pctx->g);
+        uint32_t j;
+		for (j = 0; j < SHA256_DIGEST_LENGTH; j++) {
+			pctx->f[j] ^= pctx->g[j];
+		}
+	}
+	pctx->first = 0;
+}
+
+void pbkdf2_hmac_sha256_finalize(pbkdf2_hmac_sha256_context *pctx, uint8_t *key)
+{
+	memcpy(key, pctx->f, SHA256_DIGEST_LENGTH);
+	MEMSET_BZERO(pctx, sizeof(pbkdf2_hmac_sha256_context));
+}
+
+void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+{
+	pbkdf2_hmac_sha256_context pctx;
+	pbkdf2_hmac_sha256_init(&pctx, pass, passlen, salt, saltlen);
+	pbkdf2_hmac_sha256_write(&pctx, iterations);
+	pbkdf2_hmac_sha256_finalize(&pctx, key);
+}
+
+void pbkdf2_hmac_sha512_init(pbkdf2_hmac_sha512_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)
+{
+	hmac_sha512_context hctx;
+	hmac_sha512_init(&hctx, pass, passlen);
+	hmac_sha512_write(&hctx, salt, saltlen);
+	hmac_sha512_write(&hctx, (const uint8_t *)"\x00\x00\x00\x01", 4);
+	hmac_sha512_finalize(&hctx, pctx->g);
+	memcpy(pctx->f, pctx->g, SHA512_DIGEST_LENGTH);
+	pctx->pass = pass;
+	pctx->passlen = passlen;
+	pctx->first = 1;
+}
+
+void pbkdf2_hmac_sha512_write(pbkdf2_hmac_sha512_context *pctx, uint32_t iterations)
+{
+    uint32_t i;
+	for (i = pctx->first; i < iterations; i++) {
+		hmac_sha512(pctx->pass, pctx->passlen, pctx->g, SHA512_DIGEST_LENGTH, pctx->g);
+        uint32_t j;
+		for (j = 0; j < SHA512_DIGEST_LENGTH; j++) {
+			pctx->f[j] ^= pctx->g[j];
+		}
+	}
+	pctx->first = 0;
+}
+
+void pbkdf2_hmac_sha512_finalize(pbkdf2_hmac_sha512_context *pctx, uint8_t *key)
+{
+	memcpy(key, pctx->f, SHA512_DIGEST_LENGTH);
+	MEMSET_BZERO(pctx, sizeof(pbkdf2_hmac_sha512_context));
+}
+
+void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+{
+	pbkdf2_hmac_sha512_context pctx;
+	pbkdf2_hmac_sha512_init(&pctx, pass, passlen, salt, saltlen);
+	pbkdf2_hmac_sha512_write(&pctx, iterations);
+	pbkdf2_hmac_sha512_finalize(&pctx, key);
 }

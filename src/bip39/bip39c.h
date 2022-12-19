@@ -101,10 +101,10 @@
  */
 
 /* Generates mnemonic phrase */
-int get_mnemonic(const int entropysize, const char* wordslist[], char *mnemonic, size_t* mnemonic_len);
+int get_mnemonic(const int entropysize, const char* entropy, const char* wordslist[], const char* space, char *mnemonic, size_t* mnemonic_len);
 
 /* Produces the mnemonic sentence */
-int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char entropy[], const char* wordlist[], char *mnemonic, size_t *mnemonic_len);
+int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t *mnemonic_len);
 
 /* Generates root seed for HD wallet */
 int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]);

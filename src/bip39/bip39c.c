@@ -72,16 +72,15 @@
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
 
 #include <unicode/utypes.h>
 #include <unicode/ustring.h>
 #include <unicode/unorm2.h>
 
-
 #include <bip39/index.h>
+#include <dogecoin/random.h>
+#include <dogecoin/sha2.h>
+#include <dogecoin/utils.h>
 
 /*
  * This function implements the first part of the BIP-39 algorithm.
@@ -107,8 +106,9 @@
  * |  256  |  8 |   264  |  24  |
  */
 
-int get_mnemonic(const int entropysize, const char* wordlist[], char *mnemonic, size_t* mnemonic_len) {
+int get_mnemonic(const int entropysize, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t* mnemonic_len) {
 
+    /* Check entropy size per BIP-39 */
     if (!(entropysize >= 128 && entropysize <= 256 && entropysize % 32 == 0)) {
         fprintf(stderr,
                 "ERROR: Only the following values for entropy bit sizes may be used: 128, 160, 192, 224, and 256\n");
@@ -123,55 +123,76 @@ int get_mnemonic(const int entropysize, const char* wordlist[], char *mnemonic, 
      * ENT (Entropy)
      */
 
-    unsigned char entropy[entBytes];
     char entropyBits[entropysize + 1];
     entropyBits[0] = '\0';
+    memset(entropyBits, 0, sizeof(entropyBits));  // Initialize entropyBits to all zeros
 
     char binaryByte[9] = "";
 
     /* OpenSSL */
-    int rc = RAND_bytes(entropy, sizeof(entropy));
-    if (rc != 1) {
-        fprintf(stderr, "ERROR: Failed to generate random entropy\n");
-        return -1;
+    /* Gather entropy bytes locally unless optionally provided */
+    unsigned char local_entropy[entBytes];
+    if (entropy == NULL) {
+        int rc = (int) dogecoin_random_bytes(local_entropy, sizeof(local_entropy), 0);
+        if (rc != 1) {
+            fprintf(stderr, "ERROR: Failed to generate random entropy\n");
+            return -1;
+        }
+    }
+    else {
+        /* Convert optional entropy string to bytes */
+        unsigned char* entropy_bytes = hexstr_to_char(entropy);
+        if (entropy_bytes == NULL) {
+            fprintf(stderr, "ERROR: Failed to convert entropy string to bytes\n");
+            return -1;
+        }
+        memcpy(local_entropy, entropy_bytes, sizeof(local_entropy));
+        free(entropy_bytes);
     }
 
-    for (size_t i = 0; i < sizeof(entropy); i++) {
-        char buffer[3];
-        memcpy(buffer, &entropy[i], 2);
-        buffer[2] = '\0';
+    /* Concatenate string of bits from entropy bytes */
+    for (size_t i = 0; i < sizeof(local_entropy); i++) {
 
-        unsigned char byte[1];
-        hexstr_to_char(buffer, byte);
+        /* Convert valid byte to string of bits */
+        sprintf(binaryByte, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(local_entropy[i]));
+        binaryByte[8] = '\0';  // null-terminate the binary byte
 
-        sprintf(binaryByte, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(byte[0]));
-        binaryByte[8] = '\0';
+        /* Concatentate the bits */
         if (strcat(entropyBits, binaryByte) == NULL) {
-          fprintf(stderr, "ERROR: Failed to concatenate entropy\n");
-          return -1;
+            fprintf(stderr, "ERROR: Failed to concatenate entropy\n");
+            return -1;
         }
-
     }
 
     /*
      * ENT SHA256 checksum
      */
+    static char checksum[SHA256_DIGEST_STRING_LENGTH];
+    memset(checksum, 0, sizeof(checksum));
+    checksum[0] = '\0';
 
-    static char checksum[65];
-    char entropyStr[sizeof(entropy) * 2 + 1];
+    /* SHA256 of entropy bytes */
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    sha256_raw(local_entropy, sizeof(local_entropy), hash);
 
-    /* me and OpenSSL */
-    sha256(entropyStr, checksum);
+    /* Checksum from SHA256 */
+    memset(checksum, 0, sizeof(checksum));  // Initialize checksum to all zeros
+    for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        sprintf(&checksum[i * 2], "%02x", hash[i]);
+    }
+    checksum[SHA256_DIGEST_STRING_LENGTH - 1] = '\0';  // null-terminate the checksum string
 
+    /* Copy the checksum */
     char hexStr[3];
-    memcpy(hexStr, &checksum[0], 2);
+    memset(hexStr, 0, sizeof(hexStr));
+    strncpy(hexStr, &checksum[0], 2);
     hexStr[2] = '\0';
 
     /*
      * CS (Checksum portion) to add to entropy
      */
 
-    int ret = produce_mnemonic_sentence(csAdd * 33 + 1, csAdd + 1, hexStr, entropyBits, wordlist, mnemonic, mnemonic_len);
+    int ret = produce_mnemonic_sentence(csAdd * 33 + 1, csAdd + 1, hexStr, entropyBits, wordlist, space, mnemonic, mnemonic_len);
     if (ret != 0) {
         fprintf(stderr, "ERROR: Failed to generate mnemonic sentence\n");
         return -1;
@@ -179,6 +200,7 @@ int get_mnemonic(const int entropysize, const char* wordlist[], char *mnemonic, 
 
     return 0;
 }
+
 
 /*
  * This function converts the input string to a Unicode format,
@@ -192,7 +214,7 @@ char *nfkd(const char *input) {
     /* Get an instance of the NFKD normalizer */
     const UNormalizer2 *nfkd = unorm2_getNFKDInstance(&status);
     if (U_FAILURE(status)) {
-        fprintf(stderr, "Error getting NFKD instance: %s\n", u_errorName(status));
+        fprintf(stderr, "ERROR: Failed getting NFKD instance: %s\n", u_errorName(status));
         u_cleanup();
         return NULL;
     }
@@ -200,7 +222,7 @@ char *nfkd(const char *input) {
     /* Allocate memory for the input in Unicode format */
     UChar *input_u = calloc(strlen(input) + 1, sizeof(UChar));
     if (input_u == NULL) {
-        fprintf(stderr, "Error allocating memory for input UChar\n");
+        fprintf(stderr, "ERROR: Failed allocating memory for input UChar\n");
         u_cleanup();
         return NULL;
     }
@@ -208,7 +230,7 @@ char *nfkd(const char *input) {
     /* Convert the input to Unicode format */
     u_strFromUTF8(input_u, strlen(input) + 1, NULL, input, strlen(input), &status);
     if (U_FAILURE(status)) {
-        fprintf(stderr, "Error converting input to UChar: %s\n", u_errorName(status));
+        fprintf(stderr, "ERROR: Failed converting input to UChar: %s\n", u_errorName(status));
         free(input_u);
         u_cleanup();
         return NULL;
@@ -217,7 +239,7 @@ char *nfkd(const char *input) {
     /* Get the length of the normalized string */
     int32_t normalized_length = unorm2_normalize(nfkd, input_u, -1, NULL, 0, &status);
     if (status != U_BUFFER_OVERFLOW_ERROR) {
-        fprintf(stderr, "Error getting length of normalized UChar: %s\n", u_errorName(status));
+        fprintf(stderr, "ERROR: Failed getting length of normalized UChar: %s\n", u_errorName(status));
         free(input_u);
         u_cleanup();
         return NULL;
@@ -228,7 +250,7 @@ char *nfkd(const char *input) {
     /* Allocate memory for the normalized string */
     UChar *normalized_u = calloc(normalized_length + 1, sizeof(UChar));
     if (normalized_u == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized UChar\n");
+        fprintf(stderr, "ERROR: Failed allocating memory for normalized UChar\n");
         free(input_u);
         u_cleanup();
         return NULL;
@@ -237,7 +259,7 @@ char *nfkd(const char *input) {
     /* Perform the normalization of the input string */
     unorm2_normalize(nfkd, input_u, -1, normalized_u, normalized_length + 1, &status);
     if (U_FAILURE(status)) {
-        fprintf(stderr, "Error normalizing UChar: %s\n", u_errorName(status));
+        fprintf(stderr, "ERROR: Failed normalizing UChar: %s\n", u_errorName(status));
         free(input_u);
         free(normalized_u);
         u_cleanup();
@@ -248,7 +270,7 @@ char *nfkd(const char *input) {
    /* Allocate memory for the normalized string in UTF-8 format */
     char *normalized_utf8 = calloc(normalized_length * 4 + 1, sizeof(int8_t));
     if (normalized_utf8 == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized UTF-8\n");
+        fprintf(stderr, "ERROR: Failed allocating memory for normalized UTF-8\n");
         free(normalized_u);
         u_cleanup();
        return NULL;
@@ -257,7 +279,7 @@ char *nfkd(const char *input) {
     /* Convert the normalized UChar to UTF-8 and return it. */
     u_strToUTF8(normalized_utf8, normalized_length * 4 + 1, NULL, normalized_u, normalized_length, &status);
     if (U_FAILURE(status)) {
-        fprintf(stderr, "Error converting normalized UChar to UTF-8: %s\n", u_errorName(status));
+        fprintf(stderr, "ERROR: Failed converting normalized UChar to UTF-8: %s\n", u_errorName(status));
         free(normalized_u);
         free(normalized_utf8);
         u_cleanup();
@@ -278,7 +300,6 @@ char *nfkd(const char *input) {
 int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 
         /* initialize variables */
-        char HexResult[128];
         unsigned char digest[64];
 
         /* create salt, passphrase could be empty string */
@@ -294,31 +315,20 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
             return -1;
         }
 
-        char *normalized = nfkd(pass);
-        char *norm_salt = nfkd(salt);
+        /* normalize the passphrase and salt */
+        char *norm_pass =  nfkd(pass);
+        char *norm_salt =  nfkd(salt);
 
-        /* openssl function */
-        int ret = PKCS5_PBKDF2_HMAC((const char*) normalized, strlen(normalized), (const unsigned char*) norm_salt, strlen((const char *) norm_salt), LANG_WORD_CNT, EVP_sha512(), 64, digest);
-        if (ret == 0) {
-            fprintf(stderr, "ERROR: PKCS5_PBKDF2_HMAC failed\n");
-            free(salt);
-            free(normalized);
-            free(norm_salt);
-            return -1;
-        }
+        /* pbkdf2 hmac sha512 */
+        pbkdf2_hmac_sha512((const unsigned char*) norm_pass, strlen(norm_pass), (const unsigned char*) norm_salt, strlen(norm_salt), LANG_WORD_CNT, digest);
 
         /* we're done with salt */
         free(salt);
-        free(normalized);
+        free(norm_pass);
         free(norm_salt);
 
-        for (size_t i = 0; i < sizeof(digest); i++)
-            sprintf(HexResult + (i * 2), "%02x", (unsigned int) digest[i]);
-
-        printf("%s\n", HexResult);
-
         /* copy the digest into seed*/
-        memcpy(seed, digest, 64);
+        memcpy(seed, digest, SHA512_DIGEST_LENGTH);
 
         return 0;
 }
@@ -397,7 +407,7 @@ void get_words(const char *lang, char* wordlist[]) {
       } else if (strcmp(lang,"por") == 0) {
           wordlist[i]=(char*)wordlist_por[i];
       } else {
-          fprintf(stderr, "Language or language file does not exist.\n");
+          fprintf(stderr, "ERROR: Language or language file does not exist.\n");
           exit(EXIT_FAILURE);
       }
     }
@@ -408,22 +418,36 @@ void get_words(const char *lang, char* wordlist[]) {
  * size and number of checksum bits appended to the entropy bits.
  */
 
-int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char entropy[], const char* wordlist[], char *mnemonic, size_t *mnemonic_len) {
+int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t *mnemonic_len) {
 
-    if (segSize <= 0 || checksumBits <= 0) {
-        fprintf(stderr, "Error: invalid input arguments\n");
+    /* Check if the input arguments are valid */
+    if (segSize <= 0 || checksumBits <= 0 || !firstByte || !entropy || !wordlist || !mnemonic || !mnemonic_len) {
+        fprintf(stderr, "ERROR: invalid input arguments\n");
         return -1;
     }
 
+    /* Check that wordlist is valid */
+    if (wordlist == NULL || *wordlist == NULL) {
+        fprintf(stderr, "ERROR: invalid value of wordlist\n");
+        return -1;
+    }
+
+    /* Define and initialize segment and csBits */
     char segment[segSize];
-    memset(segment, 0, segSize * sizeof(char));
+    strcpy(segment, "");
 
     char csBits[checksumBits];
-    memset(csBits, 0, checksumBits * sizeof(char));
+    strcpy(csBits, "");
 
-    unsigned char bytes[1];
-    hexstr_to_char(firstByte, bytes);
+    /* Convert the checksum string to a byte */
+    unsigned char *bytes = hexstr_to_char(firstByte);
+    if (bytes == NULL) {
+        /* Invalid byte, return from the function */
+        fprintf(stderr, "ERROR: Failed to convert first byte\n");
+        return -1;
+    }
 
+    /* Convert the byte to bits */
     switch(checksumBits) {
         case 5:
             sprintf(csBits, BYTE_TO_FIRST_FOUR_BINARY_PATTERN, BYTE_TO_FIRST_FOUR_BINARY(bytes[0]));
@@ -442,17 +466,18 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             break;
         default:
             return -1;
+            free (bytes);
             break;
     }
-
-    csBits[checksumBits - 1] = '\0';
+    free (bytes);
+    csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
 
     /* Concatenate the entropy and checksum bits onto the segment array,
      * ensuring that the segment array does not overflow.
      */
+
     strncat(segment, entropy, segSize - strlen(segment) - 1);
     strncat(segment, csBits, segSize - strlen(segment) - 1);
-    segment[segSize - 1] = '\0';
 
     char elevenBits[12] = {""};
 
@@ -462,21 +487,25 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
 
         if (elevenBitIndex == 11) {
             elevenBits[11] = '\0';
-            /* Convert the 11-bit binary chunk to a decimal value */
-            long real = strtol(elevenBits, NULL, 2);
-
-            if (strcat(mnemonic, wordlist[real]) == NULL) {
-              fprintf(stderr, "ERROR: Failed to concatenate a word\n");
-            return -1;
+            /* Compute the decimal value of the 11-bit binary chunk */
+            long real = 0;
+            for (int j = 0; j < 11; j++) {
+                real = (real << 1) | (elevenBits[j] - '0');
             }
 
-            if (strcat(mnemonic, " ") == NULL) {
-              fprintf(stderr, "ERROR: Failed to concatenate a space\n");
-            return -1;
+            /* Check that real is a valid index into the wordlist array */
+            if (real < 0 || real >= LANG_WORD_CNT) {
+                fprintf(stderr, "ERROR: invalid 11-bit binary chunk\n");
+                return -1;
             }
 
-            printf("%s", wordlist[real]);
-            printf(" ");
+            /* Concatenate the word from the wordlist to the mnemonic */
+            const char *word = wordlist[real];
+            strcat(mnemonic, word);
+
+            /* Concatenate a space to the mnemonic */
+            strcat(mnemonic, space);
+
             elevenBitIndex = 0;
         }
 
@@ -484,10 +513,8 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
         elevenBitIndex++;
     }
 
-    printf("\n");
-
     /* Remove the trailing space from the mnemonic sentence */
-    mnemonic[strlen(mnemonic) - 1] = '\0';
+    mnemonic[strlen(mnemonic) - strlen(space)] = '\0';
 
     /* Update the mnemonic_len output parameter to reflect the length of the generated mnemonic */
     *mnemonic_len = strlen(mnemonic);

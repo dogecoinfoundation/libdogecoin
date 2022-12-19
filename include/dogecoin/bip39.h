@@ -20,9 +20,12 @@ LIBDOGECOIN_API
 /* 128, 160, 192, 224, or 256 bits of entropy */
 /* ISO 639-2 code for the mnemonic language */
 /* en.wikipedia.org/wiki/List_of_ISO_639-2_codes */
-/* length of the generated mnemonic in bytes*/
-/* returns generated mnemonic */
-const char* dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* filename, size_t* length);
+/* space character to seperate mnemonic */
+/* entropy from the caller (optional) */
+/* length of the generated mnemonic in bytes (output) */
+/* generated mnemonic (output) */
+/* returns 0 (success), -1 (fail) */
+int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* space, const char* entropy, const char* filename, size_t* length, char* words);
 
 /* Derive the seed from the mnemonic */
 /* mnemonic code words */

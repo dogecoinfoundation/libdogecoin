@@ -121,7 +121,7 @@ tests_SOURCES = \
 
 tests_CFLAGS = $(libdogecoin_la_CFLAGS) -O0
 tests_CPPFLAGS = -I$(top_srcdir)/src
-tests_LDADD += $(LIBSECP256K1) -lssl -lcrypto -licuuc -licudata
+tests_LDADD += $(LIBSECP256K1) -licuuc
 tests_LDFLAGS = -static
 TESTS = tests
 endif
