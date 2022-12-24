@@ -42,3 +42,11 @@ void test_utils()
     utils_hex_to_uint8(hex2);
     utils_clear_buffers();
     }
+
+void test_net_flag_defined() {
+    assert(dogecoin_network_enabled()==true);
+}
+
+void test_net_flag_not_defined() {
+    assert(dogecoin_network_enabled()==false);
+}
