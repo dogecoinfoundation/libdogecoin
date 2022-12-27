@@ -344,6 +344,7 @@ void test_bip39()
     u_assert_mem_eq(seed, seed_test, 64); printf("%s\n", utils_uint8_to_hex(seed, 64));
 
     printf ("\nTests of mnemonic seed generation (w/o passphrase)\n");
+
     /* Japanese */
     dogecoin_seed_from_mnemonic (test_mnemonic_12_jpn, "", seed);
     memcpy_safe(seed_test,

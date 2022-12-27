@@ -146,7 +146,7 @@ dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogec
     out->depth = 0;
     out->fingerprint = 0x00000000;
     out->child_num = 0;
-    hmac_sha512((const uint8_t*)"Dogecoin seed", 12, seed, seed_len, I);
+    hmac_sha512((const uint8_t*)"Bitcoin seed", 12, seed, seed_len, I);
     memcpy_safe(out->private_key, I, DOGECOIN_ECKEY_PKEY_LENGTH);
 
     if (!dogecoin_ecc_verify_privatekey(out->private_key)) {
