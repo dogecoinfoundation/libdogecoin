@@ -1,4 +1,4 @@
-packages:=libevent
+packages:=libevent libunistring
 native_packages := native_ccache
 
 wallet_packages=

@@ -73,9 +73,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <unicode/utypes.h>
-#include <unicode/ustring.h>
-#include <unicode/unorm2.h>
+#include <uninorm.h>
 
 #include <bip39/index.h>
 #include <dogecoin/random.h>
@@ -201,136 +199,53 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
     return 0;
 }
 
-
-/*
- * This function converts the input string to a Unicode format,
- * normalizes it using the NFKD normalization form, and converts
- * it back to a UTF-8 encoded string.
- */
-char *nfkd(const char *input) {
-    /* Initialize error code */
-    UErrorCode status = U_ZERO_ERROR;
-
-    /* Get an instance of the NFKD normalizer */
-    const UNormalizer2 *nfkd = unorm2_getNFKDInstance(&status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "ERROR: Failed getting NFKD instance: %s\n", u_errorName(status));
-        u_cleanup();
-        return NULL;
-    }
-
-    /* Allocate memory for the input in Unicode format */
-    UChar *input_u = calloc(strlen(input) + 1, sizeof(UChar));
-    if (input_u == NULL) {
-        fprintf(stderr, "ERROR: Failed allocating memory for input UChar\n");
-        u_cleanup();
-        return NULL;
-    }
-
-    /* Convert the input to Unicode format */
-    u_strFromUTF8(input_u, strlen(input) + 1, NULL, input, strlen(input), &status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "ERROR: Failed converting input to UChar: %s\n", u_errorName(status));
-        free(input_u);
-        u_cleanup();
-        return NULL;
-    }
-
-    /* Get the length of the normalized string */
-    int32_t normalized_length = unorm2_normalize(nfkd, input_u, -1, NULL, 0, &status);
-    if (status != U_BUFFER_OVERFLOW_ERROR) {
-        fprintf(stderr, "ERROR: Failed getting length of normalized UChar: %s\n", u_errorName(status));
-        free(input_u);
-        u_cleanup();
-        return NULL;
-    }
-    /* Reset the status flag */
-    status = U_ZERO_ERROR;
-
-    /* Allocate memory for the normalized string */
-    UChar *normalized_u = calloc(normalized_length + 1, sizeof(UChar));
-    if (normalized_u == NULL) {
-        fprintf(stderr, "ERROR: Failed allocating memory for normalized UChar\n");
-        free(input_u);
-        u_cleanup();
-        return NULL;
-    }
-
-    /* Perform the normalization of the input string */
-    unorm2_normalize(nfkd, input_u, -1, normalized_u, normalized_length + 1, &status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "ERROR: Failed normalizing UChar: %s\n", u_errorName(status));
-        free(input_u);
-        free(normalized_u);
-        u_cleanup();
-        return NULL;
-    }
-    free(input_u);
-
-   /* Allocate memory for the normalized string in UTF-8 format */
-    char *normalized_utf8 = calloc(normalized_length * 4 + 1, sizeof(int8_t));
-    if (normalized_utf8 == NULL) {
-        fprintf(stderr, "ERROR: Failed allocating memory for normalized UTF-8\n");
-        free(normalized_u);
-        u_cleanup();
-       return NULL;
-    }
-
-    /* Convert the normalized UChar to UTF-8 and return it. */
-    u_strToUTF8(normalized_utf8, normalized_length * 4 + 1, NULL, normalized_u, normalized_length, &status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "ERROR: Failed converting normalized UChar to UTF-8: %s\n", u_errorName(status));
-        free(normalized_u);
-        free(normalized_utf8);
-        u_cleanup();
-        return NULL;
-    }
-
-    free(normalized_u);
-    u_cleanup();
-
-    return normalized_utf8;
-}
-
-
 /*
  * This function implements the second part of the BIP-39 algorithm.
  */
 
 int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 
-        /* initialize variables */
-        unsigned char digest[64];
+    /* initialize variables */
+    unsigned char digest[64];
 
-        /* create salt, passphrase could be empty string */
-        char *salt = malloc(strlen(passphrase) + 9);
-        if (salt == NULL) {
-            fprintf(stderr, "ERROR: Failed to allocate memory for salt\n");
-            return -1;
-        }
-        *salt = '\0';
+    /* create salt, passphrase could be empty string */
+    char *salt = malloc(strlen(passphrase) + 9);
+    if (salt == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for salt\n");
+        return -1;
+    }
+    *salt = '\0';
 
-        if (strcat(salt, "mnemonic") == NULL || strcat(salt, passphrase) == NULL) {
-            fprintf(stderr, "ERROR: Failed to concatenate salt\n");
-            return -1;
-        }
+    if (strcat(salt, "mnemonic") == NULL || strcat(salt, passphrase) == NULL) {
+        fprintf(stderr, "ERROR: Failed to concatenate salt\n");
+        return -1;
+    }
 
-        /* normalize the passphrase and salt */
-        char *norm_pass =  nfkd(pass);
-        char *norm_salt =  nfkd(salt);
+    /* normalize the passphrase and salt */
+    size_t norm_pass_len, norm_salt_len;
+    uint8_t *norm_pass = u8_normalize(UNINORM_NFKD, (const uint8_t *) pass, strlen(pass), NULL, &norm_pass_len);
+    if (norm_pass == NULL) {
+        fprintf(stderr, "Error normalizing passphrase\n");
+        return -1;
+    }
+    uint8_t *norm_salt = u8_normalize(UNINORM_NFKD, (const uint8_t *) salt, strlen(salt), NULL, &norm_salt_len);
+    if (norm_salt == NULL) {
+        fprintf(stderr, "Error normalizing salt\n");
+       return -1;
+    }
 
-        /* pbkdf2 hmac sha512 */
-        pbkdf2_hmac_sha512((const unsigned char*) norm_pass, strlen(norm_pass), (const unsigned char*) norm_salt, strlen(norm_salt), LANG_WORD_CNT, digest);
+    /* pbkdf2 hmac sha512 */
+    pbkdf2_hmac_sha512((const unsigned char*) norm_pass, norm_pass_len, (const unsigned char*) norm_salt, norm_salt_len, LANG_WORD_CNT, digest);
 
-        /* we're done with salt */
-        free(salt);
-        free(norm_pass);
-        free(norm_salt);
+    /* we're done with salt */
+    free(salt);
+    free(norm_pass);
+    free(norm_salt);
 
-        /* copy the digest into seed*/
-        memcpy(seed, digest, SHA512_DIGEST_LENGTH);
+    /* copy the digest into seed*/
+    memcpy(seed, digest, SHA512_DIGEST_LENGTH);
 
-        return 0;
+    return 0;
 }
 
 /*
