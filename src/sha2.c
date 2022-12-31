@@ -36,7 +36,6 @@
 #include <dogecoin/sha2.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
-#include <dogecoin/options.h>
 
 /*
  * ASSERT NOTE:
