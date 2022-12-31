@@ -217,7 +217,7 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
         return -1;
     }
 
-    while ((read = getline(&line, &line_len, fp)) != -1) {
+    while ((read = fgets(line, line_len, fp)) != NULL) {
         strtok(line, "\n");
         if (i >= LANG_WORD_CNT) {
             fprintf(stderr, "ERROR: too many words in file\n");
