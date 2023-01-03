@@ -38,7 +38,7 @@ jobs:
     - name: update system
       run: |
         sudo apt-get update --yes
-        sudo apt-get install autoconf automake libtool build-essential libevent-dev python3 --yes
+        sudo apt-get install -y autoconf automake libtool build-essential libevent-dev python3 libunistring-dev
 
     - name: init codeql
       uses: github/codeql-action/init@v2

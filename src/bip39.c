@@ -24,73 +24,234 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <limits.h>
-#include <string.h>
-#include <ctype.h>
-#include <unicode/utypes.h>
-#include <unicode/ustring.h>
-#include <unicode/unorm2.h>
+#include <uninorm.h>
 #include <bip39/index.h>
-
 #include <dogecoin/bip39.h>
 #include <dogecoin/utils.h>
-#include <dogecoin/options.h>
 #include <dogecoin/random.h>
 #include <dogecoin/sha2.h>
 
-#if USE_BIP39_CACHE
+/*
+ * This function implements the first part of the BIP-39 algorithm.
+ * The randomness or entropy for the mnemonic must be a multiple of
+ * 32 bits hence the use of 128,160,192,224,256.
+ *
+ * The CS values below represent a portion (in bits) of the first
+ * byte of the checksum or SHA256 digest of the entropy that the user
+ * chooses by program option. These checksum bits are added to the
+ * entropy prior to splitting the entire random series (ENT+CS) of bits
+ * into 11 bit words to be matched with the 2048 count language word
+ * file chosen. The final output or mnemonic sentence consists of (MS) words.
+ *
+ * CS = ENT / 32
+ * MS = (ENT + CS) / 11
+ *
+ * |  ENT  | CS | ENT+CS |  MS  |
+ * +-------+----+--------+------+
+ * |  128  |  4 |   132  |  12  |
+ * |  160  |  5 |   165  |  15  |
+ * |  192  |  6 |   198  |  18  |
+ * |  224  |  7 |   231  |  21  |
+ * |  256  |  8 |   264  |  24  |
+ */
 
-static int bip39_cache_index = 0;
+int get_mnemonic(const int entropysize, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t* mnemonic_len) {
 
-static CONFIDENTIAL struct {
-  bool set;
-  char mnemonic[256];
-  char passphrase[64];
-  uint8_t seed[512 / 8];
-} bip39_cache[BIP39_CACHE_SIZE];
+    /* Check entropy size per BIP-39 */
+    if (!(entropysize >= 128 && entropysize <= 256 && entropysize % 32 == 0)) {
+        fprintf(stderr,
+                "ERROR: Only the following values for entropy bit sizes may be used: 128, 160, 192, 224, and 256\n");
+        return -1;
+    }
 
-void bip39_cache_clear(void) {
-  dogecoin_mem_zero(bip39_cache, sizeof(bip39_cache));
-  bip39_cache_index = 0;
+
+    int entBytes = entropysize / 8; // bytes instead of bits
+    int csAdd = entropysize / 32; // portion in bits of a single byte
+
+    /*
+     * ENT (Entropy)
+     */
+
+    char entropyBits[entropysize + 1];
+    entropyBits[0] = '\0';
+    dogecoin_mem_zero(entropyBits, sizeof(entropyBits));  // Initialize entropyBits to all zeros
+
+    char binaryByte[9] = "";
+
+    /* OpenSSL */
+    /* Gather entropy bytes locally unless optionally provided */
+    unsigned char local_entropy[entBytes];
+    if (entropy == NULL) {
+        int rc = (int) dogecoin_random_bytes(local_entropy, sizeof(local_entropy), 0);
+        if (rc != 1) {
+            fprintf(stderr, "ERROR: Failed to generate random entropy\n");
+            return -1;
+        }
+    }
+    else {
+        /* Convert optional entropy string to bytes */
+        unsigned char* entropy_bytes = utils_hex_to_uint8(entropy);
+        if (entropy_bytes == NULL) {
+            fprintf(stderr, "ERROR: Failed to convert entropy string to bytes\n");
+            return -1;
+        }
+        memcpy_safe(local_entropy, entropy_bytes, sizeof(local_entropy));
+    }
+
+    /* Concatenate string of bits from entropy bytes */
+    for (size_t i = 0; i < sizeof(local_entropy); i++) {
+
+        /* Convert valid byte to string of bits */
+        sprintf(binaryByte, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(local_entropy[i]));
+        binaryByte[8] = '\0';  // null-terminate the binary byte
+
+        /* Concatentate the bits */
+        if (strcat(entropyBits, binaryByte) == NULL) {
+            fprintf(stderr, "ERROR: Failed to concatenate entropy\n");
+            return -1;
+        }
+    }
+
+    /*
+     * ENT SHA256 checksum
+     */
+    static char checksum[SHA256_DIGEST_STRING_LENGTH];
+    dogecoin_mem_zero(checksum, sizeof(checksum));
+    checksum[0] = '\0';
+
+    /* SHA256 of entropy bytes */
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    sha256_raw(local_entropy, sizeof(local_entropy), hash);
+
+    /* Checksum from SHA256 */
+    dogecoin_mem_zero(checksum, sizeof(checksum));  // Initialize checksum to all zeros
+    for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        sprintf(&checksum[i * 2], "%02x", hash[i]);
+    }
+    checksum[SHA256_DIGEST_STRING_LENGTH - 1] = '\0';  // null-terminate the checksum string
+
+    /* Copy the checksum */
+    char hexStr[3];
+    memset(hexStr, 0, sizeof(hexStr));
+    strncpy(hexStr, &checksum[0], 2);
+    hexStr[2] = '\0';
+
+    /*
+     * CS (Checksum portion) to add to entropy
+     */
+
+    int ret = produce_mnemonic_sentence(csAdd * 33 + 1, csAdd + 1, hexStr, entropyBits, wordlist, space, mnemonic, mnemonic_len);
+    if (ret != 0) {
+        fprintf(stderr, "ERROR: Failed to generate mnemonic sentence\n");
+        return -1;
+    }
+
+    return 0;
 }
 
-#endif
+/*
+ * This function implements the second part of the BIP-39 algorithm.
+ */
+
+int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
+
+    /* initialize variables */
+    unsigned char digest[64];
+
+    /* create salt, passphrase could be empty string */
+    char *salt = malloc(strlen(passphrase) + 9);
+    if (salt == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for salt\n");
+        return -1;
+    }
+    *salt = '\0';
+
+    if (strcat(salt, "mnemonic") == NULL || strcat(salt, passphrase) == NULL) {
+        fprintf(stderr, "ERROR: Failed to concatenate salt\n");
+        return -1;
+    }
+
+    /* normalize the passphrase and salt */
+    size_t norm_pass_len, norm_salt_len;
+    uint8_t *norm_pass = u8_normalize(UNINORM_NFKD, (const uint8_t *) pass, strlen(pass), NULL, &norm_pass_len);
+    if (norm_pass == NULL) {
+        fprintf(stderr, "Error normalizing passphrase\n");
+        return -1;
+    }
+    uint8_t *norm_salt = u8_normalize(UNINORM_NFKD, (const uint8_t *) salt, strlen(salt), NULL, &norm_salt_len);
+    if (norm_salt == NULL) {
+        fprintf(stderr, "Error normalizing salt\n");
+       return -1;
+    }
+
+    /* pbkdf2 hmac sha512 */
+    pbkdf2_hmac_sha512((const unsigned char*) norm_pass, norm_pass_len, (const unsigned char*) norm_salt, norm_salt_len, LANG_WORD_CNT, digest);
+
+    /* we're done with salt */
+    dogecoin_free(salt);
+    dogecoin_free(norm_pass);
+    dogecoin_free(norm_salt);
+
+    /* copy the digest into seed*/
+    memcpy_safe(seed, digest, SHA512_DIGEST_LENGTH);
+
+    return 0;
+}
 
 /*
  * This function reads the language file once and loads an array of words for
  * repeated use.
  */
-char * wordlist[2049] = {0};
 
-void get_custom_wordlist(const char *filepath) {
+int get_custom_words(const char *filepath, char* wordlist[]) {
     int i = 0;
     FILE * fp;
     char * line = NULL;
-    size_t len = 0;
+    size_t line_len = 0;
     ssize_t read;
 
     fp = fopen(filepath, "r");
-    if (fp == NULL)
-        exit(EXIT_FAILURE);
+    if (fp == NULL) {
+        fprintf(stderr, "ERROR: file read error\n");
+        return -1;
+    }
 
-    while ((read = getline(&line, &len, fp)) != -1) {
+    while ((read = fgets(line, line_len, fp)) != NULL) {
         strtok(line, "\n");
+        if (i >= LANG_WORD_CNT) {
+            fprintf(stderr, "ERROR: too many words in file\n");
+            return -1;
+        }
         wordlist[i] = malloc(read + 1);
-        strcpy(wordlist[i], line);
+        if (wordlist[i] == NULL) {
+            fprintf(stderr, "ERROR: cannot allocate memory\n");
+            return -1;
+        }
+        strncpy(wordlist[i], line, read);
+        wordlist[i][read] = '\0';
         i++;
     }
 
     fclose(fp);
-    if (line) free(line);
+    if (line) dogecoin_free(line);
+
+    if (i != LANG_WORD_CNT) {
+        fprintf(stderr, "ERROR: not 2048 words\n");
+        return -1;
+    }
+
+    return 0;
 }
 
-void get_words(const char *lang) {
+/*
+ * This function reads a wordlist and loads an array of words for
+ * repeated use.
+ */
+
+void get_words(const char *lang, char* wordlist[]) {
     int i = 0;
-    for (; i <= 2049; i++) {
+    for (; i < 2048; i++) {
       if (strcmp(lang,"spa") == 0) {
           wordlist[i]=(char*)wordlist_spa[i];
       } else if (strcmp(lang,"eng") == 0) {
@@ -112,338 +273,218 @@ void get_words(const char *lang) {
       } else if (strcmp(lang,"por") == 0) {
           wordlist[i]=(char*)wordlist_por[i];
       } else {
-          fprintf(stderr, "Language or language file does not exist.\n");
+          fprintf(stderr, "ERROR: Language or language file does not exist.\n");
+          exit(EXIT_FAILURE);
       }
     }
 }
 
-const char *mnemonic_generate(int strength) {
-  if (strength % 32 || strength < 128 || strength > 256) {
+/*
+ * This function prints the mnemonic sentence of size based on the segment
+ * size and number of checksum bits appended to the entropy bits.
+ */
+
+int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t *mnemonic_len) {
+
+    /* Check if the input arguments are valid */
+    if (segSize <= 0 || checksumBits <= 0 || !firstByte || !entropy || !wordlist || !mnemonic || !mnemonic_len) {
+        fprintf(stderr, "ERROR: invalid input arguments\n");
+        return -1;
+    }
+
+    /* Check that wordlist is valid */
+    if (wordlist == NULL || *wordlist == NULL) {
+        fprintf(stderr, "ERROR: invalid value of wordlist\n");
+        return -1;
+    }
+
+    /* Define and initialize segment and csBits */
+    char segment[segSize];
+    strcpy(segment, "");
+
+    char csBits[checksumBits];
+    strcpy(csBits, "");
+
+    /* Convert the checksum string to a byte */
+    unsigned char *bytes = utils_hex_to_uint8(firstByte);
+    if (bytes == NULL) {
+        /* Invalid byte, return from the function */
+        fprintf(stderr, "ERROR: Failed to convert first byte\n");
+        return -1;
+    }
+
+    /* Convert the byte to bits */
+    switch(checksumBits) {
+        case 5:
+            sprintf(csBits, BYTE_TO_FIRST_FOUR_BINARY_PATTERN, BYTE_TO_FIRST_FOUR_BINARY(bytes[0]));
+            break;
+        case 6:
+            sprintf(csBits, BYTE_TO_FIRST_FIVE_BINARY_PATTERN, BYTE_TO_FIRST_FIVE_BINARY(bytes[0]));
+            break;
+        case 7:
+            sprintf(csBits, BYTE_TO_FIRST_SIX_BINARY_PATTERN, BYTE_TO_FIRST_SIX_BINARY(bytes[0]));
+            break;
+        case 8:
+            sprintf(csBits, BYTE_TO_FIRST_SEVEN_BINARY_PATTERN, BYTE_TO_FIRST_SEVEN_BINARY(bytes[0]));
+            break;
+        case 9:
+            sprintf(csBits, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(bytes[0]));
+            break;
+        default:
+            return -1;
+            dogecoin_free (bytes);
+            break;
+    }
+    csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
+
+    /* Concatenate the entropy and checksum bits onto the segment array,
+     * ensuring that the segment array does not overflow.
+     */
+
+    strncat(segment, entropy, segSize - strlen(segment) - 1);
+    strncat(segment, csBits, segSize - strlen(segment) - 1);
+
+    char elevenBits[12] = {""};
+
+    int elevenBitIndex = 0;
+
+    for (int i = 0; i < segSize; i++) {
+
+        if (elevenBitIndex == 11) {
+            elevenBits[11] = '\0';
+            /* Compute the decimal value of the 11-bit binary chunk */
+            long real = 0;
+            for (int j = 0; j < 11; j++) {
+                real = (real << 1) | (elevenBits[j] - '0');
+            }
+
+            /* Check that real is a valid index into the wordlist array */
+            if (real < 0 || real >= LANG_WORD_CNT) {
+                fprintf(stderr, "ERROR: invalid 11-bit binary chunk\n");
+                return -1;
+            }
+
+            /* Concatenate the word from the wordlist to the mnemonic */
+            const char *word = wordlist[real];
+            strcat(mnemonic, word);
+
+            /* Concatenate a space to the mnemonic */
+            strcat(mnemonic, space);
+
+            elevenBitIndex = 0;
+        }
+
+        elevenBits[elevenBitIndex] = segment[i];
+        elevenBitIndex++;
+    }
+
+    /* Remove the trailing space from the mnemonic sentence */
+    mnemonic[strlen(mnemonic) - strlen(space)] = '\0';
+
+    /* Update the mnemonic_len output parameter to reflect the length of the generated mnemonic */
+    *mnemonic_len = strlen(mnemonic);
+
     return 0;
-  }
-  uint8_t data[32] = {0};
-  dogecoin_cheap_random_bytes(data, 32);
-  const char *r = mnemonic_from_data(data, strength / 8);
-  dogecoin_mem_zero(data, sizeof(data));
-  return r;
-}
-
-static CONFIDENTIAL char mnemo[24 * 10];
-
-const char *mnemonic_from_data(const uint8_t *data, int len) {
-  if (len % 4 || len < 16 || len > 32) {
-    return 0;
-  }
-
-  uint8_t bits[32 + 1] = {0};
-
-  sha256_raw(data, len, bits);
-  // checksum
-  bits[len] = bits[0];
-  // data
-  memcpy(bits, data, len);
-
-  int mlen = len * 3 / 4;
-
-  int i = 0, j = 0, idx = 0;
-  char *p = mnemo;
-  for (i = 0; i < mlen; i++) {
-    idx = 0;
-    for (j = 0; j < 11; j++) {
-      idx <<= 1;
-      idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
-    }
-    strcpy(p, wordlist[idx]);
-    p += strlen(wordlist[idx]);
-    *p = (i < mlen - 1) ? ' ' : 0;
-    p++;
-  }
-  dogecoin_mem_zero(bits, sizeof(bits));
-
-  return mnemo;
-}
-
-void mnemonic_clear(void) { dogecoin_mem_zero(mnemo, sizeof(mnemo)); }
-
-int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
-  if (!mnemonic) {
-    return 0;
-  }
-
-  uint32_t i = 0, n = 0;
-
-  while (mnemonic[i]) {
-    if (mnemonic[i] == ' ') {
-      n++;
-    }
-    i++;
-  }
-  n++;
-
-  // check that number of words is valid for BIP-39:
-  // (a) between 128 and 256 bits of initial entropy (12 - 24 words)
-  // (b) number of bits divisible by 33 (1 checksum bit per 32 input bits)
-  //     - that is, (n * 11) % 33 == 0, so n % 3 == 0
-  if (n < 12 || n > 24 || (n % 3)) {
-    return 0;
-  }
-
-  char current_word[10] = {0};
-  uint32_t j = 0, ki = 0, bi = 0;
-  uint8_t result[32 + 1] = {0};
-
-  dogecoin_mem_zero(result, sizeof(result));
-  i = 0;
-  while (mnemonic[i]) {
-    j = 0;
-    while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
-      if (j >= sizeof(current_word) - 1) {
-        return 0;
-      }
-      current_word[j] = mnemonic[i];
-      i++;
-      j++;
-    }
-    current_word[j] = 0;
-    if (mnemonic[i] != 0) {
-      i++;
-    }
-    int k = mnemonic_find_word(current_word);
-    if (k < 0) {  // word not found
-      return 0;
-    }
-    for (ki = 0; ki < 11; ki++) {
-      if (k & (1 << (10 - ki))) {
-        result[bi / 8] |= 1 << (7 - (bi % 8));
-      }
-      bi++;
-    }
-  }
-  if (bi != n * 11) {
-    return 0;
-  }
-  memcpy(bits, result, sizeof(result));
-  dogecoin_mem_zero(result, sizeof(result));
-
-  // returns amount of entropy + checksum BITS
-  return n * 11;
-}
-
-int mnemonic_check(const char *mnemonic) {
-  uint8_t bits[32 + 1] = {0};
-  int mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
-  if (mnemonic_bits_len != (12 * 11) && mnemonic_bits_len != (18 * 11) &&
-      mnemonic_bits_len != (24 * 11)) {
-    return 0;
-  }
-  int words = mnemonic_bits_len / 11;
-
-  uint8_t checksum = bits[words * 4 / 3];
-  sha256_raw(bits, words * 4 / 3, bits);
-  if (words == 12) {
-    return (bits[0] & 0xF0) == (checksum & 0xF0);  // compare first 4 bits
-  } else if (words == 18) {
-    return (bits[0] & 0xFC) == (checksum & 0xFC);  // compare first 6 bits
-  } else if (words == 24) {
-    return bits[0] == checksum;  // compare 8 bits
-  }
-  return 0;
-}
-
-const char *nfkd(const char *input) {
-    UErrorCode status = U_ZERO_ERROR;
-    const UNormalizer2 *nfkd = unorm2_getNFKDInstance(&status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "Error getting NFKD instance: %s\n", u_errorName(status));
-        return NULL;
-    }
-
-    UChar *input_u = calloc(strlen(input) + 1, sizeof(UChar));
-    if (input_u == NULL) {
-        fprintf(stderr, "Error allocating memory for input UChar\n");
-        return NULL;
-    }
-    u_strFromUTF8(input_u, strlen(input) + 1, NULL, input, strlen(input), &status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "Error converting input to UChar: %s\n", u_errorName(status));
-        free(input_u);
-        return NULL;
-    }
-
-    int32_t normalized_length = unorm2_normalize(nfkd, input_u, -1, NULL, 0, &status);
-    if (status != U_BUFFER_OVERFLOW_ERROR) {
-        fprintf(stderr, "Error getting length of normalized UChar: %s\n", u_errorName(status));
-        free(input_u);
-        return NULL;
-    }
-    status = U_ZERO_ERROR;
-
-    UChar *normalized_u = calloc(normalized_length + 1, sizeof(UChar));
-    if (normalized_u == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized UChar\n");
-        free(input_u);
-        return NULL;
-    }
-
-    unorm2_normalize(nfkd, input_u, -1, normalized_u, normalized_length + 1, &status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "Error normalizing UChar: %s\n", u_errorName(status));
-        free(input_u);
-        free(normalized_u);
-        return NULL;
-    }
-    free(input_u);
-
-    int8_t *normalized_utf8 = calloc(normalized_length * 4 + 1, sizeof(int8_t));
-    if (normalized_utf8 == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized UTF-8\n");
-        free(normalized_u);
-        return NULL;
-    }
-    u_strToUTF8((char*)normalized_utf8, normalized_length * 4 + 1, NULL, normalized_u, normalized_length, &status);
-    if (U_FAILURE(status)) {
-        fprintf(stderr, "Error converting normalized UChar to UTF-8: %s\n", u_errorName(status));
-        free(normalized_u);
-        free(normalized_utf8);
-        return NULL;
-    }
-
-free(normalized_u);
-
-return (const char *)normalized_utf8;
-}
-
-// passphrase must be at most 256 characters otherwise it would be truncated
-void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
-                      uint8_t seed[512 / 8],
-                      void (*progress_callback)(uint32_t current,
-                                                uint32_t total)) {
-  mnemonic = nfkd(mnemonic);
-  int mnemoniclen = strlen(mnemonic);
-  int passphraselen = strnlen(passphrase, 256);
-#if USE_BIP39_CACHE
-  // check cache
-  if (mnemoniclen < 256 && passphraselen < 64) {
-    int i;
-    for (i = 0; i < BIP39_CACHE_SIZE; i++) {
-      if (!bip39_cache[i].set) continue;
-      if (strcmp(bip39_cache[i].mnemonic, mnemonic) != 0) continue;
-      if (strcmp(bip39_cache[i].passphrase, passphrase) != 0) continue;
-      // found the correct entry
-      memcpy(seed, bip39_cache[i].seed, 512 / 8);
-      return;
-    }
-  }
-#endif
-  uint8_t salt[8 + 256] = {0};
-  memcpy(salt, "mnemonic", 8);
-  memcpy(salt + 8, passphrase, passphraselen);
-  static CONFIDENTIAL pbkdf2_hmac_sha512_context pctx;
-  pbkdf2_hmac_sha512_init(&pctx, (const uint8_t *)mnemonic, mnemoniclen, salt,
-                          passphraselen + 8);
-  if (progress_callback) {
-    progress_callback(0, BIP39_PBKDF2_ROUNDS);
-  }
-  int i;
-  for (i = 0; i < 16; i++) {
-    pbkdf2_hmac_sha512_write(&pctx, BIP39_PBKDF2_ROUNDS / 16);
-    if (progress_callback) {
-      progress_callback((i + 1) * BIP39_PBKDF2_ROUNDS / 16,
-                        BIP39_PBKDF2_ROUNDS);
-    }
-  }
-  pbkdf2_hmac_sha512_finalize(&pctx, seed);
-  dogecoin_mem_zero(salt, sizeof(salt));
-#if USE_BIP39_CACHE
-  // store to cache
-  if (mnemoniclen < 256 && passphraselen < 64) {
-    bip39_cache[bip39_cache_index].set = true;
-    strcpy(bip39_cache[bip39_cache_index].mnemonic, mnemonic);
-    strcpy(bip39_cache[bip39_cache_index].passphrase, passphrase);
-    memcpy(bip39_cache[bip39_cache_index].seed, seed, 512 / 8);
-    bip39_cache_index = (bip39_cache_index + 1) % BIP39_CACHE_SIZE;
-  }
-#endif
-}
-
-// binary search for finding the word in the wordlist
-int mnemonic_find_word(const char *word) {
-  int lo = 0, hi = BIP39_WORD_COUNT - 1;
-  while (lo <= hi) {
-    int mid = lo + (hi - lo) / 2;
-    int cmp = strcmp(word, wordlist[mid]);
-    if (cmp == 0) {
-      return mid;
-    }
-    if (cmp > 0) {
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
-  }
-  return -1;
-}
-
-const char *mnemonic_complete_word(const char *prefix, int len) {
-  // we need to perform linear search,
-  // because we want to return the first match
-  int i;
-  for (i = 0; i < BIP39_WORD_COUNT; i++) {
-    if (strncmp(wordlist[i], prefix, len) == 0) {
-      return wordlist[i];
-    }
-  }
-  return NULL;
-}
-
-const char *mnemonic_get_word(int index) {
-  if (index >= 0 && index < BIP39_WORD_COUNT) {
-    return wordlist[index];
-  } else {
-    return NULL;
-  }
-}
-
-uint32_t mnemonic_word_completion_mask(const char *prefix, int len) {
-  if (len <= 0) {
-    return 0x3ffffff;  // all letters (bits 1-26 set)
-  }
-  uint32_t res = 0;
-  int i;
-  for (i = 0; i < BIP39_WORD_COUNT; i++) {
-    const char *word = wordlist[i];
-    if (strncmp(word, prefix, len) == 0 && word[len] >= 'a' &&
-        word[len] <= 'z') {
-      res |= 1 << (word[len] - 'a');
-    }
-  }
-  return res;
 }
 
 /**
- * @brief This funciton generates a mnemonic for
- * a given entropy size and language
+ * @brief This function generates a mnemonic for a given entropy size and language
  *
  * @param entropy_size The 128, 160, 192, 224, or 256 bits of entropy
  * @param language The ISO 639-2 code for the mnemonic language
+ * @param space The character to seperate mnemonic words
+ * @param entropy The entropy to generate the mnemonic (optional)
+ * @param filepath The path to a custom word file (optional)
+ * @param wordlist The language word list as an array
+ * @param length The length of the generated mnemonic in bytes
  *
  * @return mnemonic code words
 */
-const char* dogecoin_generate_mnemonic (const char* entropy_size, const char* language)
+int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* space, const char* entropy, const char* filepath, size_t* length, char* words)
 {
-    static char words[] = "";
+    char *wordlist[LANG_WORD_CNT] = {0};
 
-    if (entropy_size != NULL && language != NULL) {
-        /* load word file into memory */
-        get_words(language);
+    /* validate input, optional entropy checked below */
+    if (entropy_size != NULL) {
 
-        /* convert string value to long */
-        long entropyBits = strtol(entropy_size, NULL, 10);
+        /* load words into memory */
+        if (language != NULL){
+            get_words(language, wordlist);
+        }
+        /* load custom word file into memory */
+	else if (filepath != NULL) {
+            get_custom_words (filepath, (char **) wordlist);
+        }
+        /* handle input validation errors */
+        else {
+            fprintf(stderr, "ERROR: Failed to get language or custom words file\n");
+            return -1;
+        }
 
-        /* actual program call */
-        mnemonic_generate(entropyBits);
+        /* Validate optional entropy */
+        if (entropy != NULL) {
+            /* Calculate expected entropy size in bits */
+            size_t expected_entropy_size = strtol(entropy_size, NULL, 10) / 4;
+            /* Verify size of the string equals the entropy_size specified */
+            if (strlen(entropy) != expected_entropy_size) {
+                fprintf(stderr, "ERROR: Length of optional entropy does not equal entropy size\n");
+                return -1;
+            }
+        }
+
+        /* convert string value for entropy size to base 10 and get mnemonic */
+        if (get_mnemonic(strtol(entropy_size, NULL, 10), entropy, (const char **) wordlist, space, words, length) == -1) {
+            fprintf(stderr, "ERROR: Failed to get mnemonic\n");
+
+            /* Free memory for custom words */
+            if (language == NULL) {
+                for (int i = 0; i < LANG_WORD_CNT; i++) {
+                    dogecoin_free(wordlist[i]);
+                }
+            }
+            return -1;
+        }
+
+        /* Free memory for custom words */
+        if (language == NULL) {
+            for (int i = 0; i < LANG_WORD_CNT; i++) {
+                dogecoin_free(wordlist[i]);
+            }
+        }
+    }
+    else {
+        fprintf(stderr, "ERROR: Failed to get entropy size\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief This function derives the seed from the mnemonic
+ * @param mnemonic The mnemonic code words
+ * @param passphrase The passphrase (optional)
+ * @param seed The 512-bit seed
+ *
+ * @return 0 (success), -1 (fail)
+*/
+int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, uint8_t seed[64])
+{
+    /* get seed if not null */
+    if (seed != NULL) {
+
+        /* set passphrase to empty string if null */
+        if (passphrase == NULL) {
+            passphrase = "";
+        }
+
+        /* get random binary seed */
+        if (get_root_seed(mnemonic, passphrase, seed) == -1) {
+            fprintf(stderr, "ERROR: Failed to get root seed\n");
+            return -1;
+        }
 
     }
 
-    return words;
+    return 0;
 }

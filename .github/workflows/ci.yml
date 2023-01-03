@@ -3,6 +3,8 @@
 name: CI
 
 on:
+  push:
+    branches: [ "*-dev-*"]
   pull_request:
     branches: [ "*" ]
 
@@ -114,7 +116,7 @@ jobs:
         run: |
           if ([ "${{ matrix.name }}" == "x86_64-macos" ]); then
               brew update
-              brew install automake coreutils python3 ${{ matrix.packages }}
+              brew install automake coreutils ${{ matrix.packages }}
               echo PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH" >> ~/.bashrc
               source ~/.bashrc
           else
