@@ -21,7 +21,7 @@ LIBDOGECOIN_API
  * Defines
  */
 
-# define LANG_WORD_CNT   2048
+#define LANG_WORD_CNT   2048
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \

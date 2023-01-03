@@ -77,7 +77,7 @@ libdogecoin_la_SOURCES = \
     src/vector.c
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -fPIC
-libdogecoin_la_LIBADD = $(LIBSECP256K1) -lunistring
+libdogecoin_la_LIBADD = $(LIBSECP256K1) $(LIBUNISTRING)
 
 if USE_TESTS
 noinst_PROGRAMS = tests
@@ -109,9 +109,9 @@ tests_SOURCES = \
     test/utils_tests.c \
     test/vector_tests.c
 
-tests_CFLAGS = $(libdogecoin_la_CFLAGS) -O0
+tests_CFLAGS = $(libdogecoin_la_CFLAGS)
 tests_CPPFLAGS = -I$(top_srcdir)/src
-tests_LDADD += $(LIBSECP256K1)
+tests_LDADD += $(LIBSECP256K1) $(LIBUNISTRING)
 tests_LDFLAGS = -static
 TESTS = tests
 endif

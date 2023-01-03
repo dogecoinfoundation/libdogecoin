@@ -235,6 +235,15 @@ void test_bip39()
 
     /* test custom word lists */
     printf ("\nTests with custom word lists\n");
+    #if defined(__WIN64__)
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\spanish.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\english.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\japanese.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\italian.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\french.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\chinese_simplified.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test\wordlist\chinese_traditional.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    #else
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/spanish.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/english.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/japanese.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
@@ -242,6 +251,7 @@ void test_bip39()
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/french.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/chinese_simplified.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/chinese_traditional.txt", &length, words); printf("%s \n", words); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
+    #endif
 
     /* test BIP39 languages and entropy sizes */
     printf ("\nTests with all entropy lengths, languages and word lists\n");

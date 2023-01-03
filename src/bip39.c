@@ -207,9 +207,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 int get_custom_words(const char *filepath, char* wordlist[]) {
     int i = 0;
     FILE * fp;
-    char * line = NULL;
-    size_t line_len = 0;
-    ssize_t read;
+    char * word = NULL;
 
     fp = fopen(filepath, "r");
     if (fp == NULL) {
@@ -217,24 +215,16 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
         return -1;
     }
 
-    while ((read = fgets(line, line_len, fp)) != NULL) {
-        strtok(line, "\n");
+    while (fscanf(fp, "%ms", &word) == 1) {
         if (i >= LANG_WORD_CNT) {
             fprintf(stderr, "ERROR: too many words in file\n");
             return -1;
         }
-        wordlist[i] = malloc(read + 1);
-        if (wordlist[i] == NULL) {
-            fprintf(stderr, "ERROR: cannot allocate memory\n");
-            return -1;
-        }
-        strncpy(wordlist[i], line, read);
-        wordlist[i][read] = '\0';
+        wordlist[i] = word;
         i++;
     }
 
     fclose(fp);
-    if (line) dogecoin_free(line);
 
     if (i != LANG_WORD_CNT) {
         fprintf(stderr, "ERROR: not 2048 words\n");
