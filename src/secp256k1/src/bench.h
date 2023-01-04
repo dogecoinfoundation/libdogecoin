@@ -10,7 +10,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef _MSC_VER
+#include "../../contrib/wintime/wingettime.h"
+#else
 #include "sys/time.h"
+#endif
 
 static int64_t gettime_i64(void) {
     struct timeval tv;

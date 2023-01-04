@@ -77,6 +77,16 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
     // other warnings you want to deactivate...
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
+
+    //MLUMIN:MSVC - need winsock for msvc 
+    #pragma comment(lib, "Ws2_32.lib")
+    #pragma comment(lib, "wsock32.lib")
+    //MLUMIN:MSVC - need Iphlpapi.lib for __imp_f_nametoindex in msvc
+    #pragma comment(lib, "Iphlpapi.lib")
+    //MLUMIN:MSVC - need strtok_r redefined as strtok_s in msvc
+    #define strtok_r strtok_s
+
+
 #elif defined(__GNUC__) || defined(__clang__)
     #define DO_PRAGMA(X) _Pragma(#X)
     #define DISABLE_WARNING_PUSH           DO_PRAGMA(GCC diagnostic push)

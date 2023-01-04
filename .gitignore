@@ -133,3 +133,10 @@ build/*
 **/CMakeScripts
 **/compile_commands.json
 Testing/
+/.vs
+/out/build/x64-Debug/.cmake/api/v1
+/out/build/x64-Debug
+/contrib/libevent/.vs
+/contrib/libevent/build/.vs/libevent
+/contrib/libevent/out/build/x64-Debug
+/contrib/libevent/build

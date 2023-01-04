@@ -13,9 +13,12 @@ SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 IF(WITH_NET)
-    FIND_LIBRARY(LIBEVENT event REQUIRED)
     IF(WIN32)
-        FIND_LIBRARY(LIBEVENT_PTHREADS event_pthreads REQUIRED)
+        FIND_LIBRARY(LIBEVENT NAMES event libevent HINTS "${CMAKE_PREFIX_PATH}")
+        #FIND_LIBRARY(LIBEVENT_PTHREADS event_pthreads REQUIRED)
+        FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${CMAKE_PREFIX_PATH};${CMAKE_PREFIX_PATH}/contrib/winpthreads/include/lib/x64/")
+    ELSE()
+        FIND_LIBRARY(LIBEVENT event REQUIRED)
     ENDIF()
 ENDIF()
 
@@ -101,7 +104,9 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/tx.c
     src/utils.c
     src/vector.c
-)
+    src/bip39.c
+    src/bip44.c
+  "contrib/getopt/wingetopt.c" "contrib/getopt/wingetopt.h" "contrib/wintime/wingettime.c" "contrib/wintime/wingettime.h" "include/event2/buffer.h" "include/event2/bufferevent.h" "include/event2/bufferevent_compat.h" "include/event2/bufferevent_ssl.h" "include/event2/bufferevent_struct.h" "include/event2/buffer_compat.h" "include/event2/dns.h" "include/event2/dns_compat.h" "include/event2/dns_struct.h" "include/event2/event.h" "include/event2/event_compat.h" "include/event2/event_struct.h" "include/event2/http.h" "include/event2/http_compat.h" "include/event2/http_struct.h" "include/event2/keyvalq_struct.h" "include/event2/listener.h" "include/event2/rpc.h" "include/event2/rpc_compat.h" "include/event2/rpc_struct.h" "include/event2/tag.h" "include/event2/tag_compat.h" "include/event2/thread.h" "include/event2/util.h" "include/event2/visibility.h" "include/event2/event-config.h")
 
 FILE(GLOB SECP256K1 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     src/secp256k1/src/*.c)
@@ -160,8 +165,11 @@ IF(USE_TESTS)
         test/unittester.c
         test/utils_tests.c
         test/vector_tests.c
-    )
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} m)
+        test/bip39_tests.c
+        test/bip44_tests.c
+      "contrib/getopt/wingetopt.c" "contrib/getopt/wingetopt.h" "contrib/wintime/wingettime.c" "contrib/wintime/wingettime.h" "include/event2/buffer.h" "include/event2/bufferevent.h" "include/event2/bufferevent_compat.h" "include/event2/bufferevent_ssl.h" "include/event2/bufferevent_struct.h" "include/event2/buffer_compat.h" "include/event2/dns.h" "include/event2/dns_compat.h" "include/event2/dns_struct.h" "include/event2/event.h" "include/event2/event_compat.h" "include/event2/event_struct.h" "include/event2/http.h" "include/event2/http_compat.h" "include/event2/http_struct.h" "include/event2/keyvalq_struct.h" "include/event2/listener.h" "include/event2/rpc.h" "include/event2/rpc_compat.h" "include/event2/rpc_struct.h" "include/event2/tag.h" "include/event2/tag_compat.h" "include/event2/thread.h" "include/event2/util.h" "include/event2/visibility.h" "include/event2/event-config.h")
+    #TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} m)
+    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} )
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
 ENDIF()
 
@@ -176,7 +184,7 @@ IF(WITH_NET)
         src/protocol.c
     )
 
-    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} m)
+    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} )
 
     IF(USE_TESTS)
         TARGET_SOURCES(tests PRIVATE
@@ -193,15 +201,17 @@ IF(WITH_TOOLS)
         )
     ENDIF()
 
-    ADD_EXECUTABLE(such src/cli/such.c)
+    ADD_EXECUTABLE(such src/cli/such.c  "contrib/getopt/wingetopt.c" "contrib/getopt/wingetopt.h" "contrib/wintime/wingettime.c" "contrib/wintime/wingettime.h" "include/event2/buffer.h" "include/event2/bufferevent.h" "include/event2/bufferevent_compat.h" "include/event2/bufferevent_ssl.h" "include/event2/bufferevent_struct.h" "include/event2/buffer_compat.h" "include/event2/dns.h" "include/event2/dns_compat.h" "include/event2/dns_struct.h" "include/event2/event.h" "include/event2/event_compat.h" "include/event2/event_struct.h" "include/event2/http.h" "include/event2/http_compat.h" "include/event2/http_struct.h" "include/event2/keyvalq_struct.h" "include/event2/listener.h" "include/event2/rpc.h" "include/event2/rpc_compat.h" "include/event2/rpc_struct.h" "include/event2/tag.h" "include/event2/tag_compat.h" "include/event2/thread.h" "include/event2/util.h" "include/event2/visibility.h" "include/event2/event-config.h")
     INSTALL(TARGETS such RUNTIME)
-    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} m)
+    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} )
+
     TARGET_INCLUDE_DIRECTORIES(such PRIVATE src)
 
     IF(WITH_NET)
-        ADD_EXECUTABLE(sendtx src/cli/sendtx.c)
+        ADD_EXECUTABLE(sendtx src/cli/sendtx.c  "contrib/getopt/wingetopt.c" "contrib/getopt/wingetopt.h" "contrib/wintime/wingettime.c" "contrib/wintime/wingettime.h" "include/event2/buffer.h" "include/event2/bufferevent.h" "include/event2/bufferevent_compat.h" "include/event2/bufferevent_ssl.h" "include/event2/bufferevent_struct.h" "include/event2/buffer_compat.h" "include/event2/dns.h" "include/event2/dns_compat.h" "include/event2/dns_struct.h" "include/event2/event.h" "include/event2/event_compat.h" "include/event2/event_struct.h" "include/event2/http.h" "include/event2/http_compat.h" "include/event2/http_struct.h" "include/event2/keyvalq_struct.h" "include/event2/listener.h" "include/event2/rpc.h" "include/event2/rpc_compat.h" "include/event2/rpc_struct.h" "include/event2/tag.h" "include/event2/tag_compat.h" "include/event2/thread.h" "include/event2/util.h" "include/event2/visibility.h" "include/event2/event-config.h")
         INSTALL(TARGETS sendtx RUNTIME)
-        TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME} m)
+        TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME} )
+
         TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
     ENDIF()
 ENDIF()

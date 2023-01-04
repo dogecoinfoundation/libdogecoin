@@ -37,9 +37,9 @@
 LIBDOGECOIN_BEGIN_DECL
 
 #ifdef _WIN32
-#  ifndef _MSC_VER
-#    include <getopt.h>
-#  endif
+#ifndef _MSC_VER
+#include <getopt.h>
+#endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else

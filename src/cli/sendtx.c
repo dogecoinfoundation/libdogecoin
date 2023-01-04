@@ -27,7 +27,13 @@
 */
 
 #include <assert.h>
+//MLUMIN:MSVC
+#ifndef _MSC_VER
 #include <getopt.h>
+#else
+#include <../contrib/getopt/wingetopt.h>
+#endif
+
 #ifdef HAVE_CONFIG_H
 #  include "libdogecoin-config.h"
 #endif
@@ -37,7 +43,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+#include <dogecoin/winunistd.h>
+#endif
 
 #ifdef WITH_NET
 #include <event2/event.h>

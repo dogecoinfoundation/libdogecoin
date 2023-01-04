@@ -26,7 +26,12 @@
  */
 
 #ifdef _WIN32
+#ifdef _MSC_VER
+#include <../contrib/getopt/wingetopt.h>
+#else
 #include <getopt.h>
+#endif
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
@@ -42,13 +47,22 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+//MLUMIN:MSVC
+#ifdef _MSC_VER
+#define HAVE_STRUCT_TIMESPEC
+#include <../../contrib/winpthreads/include/pthread.h>
+#else
 #include <pthread.h>
+#endif
+//MLUMIN:MSVC
+
 #include <time.h>
 
 #include <event2/event.h>
 #include <event2/util.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>

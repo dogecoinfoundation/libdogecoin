@@ -25,7 +25,7 @@
  */
 
 #include <stdio.h>
-#include <uninorm.h>
+//#include <uninorm.h>
 #include <bip39/index.h>
 #include <dogecoin/bip39.h>
 #include <dogecoin/utils.h>
