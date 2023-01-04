@@ -32,6 +32,13 @@
 #include <dogecoin/random.h>
 #include <dogecoin/sha2.h>
 
+#ifdef _WIN32
+#ifndef WINVER
+#define WINVER 0x0600
+#endif
+#include <windows.h>
+#endif
+
 /*
  * This function implements the first part of the BIP-39 algorithm.
  * The randomness or entropy for the mnemonic must be a multiple of
@@ -72,18 +79,17 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
     /*
      * ENT (Entropy)
      */
-
-    char entropyBits[entropysize + 1];
+    char* entropyBits = dogecoin_char_vla(entropysize + 1);
     entropyBits[0] = '\0';
-    dogecoin_mem_zero(entropyBits, sizeof(entropyBits));  // Initialize entropyBits to all zeros
+    dogecoin_mem_zero(entropyBits, entropysize + 1);  // Initialize entropyBits to all zeros
 
     char binaryByte[9] = "";
 
     /* OpenSSL */
     /* Gather entropy bytes locally unless optionally provided */
-    unsigned char local_entropy[entBytes];
+    unsigned char* local_entropy = dogecoin_uchar_vla(entBytes);
     if (entropy == NULL) {
-        int rc = (int) dogecoin_random_bytes(local_entropy, sizeof(local_entropy), 0);
+        int rc = (int) dogecoin_random_bytes(local_entropy, entBytes, 0);
         if (rc != 1) {
             fprintf(stderr, "ERROR: Failed to generate random entropy\n");
             return -1;
@@ -94,13 +100,15 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
         unsigned char* entropy_bytes = utils_hex_to_uint8(entropy);
         if (entropy_bytes == NULL) {
             fprintf(stderr, "ERROR: Failed to convert entropy string to bytes\n");
+            dogecoin_free(entropyBits);
+            dogecoin_free(local_entropy);
             return -1;
         }
-        memcpy_safe(local_entropy, entropy_bytes, sizeof(local_entropy));
+        memcpy_safe(local_entropy, entropy_bytes, entBytes);
     }
 
     /* Concatenate string of bits from entropy bytes */
-    for (size_t i = 0; i < sizeof(local_entropy); i++) {
+    for (int i = 0; i < entBytes; i++) {
 
         /* Convert valid byte to string of bits */
         sprintf(binaryByte, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(local_entropy[i]));
@@ -109,6 +117,8 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
         /* Concatentate the bits */
         if (strcat(entropyBits, binaryByte) == NULL) {
             fprintf(stderr, "ERROR: Failed to concatenate entropy\n");
+            dogecoin_free(entropyBits);
+            dogecoin_free(local_entropy);
             return -1;
         }
     }
@@ -122,7 +132,10 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
 
     /* SHA256 of entropy bytes */
     unsigned char hash[SHA256_DIGEST_LENGTH];
-    sha256_raw(local_entropy, sizeof(local_entropy), hash);
+    sha256_raw(local_entropy, entBytes, hash);
+
+    /* done with local_entropy */
+    dogecoin_free(local_entropy);
 
     /* Checksum from SHA256 */
     dogecoin_mem_zero(checksum, sizeof(checksum));  // Initialize checksum to all zeros
@@ -144,8 +157,12 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
     int ret = produce_mnemonic_sentence(csAdd * 33 + 1, csAdd + 1, hexStr, entropyBits, wordlist, space, mnemonic, mnemonic_len);
     if (ret != 0) {
         fprintf(stderr, "ERROR: Failed to generate mnemonic sentence\n");
+        dogecoin_free(entropyBits);
         return -1;
     }
+
+    /* done with entropyBits */
+    dogecoin_free(entropyBits);
 
     return 0;
 }
@@ -169,24 +186,223 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 
     if (strcat(salt, "mnemonic") == NULL || strcat(salt, passphrase) == NULL) {
         fprintf(stderr, "ERROR: Failed to concatenate salt\n");
+        dogecoin_free(salt);
         return -1;
     }
 
     /* normalize the passphrase and salt */
     size_t norm_pass_len, norm_salt_len;
-    uint8_t *norm_pass = u8_normalize(UNINORM_NFKD, (const uint8_t *) pass, strlen(pass), NULL, &norm_pass_len);
-    if (norm_pass == NULL) {
-        fprintf(stderr, "Error normalizing passphrase\n");
+#ifdef _WIN32
+    int pass_len = strlen(pass);
+    int salt_len = strlen(salt);
+
+    /* Convert passphrase and salt to wide characters */
+    int pass_wlen = MultiByteToWideChar(CP_UTF8, 0, pass, pass_len, NULL, 0);
+    int salt_wlen = MultiByteToWideChar(CP_UTF8, 0, salt, salt_len, NULL, 0);
+
+    if (pass_wlen == 0) {
+        fprintf(stderr, "Error converting passphrase to wide characters\n");
+        dogecoin_free(salt);
         return -1;
     }
-    uint8_t *norm_salt = u8_normalize(UNINORM_NFKD, (const uint8_t *) salt, strlen(salt), NULL, &norm_salt_len);
+    if (salt_wlen == 0) {
+        fprintf(stderr, "Error converting salt to wide characters\n");
+        dogecoin_free(salt);
+        return -1;
+    }
+
+    LPWSTR pass_w = malloc((pass_wlen) * sizeof(WCHAR));
+    if (pass_w == NULL) {
+        fprintf(stderr, "Error allocating memory for passphrase wide characters\n");
+        dogecoin_free(salt);
+        return -1;
+    }
+    LPWSTR salt_w = malloc((salt_wlen) * sizeof(WCHAR));
+    if (salt_w == NULL) {
+        fprintf(stderr, "Error allocating memory for salt wide characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        return -1;
+    }
+
+    if (MultiByteToWideChar(CP_UTF8, 0, pass, pass_len, pass_w, pass_wlen) == 0) {
+        fprintf(stderr, "Error converting passphrase to wide characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        return -1;
+    }
+
+    if (MultiByteToWideChar(CP_UTF8, 0, salt, salt_len, salt_w, salt_wlen) == 0) {
+        fprintf(stderr, "Error converting salt to wide characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        return -1;
+    }
+
+    norm_pass_len = NormalizeString(NormalizationKD, pass_w, pass_wlen, NULL, 0);
+    norm_salt_len = NormalizeString(NormalizationKD, salt_w, salt_wlen, NULL, 0);
+    if (norm_pass_len <= 0) {
+        LPVOID message;
+        DWORD error = GetLastError();
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&message, 0, NULL);
+        fprintf(stderr, "Error getting length of normalized passphrase: %s\n", message);
+        LocalFree(message);
+        fprintf(stderr, "Error getting length of normalized passphrase\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        return -1;
+    }
+    if (norm_salt_len <= 0) {
+        fprintf(stderr, "Error getting length of normalized salt\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        return -1;
+    }
+
+    LPWSTR norm_pass = malloc((norm_pass_len) * sizeof(WCHAR));
+    if (norm_pass == NULL) {
+        fprintf(stderr, "Error allocating memory for normalized passphrase\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        return -1;
+    }
+    LPWSTR norm_salt = malloc((norm_salt_len) * sizeof(WCHAR));
+    if (norm_salt == NULL) {
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        fprintf(stderr, "Error allocating memory for normalized salt\n");
+        return -1;
+    }
+
+    norm_pass_len = NormalizeString(NormalizationKD, pass_w, pass_wlen, norm_pass, norm_pass_len);
+    norm_salt_len = NormalizeString(NormalizationKD, salt_w, salt_wlen, norm_salt, norm_salt_len);
+
+    if (norm_pass_len <= 0) {
+        fprintf(stderr, "Error getting normalized passphrase\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        return -1;
+    }
+    if (norm_salt_len <= 0) {
+        fprintf(stderr, "Error getting normalized salt\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        return -1;
+    }
+
+    /* Convert normalized passphrase and salt to multi-byte characters */
+    int norm_pass_mb_len = WideCharToMultiByte(CP_UTF8, 0, norm_pass, norm_pass_len, NULL, 0, NULL, NULL);
+    int norm_salt_mb_len = WideCharToMultiByte(CP_UTF8, 0, norm_salt, norm_salt_len, NULL, 0, NULL, NULL);
+
+    if (norm_pass_len == 0) {
+        fprintf(stderr, "Error converting normalized passphrase to multi-byte characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        return -1;
+    }
+    if (norm_salt_len == 0) {
+        fprintf(stderr, "Error converting normalized seed to multi-byte characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        return -1;
+    }
+
+    char* norm_pass_mb = malloc(norm_pass_mb_len * sizeof(char));
+    if (norm_pass_mb == NULL) {
+        fprintf(stderr, "Error allocating memory for normalized passphrase multi-byte characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        return -1;
+    }
+    char* norm_salt_mb = malloc(norm_salt_mb_len * sizeof(char));
+    if (norm_salt_mb == NULL) {
+        fprintf(stderr, "Error allocating memory for normalized salt multi-byte characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        dogecoin_free(norm_pass_mb);
+        return -1;
+    }
+
+    if (WideCharToMultiByte(CP_UTF8, 0, norm_pass, norm_pass_len, norm_pass_mb, norm_pass_mb_len, NULL, NULL) == 0) {
+        fprintf(stderr, "Error converting normalized passphrase to multi-byte characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        dogecoin_free(norm_pass_mb);
+        dogecoin_free(norm_salt_mb);
+        return -1;
+    }
+
+    if (WideCharToMultiByte(CP_UTF8, 0, norm_salt, norm_salt_len, norm_salt_mb, norm_salt_mb_len, NULL, NULL) == 0) {
+        fprintf(stderr, "Error converting normalized passphrase to multi-byte characters\n");
+        dogecoin_free(salt);
+        dogecoin_free(pass_w);
+        dogecoin_free(salt_w);
+        dogecoin_free(norm_pass);
+        dogecoin_free(norm_salt);
+        dogecoin_free(norm_pass_mb);
+        dogecoin_free(norm_salt_mb);
+        return -1;
+    }
+
+    dogecoin_free(pass_w);
+    dogecoin_free(salt_w);
+
+    /* pbkdf2 hmac sha512 */
+    pbkdf2_hmac_sha512((const unsigned char*) norm_pass_mb, norm_pass_mb_len, (const unsigned char*) norm_salt_mb, norm_salt_mb_len, LANG_WORD_CNT, digest);
+
+    dogecoin_free(norm_pass_mb);
+    dogecoin_free(norm_salt_mb);
+
+#else
+    uint8_t *norm_pass;
+    uint8_t *norm_salt;
+
+    norm_pass = u8_normalize(UNINORM_NFKD, (const uint8_t *) pass, strlen(pass), NULL, &norm_pass_len);
+    if (norm_pass == NULL) {
+        fprintf(stderr, "Error normalizing passphrase\n");
+        dogecoin_free(salt);
+        return -1;
+    }
+    norm_salt = u8_normalize(UNINORM_NFKD, (const uint8_t *) salt, strlen(salt), NULL, &norm_salt_len);
     if (norm_salt == NULL) {
         fprintf(stderr, "Error normalizing salt\n");
-       return -1;
+        dogecoin_free(salt);
+        dogecoin_free(norm_pass);
+        return -1;
     }
 
     /* pbkdf2 hmac sha512 */
     pbkdf2_hmac_sha512((const unsigned char*) norm_pass, norm_pass_len, (const unsigned char*) norm_salt, norm_salt_len, LANG_WORD_CNT, digest);
+#endif
 
     /* we're done with salt */
     dogecoin_free(salt);
@@ -294,10 +510,10 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
     }
 
     /* Define and initialize segment and csBits */
-    char segment[segSize];
+    char *segment = dogecoin_string_vla (segSize);
     strcpy(segment, "");
 
-    char csBits[checksumBits];
+    char *csBits = dogecoin_string_vla (checksumBits);
     strcpy(csBits, "");
 
     /* Convert the checksum string to a byte */
@@ -305,6 +521,8 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
     if (bytes == NULL) {
         /* Invalid byte, return from the function */
         fprintf(stderr, "ERROR: Failed to convert first byte\n");
+        dogecoin_free (segment);
+        dogecoin_free (csBits);
         return -1;
     }
 
@@ -327,7 +545,8 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             break;
         default:
             return -1;
-            dogecoin_free (bytes);
+            dogecoin_free (segment);
+            dogecoin_free (csBits);
             break;
     }
     csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
@@ -338,6 +557,8 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
 
     strncat(segment, entropy, segSize - strlen(segment) - 1);
     strncat(segment, csBits, segSize - strlen(segment) - 1);
+
+    dogecoin_free (csBits);
 
     char elevenBits[12] = {""};
 
@@ -356,6 +577,7 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             /* Check that real is a valid index into the wordlist array */
             if (real < 0 || real >= LANG_WORD_CNT) {
                 fprintf(stderr, "ERROR: invalid 11-bit binary chunk\n");
+                dogecoin_free (segment);
                 return -1;
             }
 
@@ -372,6 +594,8 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
         elevenBits[elevenBitIndex] = segment[i];
         elevenBitIndex++;
     }
+
+    dogecoin_free (segment);
 
     /* Remove the trailing space from the mnemonic sentence */
     mnemonic[strlen(mnemonic) - strlen(space)] = '\0';

@@ -21,10 +21,6 @@ void test_bip44()
     int result;
     dogecoin_hdnode node;
     dogecoin_hdnode bip44_key;
-    uint8_t* seed = malloc(64);
-    memset(seed, 0, 64);
-    seed = utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f");
-    char* seed_hex;
     char mnemonic[256] = "";
     size_t length;
     char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
@@ -48,6 +44,10 @@ void test_bip44()
 
     // Convert mnemonic to seed
 //    dogecoin_seed_from_mnemonic (words, "", seed);
+    uint8_t* seed = malloc(64);
+    memset(seed, 0, 64);
+    seed = utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f");
+    char* seed_hex;
     seed_hex = utils_uint8_to_hex(seed, 16);
     printf ("%s\n", seed_hex);
 
