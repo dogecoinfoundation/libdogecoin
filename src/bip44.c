@@ -73,8 +73,8 @@ int derive_bip44_extended_private_key(const dogecoin_hdnode *master_key, const u
     if (!dogecoin_hd_generate_key(bip44_key, keypath, master_key->private_key, master_key->chain_code, false)) {
         return -1;
     }
-    printf("Account: %u\n", account);
-    printf("Derivation path: %s\n", keypath);
+    debug_print("Account: %u\n", account);
+    debug_print("Derivation path: %s\n", keypath);
     return 0;
 }
 
@@ -124,8 +124,8 @@ int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const ui
     if (!dogecoin_hd_generate_key(bip44_key, keypath, master_key->public_key, master_key->chain_code, true)) {
         return -1;
     }
-    printf("Account: %u\n", account);
-    printf("Derivation path: %s\n", keypath);
+    debug_print("Account: %u\n", account);
+    debug_print("Derivation path: %s\n", keypath);
     return 0;
 }
 
