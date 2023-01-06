@@ -287,3 +287,11 @@ uint8_t** dogecoin_uint8ptr_vla(size_t size)
     outarray = (uint8_t**)malloc(size * sizeof(uint8_t*));
     return outarray;
 }
+
+char* dogecoin_string_vla(size_t size)
+{
+    char* outarray;
+    outarray = (char*)malloc(size + 1 * sizeof(char));
+    outarray[size] = '\0';
+    return outarray;
+}

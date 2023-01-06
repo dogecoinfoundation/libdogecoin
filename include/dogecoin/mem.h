@@ -4,6 +4,7 @@
 
  Copyright (c) 2017 Jonas Schnelli
  Copyright (c) 2022 bluezr
+ Copyright (c) 2022 michilumin
  Copyright (c) 2022 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -66,6 +67,7 @@ LIBDOGECOIN_API char* dogecoin_char_vla(size_t size);
 LIBDOGECOIN_API unsigned char* dogecoin_uchar_vla(size_t size);
 LIBDOGECOIN_API unsigned char** dogecoin_ucharptr_vla(size_t size);
 LIBDOGECOIN_API uint8_t** dogecoin_uint8ptr_vla(size_t size);
+LIBDOGECOIN_API char* dogecoin_string_vla(size_t size);
     LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_MEM_H__
