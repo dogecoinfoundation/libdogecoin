@@ -6,6 +6,7 @@ $(package)_sha256_hash=a2252beeec830ac444b9f68d6b38ad883db19919db35b52222cf827c3
 
 define $(package)_set_vars
   $(package)_config_opts=--disable-shared --enable-static
+  $(package)_config_opts_mingw32=--enable-threads=windows
 endef
 
 define $(package)_config_cmds

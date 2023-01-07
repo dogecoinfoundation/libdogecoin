@@ -267,6 +267,14 @@ char* dogecoin_char_vla(size_t size)
     return outarray;
 }
 
+char* dogecoin_string_vla(size_t size)
+{
+    char* outarray;
+    outarray = (char*)malloc(size + 1 * sizeof(char));
+    outarray[size] = '\0';
+    return outarray;
+}
+
 unsigned char* dogecoin_uchar_vla(size_t size)
 {
     unsigned char* outarray;

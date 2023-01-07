@@ -70,9 +70,11 @@ case $host in
   ;;
   *darwin*)
     TARGET_OS=darwin
+    AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
   ;;
   *linux*)
     TARGET_OS=linux
+    AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
   ;;
 esac
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"
