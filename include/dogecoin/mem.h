@@ -68,6 +68,6 @@ LIBDOGECOIN_API unsigned char* dogecoin_uchar_vla(size_t size);
 LIBDOGECOIN_API unsigned char** dogecoin_ucharptr_vla(size_t size);
 LIBDOGECOIN_API uint8_t** dogecoin_uint8ptr_vla(size_t size);
 LIBDOGECOIN_API char* dogecoin_string_vla(size_t size);
-    LIBDOGECOIN_END_DECL
+LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_MEM_H__

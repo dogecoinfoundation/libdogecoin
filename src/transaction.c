@@ -565,8 +565,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         dogecoin_mem_zero(sigderhex, sizeof(sigderhex));
         utils_bin_to_hex((unsigned char *)sigder_plus_hashtype, sigderlen, sigderhex);
 
-        printf("\nsignature created:\nsignature compact: %s\n", sigcompacthex);
-        printf("signature DER (+hashtype): %s\n", sigderhex);
+        debug_print("\nsignature created:\nsignature compact: %s\n", sigcompacthex);
+        debug_print("signature DER (+hashtype): %s\n", sigderhex);
 
         cstring* signed_tx = cstr_new_sz(1024);
         dogecoin_tx_serialize(signed_tx, txtmp);
@@ -574,7 +574,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         char* signed_tx_hex = dogecoin_char_vla(signed_tx->len * 2 + 1);
         utils_bin_to_hex((unsigned char *)signed_tx->str, signed_tx->len, signed_tx_hex);
         memcpy(incomingrawtx, signed_tx_hex, strlen(signed_tx_hex));
-        printf("signed TX: %s\n", incomingrawtx);
+        debug_print("signed TX: %s\n", incomingrawtx);
         cstr_free(signed_tx, true);
         dogecoin_tx_free(txtmp);
         free(signed_tx_hex);

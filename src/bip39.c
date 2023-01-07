@@ -32,7 +32,6 @@
 #include <dogecoin/random.h>
 #include <dogecoin/sha2.h>
 
-
 #ifdef _WIN32
 #ifndef WINVER
 #define WINVER 0x0600
@@ -84,7 +83,6 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
      */
 
     char* entropyBits = dogecoin_char_vla(entropysize + 1);
-     
     entropyBits[0] = '\0';
     dogecoin_mem_zero(entropyBits, sizeof(entropyBits));  // Initialize entropyBits to all zeros
 
@@ -93,7 +91,6 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
 
     /* OpenSSL */
     /* Gather entropy bytes locally unless optionally provided */
-    //unsigned char local_entropy[entBytes];
     unsigned char* local_entropy = dogecoin_uchar_vla(entBytes);
     if (entropy == NULL) {
         int rc = (int) dogecoin_random_bytes(local_entropy,entBytes, 0);
@@ -162,9 +159,7 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
         dogecoin_free(entropyBits);
         return -1;
     }
-
     dogecoin_free(entropyBits);
-
     return 0;
 }
 
@@ -384,13 +379,13 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 
     norm_pass = u8_normalize(UNINORM_NFKD, (const uint8_t *) pass, strlen(pass), NULL, &norm_pass_len);
     if (norm_pass == NULL) {
-    fprintf(stderr, "Error normalizing passphrase\n");
+        fprintf(stderr, "Error normalizing passphrase\n");
         dogecoin_free(salt);
         return -1;
     }
     norm_salt = u8_normalize(UNINORM_NFKD, (const uint8_t *) salt, strlen(salt), NULL, &norm_salt_len);
     if (norm_salt == NULL) {
-    fprintf(stderr, "Error normalizing salt\n");
+        fprintf(stderr, "Error normalizing salt\n");
         dogecoin_free(salt);
         dogecoin_free(norm_pass);
         return -1;
@@ -510,7 +505,6 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
     strcpy(segment, "");
 
     char *csBits = dogecoin_string_vla (checksumBits);
-    //char csBits[checksumBits];
     strcpy(csBits, "");
 
     /* Convert the checksum string to a byte */
@@ -544,7 +538,6 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             return -1;
             dogecoin_free (segment);
             dogecoin_free (csBits);
-           // dogecoin_free (bytes);
             break;
     }
     csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
@@ -557,7 +550,6 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
     strncat(segment, csBits, segSize - strlen(segment) - 1);
 
     dogecoin_free (csBits);
-
     char elevenBits[12] = {""};
 
     int elevenBitIndex = 0;
@@ -574,7 +566,6 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             if (real < 0 || real >= LANG_WORD_CNT) {
                 fprintf(stderr, "ERROR: invalid 11-bit binary chunk\n");
                 dogecoin_free (segment);
-             //   dogecoin_free (bytes);
                 return -1;
             }
 
@@ -593,7 +584,6 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
     }
 
     dogecoin_free (segment);
-
     /* Remove the trailing space from the mnemonic sentence */
     mnemonic[strlen(mnemonic) - strlen(space)] = '\0';
 
