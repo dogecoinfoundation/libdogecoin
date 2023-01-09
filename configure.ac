@@ -152,8 +152,6 @@ if test x$with_net = "xyes"; then
   fi
 fi
 
-AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
-
 AC_CONFIG_HEADERS([src/libdogecoin-config.h])
 AC_CONFIG_FILES([Makefile libdogecoin.pc])
 AC_SUBST(LIBTOOL_APP_LDFLAGS)

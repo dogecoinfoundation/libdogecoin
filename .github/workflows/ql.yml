@@ -38,7 +38,21 @@ jobs:
     - name: update system
       run: |
         sudo apt-get update --yes
-        sudo apt-get install -y autoconf automake libtool build-essential libevent-dev python3 libunistring-dev
+        sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential python3
+
+    - name: Dependency cache
+      uses: actions/cache@v2
+      env:
+        cache-name: depends
+      with:
+        path: ./depends/built
+        key: codeql-${{ env.cache-name }}-${{ hashFiles('depends/packages/*') }}
+
+    - name: Build depends
+      run: |
+        pushd depends
+        make -j4 HOST=x86_64-pc-linux-gnu
+        popd
 
     - name: init codeql
       uses: github/codeql-action/init@v2
@@ -48,7 +62,7 @@ jobs:
     - name: build libdogecoin
       run: |
        ./autogen.sh
-       ./configure
+       ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
        make check -j3 VERBOSE=1
 
     - name: perform codeql analysis
