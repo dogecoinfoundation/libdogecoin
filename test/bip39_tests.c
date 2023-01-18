@@ -11,8 +11,8 @@
 #include "utest.h"
 
 #include <dogecoin/bip39.h>
-#include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/utils.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +20,6 @@
 
 void test_bip39()
 {
-
     /* iancoleman.io/bip39 */
     const char* test_mnemonic_12 = "chief prevent advice search broccoli dish pride grow evidence bicycle cushion lady";
     const char* test_mnemonic_15 = "engine link summer museum gift sphere half void where long copper mandate push valve enhance";
@@ -173,14 +172,14 @@ void test_bip39()
     const char* test_seed_24_por = "a1996cc0f01b82b8af10af4563bbb907a9bd82c6e16e8632fe617a5d63f2eed6f33181c8358f77ddd8f461476ac6faee548523c6512400e55341d8b0215e0351";
 
 
-    uint8_t seed [64] = "";
-    uint8_t seed_test [512 / 8];
+    uint8_t seed[64] = "";
+    uint8_t seed_test[512 / 8];
     size_t size;
 
     /* generate mnemonic(s) */
-    char *words = NULL;
-    char *entropy = NULL;
-    char *entropy_out = NULL;
+    char* words = NULL;
+    char* entropy = NULL;
+    char* entropy_out = NULL;
 
     /* allocate space for mnemonics */
     words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
@@ -197,131 +196,665 @@ void test_bip39()
     memset(entropy_out, '\0', MAX_ENTROPY_STRING_SIZE);
 
     /* Test with known entropy values */
-    debug_print ("%s", "\nTests with known entropy values\n");
-    dogecoin_generate_mnemonic ("128", "eng", " ", "00000000000000000000000000000000", NULL, entropy_out, &size, words);
+    debug_print("%s", "\nTests with known entropy values\n");
+    dogecoin_generate_mnemonic("128", "eng", " ", "00000000000000000000000000000000", NULL, entropy_out, &size, words);
     u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", size);
-    debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("160", "eng", " ", "0000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon address", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("192", "eng", " ", "000000000000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("224", "eng", " ", "00000000000000000000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon admit", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("256", "eng", " ", "0000000000000000000000000000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("160", "eng", " ", "0000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon address", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("192", "eng", " ", "000000000000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("224", "eng", " ", "00000000000000000000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon admit", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("256", "eng", " ", "0000000000000000000000000000000000000000000000000000000000000000", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
 
-    dogecoin_generate_mnemonic ("128", "jpn", "　", "00000000000000000000000000000000", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あおぞら", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("128", "jpn", "　", "00000000000000000000000000000000", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あおぞら", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
 
-    dogecoin_generate_mnemonic ("128", "jpn", "　", "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "そつう　れきだい　ほんやく　わかす　りくつ　ばいか　ろせん　やちん　そつう　れきだい　ほんやく　わかめ", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("128", "jpn", "　", "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "そつう　れきだい　ほんやく　わかす　りくつ　ばいか　ろせん　やちん　そつう　れきだい　ほんやく　わかめ", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
 
-    dogecoin_generate_mnemonic ("256", "jpn", "　", "15da872c95a13dd738fbf50e427583ad61f18fd99f628c417a61cf8343c90419", NULL, entropy_out, &size, words);
-    u_assert_mem_eq(words, "うちゅう　ふそく　ひしょ　がちょう　うけもつ　めいそう　みかん　そざい　いばる　うけとる　さんま　さこつ　おうさま　ぱんつ　しひょう　めした　たはつ　いちぶ　つうじょう　てさぎょう　きつね　みすえる　いりぐち　かめれおん", size); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("256", "jpn", "　", "15da872c95a13dd738fbf50e427583ad61f18fd99f628c417a61cf8343c90419", NULL, entropy_out, &size, words);
+    u_assert_mem_eq(words, "うちゅう　ふそく　ひしょ　がちょう　うけもつ　めいそう　みかん　そざい　いばる　うけとる　さんま　さこつ　おうさま　ぱんつ　しひょう　めした　たはつ　いちぶ　つうじょう　てさぎょう　きつね　みすえる　いりぐち　かめれおん", size);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
 
     /* Tests with local entropy (random) */
-    debug_print ("%s", "\nTests with local (random) entropy\n");
-    dogecoin_generate_mnemonic ("128", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("160", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("192", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("224", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
-    dogecoin_generate_mnemonic ("256", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    debug_print ("%lu bytes \n", size);
+    debug_print("%s", "\nTests with local (random) entropy\n");
+    dogecoin_generate_mnemonic("128", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("160", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("192", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("224", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
+    dogecoin_generate_mnemonic("256", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%lu bytes \n", size);
 
     /* test custom word lists (random) */
-    debug_print ("%s", "\nTests with custom word lists\n");
-    #ifdef _WIN32
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\spanish.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\english.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\japanese.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\italian.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\french.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\chinese_simplified.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\chinese_traditional.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    #else
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/spanish.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/english.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/japanese.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/italian.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/french.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/chinese_simplified.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("128", NULL, " ", entropy, "test/wordlist/chinese_traditional.txt", entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    #endif
+    debug_print("%s", "\nTests with custom word lists\n");
+#ifdef _WIN32
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\spanish.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\english.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\japanese.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\italian.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\french.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\chinese_simplified.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, ".\\test\\wordlist\\chinese_traditional.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+#else
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/spanish.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/english.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/japanese.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/italian.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/french.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/chinese_simplified.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", NULL, " ", entropy, "test/wordlist/chinese_traditional.txt", entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+#endif
 
     /* test BIP39 languages and entropy sizes (random) */
-    debug_print ("%s", "\nTests with all entropy lengths, languages and word lists\n");
-    dogecoin_generate_mnemonic ("128", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "eng", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    debug_print("%s", "\nTests with all entropy lengths, languages and word lists\n");
+    dogecoin_generate_mnemonic("128", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "eng", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "jpn", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "jpn", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "jpn", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "jpn", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "jpn", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "jpn", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "jpn", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "jpn", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "jpn", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "jpn", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "spa", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "spa", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "spa", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "spa", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "spa", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "spa", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "spa", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "spa", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "spa", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "spa", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "sc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "sc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "sc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "sc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "sc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "sc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "sc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "sc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "sc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "sc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "tc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "tc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "tc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "tc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "tc", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "tc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "tc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "tc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "tc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "tc", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "fra", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "fra", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "fra", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "fra", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "fra", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "fra", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "fra", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "fra", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "fra", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "fra", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "ita", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "ita", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "ita", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "ita", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "ita", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "ita", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "ita", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "ita", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "ita", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "ita", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "kor", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "kor", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "kor", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "kor", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "kor", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "kor", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "kor", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "kor", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "kor", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "kor", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "cze", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "cze", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "cze", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "cze", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "cze", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("128", "cze", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "cze", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "cze", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "cze", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "cze", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
 
-    dogecoin_generate_mnemonic ("128", "por", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("160", "por", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("192", "por", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("224", "por", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); entropy_out  = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE); memset(words, '\0', MAX_ENTROPY_STRING_SIZE); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE); memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
-    dogecoin_generate_mnemonic ("256", "por", " ", entropy, NULL, entropy_out, &size, words); debug_print("%s \n", words); free(entropy_out); free(words);
+    dogecoin_generate_mnemonic("128", "por", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("160", "por", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("192", "por", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("224", "por", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    memset(words, '\0', MAX_ENTROPY_STRING_SIZE);
+    free(words);
+    words = malloc(sizeof(char) * MAX_MNEMONIC_STRING_SIZE);
+    memset(words, '\0', MAX_MNEMONIC_STRING_SIZE);
+    dogecoin_generate_mnemonic("256", "por", " ", entropy, NULL, entropy_out, &size, words);
+    debug_print("%s \n", words);
+    free(entropy_out);
+    free(words);
 
     /* generate seed */
     /* mnemonic vectors */
@@ -329,323 +862,373 @@ void test_bip39()
 
     /* English with passphrase */
 
-    debug_print ("%s", "\nTests of mnemonic seed generation (w/ passphrase)\n");
-    dogecoin_seed_from_mnemonic (test_mnemonic_12, "TREZOR", seed);
+    debug_print("%s", "\nTests of mnemonic seed generation (w/ passphrase)\n");
+    dogecoin_seed_from_mnemonic(test_mnemonic_12, "TREZOR", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8("31113f96716b7d5b8d58a49c5e1f6d6300ff307b35eef3cecfdb97869e514ad330f0a7dcec4ed2feeebf8d2267ebfefeb149df84642ca091befd25ea15d36076"),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8("31113f96716b7d5b8d58a49c5e1f6d6300ff307b35eef3cecfdb97869e514ad330f0a7dcec4ed2feeebf8d2267ebfefeb149df84642ca091befd25ea15d36076"),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15, "TREZOR", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15, "TREZOR", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8("7de0820caafcfc0695724ed19c3f35531c1f290650a0b39c053e67175979ed05dfedc824dcf9ac38cbc014fa86a2836c5b5e3b9ab1b9f0f84a76c492a04665b0"),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8("7de0820caafcfc0695724ed19c3f35531c1f290650a0b39c053e67175979ed05dfedc824dcf9ac38cbc014fa86a2836c5b5e3b9ab1b9f0f84a76c492a04665b0"),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18, "TREZOR", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18, "TREZOR", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8("fffa2ea3c80653436c24f629581a4b3daf9843fab6f524f642aa71ffbeab7b6ce7aaa1ea03fb3686eb3b661bd2ee80bc5c42b3e94d91d40bd89a3bf9319428a2"),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8("fffa2ea3c80653436c24f629581a4b3daf9843fab6f524f642aa71ffbeab7b6ce7aaa1ea03fb3686eb3b661bd2ee80bc5c42b3e94d91d40bd89a3bf9319428a2"),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21, "TREZOR", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21, "TREZOR", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8("706f79690efe53f124b30caf062603229735dbee0431aa7832a047ef6456a045c33d7274ef8ed97fc23bd1aaf0b02a3d50d91196ae9a9a005fbf90e76ddbce08"),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8("706f79690efe53f124b30caf062603229735dbee0431aa7832a047ef6456a045c33d7274ef8ed97fc23bd1aaf0b02a3d50d91196ae9a9a005fbf90e76ddbce08"),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24, "TREZOR", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24, "TREZOR", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8("65b6c6b1e71980836b3c98ca9fd879d32e1d225c7095e3c17e68ea6daf2ea856b6e04f05e0d4a627b8d82975319b83e0dff0ab817d8e25646287f51b06b44af4"),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8("65b6c6b1e71980836b3c98ca9fd879d32e1d225c7095e3c17e68ea6daf2ea856b6e04f05e0d4a627b8d82975319b83e0dff0ab817d8e25646287f51b06b44af4"),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    debug_print ("%s", "\nTests of mnemonic seed generation (w/o passphrase)\n");
+    debug_print("%s", "\nTests of mnemonic seed generation (w/o passphrase)\n");
 
     /* Japanese */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_jpn, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_jpn, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_jpn),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_jpn),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_jpn, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_jpn, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_jpn),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_jpn),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_jpn, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_jpn, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_jpn),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_jpn),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_jpn, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_jpn, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_jpn),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_jpn),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_jpn, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_jpn, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_jpn),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_jpn),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-   /* Spanish */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_spa, "", seed);
+    /* Spanish */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_spa, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_spa),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_spa),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_spa, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_spa, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_spa),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_spa),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_spa, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_spa, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_spa),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_spa),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_spa, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_spa, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_spa),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_spa),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_spa, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_spa, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_spa),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_spa),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-   /* Chinese (Simplified) */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_sc, "", seed);
+    /* Chinese (Simplified) */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_sc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_sc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_sc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_sc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_sc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_sc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_sc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_sc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_sc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_sc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_sc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_sc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_sc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_sc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_sc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_sc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_sc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_sc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_sc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-   /* Chinese (Traditional) */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_tc, "", seed);
+    /* Chinese (Traditional) */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_tc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_tc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_tc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_tc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_tc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_tc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_tc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_tc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_tc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_tc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_tc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_tc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_tc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_tc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_tc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_tc, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_tc, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_tc),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_tc),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-   /* French */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_fra, "", seed);
+    /* French */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_fra, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_fra),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_fra),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_fra, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_fra, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_fra),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_fra),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_fra, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_fra, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_fra),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_fra),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_fra, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_fra, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_fra),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_fra),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_fra, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_fra, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_fra),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_fra),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-   /* Italian */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_ita, "", seed);
+    /* Italian */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_ita, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_ita),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_ita),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_ita, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_ita, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_ita),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_ita),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_ita, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_ita, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_ita),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_ita),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_ita, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_ita, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_ita),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_ita),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_ita, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_ita, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_ita),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_ita),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-   /* Korean */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_kor, "", seed);
+    /* Korean */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_kor, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_kor),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_kor),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_kor, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_kor, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_kor),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_kor),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_kor, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_kor, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_kor),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_kor),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_kor, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_kor, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_kor),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_kor),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_kor, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_kor, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_kor),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_kor),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
-  /* Czech */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_cze, "", seed);
+    /* Czech */
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_cze, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_cze),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_cze),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_cze, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_cze, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_cze),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_cze),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_cze, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_cze, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_cze),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_cze),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_cze, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_cze, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_cze),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_cze),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_cze, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_cze, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_cze),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_cze),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
 
     /* Portuguese */
-    dogecoin_seed_from_mnemonic (test_mnemonic_12_por, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_12_por, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_12_por),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_12_por),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_15_por, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_15_por, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_15_por),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_15_por),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_18_por, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_18_por, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_18_por),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_18_por),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_21_por, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_21_por, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_21_por),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_21_por),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    dogecoin_seed_from_mnemonic (test_mnemonic_24_por, "", seed);
+    dogecoin_seed_from_mnemonic(test_mnemonic_24_por, "", seed);
     memcpy_safe(seed_test,
-           utils_hex_to_uint8(test_seed_24_por),
-           64);
-    u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
+                utils_hex_to_uint8(test_seed_24_por),
+                64);
+    u_assert_mem_eq(seed, seed_test, 64);
+    debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 }

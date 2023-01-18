@@ -95,6 +95,23 @@ char* get_raw_transaction(int txindex);
 /* clear the transaction at (txindex) in memory */
 void clear_transaction(int txindex);
 
+/* QR Code Generation Functions
+---------------------------------
+*/
+
+//TODO: These are strings not just P2PKH but we need to set a min and max, perhaps only accept wif and p2pkh.
+
+/*populate an array of bits that represent qrcode pixels*/
+/* returns size(L or W) in pixels of QR.*/
+int qrgen_p2pkh_to_qrbits(const char* in_p2pkh, uint8_t* outQrByteArray);
+
+/* create a QR text formatted string (with line breaks) from an incoming p2pkh*/
+int qrgen_p2pkh_to_qr_string(const char* in_p2pkh, char* outString);
+
+/* Prints the given p2pkh addr as QR Code to the console. */
+void qrgen_p2pkh_consoleprint_to_qr(char* in_p2pkh);
+
+
 /* Advanced API functions for operating on already formed raw transactions
 --------------------------------------------------------------------------
 */
