@@ -4,7 +4,7 @@
  * Copyright (c) 2022 edtubbs
  * Copyright (c) 2022 bluezr
  * Copyright (c) 2022 michilumin
- * Copyright (c) 2022 The Dogecoin Foundation
+ * Copyright (c) 2023 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -65,7 +65,7 @@
  * |  256  |  8 |   264  |  24  |
  */
 
-int get_mnemonic(const int entropysize, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t* mnemonic_len) {
+int get_mnemonic(const int entropysize, const char* entropy, const char* wordlist[], const char* space, char* entropy_out, char* mnemonic, size_t* mnemonic_size) {
 
     /* Check entropy size per BIP-39 */
     if (!(entropysize >= 128 && entropysize <= 256 && entropysize % 32 == 0)) {
@@ -82,19 +82,31 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
      * ENT (Entropy)
      */
     char* entropyBits = dogecoin_char_vla(entropysize + 1);
+    if (entropyBits == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for entropyBits\n");
+        return -1;
+    }
     entropyBits[0] = '\0';
     dogecoin_mem_zero(entropyBits, entropysize + 1);  // Initialize entropyBits to all zeros
 
 
     char binaryByte[9] = "";
 
-    /* OpenSSL */
-    /* Gather entropy bytes locally unless optionally provided */
+    /* Allocate memory for local entropy */
     unsigned char* local_entropy = dogecoin_uchar_vla(entBytes);
+    if (local_entropy == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for local entropy\n");
+        dogecoin_free(entropyBits);
+        return -1;
+    }
+
+    /* Gather entropy bytes locally unless optionally provided */
     if (entropy == NULL) {
         int rc = (int) dogecoin_random_bytes(local_entropy, entBytes, 0);
         if (rc != 1) {
             fprintf(stderr, "ERROR: Failed to generate random entropy\n");
+            dogecoin_free(entropyBits);
+            dogecoin_free(local_entropy);
             return -1;
         }
     }
@@ -108,6 +120,11 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
             return -1;
         }
         memcpy_safe(local_entropy, entropy_bytes, entBytes);
+    }
+
+    /* Convert local entropy and copy to entropy parameter if allocated */
+    if (entropy_out != NULL) {
+        strcpy(entropy_out, utils_uint8_to_hex(local_entropy, entBytes));
     }
 
     /* Concatenate string of bits from entropy bytes */
@@ -157,7 +174,7 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
      * CS (Checksum portion) to add to entropy
      */
 
-    int ret = produce_mnemonic_sentence(csAdd * 33 + 1, csAdd + 1, hexStr, entropyBits, wordlist, space, mnemonic, mnemonic_len);
+    int ret = produce_mnemonic_sentence(csAdd * 33 + 1, csAdd + 1, hexStr, entropyBits, wordlist, space, mnemonic, mnemonic_size);
     if (ret != 0) {
         fprintf(stderr, "ERROR: Failed to generate mnemonic sentence\n");
         dogecoin_free(entropyBits);
@@ -427,6 +444,12 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
     FILE * fp;
     char word[1024];
 
+    /* Check that file path is valid */
+    if (filepath == NULL) {
+        fprintf(stderr, "ERROR: file path error\n");
+        return -1;
+    }
+
     fp = fopen(filepath, "r");
     if (fp == NULL) {
         fprintf(stderr, "ERROR: file read error\n");
@@ -462,8 +485,21 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
  * repeated use.
  */
 
-void get_words(const char *lang, char* wordlist[]) {
+int get_words(const char *lang, char* wordlist[]) {
     int i = 0;
+
+    /* Check that language is valid */
+    if (lang == NULL) {
+        fprintf(stderr, "ERROR: invalid language\n");
+        return -1;
+    }
+
+    /* Check that wordlist is valid */
+    if (wordlist == NULL) {
+        fprintf(stderr, "ERROR: invalid value of wordlist\n");
+        return -1;
+    }
+
     for (; i < 2048; i++) {
       if (strcmp(lang,"spa") == 0) {
           wordlist[i]=(char*)wordlist_spa[i];
@@ -486,10 +522,11 @@ void get_words(const char *lang, char* wordlist[]) {
       } else if (strcmp(lang,"por") == 0) {
           wordlist[i]=(char*)wordlist_por[i];
       } else {
-          fprintf(stderr, "ERROR: Language or language file does not exist.\n");
-          exit(EXIT_FAILURE);
+          fprintf(stderr, "ERROR: invalid language\n");
+          return -1;
       }
     }
+   return 0;
 }
 
 /*
@@ -497,25 +534,34 @@ void get_words(const char *lang, char* wordlist[]) {
  * size and number of checksum bits appended to the entropy bits.
  */
 
-int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char *firstByte, const char* entropy, const char* wordlist[], const char* space, char *mnemonic, size_t *mnemonic_len) {
+int produce_mnemonic_sentence(const int segSize, const int checksumBits, const char* firstByte, const char* entropy, const char* wordlist[], const char* space, char* mnemonic, size_t* mnemonic_size) {
 
-    /* Check if the input arguments are valid */
-    if (segSize <= 0 || checksumBits <= 0 || !firstByte || !entropy || !wordlist || !mnemonic || !mnemonic_len) {
+    /* Check if the input arguments are valid, mnemonic may be NULL */
+    if (segSize <= 0 || checksumBits <= 0 || !firstByte || !entropy || !wordlist || !space || !mnemonic_size) {
         fprintf(stderr, "ERROR: invalid input arguments\n");
         return -1;
     }
 
     /* Check that wordlist is valid */
-    if (wordlist == NULL || *wordlist == NULL) {
+    if (*wordlist == NULL) {
         fprintf(stderr, "ERROR: invalid value of wordlist\n");
         return -1;
     }
 
     /* Define and initialize segment and csBits */
     char *segment = dogecoin_string_vla (segSize);
+    if (segment == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for segment\n");
+        return -1;
+    }
     strcpy(segment, "");
 
     char *csBits = dogecoin_string_vla (checksumBits);
+    if (csBits == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for csBits\n");
+        dogecoin_free (segment);
+        return -1;
+    }
     strcpy(csBits, "");
 
     /* Convert the checksum string to a byte */
@@ -562,6 +608,12 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
 
     dogecoin_free (csBits);
 
+    /* Initialize the mnemonic array with a null terminator */
+    if (mnemonic != NULL) {
+        mnemonic[0] = '\0';
+    }
+    *mnemonic_size = 0;
+
     char elevenBits[12] = {""};
 
     int elevenBitIndex = 0;
@@ -581,12 +633,31 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
                 return -1;
             }
 
-            /* Concatenate the word from the wordlist to the mnemonic */
             const char *word = wordlist[real];
-            strcat(mnemonic, word);
 
-            /* Concatenate a space to the mnemonic */
-            strcat(mnemonic, space);
+            /* Check for allocation */
+            if (mnemonic == NULL) {
+                /* update mnemonic_size with the length of what the mnemonic should be */
+                *mnemonic_size += strlen(word);
+
+                /* Only count the space if it's not the last word */
+                if (i < segSize - 1) {
+                    *mnemonic_size += strlen(space);
+                }
+            }
+            else {
+                /* Concatenate the word from the wordlist to the mnemonic */
+                strcat(mnemonic, word);
+
+                /* update mnemonic_size with the length of the mnemonic */
+                *mnemonic_size += strlen(word);
+
+                /* Concatenate a space to the mnemonic only if it's not the last word */
+                if (i < segSize - 1) {
+                    strcat(mnemonic, space);
+                    *mnemonic_size += strlen(space);
+                }
+            }
 
             elevenBitIndex = 0;
         }
@@ -597,42 +668,49 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
 
     dogecoin_free (segment);
 
-    /* Remove the trailing space from the mnemonic sentence */
-    mnemonic[strlen(mnemonic) - strlen(space)] = '\0';
+   /* Increment mnemonic_size to account for the null terminator */
+   *mnemonic_size = *mnemonic_size + 1;
 
-    /* Update the mnemonic_len output parameter to reflect the length of the generated mnemonic */
-    *mnemonic_len = strlen(mnemonic);
-
-    return 0;
+   return 0;
 }
 
 /**
- * @brief This function generates a mnemonic for a given entropy size and language
+ * @brief This function generates a mnemonic for a given entropy size and language.
  *
- * @param entropy_size The 128, 160, 192, 224, or 256 bits of entropy
- * @param language The ISO 639-2 code for the mnemonic language
- * @param space The character to seperate mnemonic words
- * @param entropy The entropy to generate the mnemonic (optional)
- * @param filepath The path to a custom word file (optional)
- * @param wordlist The language word list as an array
- * @param length The length of the generated mnemonic in bytes
+ * @param entropy_size The "128", "160", "192", "224", or "256" bits of entropy.
+ * @param language The ISO 639-2 code for the mnemonic language.
+ * @param space The character to seperate mnemonic words.
+ * @param entropy The entropy to generate the mnemonic (optional).
+ * @param filepath The path to a custom word file (optional).
+ * @param entropy_out The entropy of a given size as a hex string.
+ * @param size The size of the generated mnemonic in bytes (including '\0').
+ * @param words The generated mnemonic code words.
  *
- * @return mnemonic code words
+ * @return 0 (success), -1 (fail)
 */
-int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* space, const char* entropy, const char* filepath, size_t* length, char* words)
+int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* space, const char* entropy, const char* filepath, char* entropy_out, size_t* size, char* words)
 {
     char *wordlist[LANG_WORD_CNT] = {0};
 
     /* validate input, optional entropy checked below */
     if (entropy_size != NULL) {
 
-        /* load words into memory */
-        if (language != NULL){
-            get_words(language, wordlist);
+        /* load custom word file into memory if path is valid */
+	if (filepath != NULL) {
+            if (get_custom_words (filepath, (char **) wordlist) == -1) {
+
+                /* Free memory for custom words */
+                for (int i = 0; i < LANG_WORD_CNT; i++) {
+                    dogecoin_free(wordlist[i]);
+                }
+                return -1;
+            }
         }
-        /* load custom word file into memory */
-	      else if (filepath != NULL) {
-            get_custom_words (filepath, (char **) wordlist);
+        /* otherwise, load language word list into memory */
+        else if (language != NULL) {
+           if (get_words(language, wordlist) == -1) {
+               return -1;
+           }
         }
         /* handle input validation errors */
         else {
@@ -642,21 +720,30 @@ int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, 
 
         /* Validate optional entropy */
         if (entropy != NULL) {
-            /* Calculate expected entropy size in bits */
-            size_t expected_entropy_size = strtol(entropy_size, NULL, 10) / 4;
+
+            /* Calculate expected size of entropy hex string */
+            size_t expected_entropy_size = strtol(entropy_size, NULL, 10) / 8 * HEX_CHARS_PER_BYTE;
+
             /* Verify size of the string equals the entropy_size specified */
             if (strlen(entropy) != expected_entropy_size) {
-                fprintf(stderr, "ERROR: Length of optional entropy does not equal entropy size\n");
+                fprintf(stderr, "ERROR: invalid entropy string, expected %ld bytes\n", expected_entropy_size);
+
+                /* Free memory for custom words */
+                if (filepath != NULL) {
+                    for (int i = 0; i < LANG_WORD_CNT; i++) {
+                        dogecoin_free(wordlist[i]);
+                    }
+                }
                 return -1;
             }
         }
 
         /* convert string value for entropy size to base 10 and get mnemonic */
-        if (get_mnemonic(strtol(entropy_size, NULL, 10), entropy, (const char **) wordlist, space, words, length) == -1) {
+        if (get_mnemonic(strtol(entropy_size, NULL, 10), entropy, (const char **) wordlist, space, entropy_out, words, size) == -1) {
             fprintf(stderr, "ERROR: Failed to get mnemonic\n");
 
             /* Free memory for custom words */
-            if (language == NULL) {
+            if (filepath != NULL) {
                 for (int i = 0; i < LANG_WORD_CNT; i++) {
                     dogecoin_free(wordlist[i]);
                 }
@@ -665,7 +752,7 @@ int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, 
         }
 
         /* Free memory for custom words */
-        if (language == NULL) {
+        if (filepath != NULL) {
             for (int i = 0; i < LANG_WORD_CNT; i++) {
                 dogecoin_free(wordlist[i]);
             }
@@ -680,30 +767,91 @@ int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, 
 }
 
 /**
- * @brief This function derives the seed from the mnemonic
- * @param mnemonic The mnemonic code words
- * @param passphrase The passphrase (optional)
- * @param seed The 512-bit seed
+ * @brief This function derives the seed from the mnemonic.
+ *
+ * @param mnemonic The mnemonic code words.
+ * @param passphrase The passphrase (optional).
+ * @param seed The 512-bit seed.
  *
  * @return 0 (success), -1 (fail)
 */
-int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, uint8_t seed[64])
+int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, SEED seed)
 {
-    /* get seed if not null */
-    if (seed != NULL) {
+    /* Check if the input arguments are valid */
+    if (!mnemonic || !seed) {
+        fprintf(stderr, "ERROR: invalid input arguments\n");
+        return -1;
+    }
 
-        /* set passphrase to empty string if null */
-        if (passphrase == NULL) {
-            passphrase = "";
-        }
+    /* set passphrase to empty string if null */
+    if (passphrase == NULL) {
+        passphrase = "";
+    }
 
-        /* get random binary seed */
-        if (get_root_seed(mnemonic, passphrase, seed) == -1) {
-            fprintf(stderr, "ERROR: Failed to get root seed\n");
+    /* get random binary seed */
+    if (get_root_seed(mnemonic, passphrase, seed) == -1) {
+        fprintf(stderr, "ERROR: Failed to get root seed\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief This function generates a random English mnemonic phrase.
+ *
+ * @param mnemonic The mnemonic code words.
+ *
+ * @return 0 (success), -1 (fail)
+*/
+int generateRandomEnglishMnemonic (MNEMONIC mnemonic) {
+
+    /* generate an English mnemonic without random entropy */
+    return generateEnglishMnemonic (NULL, mnemonic);
+}
+
+/**
+ * @brief This function gnerates an English mnemonic phrase from hex entropy.
+ *
+ * @param mnemonic The mnemonic code words.
+ * @param entropy The hex string of entropy.
+ *
+ * @return 0 (success), -1 (fail)
+*/
+int generateEnglishMnemonic (const HEX_ENTROPY entropy, MNEMONIC mnemonic) {
+
+    /* Initialize variables */
+    const char* size = "256";     /* default bits of entropy (256) */
+    const char* lang = "eng";     /* default english (eng) */
+    const char* space = " ";      /* default utf8 ( ) */
+    const char* words = 0;        /* default no custom words (NULL) */
+    char* entropy_out = 0;
+    size_t mnemonic_size = 0;
+
+    /* allocate space for entropy if valid */
+    if (entropy) {
+        entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+        if (entropy_out == NULL) {
+
+            fprintf(stderr, "ERROR: Failed to allocate memory for mnemonic\n");
             return -1;
         }
-
+        memset(entropy_out, '\0', MAX_ENTROPY_STRING_SIZE);
     }
+
+    /* first determine size of mnemonic */
+    if (dogecoin_generate_mnemonic (size, lang, space, entropy, words, entropy_out, &mnemonic_size, NULL) == -1) {
+        dogecoin_free (entropy_out);
+        return -1;
+    }
+
+    /* generate mnemonic with entropy out */
+    if (dogecoin_generate_mnemonic (size, lang, space, entropy_out, words, NULL, &mnemonic_size, mnemonic) == -1) {
+        dogecoin_free (entropy_out);
+        return -1;
+    }
+
+    dogecoin_free (entropy_out);
 
     return 0;
 }

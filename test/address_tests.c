@@ -1,6 +1,7 @@
 /**********************************************************************
  * Copyright (c) 2022 bluezr                                          *
- * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Copyright (c) 2023 edtubbs                                         *
+ * Copyright (c) 2023 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -159,6 +160,17 @@ void test_address()
     res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, false);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
+
+    // mnemonic to HD keys and addresses
+    MNEMONIC seedphrase = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote";
+    res = generateHDMasterPubKeypairFromMnemonic (extout, p2pkh_pubkey_test, seedphrase, NULL, true);
+    u_assert_str_eq(extout, "tprv8ZgxMBicQKsPd66qSfNTYkdM76NsJ368nHs7r1WnKhmUbdx4Gwkhk175pvpe2A652Xzszhg2qf55w8qpRzNBwMboA3R6PoABT36eHV89dRZ");
+    res = verifyHDMasterPubKeypairFromMnemonic ("tprv8ZgxMBicQKsPd66qSfNTYkdM76NsJ368nHs7r1WnKhmUbdx4Gwkhk175pvpe2A652Xzszhg2qf55w8qpRzNBwMboA3R6PoABT36eHV89dRZ", p2pkh_pubkey_test, seedphrase, NULL, true);
+    u_assert_int_eq(res, 0);
+    res = getDerivedHDAddressFromMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, seedphrase, NULL, p2pkh_pubkey_test, true);
+    u_assert_str_eq(p2pkh_pubkey_test, "naTzLkBZLpUVXykb3sSP1Wzzz9GzzM4BVU");
+    res = getDerivedHDAddressFromMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, seedphrase, NULL, p2pkh_pubkey_main, false);
+    u_assert_str_eq(p2pkh_pubkey_main, "DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT");
 
     /*free up VLAs*/
     free(masterkey_main);
