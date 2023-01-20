@@ -33,6 +33,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(HAVE_CONFIG_H)
+#include "src/libdogecoin-config.h"
+#endif
+
 typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 
 #ifndef __cplusplus
@@ -106,10 +110,12 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 
 #endif
 
-#define DEBUG 0
-#ifdef DEBUG
+#ifndef ENABLE_DEBUG
+#define ENABLE_DEBUG 0
+#endif
+#ifdef ENABLE_DEBUG
 #define debug_print(fmt, ...) \
-        do { if (DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
+        do { if (ENABLE_DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__); } while (0)
 #endif
 
