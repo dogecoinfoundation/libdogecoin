@@ -102,65 +102,53 @@ static void printQr(const uint8_t qrcode[])
     printf("\n");
 }
 
-//png access test
-/* Encode from raw pixels to an in - memory PNG file first, then write it to disk
- The image argument has width *height RGBA pixels or
- width *height * 4 bytes */
+//internal conversion for PNG
 
-void encodeTwoSteps(const char* filename, const unsigned char* image, unsigned width, unsigned height)
+uint8_t* bytesToRgb(uint8_t* qrBytes, size_t multiplier)
 {
-    unsigned char* png;
-    size_t pngsize;
-
-    unsigned error = lodepng_encode32(&png, &pngsize, image, width, height);
-    if (!error)
-        lodepng_save_file(png, pngsize, filename);
-
-    /*if there's an error, display it*/
-    if (error)
-        printf("error %u: %s\n", error, lodepng_error_text(error));
-
-    free(png);
-}
-
-//internal conversion
-uint8_t* bytesToRgb(uint8_t* qrBytes)
-{
-
-    size_t side=qrcodegen_getSize(qrBytes);
+    size_t side = qrcodegen_getSize(qrBytes);
     size_t pixelRunLength = side * side;
     uint8_t darkPixel[3] = {0, 0, 0};
     uint8_t litePixel[3] = {255, 255, 255};
     int border = 4;
     int step = 3;
 
-    uint8_t* outRgb = (uint8_t*)calloc(pixelRunLength*step, sizeof(uint8_t));
- 
+    uint8_t* outRgb = (uint8_t*)calloc(pixelRunLength * step * multiplier * multiplier, sizeof(uint8_t));
+
     int iterator = 0;
 
-    for (int y=0; y < side; y++) {
-        for (int x=0; x < side; x++) {
-            if (qrcodegen_getModule(qrBytes, x, y)) {
-                memcpy(outRgb+iterator, litePixel, step);
-                iterator = iterator + step;
-            } else {
-                memcpy(outRgb+iterator, darkPixel, step);
-                iterator = iterator + step;
+    for (int y = 0; y < side; y++) {
+        for (int r = 0; r < multiplier; ++r) {
+            for (int x = 0; x < side; x++) {
+                for (int n = 0; n < multiplier; ++n) {
+                    if (qrcodegen_getModule(qrBytes, x, y)) {
+                        memcpy(outRgb + iterator, litePixel, step);
+                        iterator = iterator + step;
+                    } else {
+                        memcpy(outRgb + iterator, darkPixel, step);
+                        iterator = iterator + step;
+                    }
+                }
             }
         }
     }
 
-    //should have outRgb now... sized correctly
+    // should have outRgb now... sized correctly
     return outRgb;
 }
 
 // encode a string to PNG file with med ECC
-int qrgen_string_to_qr_pngfile(const char *filename, const char* inString)
+int qrgen_string_to_qr_pngfile(const char *filename, const char* inString, uint8_t multiplier)
 {
+    if (multiplier<1) 
+    {
+        multiplier = 1;
+    }
     unsigned char* png;
     size_t pngsize;
     unsigned width;
     unsigned height;
+
 
     uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
     uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
@@ -169,12 +157,12 @@ int qrgen_string_to_qr_pngfile(const char *filename, const char* inString)
    
     if (codeGenerated) {
         unsigned tempSideDim = qrcodegen_getSize(qrcode);
-        width = tempSideDim;
-        height = tempSideDim;
+        width = tempSideDim * multiplier;
+        height = tempSideDim * multiplier;
 
         // bytes to rgb
-        uint8_t* image = malloc(width * height * 3);
-        image = bytesToRgb(qrcode);
+        uint8_t* image = malloc(width * height);
+        image = bytesToRgb(qrcode, multiplier);
 
         unsigned error = lodepng_encode24(&png, &pngsize, image, width, height);
         if (!error)    
