@@ -9,15 +9,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include "qr\qr.h"
+#include "qr\png.h"
 #include <dogecoin\qrengine.h>
 
 
 
-//encode a string to QR byte array with high ECC
+//encode a string to QR byte array with med ECC
 int stringToQrArray(const char* inString,uint8_t* qrcode)
 {
     uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
-    bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
+    bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, qrcode, qrcodegen_Ecc_MEDIUM, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
     if (codeGenerated) 
     {
         //return 0 on pass/OK.
@@ -101,4 +102,97 @@ static void printQr(const uint8_t qrcode[])
     printf("\n");
 }
 
+//png access test
+/* Encode from raw pixels to an in - memory PNG file first, then write it to disk
+ The image argument has width *height RGBA pixels or
+ width *height * 4 bytes */
 
+void encodeTwoSteps(const char* filename, const unsigned char* image, unsigned width, unsigned height)
+{
+    unsigned char* png;
+    size_t pngsize;
+
+    unsigned error = lodepng_encode32(&png, &pngsize, image, width, height);
+    if (!error)
+        lodepng_save_file(png, pngsize, filename);
+
+    /*if there's an error, display it*/
+    if (error)
+        printf("error %u: %s\n", error, lodepng_error_text(error));
+
+    free(png);
+}
+
+//internal conversion
+uint8_t* bytesToRgb(uint8_t* qrBytes)
+{
+
+    size_t side=qrcodegen_getSize(qrBytes);
+    size_t pixelRunLength = side * side;
+    uint8_t darkPixel[3] = {0, 0, 0};
+    uint8_t litePixel[3] = {255, 255, 255};
+    int border = 4;
+    int step = 3;
+
+    uint8_t* outRgb = (uint8_t*)calloc(pixelRunLength*step, sizeof(uint8_t));
+ 
+    int iterator = 0;
+
+    for (int y=0; y < side; y++) {
+        for (int x=0; x < side; x++) {
+            if (qrcodegen_getModule(qrBytes, x, y)) {
+                memcpy(outRgb+iterator, litePixel, step);
+                iterator = iterator + step;
+            } else {
+                memcpy(outRgb+iterator, darkPixel, step);
+                iterator = iterator + step;
+            }
+        }
+    }
+
+    //should have outRgb now... sized correctly
+    return outRgb;
+}
+
+// encode a string to PNG file with med ECC
+int qrgen_string_to_qr_pngfile(const char *filename, const char* inString)
+{
+    unsigned char* png;
+    size_t pngsize;
+    unsigned width;
+    unsigned height;
+
+    uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
+    uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
+
+    bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, qrcode, qrcodegen_Ecc_MEDIUM, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
+   
+    if (codeGenerated) {
+        unsigned tempSideDim = qrcodegen_getSize(qrcode);
+        width = tempSideDim;
+        height = tempSideDim;
+
+        // bytes to rgb
+        uint8_t* image = malloc(width * height * 3);
+        image = bytesToRgb(qrcode);
+
+        unsigned error = lodepng_encode24(&png, &pngsize, image, width, height);
+        if (!error)    
+        {
+            lodepng_save_file(png, pngsize, filename);
+            free(png);
+            return 0;
+        }
+       else 
+        {
+            printf("png error %u: %s\n", error, lodepng_error_text(error));
+            free(png);
+            return 1;
+        }
+    } 
+    else 
+    {
+        printf("Error generating QR\n");
+        return 1;
+    }
+}

@@ -19,6 +19,7 @@ LIBDOGECOIN_BEGIN_DECL
 LIBDOGECOIN_API int qrgen_p2pkh_to_qr_string(const char* in_p2pkh, char* outString);
 LIBDOGECOIN_API void qrgen_p2pkh_consoleprint_to_qr(char* in_p2pkh);
 LIBDOGECOIN_API int qrgen_p2pkh_to_qrbits(const char* in_p2pkh, uint8_t* outQrByteArray);
+LIBDOGECOIN_API int qrgen_string_to_qr_pngfile(const char* outFilename, const char* inString);
 
 LIBDOGECOIN_END_DECL
 

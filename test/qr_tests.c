@@ -26,4 +26,8 @@ void test_qr()
     char tempstr[qrcodegen_BUFFER_LEN_MAX*4];
     qrgen_p2pkh_to_qr_string(test_addr,tempstr);
     printf("%s", tempstr);
+
+    printf("Attempting to write PNG...\n", NULL);
+    char* testfile = "qrtest.png";
+    qrgen_string_to_qr_pngfile(testfile, test_addr);
 }
