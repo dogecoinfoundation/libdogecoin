@@ -28,7 +28,7 @@ The manual and changelog are in the header file "lodepng.h"
 Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for C.
 */
 
-#include "qr\png.h"
+#include <qr/png.h>
 
 #ifdef LODEPNG_COMPILE_DISK
 #include <limits.h> /* LONG_MAX */
