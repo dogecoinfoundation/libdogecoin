@@ -16,10 +16,10 @@ SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random dat
 IF(WITH_NET)
     IF(WIN32)
         FIND_LIBRARY(LIBEVENT NAMES event libevent HINTS "${CMAKE_PREFIX_PATH}")
-        #FIND_LIBRARY(LIBEVENT_PTHREADS event_pthreads REQUIRED)
         FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${CMAKE_PREFIX_PATH};${CMAKE_PREFIX_PATH}/contrib/winpthreads/include/lib/x64/")
     ELSE()
         FIND_LIBRARY(LIBEVENT event REQUIRED)
+        FIND_LIBRARY(LIBUNISTRING unistring REQUIRED)
     ENDIF()
 ENDIF()
 
@@ -45,7 +45,6 @@ IF(WITH_NET)
 ENDIF()
 FILE(TOUCH src/libdogecoin-config.h)
 
-
 ADD_LIBRARY(${LIBDOGECOIN_NAME})
 
 INSTALL(FILES
@@ -53,6 +52,8 @@ INSTALL(FILES
     include/dogecoin/aes.h
     include/dogecoin/base58.h
     include/dogecoin/bip32.h
+    include/dogecoin/bip39.h
+    include/dogecoin/bip44.h
     include/dogecoin/block.h
     include/dogecoin/buffer.h
     include/dogecoin/byteswap.h
@@ -78,42 +79,23 @@ INSTALL(FILES
     include/dogecoin/utils.h
     include/dogecoin/vector.h
     include/dogecoin/wow.h
-    include/event2/buffer.h 
-    include/event2/bufferevent.h 
-    include/event2/bufferevent_compat.h 
-    include/event2/bufferevent_ssl.h 
-    include/event2/bufferevent_struct.h 
-    include/event2/buffer_compat.h 
-    include/event2/dns.h
-    include/event2/dns_compat.h 
-    include/event2/dns_struct.h 
-    include/event2/event.h 
-    include/event2/event_compat.h 
-    include/event2/event_struct.h 
-    include/event2/http.h 
-    include/event2/http_compat.h 
-    include/event2/http_struct.h 
-    include/event2/keyvalq_struct.h 
-    include/event2/listener.h 
-    include/event2/rpc.h 
-    include/event2/rpc_compat.h 
-    include/event2/rpc_struct.h 
-    include/event2/tag.h 
-    include/event2/tag_compat.h 
-    include/event2/thread.h 
-    include/event2/util.h 
-    include/event2/visibility.h 
-    include/event2/event-config.h
-    contrib/getopt/wingetopt.h
-    contrib/wintime/wingettime.h
     DESTINATION include/dogecoin
 )
+
+IF(WIN32)
+    INSTALL(FILES
+    contrib/getopt/wingetopt.h
+    contrib/wintime/wingettime.h
+    DESTINATION include/dogecoin)
+ENDIF()
 
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/address.c
     src/aes.c
     src/base58.c
     src/bip32.c
+    src/bip39.c
+    src/bip44.c
     src/block.c
     src/buffer.c
     src/chainparams.c
@@ -133,11 +115,14 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/tx.c
     src/utils.c
     src/vector.c
-    src/bip44.c
-    src/bip39.c
+)
+
+IF(WIN32)
+TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     contrib/getopt/wingetopt.c
     contrib/wintime/wingettime.c
 )
+ENDIF()
 
 FILE(GLOB SECP256K1 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     src/secp256k1/src/*.c)
@@ -177,6 +162,8 @@ IF(USE_TESTS)
         test/aes_tests.c
         test/base58_tests.c
         test/bip32_tests.c
+        test/bip39_tests.c
+        test/bip44_tests.c
         test/block_tests.c
         test/buffer_tests.c
         test/cstr_tests.c
@@ -196,11 +183,15 @@ IF(USE_TESTS)
         test/unittester.c
         test/utils_tests.c
         test/vector_tests.c
-        test/bip39_tests.c
-        test/bip44_tests.c
 )
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} )
+    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
+    # move test/wordlist to build
+    FILE(GLOB_RECURSE WORDLISTS "${PROJECT_SOURCE_DIR}/test/wordlist/*.txt")
+    FOREACH(wordlist ${WORDLISTS})
+        GET_FILENAME_COMPONENT(wordlist_name ${wordlist} NAME)
+        CONFIGURE_FILE(${wordlist} "${CMAKE_CURRENT_BINARY_DIR}/test/wordlist/${wordlist_name}" COPYONLY)
+    ENDFOREACH()
 ENDIF()
 
 IF(WITH_NET)
@@ -214,7 +205,7 @@ IF(WITH_NET)
         src/protocol.c
     )
 
-    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} )
+    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
 
     IF(USE_TESTS)
         TARGET_SOURCES(tests PRIVATE
@@ -233,14 +224,14 @@ IF(WITH_TOOLS)
 
     ADD_EXECUTABLE(such src/cli/such.c)
     INSTALL(TARGETS such RUNTIME)
-    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} )
+    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
 
     TARGET_INCLUDE_DIRECTORIES(such PRIVATE src)
 
     IF(WITH_NET)
         ADD_EXECUTABLE(sendtx src/cli/sendtx.c)
         INSTALL(TARGETS sendtx RUNTIME)
-        TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME} )
+        TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME})
 
         TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
     ENDIF()
