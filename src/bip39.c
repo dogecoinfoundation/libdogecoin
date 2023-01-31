@@ -150,7 +150,7 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
     /* Copy the checksum */
     char hexStr[3];
     memset(hexStr, 0, sizeof(hexStr));
-    strncpy(hexStr, &checksum[0], 2);
+    memcpy_safe(hexStr, &checksum[0], 2);
     hexStr[2] = '\0';
 
     /*
