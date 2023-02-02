@@ -428,9 +428,9 @@ func main() {
 ---
 ### **sign_raw_transaction**
 
-`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* amount, char* privkey)`
+`int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey)`
 
-This function takes in an index denoting which of the current transaction's inputs to sign (inputindex), the raw hexadecimal representation of the transaction to sign (incomingrawtx), the pubkey script in hexadecimal format (scripthex), the signature hash type (sighashtype), the amount included in the input to sign (amount), and the WIF-encoded private key used to sign the input (privkey). Signature hash type in normal use cases is set to 1 to denote that anyone can pay. In C, the function returns a boolean denoting success, but the actual signed transaction hex is passed back through incomingrawtx. From the wrappers, the transaction is simply returned as a string unless the signing fails, which results in a return of zero (Python) or an empty string (Go). **Important:** `sign_raw_transaction` must be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
+This function takes in an index denoting which of the current transaction's inputs to sign (inputindex), the raw hexadecimal representation of the transaction to sign (incomingrawtx), the pubkey script in hexadecimal format (scripthex), the signature hash type (sighashtype) and the WIF-encoded private key used to sign the input (privkey). Signature hash type in normal use cases is set to 1 to denote that anyone can pay. In C, the function returns a boolean denoting success, but the actual signed transaction hex is passed back through incomingrawtx. From the wrappers, the transaction is simply returned as a string unless the signing fails, which results in a return of zero (Python) or an empty string (Go). **Important:** `sign_raw_transaction` must be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
 _C usage:_
 ```C
@@ -533,9 +533,9 @@ func main() {
 ---
 ### **sign_transaction**
 
-`int sign_transaction(int txindex, char* amounts[], char* script_pubkey, char* privkey)`
+`int sign_transaction(int txindex, char* script_pubkey, char* privkey)`
 
-This function takes in a working transaction structure's index as an integer (txindex), an array of all the input amounts (amounts), the pubkey in script hex form (script_pubkey), and the WIF-encoded private key (privkey). Each input is then signed using the specified private key, and the final signed transaction is saved to the hash table, which can be retrieved using `get_raw_transaction()`. The return value of `sign_transaction()` is a boolean denoting whether the signing was successful, but the output from `get_raw_transaction()` is a fully signed transaction that--if all information is valid--can be broadcast to miners and incorporated into the blockchain. **Important:** `sign_transaction` must also be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
+This function takes in a working transaction structure's index as an integer (txindex), the pubkey in script hex form (script_pubkey) and the WIF-encoded private key (privkey). Each input is then signed using the specified private key, and the final signed transaction is saved to the hash table, which can be retrieved using `get_raw_transaction()`. The return value of `sign_transaction()` is a boolean denoting whether the signing was successful, but the output from `get_raw_transaction()` is a fully signed transaction that--if all information is valid--can be broadcast to miners and incorporated into the blockchain. **Important:** `sign_transaction` must also be run within a secp256k1 context, which can be created by calling `dogecoin_ecc_start()` and `dogecoin_ecc_stop()` as shown below.
 
 _Note: Golang does not currently support the use of char*s, so depending on architecture, using Go wrappers may result in loss of precision._
 
