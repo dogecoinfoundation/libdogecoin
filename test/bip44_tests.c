@@ -22,7 +22,7 @@ void test_bip44()
     int result;
     dogecoin_hdnode node;
     dogecoin_hdnode bip44_key;
-    char mnemonic[256] = "";
+    // char mnemonic[256] = "";
     size_t length;
     char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
 
@@ -39,7 +39,7 @@ void test_bip44()
     memset(words, '\0', MAX_MNEMONIC_LENGTH);
 
 
-    debug_print ("\nTests with known entropy values\n", NULL);
+    debug_print ("%s", "\nTests with known entropy values\n");
     dogecoin_generate_mnemonic ("128", "eng", " ", entropy, NULL, &length, words);
     u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", length);
 
@@ -89,7 +89,7 @@ void test_bip44()
         dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
         debug_print("BIP44 extended public key: %s\n", bip44_public_key);
 
-        debug_print("Derived Addresses\n", NULL);
+        debug_print("%s", "Derived Addresses\n");
 
         for (uint32_t index = BIP44_FIRST_ACCOUNT_NODE; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
             // Derive the addresses

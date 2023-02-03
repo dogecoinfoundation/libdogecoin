@@ -190,7 +190,7 @@ void test_bip39()
     memset(words, '\0', MAX_MNEMONIC_LENGTH);
 
     /* Test with known entropy values */
-    debug_print ("\nTests with known entropy values\n", NULL);
+    debug_print ("%s", "\nTests with known entropy values\n");
     dogecoin_generate_mnemonic ("128", "eng", " ", "00000000000000000000000000000000", NULL, &length, words);
     u_assert_mem_eq(words, "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", length);
     debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
@@ -222,7 +222,7 @@ void test_bip39()
     debug_print ("%lu bytes \n", length);
 
     /* Tests with local entropy (random) */
-    debug_print ("\nTests with local (random) entropy\n", NULL);
+    debug_print ("%s", "\nTests with local (random) entropy\n");
     dogecoin_generate_mnemonic ("128", "eng", " ", entropy, NULL, &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     debug_print ("%lu bytes \n", length);
     dogecoin_generate_mnemonic ("160", "eng", " ", entropy, NULL, &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
@@ -235,7 +235,7 @@ void test_bip39()
     debug_print ("%lu bytes \n", length);
 
     /* test custom word lists (random) */
-    debug_print ("\nTests with custom word lists\n", NULL);
+    debug_print ("%s", "\nTests with custom word lists\n");
     #ifdef _WIN32
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\spanish.txt", &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("128", NULL, " ", entropy, ".\\test\\wordlist\\english.txt", &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
@@ -255,7 +255,7 @@ void test_bip39()
     #endif
 
     /* test BIP39 languages and entropy sizes (random) */
-    debug_print ("\nTests with all entropy lengths, languages and word lists\n", NULL);
+    debug_print ("%s", "\nTests with all entropy lengths, languages and word lists\n");
     dogecoin_generate_mnemonic ("128", "eng", " ", entropy, NULL, &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("160", "eng", " ", entropy, NULL, &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
     dogecoin_generate_mnemonic ("192", "eng", " ", entropy, NULL, &length, words); debug_print("%s \n", words); u_assert_int_eq(length, strlen(words)); free(words); words = malloc(sizeof(char) * MAX_MNEMONIC_LENGTH); memset(words, '\0', MAX_MNEMONIC_LENGTH);
@@ -322,7 +322,7 @@ void test_bip39()
 
     /* English with passphrase */
 
-    debug_print ("\nTests of mnemonic seed generation (w/ passphrase)\n", NULL);
+    debug_print ("%s", "\nTests of mnemonic seed generation (w/ passphrase)\n");
     dogecoin_seed_from_mnemonic (test_mnemonic_12, "TREZOR", seed);
     memcpy_safe(seed_test,
            utils_hex_to_uint8("31113f96716b7d5b8d58a49c5e1f6d6300ff307b35eef3cecfdb97869e514ad330f0a7dcec4ed2feeebf8d2267ebfefeb149df84642ca091befd25ea15d36076"),
@@ -355,7 +355,7 @@ void test_bip39()
            64);
     u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
 
-    debug_print ("\nTests of mnemonic seed generation (w/o passphrase)\n", NULL);
+    debug_print ("%s", "\nTests of mnemonic seed generation (w/o passphrase)\n");
 
     /* Japanese */
     dogecoin_seed_from_mnemonic (test_mnemonic_12_jpn, "", seed);
@@ -641,5 +641,4 @@ void test_bip39()
            utils_hex_to_uint8(test_seed_24_por),
            64);
     u_assert_mem_eq(seed, seed_test, 64); debug_print("%s\n", utils_uint8_to_hex(seed, 64));
-
 }

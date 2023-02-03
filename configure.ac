@@ -70,11 +70,9 @@ case $host in
   ;;
   *darwin*)
     TARGET_OS=darwin
-    AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
   ;;
   *linux*)
     TARGET_OS=linux
-    AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
   ;;
 esac
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"
@@ -129,7 +127,7 @@ if test "x$random_device" = x"/dev/random"; then
 fi
 
 if test "x$with_tools" = xyes; then
-AC_DEFINE_UNQUOTED([WITH_TOOLS],[1],[Define to 1 to enable wallet compilation])
+  AC_DEFINE_UNQUOTED([WITH_TOOLS],[1],[Define to 1 to enable wallet compilation])
 fi
 
 if test "x$with_net" = xyes; then
@@ -142,15 +140,13 @@ if test "x$enable_debug" = xyes; then
   AC_DEFINE_UNQUOTED([ENABLE_DEBUG],[1],[Define to 1 to enable debug output])
 fi
 
-if test x$with_net = "xyes"; then
+if test "x$with_net" = xyes; then
   AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
-  AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
   AC_CHECK_LIB([event_core],[main],EVENT_LIBS=-levent_core,AC_MSG_ERROR(libevent_core missing))
-  LIBS="$LIBS -levent -levent_core"
-  if test "$host" = "mingw"; then
-    AC_CHECK_LIB([event_pthreads],[main],EVENT_PTHREADS_LIBS=-levent_pthreads,AC_MSG_ERROR(libevent_pthreads missing))
-  fi
+  LIBS="$LIBS $EVENT_LIBS"
 fi
+
+AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
 
 AC_CONFIG_HEADERS([src/libdogecoin-config.h])
 AC_CONFIG_FILES([Makefile libdogecoin.pc])
@@ -176,6 +172,7 @@ echo "Options used to compile and link:"
 echo "  with tools    = $with_tools"
 echo "  with net      = $with_net"
 echo
+echo "  host          = $host"
 echo "  target os     = $TARGET_OS"
 echo
 echo "  CC            = $CC"
