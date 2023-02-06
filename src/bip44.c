@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2022 edtubbs
- * Copyright (c) 2022 The Dogecoin Foundation
+ * Copyright (c) 2023 edtubbs
+ * Copyright (c) 2023 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -38,36 +38,41 @@
  * @param account The account number to use in the BIP 44 key derivation.
  * @param address_index The address index to use in the BIP 44 key derivation.
  * @param change_level The change level to use in the BIP 44 key derivation, either "external" or "internal".
- * @param hard_addr A flag indicating whether or not to use a hardened address in the BIP 44 key derivation.
+ * @param custom_path A custom BIP 44 keypath to use for the derivation (optional).
  * @param keypath A string buffer to store the BIP 44 keypath used for the derivation.
  * @param bip44_key The BIP 44 extended private key to be generated.
  * @return 0 if the key is derived successfully, -1 otherwise.
  */
-int derive_bip44_extended_private_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const char* change_level, const int hard_addr, char* keypath, dogecoin_hdnode *bip44_key)
+int derive_bip44_extended_private_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH custom_path, const dogecoin_bool is_testnet, KEY_PATH keypath, dogecoin_hdnode *bip44_key)
 {
     char addr_idx_str[UINT32_MAX_DIGITS + 1] = "";
-    char hard_addr_char = '\0';
 
     /* Validate input parameters */
     if (master_key == NULL || change_level == NULL || keypath == NULL || bip44_key == NULL) {
+        fprintf(stderr, "ERROR: invalid input arguments\n");
         return -1;
     }
 
-    /* Convert the address index to a string and set the harden character if necessary */
+    /* Convert the address index to a string */
     if (address_index != NULL) {
         snprintf(addr_idx_str, UINT32_MAX_DIGITS + 1, "/%u", (uint32_t) *address_index);
-        if (hard_addr == BIP44_HARDENED_ADDRESS) {
-            hard_addr_char = '\'';
-        }
     }
 
     /* Validate the change level input */
     if (strcmp(change_level, BIP44_CHANGE_EXTERNAL) != 0 && strcmp(change_level, BIP44_CHANGE_INTERNAL) != 0) {
+        fprintf(stderr, "ERROR: invalid change level\n");
         return -1;
     }
 
-    /* Construct the BIP 44 keypath using the input parameters and BIP 44 constants */
-    snprintf(keypath, BIP44_KEY_PATH_MAX_LENGTH, "m/" BIP44_PURPOSE "'/" BIP44_COIN_TYPE "'/%u'/%s%s%c", account, change_level, addr_idx_str, hard_addr_char);
+    /* Check for custom key path */
+    if (custom_path != NULL) {
+        /* Construct the BIP 44 keypath using the custom path */
+        snprintf(keypath, BIP44_KEY_PATH_MAX_LENGTH, "%s%s", custom_path, addr_idx_str);
+    }
+    else {
+        /* Construct the BIP 44 keypath using the input parameters and BIP 44 constants */
+        snprintf(keypath, BIP44_KEY_PATH_MAX_LENGTH, SLIP44_KEY_PATH "%s'/%u'/%s%s", is_testnet ? BIP44_COIN_TYPE_TEST : BIP44_COIN_TYPE , account, change_level, addr_idx_str);
+    }
 
     /* Generate the BIP 44 extended private key using the master key and keypath */
     if (!dogecoin_hd_generate_key(bip44_key, keypath, master_key->private_key, master_key->chain_code, false)) {
@@ -89,36 +94,41 @@ int derive_bip44_extended_private_key(const dogecoin_hdnode *master_key, const u
  * @param account The account number to use in the BIP 44 key derivation.
  * @param address_index The address index to use in the BIP 44 key derivation.
  * @param change_level The change level to use in the BIP 44 key derivation, either "external" or "internal".
- * @param hard_addr A flag indicating whether or not to use a hardened address in the BIP 44 key derivation.
+ * @param custom_path A custom BIP 44 keypath to use for the derivation (optional).
  * @param keypath A string buffer to store the BIP 44 keypath used for the derivation.
  * @param bip44_key The BIP 44 extended public key to be generated.
  * @return 0 if the key is derived successfully, -1 otherwise.
  */
-int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const char* change_level, const int hard_addr, char* keypath, dogecoin_hdnode *bip44_key)
+int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH custom_path, const dogecoin_bool is_testnet, KEY_PATH keypath, dogecoin_hdnode *bip44_key)
 {
     char addr_idx_str[UINT32_MAX_DIGITS + 1] = "";
-    char hard_addr_char = '\0';
 
     /* Validate input parameters */
     if (master_key == NULL || change_level == NULL || keypath == NULL || bip44_key == NULL) {
+        fprintf(stderr, "ERROR: invalid input arguments\n");
         return -1;
     }
 
-    /* Convert the address index to a string and set the harden character if necessary */
+    /* Convert the address index to a string */
     if (address_index != NULL) {
         snprintf(addr_idx_str, UINT32_MAX_DIGITS + 1, "/%u", (uint32_t) *address_index);
-        if (hard_addr == BIP44_HARDENED_ADDRESS) {
-            hard_addr_char = '\'';
-        }
     }
 
     /* Validate the change level input */
     if (strcmp(change_level, BIP44_CHANGE_EXTERNAL) != 0 && strcmp(change_level, BIP44_CHANGE_INTERNAL) != 0) {
+        fprintf(stderr, "ERROR: invalid change level\n");
         return -1;
     }
 
-    /* Construct the BIP 44 keypath using the input parameters and BIP 44 constants */
-    snprintf(keypath, BIP44_KEY_PATH_MAX_LENGTH, "m/" BIP44_PURPOSE "'/" BIP44_COIN_TYPE "'/%u'/%s/%s%c", account, change_level, addr_idx_str, hard_addr_char);
+    /* Check for custom key path */
+    if (custom_path != NULL) {
+        /* Construct the BIP 44 keypath using the custom path */
+        snprintf(keypath, BIP44_KEY_PATH_MAX_LENGTH, "%s%s", custom_path, addr_idx_str);
+    }
+    else {
+        /* Construct the BIP 44 keypath using the input parameters and BIP 44 constants */
+        snprintf(keypath, BIP44_KEY_PATH_MAX_LENGTH, SLIP44_KEY_PATH "%s'/%u'/%s%s", is_testnet ? BIP44_COIN_TYPE_TEST : BIP44_COIN_TYPE , account, change_level, addr_idx_str);
+    }
 
     /* Generate the BIP 44 extended public key using the master key and keypath */
     if (!dogecoin_hd_generate_key(bip44_key, keypath, master_key->public_key, master_key->chain_code, true)) {
@@ -128,4 +138,3 @@ int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const ui
     debug_print("Derivation path: %s\n", keypath);
     return 0;
 }
-

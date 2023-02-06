@@ -143,7 +143,7 @@ tests_SOURCES += \
 endif
 instdir=$(prefix)/bin
 inst_PROGRAMS = such
-such_LDADD = libdogecoin.la $(LIBSECP256K1)
+such_LDADD = libdogecoin.la $(LIBSECP256K1) $(LIBUNISTRING)
 such_SOURCES = \
     src/cli/such.c
 such_CFLAGS = $(libdogecoin_la_CFLAGS)

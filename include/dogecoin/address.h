@@ -2,7 +2,8 @@
  The MIT License (MIT)
  
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -26,6 +27,8 @@
 
 #include <stdbool.h>
 
+#include <dogecoin/bip39.h>
+#include <dogecoin/bip44.h>
 #include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
@@ -53,6 +56,15 @@ LIBDOGECOIN_API int getDerivedHDAddress(const char* masterkey, uint32_t account,
 
 /* generate an extended hd public/private child address with a more flexible derived path */
 LIBDOGECOIN_API int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+
+/* generates a new dogecoin address from a mnemonic and a slip44 key path */
+LIBDOGECOIN_API int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASSPHRASE pass, char* p2pkh_pubkey, const dogecoin_bool is_testnet);
+
+/* generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
+LIBDOGECOIN_API int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_master, char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
+
+/* verify that a HD master key and a dogecoin address matches a mnemonic */
+LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
 
 LIBDOGECOIN_END_DECL
 

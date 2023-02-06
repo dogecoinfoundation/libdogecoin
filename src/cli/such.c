@@ -4,7 +4,8 @@
 
  Copyright (c) 2016 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -51,6 +52,8 @@
 
 #include <dogecoin/address.h>
 #include <dogecoin/bip32.h>
+#include <dogecoin/bip39.h>
+#include <dogecoin/bip44.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/ecc.h>
@@ -603,9 +606,15 @@ void main_menu() {
 // ******************************** CLI INTERFACE ********************************
 static struct option long_options[] =
     {
+        {"address_index", required_argument, NULL, 'i'},
         {"privkey", required_argument, NULL, 'p'},
         {"pubkey", required_argument, NULL, 'k'},
         {"derived_path", required_argument, NULL, 'm'},
+        {"account_int", required_argument, NULL, 'o'},
+        {"change_level", required_argument, NULL, 'g'},
+        {"entropy", required_argument, NULL, 'e'},
+        {"mnemonic", required_argument, NULL, 'n'},
+        {"mnemonic_pass", required_argument, NULL, 'a'},
         {"command", required_argument, NULL, 'c'},
         {"testnet", no_argument, NULL, 't'},
         {"regtest", no_argument, NULL, 'r'},
@@ -620,8 +629,8 @@ static void print_version()
 static void print_usage()
     {
     print_version();
-    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
-    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
+    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-e|-entropy <hex_entropy>) (-n|-mnemonic <seedphrase>) (-a|-mnemonic_pass <passphrase>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
+    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, generate_mnemonic (-e <hex_entropy>, optional), mnemonic_to_addresses (requires -n <seedphrase>, -o <account_int> optional, -g <external \"0\"/internal \"1\"> optional, -i <address_index> optional, -a <passphrase> optional), print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
     printf("\nExamples: \n");
     printf("Generate a testnet private ec keypair wif/hex:\n");
     printf("> such -c generate_private_key\n\n");
@@ -643,6 +652,13 @@ int main(int argc, char* argv[])
     char* pubkey = 0;
     char* cmd = 0;
     char* derived_path = 0;
+    int account = BIP44_FIRST_ACCOUNT_NODE;   /* default account (BIP44_FIRST_ACCOUNT_NODE) */
+    char* change_level = BIP44_CHANGE_EXTERNAL;    /* default external (BIP44_CHANGE_EXTERNAL) */
+    char* mnemonic_in = 0;
+    char* pass = 0;
+    char* entropy = 0;
+    MNEMONIC mnemonic = {0};
+
     char* txhex = 0;
     char* scripthex = 0;
     int inputindex = 0;
@@ -651,7 +667,7 @@ int main(int argc, char* argv[])
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:c:trv", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:a:c:trv", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'p':
                     pkey = optarg;
@@ -663,6 +679,21 @@ int main(int argc, char* argv[])
                     break;
                 case 'm':
                     derived_path = optarg;
+                    break;
+                case 'o':
+                    account = (int)strtol(optarg, (char**)NULL, 10);
+                    break;
+                case 'g':
+                    change_level = optarg;
+                    break;
+                case 'e':
+                    entropy = optarg;
+                    break;
+                case 'n':
+                    mnemonic_in = optarg;
+                    break;
+                case 'a':
+                    pass = optarg;
                     break;
                 case 'k':
                     pubkey = optarg;
@@ -977,6 +1008,28 @@ int main(int argc, char* argv[])
         printf("xpriv: %s\n", masterkeyhex);
         dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_test, masterkeyhex, strsize);
         printf("xpub: %s\n", masterkeyhex);
+    }
+    else if (strcmp(cmd, "generate_mnemonic") == 0) { /* Creating a bip32 master key from a mnemonic. */
+
+        /* generate mnemonic with entropy out */
+        if (generateEnglishMnemonic (entropy, mnemonic) == -1) {
+            dogecoin_ecc_stop();
+            return -1;
+        }
+
+        printf("%s\n", mnemonic);
+    }
+    else if (strcmp(cmd, "mnemonic_to_addresses") == 0) { /* Creating wif addresses from a mnemonic via slip44. */
+
+    char hd_pubkey_address [53];
+
+        /* generate wif address for slip44 account, index, and change_level, from bip39 mnemonic and password (optional) */
+        if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, mnemonic_in, pass, hd_pubkey_address, false) == -1) {
+            dogecoin_ecc_stop();
+            return -1;
+        }
+
+        printf("Address: %s\n", hd_pubkey_address);
     }
     else if (strcmp(cmd, "transaction") == 0) {
         main_menu();

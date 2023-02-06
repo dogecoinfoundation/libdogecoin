@@ -3,7 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -40,6 +41,7 @@
 
 #include <dogecoin/address.h>
 #include <dogecoin/bip32.h>
+#include <dogecoin/bip44.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/key.h>
 #include <dogecoin/random.h>
@@ -263,9 +265,9 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
  * private key matches a given HD master public key and
  * that both are valid on the specified network.
  * 
+ * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
  * @param wif_privkey_master The master private key to check.
  * @param p2pkh_pubkey_master The master public key to check.
- * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
  * 
  * @return 1 if the keys match and are valid on the specified network, 0 otherwise.
  */
@@ -392,4 +394,154 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
 
         int ret = getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
         return ret;
+}
+
+/**
+ * @brief This function generates a new dogecoin address from a mnemonic by the slip44 key path.
+ *
+ * @param account The BIP44 account to generate the derived address.
+ * @param index The BIP44 index to generate the derived address.
+ * @param change_level The BIP44 change level flag to generate derived address.
+ * @param mnemonic The mnemonic code words.
+ * @param passphrase The passphrase (optional).
+ * @param p2pkh_pubkey_master The generated master public key.
+ * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
+ *
+ * return: 0 (success), -1 (fail)
+ */
+int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASSPHRASE pass, char* p2pkh_pubkey, const dogecoin_bool is_testnet) {
+
+    /* Validate input */
+    if (!mnemonic) {
+        fprintf(stderr, "ERROR: Invalid mnemonic\n");
+        return -1;
+    }
+
+    /* Initialize variables */
+    dogecoin_hdnode node;
+    dogecoin_hdnode bip44_key;
+    char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+
+    /* Define seed and initialize */
+    SEED seed = {0};
+
+    /* Convert mnemonic to seed */
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
+        return -1;
+    }
+
+    /* Generate the root key from the seed */
+    dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
+
+    /* Derive the BIP 44 extended key */
+    if (derive_bip44_extended_private_key(&node, account, NULL, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+        return -1;
+    }
+
+    /* Derive the child private key at the index */
+    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+        return -1;
+    }
+
+    /* Generate the address */
+    dogecoin_hdnode_get_p2pkh_address(&bip44_key, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, p2pkh_pubkey, P2PKH_ADDR_STRINGLEN);
+
+   return 0;
+
+}
+
+/**
+ * @brief This function generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic.
+ *
+ * @param wif_privkey_master The generated master private key.
+ * @param p2pkh_pubkey_master The generated master public key.
+ * @param mnemonic The mnemonic code words.
+ * @param passphrase The passphrase (optional).
+ * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
+ *
+ * return: 0 (success), -1 (fail)
+ */
+int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_master, char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet) {
+
+    /* Validate input */
+    if (!mnemonic) {
+        fprintf(stderr, "ERROR: Invalid mnemonic\n");
+        return -1;
+    }
+
+    /* Initialize variables */
+    dogecoin_hdnode node;
+
+    /* Define seed and initialize */
+    SEED seed = {0};
+
+    /* Convert mnemonic to seed */
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
+        return -1;
+    }
+
+    /* Generate the root key from the seed */
+    dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
+
+    /* Serialize the private key */
+    dogecoin_hdnode_serialize_private(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, wif_privkey_master, HD_MASTERKEY_STRINGLEN);
+
+    /* Generate the address */
+    dogecoin_hdnode_get_p2pkh_address(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, p2pkh_pubkey_master, P2PKH_ADDR_STRINGLEN);
+
+    return 0;
+}
+
+/**
+ * @brief This function verifies that a HD master key and a dogecoin address matches a mnemonic.
+ *
+ * @param wif_privkey_master The master private key to check.
+ * @param p2pkh_pubkey_master The master public key to check.
+ * @param mnemonic The mnemonic code words.
+ * @param passphrase The passphrase (optional).
+ * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
+ *
+ * return: 0 (success), -1 (fail)
+ */
+int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet) {
+
+    /* Validate input */
+    if (!mnemonic) {
+        fprintf(stderr, "ERROR: Invalid mnemonic\n");
+        return -1;
+    }
+
+    /* Initialize variables */
+    dogecoin_hdnode node;
+
+    /* Define seed and initialize */
+    SEED seed = {0};
+
+    /* Convert mnemonic to seed */
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
+        return -1;
+    }
+
+    /* Generate the root key from the seed */
+    dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
+
+    /* Serialize the private key */
+    char wif_privkey_master_calculated[HD_MASTERKEY_STRINGLEN];
+    dogecoin_hdnode_serialize_private(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, wif_privkey_master_calculated, HD_MASTERKEY_STRINGLEN);
+
+    /* Compare the calculated private key with the input private key */
+    if (strcmp(wif_privkey_master, wif_privkey_master_calculated) != 0) {
+        return -1;
+    }
+
+    /* Generate the address */
+    char p2pkh_pubkey_master_calculated[P2PKH_ADDR_STRINGLEN];
+    dogecoin_hdnode_get_p2pkh_address(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, p2pkh_pubkey_master_calculated, P2PKH_ADDR_STRINGLEN);
+
+    /* Compare the calculated address with the input address */
+    if (strcmp(p2pkh_pubkey_master, p2pkh_pubkey_master_calculated) != 0) {
+        return -1;
+    }
+
+    return 0;
 }
