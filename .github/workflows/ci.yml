@@ -105,7 +105,7 @@ jobs:
             goal: install
           - name: i686-linux
             host: i686-pc-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             packages: g++-multilib bc
             run-tests: true
             dep-opts: "SPEED=slow V=1"
