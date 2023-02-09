@@ -606,15 +606,15 @@ void main_menu() {
 // ******************************** CLI INTERFACE ********************************
 static struct option long_options[] =
     {
-        {"address_index", required_argument, NULL, 'i'},
         {"privkey", required_argument, NULL, 'p'},
         {"pubkey", required_argument, NULL, 'k'},
         {"derived_path", required_argument, NULL, 'm'},
-        {"account_int", required_argument, NULL, 'o'},
-        {"change_level", required_argument, NULL, 'g'},
         {"entropy", required_argument, NULL, 'e'},
         {"mnemonic", required_argument, NULL, 'n'},
-        {"mnemonic_pass", required_argument, NULL, 'a'},
+        {"pass_phrase", required_argument, NULL, 'a'},
+        {"account_int", required_argument, NULL, 'o'},
+        {"change_level", required_argument, NULL, 'g'},
+        {"address_index", required_argument, NULL, 'i'},
         {"command", required_argument, NULL, 'c'},
         {"testnet", no_argument, NULL, 't'},
         {"regtest", no_argument, NULL, 'r'},
@@ -629,8 +629,8 @@ static void print_version()
 static void print_usage()
     {
     print_version();
-    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-e|-entropy <hex_entropy>) (-n|-mnemonic <seedphrase>) (-a|-mnemonic_pass <passphrase>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
-    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, generate_mnemonic (-e <hex_entropy>, optional), mnemonic_to_addresses (requires -n <seedphrase>, -o <account_int> optional, -g <external \"0\"/internal \"1\"> optional, -i <address_index> optional, -a <passphrase> optional), print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
+    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
+    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, generate_mnemonic (-e <hex_entropy>, optional), mnemonic_to_addresses (requires -n <seed_phrase>, -o <account_int> optional, -g <change_level> optional, -i <address_index> optional, -a <pass_phrase> optional), print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
     printf("\nExamples: \n");
     printf("Generate a testnet private ec keypair wif/hex:\n");
     printf("> such -c generate_private_key\n\n");
@@ -1012,7 +1012,7 @@ int main(int argc, char* argv[])
     else if (strcmp(cmd, "generate_mnemonic") == 0) { /* Creating a bip32 master key from a mnemonic. */
 
         /* generate mnemonic with entropy out */
-        if (generateEnglishMnemonic (entropy, mnemonic) == -1) {
+        if (generateEnglishMnemonic (entropy, "256", mnemonic) == -1) {
             dogecoin_ecc_stop();
             return -1;
         }
@@ -1024,7 +1024,7 @@ int main(int argc, char* argv[])
     char hd_pubkey_address [53];
 
         /* generate wif address for slip44 account, index, and change_level, from bip39 mnemonic and password (optional) */
-        if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, mnemonic_in, pass, hd_pubkey_address, false) == -1) {
+        if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, mnemonic_in, pass, hd_pubkey_address, (chain == &dogecoin_chainparams_test)) == -1) {
             dogecoin_ecc_stop();
             return -1;
         }

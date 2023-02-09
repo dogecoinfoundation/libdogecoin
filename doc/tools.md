@@ -17,6 +17,8 @@ The `such` tool can be used by simply running the command `./such` in the top le
 - bip32_extended_master_key
 - bip32maintotest
 - derive_child_keys
+- generate_mnemonic
+- mnemonic_to_addresses
 - print_keys
 - sign
 - comp2der
@@ -33,6 +35,12 @@ Most of these commands require a flag following them to denote things like exist
 | -p, --privkey  | private_key         | yes | generate_public_key -p <private_key> |
 | -k, --pubkey  | public_key          | yes | p2pkh -k <public_key> |
 | -m, --derived_path | derived_path        | yes | derive_child_key -p <extended_private_key> -m <derived_path> |
+| -e, --entropy  | hex_entropy | yes | generate_mnemonic -e <hex_entropy> |
+| -n, --mnemonic  | seed_phrase | yes | mnemonic_to_addresses -n <seed_phrase> |
+| -a, --pass_phrase  | pass_phrase | yes | mnemonic_to_addresses -n <seed_phrase> -a <pass_phrase> |
+| -o, --account_int  | account_int | yes | mnemonic_to_addresses -n <seed_phrase> -o <account_int> |
+| -g, --change_level  | change_level | yes | mnemonic_to_addresses -n <seed_phrase> -g <change_level> |
+| -i, --address_index  | address_index | yes | mnemonic_to_addresses -n <seed_phrase> -i <address_index> |
 | -t, --testnet  | designate_testnet   | no  | generate_private_key -t |
 | -s  | script_hex          | yes | comp2der -s <compact_signature> |
 | -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> |
@@ -49,6 +57,8 @@ Below is a list of all the commands and the flags that they require. As a remind
 | bip32_extended_master_key | None                   | -t   | Generate an extended master private key from a secp256k1 context for either mainnet or testnet. |
 | bip32maintotest           | -p                     | None | Convert a mainnet private key into an equivalent testnet key. |
 | derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified private key using the specified derivation path. 
+| generate_mnemonic         | None                   | -e   | Generates a seed phrase randomly or from optional hex entropy. |
+| mnemonic_to_addresses     | -n      | -a, -o, g, -i, -t   | Generates an address from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
 | sign                      | -x, -s, -i, -h, -p     | -t   | See the definition of sign_raw_transaction in the Transaction API.
 | comp2der                  | -s                     | None | Convert a compact signature to a DER signature.
@@ -106,6 +116,26 @@ Below are some examples on how to use the `such` tool in practice.
     > depth:               1
     > child index:         -2147483647
     > p2pkh address:       DFqonEEA56VE8zEGvhXNgjiPT3PaPFNQQu
+
+#### Generate a random BIP39 seed phrase
+
+    ./such -c generate_mnemonic
+    > they nuclear observe moral twenty gym hedgehog damage reveal syrup negative beach best silk alone feel vapor deposit belt host purity run clever deer
+
+#### Geneate an HD address from the seed phrase for a given account (2), change level (1, internal) and index (0) for testnet
+
+    ./such -c mnemonic_to_addresses -n "they nuclear observe moral twenty gym hedgehog damage reveal syrup negative beach best silk alone feel vapor deposit belt host purity run clever deer" -o 2 -g 1 -i 0 -t
+    > Address: nW7ndt4HZh8XwLYN6v6N2S4mZCbpZPuFxh
+
+#### Generate a BIP39 seed phrase from hex entropy
+
+    ./such -c generate_mnemonic -e "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+    > zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote
+
+#### Geneate an HD address from the seed phrase and default path (m/44'/3'/0'/0/0) for mainnet
+
+    ./such -c mnemonic_to_addresses -n "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote"
+    > Address: DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT
 
 ### Interactive Transaction Building with `such`
 
