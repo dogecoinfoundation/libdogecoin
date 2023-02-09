@@ -136,7 +136,13 @@ Testing/
 /.vs
 /out/build/x64-Debug/.cmake/api/v1
 /out/build/x64-Debug
-/contrib/libevent/.vs
-/contrib/libevent/build/.vs/libevent
-/contrib/libevent/out/build/x64-Debug
-/contrib/libevent/build
+/src/libevent/.vs
+/src/libevent/build/.vs/libevent
+/src/libevent/out/build/x64-Debug
+/src/libevent/build
+*.tcl
+include/uni*.h
+include/unistring/
+include/ev*.h
+include/event2/*
+include/include.am

@@ -145,6 +145,17 @@ To build the pure library without net support, add the following flags to the `.
 ./configure --disable-net --disable-tools
 make
 ```
+
+#### CMake
+
+To build with `cmake` run the following from the project root directory:
+```
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
 ### Integration
 
 Using Libdogecoin in your own project is very simple! Once the library is built, you will see the resulting `libdogecoin.a` file in the `/.libs` folder. Additionally, you will want to locate the `libdogecoin.h` header file in the `/include/dogecoin` folder. Move both of these files into your project directory, or somewhere where the compiler can find them. In your source code which uses the Libdogecoin API, make sure to include this `libdogecoin.h` header at the top of your code.
