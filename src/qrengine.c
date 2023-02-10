@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "qr\qr.h"
-#include "qr\png.h"
-#include <dogecoin\qrengine.h>
+#include <qr/qr.h>
+#include <qr/png.h>
+#include <dogecoin/qrengine.h>
 
 
 
@@ -29,11 +29,10 @@ int stringToQrArray(const char* inString,uint8_t* qrcode)
         printf("Error generating QR\n"); 
         return 1;
     }
-      
 }
 
 //take in a QR byte array and output a formatted string with line breaks ready for console printing
-int outputQRStringFromQRBytes(uint8_t qrcode[],char* outstring)
+int outputQRStringFromQRBytes(const uint8_t qrcode[],char* outstring)
 {
     outstring[0] = '\0'; //make sure it starts with a nul so strcat knows what to do 
     int size = qrcodegen_getSize(qrcode);
@@ -61,7 +60,7 @@ int qrgen_p2pkh_to_qr_string(const char* in_p2pkh,char* outqr)
 {   
     uint8_t temparray[qrcodegen_BUFFER_LEN_MAX];
     stringToQrArray(in_p2pkh, temparray);
-    outputQRStringFromQRBytes(temparray, outqr);
+    return outputQRStringFromQRBytes(temparray, outqr);
 }
 
 // For API: Return byte array of QR code "pixels" (byte map) - returns size (L or W) in pixels of QR.
@@ -81,7 +80,7 @@ void qrgen_p2pkh_consoleprint_to_qr(char* in_p2pkh)
 }
 
 //Internal: print a QR byte array to the console in scannable ASCII text.
-static void printQr(const uint8_t qrcode[])
+void printQr(const uint8_t qrcode[])
 {
     int size = qrcodegen_getSize(qrcode);
 
@@ -110,17 +109,17 @@ uint8_t* bytesToRgb(uint8_t* qrBytes, size_t multiplier)
     size_t pixelRunLength = side * side;
     uint8_t darkPixel[3] = {0, 0, 0};
     uint8_t litePixel[3] = {255, 255, 255};
-    int border = 4;
+    // int border = 4; //unused variable
     int step = 3;
 
     uint8_t* outRgb = (uint8_t*)calloc(pixelRunLength * step * multiplier * multiplier, sizeof(uint8_t));
 
     int iterator = 0;
 
-    for (int y = 0; y < side; y++) {
-        for (int r = 0; r < multiplier; ++r) {
-            for (int x = 0; x < side; x++) {
-                for (int n = 0; n < multiplier; ++n) {
+    for (int y = 0; y < (int)side; y++) {
+        for (int r = 0; r < (int)multiplier; ++r) {
+            for (int x = 0; x < (int)side; x++) {
+                for (int n = 0; n < (int)multiplier; ++n) {
                     if (qrcodegen_getModule(qrBytes, x, y)) {
                         memcpy(outRgb + iterator, litePixel, step);
                         iterator = iterator + step;
