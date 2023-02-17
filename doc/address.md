@@ -6,6 +6,7 @@
   - [Introduction](#introduction)
     - [Simple Addresses](#simple-addresses)
     - [HD Addresses](#hd-addresses)
+    - [Seedphrases](#seedphrases)
   - [Simple Address Generation Process](#simple-address-generation-process)
   - [Essential Address API](#essential-address-api)
     - [**generatePrivPubKeypair:**](#generateprivpubkeypair)
@@ -14,6 +15,9 @@
     - [**verifyPrivPubKeypair**](#verifyprivpubkeypair)
     - [**verifyHDMasterPubKeypair**](#verifyhdmasterpubkeypair)
     - [**verifyP2pkhAddress**](#verifyp2pkhaddress)
+  - [Advanced Address API](#advanced-address-api)
+    - [**generateRandomEnglishMnemonic:**](#generateRandomEnglishMnemonic)
+    - [**getDerivedHDAddressFromMnemonic:**](#getDerivedHDAddressFromMnemonic)
 
 ## Introduction
 
@@ -28,6 +32,10 @@ These are the most common form of Dogecoin address, a single private key with a 
 ### HD Addresses
 
 HD, or _Hierarchical Deterministic_ addresses, unlike simple addresses are created from a seed key-phrase, usually twelve random unique words rather than a 256-bit private key. The key-phrase is then used (with the addition of a simple, incrementing number) to generate an unlimited supply of public Dogecoin addresses which the holder of the key-phrase can sign.
+
+### Seedphrases
+
+Seedphrases, also known as mnemonic phrases, are a commonly used method to create and backup HD addresses. These phrases consist of 12 or 24 random words, generated from a 128 or 256-bit entropy source, respectively. Seedphrases can then be used to generate an HD address.
 
 ## Simple Address Generation Process
 
@@ -444,5 +452,99 @@ func main() {
 		fmt.Println("Address is invalid.")
 	}
 	libdogecoin.W_context_stop()
+}
+```
+
+## Advanced Address API
+
+These functions implement advanced functionality of Libdogecoin for address generation and validation, and are described in depth below. You can access them through a C program, by including the `libdogecoin.h` header in the source code and including the `libdogecoin.a` library at compile time. Or, you may implement either set of wrappers if you are more inclined towards a high-level language. For more details about wrapper installation and setup, see [bindings.md](bindings.md).
+
+---
+### **generateRandomEnglishMnemonic**
+
+`int generateRandomEnglishMnemonic(const ENTROPY_SIZE size, MNEMONIC mnemonic);`
+
+This function generates a random English mnemonic phrase (seedphrase).
+
+_C usage:_
+```C
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main () {
+  MNEMONIC seed_phrase;
+
+  dogecoin_ecc_start();
+  generateRandomEnglishMnemonic("256", seed_phrase);
+  dogecoin_ecc_stop();
+
+  printf("%s\n", seed_phrase);
+}
+```
+_C++ usage:_
+```C++
+extern "C" {
+#include "libdogecoin.h"
+}
+#include <iostream>
+using namespace std;
+
+int main () {
+  MNEMONIC seed_phrase;
+
+  dogecoin_ecc_start();
+  generateRandomEnglishMnemonic("256", seed_phrase);
+  dogecoin_ecc_stop();
+
+  cout << seed_phrase << endl;
+}
+```
+---
+### **getDerivedHDAddressFromMnemonic**
+`int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);`
+
+This function generates a new dogecoin address from a mnemonic and a slip44 key path.
+
+_C usage:_
+```C
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main () {
+  int addressLen = 53;
+
+  MNEMONIC seed_phrase;
+  char address [addressLen];
+
+  dogecoin_ecc_start();
+  generateRandomEnglishMnemonic("256", seed_phrase);
+  getDerivedHDAddressFromMnemonic(0, 0, "0", seed_phrase, NULL, address, false);
+  dogecoin_ecc_stop();
+
+  printf("%s\n", seed_phrase);
+  printf("%s\n", address);
+}
+```
+_C++ usage:_
+```C++
+extern "C" {
+#include "libdogecoin.h"
+}
+#include <iostream>
+using namespace std;
+
+int main () {
+  int addressLen = 53;
+
+  MNEMONIC seed_phrase;
+  char address [addressLen];
+
+  dogecoin_ecc_start();
+  generateRandomEnglishMnemonic("256", seed_phrase);
+  getDerivedHDAddressFromMnemonic(0, 0, "0", seed_phrase, NULL, address, false);
+  dogecoin_ecc_stop();
+
+  cout << seed_phrase << endl;
+  cout << address << endl;
 }
 ```

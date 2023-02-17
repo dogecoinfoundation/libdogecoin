@@ -688,7 +688,7 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
  *
  * @return 0 (success), -1 (fail)
 */
-int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* space, const char* entropy, const char* filepath, char* entropy_out, size_t* size, char* words)
+int dogecoin_generate_mnemonic (const ENTROPY_SIZE entropy_size, const char* language, const char* space, const char* entropy, const char* filepath, char* entropy_out, size_t* size, char* words)
 {
     char *wordlist[LANG_WORD_CNT] = {0};
 
@@ -800,28 +800,29 @@ int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, S
 /**
  * @brief This function generates a random English mnemonic phrase.
  *
+ * @param size The size of entropy in bits.
  * @param mnemonic The mnemonic code words.
  *
  * @return 0 (success), -1 (fail)
 */
-int generateRandomEnglishMnemonic (MNEMONIC mnemonic) {
+int generateRandomEnglishMnemonic (const ENTROPY_SIZE size, MNEMONIC mnemonic) {
 
     /* generate an English mnemonic without random entropy */
-    return generateEnglishMnemonic (NULL, mnemonic);
+    return generateEnglishMnemonic (NULL, size, mnemonic);
 }
 
 /**
- * @brief This function gnerates an English mnemonic phrase from hex entropy.
+ * @brief This function gnerates an English mnemonic phrase of given size or from hex entropy.
  *
- * @param mnemonic The mnemonic code words.
  * @param entropy The hex string of entropy.
+ * @param size The size of entropy in bits.
+ * @param mnemonic The mnemonic code words.
  *
  * @return 0 (success), -1 (fail)
 */
-int generateEnglishMnemonic (const HEX_ENTROPY entropy, MNEMONIC mnemonic) {
+int generateEnglishMnemonic (const HEX_ENTROPY entropy, const ENTROPY_SIZE size, MNEMONIC mnemonic) {
 
     /* Initialize variables */
-    const char* size = "256";     /* default bits of entropy (256) */
     const char* lang = "eng";     /* default english (eng) */
     const char* space = " ";      /* default utf8 ( ) */
     const char* words = 0;        /* default no custom words (NULL) */

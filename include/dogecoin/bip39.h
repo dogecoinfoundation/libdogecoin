@@ -54,6 +54,9 @@ LIBDOGECOIN_API
 /* Maximum size of a seed in bytes */
 #define MAX_SEED_SIZE 64
 
+/* Specifies the number of decimal characters needed to represent entropy size */
+#define ENTROPY_SIZE_STRING_SIZE 3
+
 /* format string to print the binary representation of a byte */
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 
@@ -134,6 +137,10 @@ typedef char MNEMONIC[MAX_MNEMONIC_STRING_SIZE];
 /* The seed should be an unsigned integer with a maximum size of MAX_SEED_SIZE */
 typedef uint8_t SEED[MAX_SEED_SIZE];
 
+/* A string representation of the entropy size to generate a BIP39 mnemonic */
+/* The entropy size should be a decimal string with a size of ENTROPY_SIZE_STRING_SIZE */
+typedef char ENTROPY_SIZE [ENTROPY_SIZE_STRING_SIZE];
+
 /*
  * Function declarations
  */
@@ -164,7 +171,7 @@ int get_custom_words(const char* filepath, char* wordlist[]);
 /* size of the generated mnemonic in bytes (output) */
 /* generated mnemonic (output) */
 /* returns 0 (success), -1 (fail) */
-LIBDOGECOIN_API int dogecoin_generate_mnemonic (const char* entropy_size, const char* language, const char* space, const char* entropy, const char* filename, char* entropy_out, size_t* size, char* words);
+LIBDOGECOIN_API int dogecoin_generate_mnemonic (const ENTROPY_SIZE entropy_size, const char* language, const char* space, const char* entropy, const char* filename, char* entropy_out, size_t* size, char* words);
 
 /* Derive the seed from the mnemonic and optional passphrase */
 /* mnemonic code words */
@@ -174,15 +181,17 @@ LIBDOGECOIN_API int dogecoin_generate_mnemonic (const char* entropy_size, const 
 LIBDOGECOIN_API int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, SEED seed);
 
 /* Generates a random (256-bit) English mnemonic phrase */
-/* mnemonic: Output buffer for the generated mnemonic */
+/* size of the entropy in bits */
+/* output buffer for the generated mnemonic */
 /* return: 0 (success), -1 (fail) */
-LIBDOGECOIN_API int generateRandomEnglishMnemonic(MNEMONIC mnemonic);
+LIBDOGECOIN_API int generateRandomEnglishMnemonic(const ENTROPY_SIZE size, MNEMONIC mnemonic);
 
 /* Generates an English mnemonic phrase from given hex string of entropy */
-/* entropy: Hex string of the entropy to use for generating the mnemonic */
-/* mnemonic: Output buffer for the generated mnemonic */
+/* hex string of the entropy to use for generating the mnemonic */
+/* size of the entropy in bits */
+/* output buffer for the generated mnemonic */
 /* return: 0 (success), -1 (fail) */
-LIBDOGECOIN_API int generateEnglishMnemonic(const HEX_ENTROPY entropy, MNEMONIC mnemonic);
+LIBDOGECOIN_API int generateEnglishMnemonic(const HEX_ENTROPY entropy, const ENTROPY_SIZE size, MNEMONIC mnemonic);
 
 LIBDOGECOIN_END_DECL
 

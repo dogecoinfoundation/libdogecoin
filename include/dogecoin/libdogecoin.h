@@ -33,7 +33,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-/* basic address functions: return 1 if succesful 
+/* basic address functions: return 1 if succesful
    ----------------------------------------------
 *///!init static ecc context
 void dogecoin_ecc_start(void);
@@ -63,8 +63,41 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
 --------------------------------------------------------------------------
 */
 
-/* Generates a random (256-bit) English mnemonic phrase */
-int generateRandomEnglishMnemonic(char* mnemonic);
+/* BIP 39 entropy */
+#define ENT_STRING_SIZE 3
+typedef char ENTROPY_SIZE [ENT_STRING_SIZE];
+
+/* BIP 39 hex entropy */
+#define MAX_HEX_ENT_SIZE 64 + 1
+typedef char HEX_ENTROPY [MAX_HEX_ENT_SIZE];
+
+/* BIP 39 mnemonic */
+#define MAX_MNEMONIC_SIZE 1024
+typedef char MNEMONIC [MAX_MNEMONIC_SIZE];
+
+/* BIP 39 passphrase */
+#define MAX_PASS_SIZE 256
+typedef char PASS [MAX_PASS_SIZE];
+
+/* BIP 32 512-bit seed */
+#define MAX_SEED_SIZE 64
+typedef uint8_t SEED [MAX_SEED_SIZE];
+
+/* BIP 32 change level */
+#define CHG_LEVEL_STRING_SIZE 2
+typedef char CHANGE_LEVEL [CHG_LEVEL_STRING_SIZE];
+
+/* Generates an English mnemonic phrase from given hex entropy */
+int generateEnglishMnemonic(const HEX_ENTROPY entropy, const ENTROPY_SIZE size, MNEMONIC mnemonic);
+
+/* Generates a random (e.g. "128" or "256") English mnemonic phrase */
+int generateRandomEnglishMnemonic(const ENTROPY_SIZE size, MNEMONIC mnemonic);
+
+/* Generates a seed from an mnemonic seedphrase */
+int dogecoin_seed_from_mnemonic(const MNEMONIC mnemonic, const PASS pass, SEED seed);
+
+/* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
+int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
 
 /*transaction creation functions - builds a dogecoin transaction
 ----------------------------------------------------------------
