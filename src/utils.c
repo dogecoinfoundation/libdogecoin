@@ -27,9 +27,12 @@
 
 */
 
+#include <src/libdogecoin-config.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 #include <time.h>
@@ -556,4 +559,12 @@ void dogecoin_uitoa(int n, char s[])
         s[i++] = '-';
     s[i] = '\0';
     dogecoin_str_reverse(s);
+}
+
+bool dogecoin_network_enabled() {
+#ifndef WITH_NET
+    return false;
+#else
+    return true;
+#endif
 }

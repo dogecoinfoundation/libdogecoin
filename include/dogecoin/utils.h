@@ -30,6 +30,8 @@
 #ifndef __LIBDOGECOIN_UTILS_H__
 #define __LIBDOGECOIN_UTILS_H__
 
+#include <stdbool.h>
+
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/mem.h>
@@ -62,6 +64,7 @@ LIBDOGECOIN_API void text_to_hex(char* in, char* out);
 LIBDOGECOIN_API const char* get_build();
 LIBDOGECOIN_API void dogecoin_str_reverse(char s[]);
 LIBDOGECOIN_API void dogecoin_uitoa(int n, char s[]);
+LIBDOGECOIN_API bool dogecoin_network_enabled();
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */

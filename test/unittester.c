@@ -77,6 +77,9 @@ extern void test_tool();
 #ifdef WITH_NET
 extern void test_net_basics_plus_download_block();
 extern void test_protocol();
+extern void test_net_flag_defined();
+#else
+extern void test_net_flag_not_defined();
 #endif
 
 extern void dogecoin_ecc_start();
@@ -128,8 +131,11 @@ int main()
 #endif
 
 #ifdef WITH_NET
+    u_run_test(test_net_flag_defined);
     u_run_test(test_net_basics_plus_download_block);
     u_run_test(test_protocol);
+#else
+    u_run_test(test_net_flag_not_defined);
 #endif
 
     dogecoin_ecc_stop();
