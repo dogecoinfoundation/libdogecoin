@@ -73,7 +73,7 @@ int qrgen_p2pkh_to_qrbits(const char* in_p2pkh, uint8_t* outQrByteArray)
 }
 
 //Creates a QR from the incoming p2pkh and then prints to console.
-void qrgen_p2pkh_consoleprint_to_qr(char* in_p2pkh)
+void qrgen_p2pkh_consoleprint_to_qr(const char* in_p2pkh)
 {
     uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
     stringToQrArray(in_p2pkh, qrcode);
