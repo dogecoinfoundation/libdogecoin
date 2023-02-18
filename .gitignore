@@ -146,3 +146,6 @@ include/unistring/
 include/ev*.h
 include/event2/*
 include/include.am
+
+# QR
+qrtest.png

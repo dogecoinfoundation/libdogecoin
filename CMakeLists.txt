@@ -109,10 +109,13 @@ INSTALL(FILES
     include/dogecoin/tool.h
     include/dogecoin/transaction.h
     include/dogecoin/tx.h
+    include/dogecoin/qrengine.h
     include/uthash/uthash.h
     include/dogecoin/utils.h
     include/dogecoin/vector.h
     include/dogecoin/wow.h
+    include/qr/qr.h
+    include/qr/png.h
     DESTINATION include/dogecoin
 )
 
@@ -140,6 +143,9 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/key.c
     src/koinu.c
     src/mem.c
+    src/qr.c
+    src/qrengine.c
+    src/png.c
     src/random.c
     src/rmd160.c
     src/script.c
@@ -208,6 +214,7 @@ IF(USE_TESTS)
         test/koinu_tests.c
         test/mem_tests.c
         test/opreturn_tests.c
+        test/qr_tests.c
         test/random_tests.c
         test/rmd160_tests.c
         test/serialize_tests.c
