@@ -27,7 +27,9 @@
 
 */
 
-#include <src/libdogecoin-config.h>
+#if defined HAVE_CONFIG_H
+#include "libdogecoin-config.h"
+#endif
 
 #include <ctype.h>
 #include <stdio.h>
