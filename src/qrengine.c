@@ -15,10 +15,10 @@
 
 
 //encode a string to QR byte array with med ECC
-int stringToQrArray(const char* inString,uint8_t* qrcode)
+int stringToQrArray(const char* inString, uint8_t* outQrBytes)
 {
     uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
-    bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, qrcode, qrcodegen_Ecc_MEDIUM, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
+    bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, outQrBytes, qrcodegen_Ecc_MEDIUM, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
     if (codeGenerated) 
     {
         //return 0 on pass/OK.
@@ -26,48 +26,49 @@ int stringToQrArray(const char* inString,uint8_t* qrcode)
     } 
     else 
     {
-        printf("Error generating QR\n"); 
+        printf("Error generating QR\n");
         return 1;
     }
 }
 
 //take in a QR byte array and output a formatted string with line breaks ready for console printing
-int outputQRStringFromQRBytes(const uint8_t qrcode[],char* outstring)
+int outputQRStringFromQRBytes(const uint8_t* inQrBytes, char* outString)
 {
-    outstring[0] = '\0'; //make sure it starts with a nul so strcat knows what to do 
-    int size = qrcodegen_getSize(qrcode);
+    outString[0] = '\0'; //make sure it starts with a nul so strcat knows what to do 
+    int size = qrcodegen_getSize(inQrBytes);
     int border = 4;
     const char* dark = "  ";
     const char* light = "##";
 
     for (int y = -border; y < size + border; y++) {
         for (int x = -border; x < size + border; x++) {
-            if (qrcodegen_getModule(qrcode, x, y)) {
-                strcat(outstring, light);
+            if (qrcodegen_getModule(inQrBytes, x, y)) {
+                strcat(outString, light);
             } else {
-                strcat(outstring, dark);
+                strcat(outString, dark);
             }
         }
-        strcat(outstring, "\n");
+        strcat(outString, "\n");
     }
-    strcat(outstring,"\n");
+    strcat(outString,"\n");
     return 0;
 }
 
 
 //macro to glue together string-to-qr and qr-to-string.  String addr in, string QR out.
-int qrgen_p2pkh_to_qr_string(const char* in_p2pkh,char* outqr)
+int qrgen_p2pkh_to_qr_string(const char* in_p2pkh, char* outString)
 {   
     uint8_t temparray[qrcodegen_BUFFER_LEN_MAX];
     stringToQrArray(in_p2pkh, temparray);
-    return outputQRStringFromQRBytes(temparray, outqr);
+    outputQRStringFromQRBytes(temparray, outString);
+    return 0;
 }
 
 // For API: Return byte array of QR code "pixels" (byte map) - returns size (L or W) in pixels of QR.
-int qrgen_p2pkh_to_qrbits(const char* in_p2pkh,uint8_t* qrbits)
+int qrgen_p2pkh_to_qrbits(const char* in_p2pkh, uint8_t* outQrByteArray)
 {       
-    int size = qrcodegen_getSize(qrbits);
-    stringToQrArray(in_p2pkh,qrbits);
+    int size = qrcodegen_getSize(outQrByteArray);
+    stringToQrArray(in_p2pkh,outQrByteArray);
     return size;
 }
 
@@ -137,11 +138,11 @@ uint8_t* bytesToRgb(uint8_t* qrBytes, size_t multiplier)
 }
 
 // encode a string to PNG file with med ECC
-int qrgen_string_to_qr_pngfile(const char *filename, const char* inString, uint8_t multiplier)
+int qrgen_string_to_qr_pngfile(const char *filename, const char* inString, uint8_t sizeMultiplier)
 {
-    if (multiplier<1) 
+    if (sizeMultiplier<1) 
     {
-        multiplier = 1;
+        sizeMultiplier = 1;
     }
     unsigned char* png;
     size_t pngsize;
@@ -156,24 +157,26 @@ int qrgen_string_to_qr_pngfile(const char *filename, const char* inString, uint8
    
     if (codeGenerated) {
         unsigned tempSideDim = qrcodegen_getSize(qrcode);
-        width = tempSideDim * multiplier;
-        height = tempSideDim * multiplier;
+        width = tempSideDim * sizeMultiplier;
+        height = tempSideDim * sizeMultiplier;
 
         // bytes to rgb
-        uint8_t* image = malloc(width * height);
-        image = bytesToRgb(qrcode, multiplier);
+        uint8_t* image = bytesToRgb(qrcode, sizeMultiplier);
+      
 
         unsigned error = lodepng_encode24(&png, &pngsize, image, width, height);
         if (!error)    
         {
             lodepng_save_file(png, pngsize, filename);
             free(png);
+            free(image);
             return 0;
         }
        else 
         {
             printf("png error %u: %s\n", error, lodepng_error_text(error));
             free(png);
+            free(image);
             return 1;
         }
     } 
