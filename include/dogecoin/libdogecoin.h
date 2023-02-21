@@ -59,6 +59,12 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
 /* verify that a dogecoin address is valid. */
 int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
 
+/* get derived hd address */
+int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey);
+
+/* get derived hd address by custom path */
+int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+
 /* Advanced API functions for mnemonic seedphrase generation
 --------------------------------------------------------------------------
 */
@@ -157,3 +163,6 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
 /*Store a raw transaction that's already formed, and give it a txindex in memory. (txindex) is returned as int. */
 int store_raw_transaction(char* incomingrawtx);
+
+/* Utilities */
+char* dogecoin_char_vla(size_t size);

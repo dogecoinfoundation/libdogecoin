@@ -119,6 +119,7 @@ dist/
 !wrappers/golang/libdogecoin/go.mod
 contrib/gitian/
 contrib/gitian/*
+example
 
 # CMake files
 build/*
