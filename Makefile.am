@@ -32,6 +32,7 @@ noinst_HEADERS = \
     include/dogecoin/key.h \
     include/dogecoin/koinu.h \
     include/dogecoin/mem.h \
+    include/dogecoin/moon.h \
     include/dogecoin/portable_endian.h \
     include/qr/png.h \
     include/qr/qr.h \
@@ -79,7 +80,8 @@ libdogecoin_la_SOURCES = \
     src/transaction.c \
     src/tx.c \
     src/utils.c \
-    src/vector.c
+    src/vector.c \
+    src/moon.c
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -fPIC
 libdogecoin_la_LIBADD = $(LIBSECP256K1) $(LIBUNISTRING)
@@ -113,7 +115,8 @@ tests_SOURCES = \
     test/utest.h \
     test/unittester.c \
     test/utils_tests.c \
-    test/vector_tests.c
+    test/vector_tests.c \
+    test/moon_tests.c
 
 tests_CFLAGS = $(libdogecoin_la_CFLAGS)
 tests_CPPFLAGS = -I$(top_srcdir)/src

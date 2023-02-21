@@ -100,6 +100,7 @@ INSTALL(FILES
     include/dogecoin/key.h
     include/dogecoin/koinu.h
     include/dogecoin/mem.h
+    include/dogecoin/moon.h
     include/dogecoin/portable_endian.h
     include/dogecoin/random.h
     include/dogecoin/rmd160.h
@@ -143,6 +144,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/key.c
     src/koinu.c
     src/mem.c
+    src/moon.c
     src/qr.c
     src/qrengine.c
     src/png.c
@@ -213,6 +215,7 @@ IF(USE_TESTS)
         test/key_tests.c
         test/koinu_tests.c
         test/mem_tests.c
+        test/moon_tests.c
         test/opreturn_tests.c
         test/qr_tests.c
         test/random_tests.c
