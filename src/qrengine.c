@@ -201,7 +201,7 @@ int qrgen_string_to_qr_pngfile(const char * outFilename, const char* inString, u
             lodepng_save_file(png, pngsize, outFilename);
             free(png);
             free(image);
-            return 0;
+            return (int)pngsize;
         }
        else 
         {
@@ -222,7 +222,8 @@ int qrgen_string_to_qr_pngfile(const char * outFilename, const char* inString, u
 // encode a string to JPEG file with med ECC
 int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, uint8_t sizeMultiplier)
 {
-    if (sizeMultiplier < 1) {
+    if (sizeMultiplier < 1) 
+    {
         sizeMultiplier = 1;
     }
 
@@ -254,7 +255,7 @@ int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, ui
         fclose(file);
         jpec_enc_del(enc);
         free(image);
-        return 0;
+        return jpgsize;
     } 
     else 
     {
