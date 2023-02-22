@@ -69,6 +69,7 @@ libdogecoin_la_SOURCES = \
     src/koinu.c \
     src/mem.c \
     src/png.c \
+    src/jpeg.c \
     src/qrengine.c \
     src/qr.c \
     src/random.c \
