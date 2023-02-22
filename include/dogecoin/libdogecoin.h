@@ -148,6 +148,10 @@ void qrgen_p2pkh_consoleprint_to_qr(char* in_p2pkh);
 int qrgen_string_to_qr_pngfile(const char* outFilename, const char* inString, uint8_t sizeMultiplier);
 
 
+/* Creates a .jpg file with the filename outFilename, from string inString, w. size factor of SizeMultiplier.*/
+int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, uint8_t sizeMultiplier);
+
+
 /* Advanced API functions for operating on already formed raw transactions
 --------------------------------------------------------------------------
 */

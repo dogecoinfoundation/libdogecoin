@@ -35,6 +35,7 @@ noinst_HEADERS = \
     include/dogecoin/portable_endian.h \
     include/qr/png.h \
     include/qr/qr.h \
+    include/qr/jpeg.h \
     include/dogecoin/random.h \
     include/dogecoin/rmd160.h \
     include/dogecoin/script.h \
