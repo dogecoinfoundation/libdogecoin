@@ -35,6 +35,7 @@ noinst_HEADERS = \
     include/dogecoin/portable_endian.h \
     include/qr/png.h \
     include/qr/qr.h \
+    include/qr/jpeg.h \
     include/dogecoin/random.h \
     include/dogecoin/rmd160.h \
     include/dogecoin/script.h \
@@ -68,6 +69,7 @@ libdogecoin_la_SOURCES = \
     src/koinu.c \
     src/mem.c \
     src/png.c \
+    src/jpeg.c \
     src/qrengine.c \
     src/qr.c \
     src/random.c \

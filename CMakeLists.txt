@@ -116,6 +116,7 @@ INSTALL(FILES
     include/dogecoin/wow.h
     include/qr/qr.h
     include/qr/png.h
+    include/qr/jpeg.h
     DESTINATION include/dogecoin
 )
 
@@ -146,6 +147,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/qr.c
     src/qrengine.c
     src/png.c
+    src/jpeg.c
     src/random.c
     src/rmd160.c
     src/script.c

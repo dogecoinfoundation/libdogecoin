@@ -20,7 +20,7 @@ LIBDOGECOIN_API int qrgen_p2pkh_to_qr_string(const char* in_p2pkh, char* outStri
 LIBDOGECOIN_API void qrgen_p2pkh_consoleprint_to_qr(const char* in_p2pkh);
 LIBDOGECOIN_API int qrgen_p2pkh_to_qrbits(const char* in_p2pkh, uint8_t* outQrByteArray);
 LIBDOGECOIN_API int qrgen_string_to_qr_pngfile(const char* outFilename, const char* inString, uint8_t sizeMultiplier);
-
+LIBDOGECOIN_API int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, uint8_t sizeMultiplier);
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_QRENGINE_H__

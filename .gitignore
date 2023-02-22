@@ -149,3 +149,4 @@ include/include.am
 
 # QR
 qrtest.png
+qrtest.jpg
