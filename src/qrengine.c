@@ -113,7 +113,6 @@ uint8_t* bytesToRgb(uint8_t* qrBytes, size_t multiplier)
     size_t pixelRunLength = side * side;
     uint8_t darkPixel[3] = {0, 0, 0};
     uint8_t litePixel[3] = {255, 255, 255};
-    // int border = 4; //unused variable
     int step = 3;
 
     uint8_t* outRgb = (uint8_t*)calloc(pixelRunLength * step * multiplier * multiplier, sizeof(uint8_t));
@@ -151,6 +150,7 @@ uint8_t* bytesToMono(uint8_t* qrBytes, size_t multiplier)
     uint8_t* outMono = (uint8_t*)calloc(pixelRunLength * step * multiplier * multiplier, sizeof(uint8_t));
 
     int iterator = 0;
+    
     for (int y = 0; y < (int)side; y++) {
         for (int r = 0; r < (int)multiplier; ++r) {
             for (int x = 0; x < (int)side; x++) {
@@ -166,9 +166,7 @@ uint8_t* bytesToMono(uint8_t* qrBytes, size_t multiplier)
             }
         }
     }
-
     return outMono;
-
 }
 
 // encode a string to PNG file with med ECC
@@ -183,13 +181,13 @@ int qrgen_string_to_qr_pngfile(const char * outFilename, const char* inString, u
     unsigned width;
     unsigned height;
 
-
     uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
     uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
 
     bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, qrcode, qrcodegen_Ecc_MEDIUM, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
    
-    if (codeGenerated) {
+    if (codeGenerated) 
+    {
         unsigned tempSideDim = qrcodegen_getSize(qrcode);
         width = tempSideDim * sizeMultiplier;
         height = tempSideDim * sizeMultiplier;
@@ -210,13 +208,13 @@ int qrgen_string_to_qr_pngfile(const char * outFilename, const char* inString, u
             printf("png error %u: %s\n", error, lodepng_error_text(error));
             free(png);
             free(image);
-            return 1;
+            return -1;
         }
     } 
     else 
     {
         printf("Error generating QR\n");
-        return 1;
+        return -1;
     }
 }
 
@@ -238,7 +236,8 @@ int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, ui
 
     bool codeGenerated = qrcodegen_encodeText(inString, tempBuffer, qrcode, qrcodegen_Ecc_MEDIUM, qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
 
-    if (codeGenerated) {
+    if (codeGenerated) 
+    {
         unsigned tempSideDim = qrcodegen_getSize(qrcode);
         width = tempSideDim * sizeMultiplier;
         height = tempSideDim * sizeMultiplier;
@@ -255,10 +254,11 @@ int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, ui
         fclose(file);
         jpec_enc_del(enc);
         free(image);
+        return 0;
     } 
     else 
     {
         printf("Error generating QR\n");
-        return 1;
+        return -1;
     }
 }
