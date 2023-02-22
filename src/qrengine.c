@@ -227,7 +227,7 @@ int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, ui
         sizeMultiplier = 1;
     }
 
-    unsigned char* jpg;
+    const uint8_t* jpg;
     int jpgsize;
     unsigned width;
     unsigned height;
@@ -248,13 +248,14 @@ int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, ui
 
         //encode jpeg
         jpec_enc_t* enc = jpec_enc_new(image, width, height);
-        const uint8_t* jpeg = jpec_enc_run(enc, &jpgsize);
+        jpg = jpec_enc_run(enc, &jpgsize);
 
         FILE* file = fopen(outFilename, "wb");
-        fwrite(jpeg, sizeof(uint8_t), jpgsize, file);
+        fwrite(jpg, sizeof(uint8_t), jpgsize, file);
         fclose(file);
         jpec_enc_del(enc);
         free(image);
+        free(jpg);
         return jpgsize;
     } 
     else 
