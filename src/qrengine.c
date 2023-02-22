@@ -255,6 +255,7 @@ int qrgen_string_to_qr_jpgfile(const char* outFilename, const char* inString, ui
         fclose(file);
         jpec_enc_del(enc);
         free(image);
+        free(jpg);
         return jpgsize;
     } 
     else 
