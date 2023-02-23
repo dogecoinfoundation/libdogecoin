@@ -11,7 +11,9 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 lib_LTLIBRARIES = libdogecoin.la
-include_HEADERS = include/dogecoin/libdogecoin.h
+include_HEADERS = \
+    include/dogecoin/constants.h \
+    include/dogecoin/libdogecoin.h
 noinst_HEADERS = \
     include/bip39/index.h \
     include/dogecoin/address.h \
