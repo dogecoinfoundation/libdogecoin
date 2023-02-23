@@ -118,6 +118,7 @@ Below are some examples on how to use the `such` tool in practice.
     > p2pkh address:       DFqonEEA56VE8zEGvhXNgjiPT3PaPFNQQu
 
 #### Generate a random BIP39 seed phrase
+#### See "Seed phrases" in address.md, for additional guidance
 
     ./such -c generate_mnemonic
     > they nuclear observe moral twenty gym hedgehog damage reveal syrup negative beach best silk alone feel vapor deposit belt host purity run clever deer

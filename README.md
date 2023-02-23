@@ -117,7 +117,7 @@ Before attempting to build, make sure all the necessary dependencies for your ar
 
 _Debian/Ubuntu_
 ```
-sudo apt-get install autoconf automake libtool build-essential libevent-dev
+sudo apt-get install autoconf automake libtool build-essential libevent-dev libunistring-dev
 ```
 
 _MacOS_
