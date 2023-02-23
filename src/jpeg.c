@@ -544,7 +544,7 @@ static void jpec_enc_block_dct(jpec_enc_t* e) {
 	const float* coeff = jpec_dct;
 	float tmp[64];
 	for (int row = 0; row < 8; row++) {
-		/* NOTE: the shift by 256 allows resampling from [0 255] to [–128 127] */
+		/* NOTE: the shift by 256 allows resampling from [0 255] to [-128 127] */
 		float s0 = (float)(JPEC_BLOCK(0, row) + JPEC_BLOCK(7, row) - 256);
 		float s1 = (float)(JPEC_BLOCK(1, row) + JPEC_BLOCK(6, row) - 256);
 		float s2 = (float)(JPEC_BLOCK(2, row) + JPEC_BLOCK(5, row) - 256);
