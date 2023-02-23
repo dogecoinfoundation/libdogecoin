@@ -15,10 +15,10 @@
 // Example of how to use libdogecoin API functions:
 // gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
 
-//(or in the case of this project's directory structure, and if you want to build statically):
-//(after build, from the /libdogecoin project root directory)
-//gcc ./contrib/examples/example.c ./.libs/libdogecoin.a -I./include/dogecoin -L./.libs -ldogecoin -o example
-//then run 'example'. 
+// (or in the case of this project's directory structure, and if you want to build statically):
+// (after build, from the /libdogecoin project root directory)
+// gcc ./contrib/examples/example.c ./.libs/libdogecoin.a -I./include/dogecoin -L./.libs -ldogecoin -lunistring -o example
+// then run 'example'. 
 
 int main() {
 	dogecoin_ecc_start();
@@ -61,7 +61,7 @@ int main() {
 
 	// keypair verification
 	if (verifyPrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet 4.\n", wif_privkey, p2pkh_pubkey);
+		printf("Keypair (%s, %s) is valid for mainnet 4.\n\n", wif_privkey, p2pkh_pubkey);
 	}
 	else {
 		printf("Keypair (%s, %s) is not valid for mainnet 4.\n", wif_privkey, p2pkh_pubkey);
@@ -69,7 +69,7 @@ int main() {
 	}
 
 	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
+		printf("Keypair (%s, %s) is valid for mainnet 5.\n\n", wif_master_privkey, p2pkh_master_pubkey);
 	}
 	else {
 		printf("Keypair (%s, %s) is not valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
@@ -77,17 +77,17 @@ int main() {
 	}
 
 	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_child_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
+		printf("Keypair (%s, %s) is valid for mainnet 6.\n\n", wif_master_privkey, p2pkh_child_pubkey);
 	}
 	else {
 		printf("Keypair (%s, %s) is not valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
 		return -1;
 	}
-	printf("\n\n");
+	printf("\n");
 
 	// address verification
 	if (verifyP2pkhAddress(p2pkh_pubkey, strlen(p2pkh_pubkey))) {
-		printf("Address %s is valid for mainnet 7.\n", p2pkh_pubkey);
+		printf("Address %s is valid for mainnet 7.\n\n", p2pkh_pubkey);
 	}
 	else {
 		printf("Address %s is not valid for mainnet 7.\n", p2pkh_pubkey);
@@ -95,7 +95,7 @@ int main() {
 	}
 
 	if (verifyP2pkhAddress(p2pkh_master_pubkey, strlen(p2pkh_master_pubkey))) {
-		printf("Address %s is valid for mainnet 8.\n", p2pkh_master_pubkey);
+		printf("Address %s is valid for mainnet 8.\n\n", p2pkh_master_pubkey);
 	}
 	else {
 		printf("Address %s is not valid for mainnet 8.\n", p2pkh_master_pubkey);
@@ -103,16 +103,33 @@ int main() {
 	}
 
 	if (verifyP2pkhAddress(p2pkh_child_pubkey, strlen(p2pkh_child_pubkey))) {
-		printf("Address %s is valid for mainnet 9.\n", p2pkh_child_pubkey);
+		printf("Address %s is valid for mainnet 9.\n\n", p2pkh_child_pubkey);
 	}
 	else {
 		printf("Address %s is not valid for mainnet 9.\n", p2pkh_child_pubkey);
 		return -1;
 	}
-	printf("\n\n");
+	printf("\n");
 
-
+	// TEST DERIVED HD ADDRESS FUNCTIONS
+	size_t extoutsize = 112;
+	char* extout = dogecoin_char_vla(extoutsize);
+	char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
 	
+	if (getDerivedHDAddress(masterkey_main_ext, 0, false, 0, extout, true)) {
+		printf("Derived HD Addresses:\n%s\n%s\n\n", extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+	} else {
+		printf("getDerviedHDAddress failed!\n");
+		return -1;
+	}
+
+	if (getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true)) {
+		printf("Derived HD Addresses:\n%s\n%s\n\n", extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+	} else {
+		printf("getDerivedHDAddressByPath failed!\n");
+		return -1;
+	}
+
 	// CALLING TRANSACTION FUNCTIONS
 	// declare keys and previous hashes
 	char *external_p2pkh_addr = 	"nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";

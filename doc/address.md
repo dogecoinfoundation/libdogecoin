@@ -15,6 +15,8 @@
     - [**verifyPrivPubKeypair**](#verifyprivpubkeypair)
     - [**verifyHDMasterPubKeypair**](#verifyhdmasterpubkeypair)
     - [**verifyP2pkhAddress**](#verifyp2pkhaddress)
+    - [**getDerivedHDAddress**](#getderivedhdaddress)
+    - [**getDerivedHDAddressByPath**](#getderivedhdaddressbypath)
   - [Advanced Address API](#advanced-address-api)
     - [**generateRandomEnglishMnemonic:**](#generateRandomEnglishMnemonic)
     - [**getDerivedHDAddressFromMnemonic:**](#getDerivedHDAddressFromMnemonic)
@@ -452,6 +454,60 @@ func main() {
 		fmt.Println("Address is invalid.")
 	}
 	libdogecoin.W_context_stop()
+}
+```
+
+---
+### **getDerivedHDAddress**
+
+`int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey)`
+
+This function derives a hierarchical deterministic address by way of providing the extended master key, account, ischange and addressindex.
+It will return 1 if the function is successful and 0 if not.
+
+_C usage:_
+```C
+#include "libdogecoin.h"
+#include <assert.h>
+#include <stdio.h>
+
+int main() {
+  size_t extoutsize = 112;
+  char* extout = dogecoin_char_vla(extoutsize);
+  char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
+  dogecoin_ecc_start();
+  int res = getDerivedHDAddress(masterkey_main_ext, 0, false, 0, extout, true);
+  u_assert_int_eq(res, true);
+  u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+  dogecoin_ecc_stop();
+  free(extout);
+}
+```
+
+---
+### **getDerivedHDAddressByPath**
+
+`int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey)`
+
+This function derives an extended HD address by custom path in string format (derived_path).
+It returns 1 if the address is valid and 0 if it is not.
+
+_C usage:_
+```C
+#include "libdogecoin.h"
+#include <assert.h>
+#include <stdio.h>
+
+int main() {
+  size_t extoutsize = 112;
+  char* extout = dogecoin_char_vla(extoutsize);
+  char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
+  dogecoin_ecc_start();
+  res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
+  u_assert_int_eq(res, true);
+  u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+  dogecoin_ecc_stop();
+  free(extout);
 }
 ```
 
