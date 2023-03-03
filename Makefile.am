@@ -112,6 +112,7 @@ tests_SOURCES = \
     test/rmd160_tests.c \
     test/serialize_tests.c \
     test/sha2_tests.c \
+    test/signmsg_tests.c \
     test/transaction_tests.c \
     test/tx_tests.c \
     test/utest.h \

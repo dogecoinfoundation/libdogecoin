@@ -65,6 +65,9 @@ LIBDOGECOIN_API const char* get_build();
 LIBDOGECOIN_API void dogecoin_str_reverse(char s[]);
 LIBDOGECOIN_API void dogecoin_uitoa(int n, char s[]);
 LIBDOGECOIN_API bool dogecoin_network_enabled();
+LIBDOGECOIN_API char *b64_encode(const unsigned char *in, size_t len);
+LIBDOGECOIN_API int b64_decode(const char *in, unsigned char *out, size_t outlen);
+LIBDOGECOIN_API size_t b64_decoded_size(const char *in);
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */
