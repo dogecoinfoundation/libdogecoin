@@ -39,13 +39,15 @@ LIBDOGECOIN_BEGIN_DECL
 typedef struct eckey {
     int idx;
     dogecoin_key private_key;
+    char private_key_wif[128];
     dogecoin_pubkey public_key;
+    char public_key_hex[128];
     UT_hash_handle hh;
 } eckey;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-static eckey *eckeys = NULL;
+static eckey *keys = NULL;
 #pragma GCC diagnostic pop
 // instantiates a new eckey
 LIBDOGECOIN_API eckey* new_eckey();

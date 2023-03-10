@@ -35,5 +35,12 @@ void test_signmsg_ext() {
     int key_id = start_key();
     printf("key_id: %d\n", key_id);
     eckey* key = find_eckey(key_id);
+    printf("key: %s\n", &key->private_key_wif);
+    printf("pubkey: %s\n", &key->public_key_hex);
+    char* address = addressFromPrivkey(&key->private_key_wif);
+    char* msg = "This is a test message";
+    char* sig = signmsgwithprivatekey(&key->private_key_wif, msg);
+    printf("verified: %d\n", verifymessage(address, sig, msg));
     remove_eckey(key);
+    dogecoin_free(sig);
 }
