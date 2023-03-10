@@ -30,3 +30,10 @@ void test_signmsg() {
     u_assert_int_eq(verifymessage(address, sig, msg), 1);
     dogecoin_free(sig);
 }
+
+void test_signmsg_ext() {
+    int key_id = start_key();
+    printf("key_id: %d\n", key_id);
+    eckey* key = find_eckey(key_id);
+    remove_eckey(key);
+}

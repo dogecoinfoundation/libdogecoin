@@ -30,8 +30,33 @@
 #include <dogecoin/bip39.h>
 #include <dogecoin/bip44.h>
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/key.h>
+#include <uthash/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
+
+/* hashmap functions */
+typedef struct eckey {
+    int idx;
+    dogecoin_key private_key;
+    dogecoin_pubkey public_key;
+    UT_hash_handle hh;
+} eckey;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+static eckey *eckeys = NULL;
+#pragma GCC diagnostic pop
+// instantiates a new eckey
+LIBDOGECOIN_API eckey* new_eckey();
+
+LIBDOGECOIN_API void add_eckey(eckey *key);
+
+LIBDOGECOIN_API eckey* find_eckey(int idx);
+
+LIBDOGECOIN_API void remove_eckey(eckey *key);
+
+LIBDOGECOIN_API int start_key();
 
 /* generate a new private key (hex) */
 LIBDOGECOIN_API int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);

@@ -55,6 +55,100 @@
 
 
 /**
+ * @brief This function instantiates a new working eckey,
+ * but does not add it to the hash table.
+ * 
+ * @return A pointer to the new working eckey. 
+ */
+eckey* new_eckey() {
+    eckey* working_eckey = (struct eckey*)dogecoin_calloc(1, sizeof *working_eckey);
+    dogecoin_privkey_init(&working_eckey->private_key);
+    dogecoin_privkey_gen(&working_eckey->private_key);
+    dogecoin_pubkey_init(&working_eckey->public_key);
+    dogecoin_pubkey_from_key(&working_eckey->private_key, &working_eckey->public_key);
+    printf("privkey: %s\n", utils_uint8_to_hex(&working_eckey->private_key, 65));
+    printf("pubkey: %s\n", utils_uint8_to_hex(&working_eckey->public_key, 33));
+    working_eckey->idx = HASH_COUNT(eckeys) + 1;
+    return working_eckey;
+}
+
+/**
+ * @brief This function takes a pointer to an existing working
+ * eckey object and adds it to the hash table.
+ * 
+ * @param key The pointer to the working eckey.
+ * 
+ * @return Nothing.
+ */
+void add_eckey(eckey *working_eckey) {
+    eckey* key_old;
+    HASH_FIND_INT(eckeys, &working_eckey->idx, key_old);
+    if (key_old == NULL) {
+        HASH_ADD_INT(eckeys, idx, working_eckey);
+    } else {
+        HASH_REPLACE_INT(eckeys, idx, working_eckey, key_old);
+    }
+    dogecoin_free(key_old);
+}
+
+/**
+ * @brief This function takes an index and returns the working
+ * eckey associated with that index in the hash table.
+ * 
+ * @param idx The index of the target working eckey.
+ * 
+ * @return The pointer to the working eckey associated with
+ * the provided index.
+ */
+eckey* find_eckey(int idx) {
+    eckey *working_eckey;
+    HASH_FIND_INT(eckeys, &idx, working_eckey);
+    return working_eckey;
+}
+
+/**
+ * @brief This function removes the specified working eckey
+ * from the hash table and frees the eckeys in memory.
+ * 
+ * @param key The pointer to the eckey to remove.
+ * 
+ * @return Nothing.
+ */
+void remove_eckey(eckey* key) {
+    HASH_DEL(eckeys, key); /* delete it (eckeys advances to next) */
+    dogecoin_privkey_cleanse(&key->private_key);
+    dogecoin_pubkey_cleanse(&key->public_key);
+    dogecoin_free(key);
+}
+
+/**
+ * @brief This function frees the memory allocated
+ * for an eckey.
+ * 
+ * @param eckey The pointer to the eckey to be freed.
+ * 
+ * @return Nothing.
+ */
+void dogecoin_key_free(eckey* eckey)
+{
+    dogecoin_free(eckey);
+}
+
+/**
+ * @brief This function creates a new key, places it in
+ * the hash table, and returns the index of the new key,
+ * starting from 1 and incrementing each subsequent call.
+ * 
+ * @return The index of the new key.
+ */
+int start_key() {
+    eckey* eckey = new_eckey();
+    int index = eckey->idx;
+    add_eckey(eckey);
+    return index;
+}
+
+/**
  * @brief This function generates a new basic public-private
  * key pair for the specified network.
  * 
@@ -216,7 +310,7 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
  * @param p2pkh_pubkey The public key to check.
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
  * 
- * @return 1 if the keys match and are valid on the specified network, 0 otherwise.
+ * @return 1 if the eckeys match and are valid on the specified network, 0 otherwise.
  */
 int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet) {
     /* require both private and public key */
@@ -265,7 +359,7 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
  * @param wif_privkey_master The master private key to check.
  * @param p2pkh_pubkey_master The master public key to check.
  * 
- * @return 1 if the keys match and are valid on the specified network, 0 otherwise.
+ * @return 1 if the eckeys match and are valid on the specified network, 0 otherwise.
  */
 int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet) {
     /* require both private and public key */
@@ -280,7 +374,7 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
     char new_p2pkh_pubkey_master[HD_MASTERKEY_STRINGLEN];
     dogecoin_hdnode_get_p2pkh_address(&node, chain, new_p2pkh_pubkey_master, sizeof(new_p2pkh_pubkey_master));
 
-    /* compare derived and given pubkeys */
+    /* compare derived and given pubeckeys */
     if (strcmp(p2pkh_pubkey_master, new_p2pkh_pubkey_master)) return false;
 
     return true;
