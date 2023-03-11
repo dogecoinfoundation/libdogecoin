@@ -736,3 +736,38 @@ char *substring(char *string, int position, int length)
  
    return p;
 }
+
+/**
+ * Convert an integer, positive or negative, to a character string radix 10.
+ */
+char* itoa_s(int32_t i, char* buf)
+{
+    char* result = buf;
+
+    // Handle negative
+    if (i < 0)
+    {
+        *buf++ = '-';
+        i = -i;
+    }
+
+    // Output digits in reverse order
+    char* p = buf;
+    do
+    {
+        *p++ = (char)('0' + (i % 10));
+        i /= 10;
+    }
+    while (i);
+    *p-- = 0;
+
+    // Reverse the string
+    while (buf < p)
+    {
+        char c = *buf;
+        *buf++ = *p;
+        *p-- = c;
+    }
+
+    return result;
+}

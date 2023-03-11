@@ -42,13 +42,34 @@ typedef struct eckey {
     char private_key_wif[128];
     dogecoin_pubkey public_key;
     char public_key_hex[128];
+    int recid;
     UT_hash_handle hh;
 } eckey;
+
+typedef struct signature {
+    int idx;
+    char* content;
+    int recid;
+    UT_hash_handle hh;
+} signature;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static eckey *keys = NULL;
+static signature *signatures = NULL;
 #pragma GCC diagnostic pop
+
+// instantiates a new signature
+LIBDOGECOIN_API signature* new_signature();
+
+LIBDOGECOIN_API void add_signature(signature *sig);
+
+LIBDOGECOIN_API signature* find_signature(int idx);
+
+LIBDOGECOIN_API void remove_signature(signature *sig);
+
+LIBDOGECOIN_API int start_signature();
+
 // instantiates a new eckey
 LIBDOGECOIN_API eckey* new_eckey();
 
@@ -100,6 +121,10 @@ LIBDOGECOIN_API char* signmsgwithprivatekey(char* privkey, char* msg);
 LIBDOGECOIN_API dogecoin_bool verifymessage(char* address, char* sig, char* msg);
 
 LIBDOGECOIN_API char* addressFromPrivkey(char* privkey);
+
+LIBDOGECOIN_API dogecoin_bool verifymessagewitheckey(eckey* key, signature* sig, char* msg);
+
+LIBDOGECOIN_API signature* signmsgwitheckey(eckey* key, char* msg);
 
 LIBDOGECOIN_END_DECL
 
