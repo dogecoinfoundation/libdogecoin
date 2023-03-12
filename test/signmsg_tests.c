@@ -32,7 +32,7 @@ void test_signmsg() {
 }
 
 void test_signmsg_ext() {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 5; i++) {
         // key 1:
         int key_id = start_key();
         printf("key_id: %d\n", key_id);
@@ -42,7 +42,7 @@ void test_signmsg_ext() {
         char* address = addressFromPrivkey((char*)key->private_key.privkey);
         printf("address: %s\n", address);
         char* msg = "This is a test message";
-        char* sig = signmsgwitheckey(key, msg);
+        signature* sig = signmsgwitheckey(key, msg);
         u_assert_int_eq(verifymessagewitheckey(key, sig, msg), 1);
 
         // key 2:
@@ -54,13 +54,16 @@ void test_signmsg_ext() {
         char* address2 = addressFromPrivkey((char*)key2->private_key.privkey);
         printf("address: %s\n", address2);
         char* msg2 = "This is a test message";
-        char* sig2 = signmsgwitheckey(key2, msg2);
+        signature* sig2 = signmsgwitheckey(key2, msg2);
         u_assert_int_eq(verifymessagewitheckey(key2, sig2, msg2), 1);
 
         remove_eckey(key);
         remove_eckey(key2);
 
-        dogecoin_free(sig);
-        dogecoin_free(sig2);
+        free_signature(sig);
+        free_signature(sig2);
+
+        dogecoin_free(address);
+        dogecoin_free(address2);
     }
 }

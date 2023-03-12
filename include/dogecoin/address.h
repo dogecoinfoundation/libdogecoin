@@ -70,6 +70,8 @@ LIBDOGECOIN_API void remove_signature(signature *sig);
 
 LIBDOGECOIN_API int start_signature();
 
+LIBDOGECOIN_API void free_signature(signature* sig);
+
 // instantiates a new eckey
 LIBDOGECOIN_API eckey* new_eckey();
 

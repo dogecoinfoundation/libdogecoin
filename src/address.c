@@ -62,7 +62,6 @@
  */
 signature* new_signature() {
     signature* sig = (struct signature*)dogecoin_calloc(1, sizeof *sig);
-    sig->content = dogecoin_char_vla(75);
     sig->recid = 0;
     sig->idx = HASH_COUNT(signatures) + 1;
     return sig;
@@ -128,6 +127,20 @@ int start_signature() {
     int index = sig->idx;
     add_signature(sig);
     return index;
+}
+
+/**
+ * @brief This function frees the memory allocated
+ * for an sig.
+ * 
+ * @param sig The pointer to the sig to be freed.
+ * 
+ * @return Nothing.
+ */
+void free_signature(signature* sig)
+{
+    dogecoin_free(sig->content);
+    dogecoin_free(sig);
 }
 
 /**
@@ -1087,6 +1100,7 @@ dogecoin_bool verifymessagewitheckey(eckey* key, signature* sig, char* msg) {
         printf("pubkey sig verification failed!\n");
         return ret;
     }
+    dogecoin_free(out);
     printf("ret: %d\n", ret);
     printf("pub_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&pubkey, 33));
     printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
