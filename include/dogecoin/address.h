@@ -30,59 +30,8 @@
 #include <dogecoin/bip39.h>
 #include <dogecoin/bip44.h>
 #include <dogecoin/dogecoin.h>
-#include <dogecoin/key.h>
-#include <uthash/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
-
-/* hashmap functions */
-typedef struct eckey {
-    int idx;
-    dogecoin_key private_key;
-    char private_key_wif[128];
-    dogecoin_pubkey public_key;
-    char public_key_hex[128];
-    int recid;
-    UT_hash_handle hh;
-} eckey;
-
-typedef struct signature {
-    int idx;
-    char* content;
-    char address[35];
-    int recid;
-    UT_hash_handle hh;
-} signature;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static eckey *keys = NULL;
-static signature *signatures = NULL;
-#pragma GCC diagnostic pop
-
-// instantiates a new signature
-LIBDOGECOIN_API signature* new_signature();
-
-LIBDOGECOIN_API void add_signature(signature *sig);
-
-LIBDOGECOIN_API signature* find_signature(int idx);
-
-LIBDOGECOIN_API void remove_signature(signature *sig);
-
-LIBDOGECOIN_API int start_signature();
-
-LIBDOGECOIN_API void free_signature(signature* sig);
-
-// instantiates a new eckey
-LIBDOGECOIN_API eckey* new_eckey();
-
-LIBDOGECOIN_API void add_eckey(eckey *key);
-
-LIBDOGECOIN_API eckey* find_eckey(int idx);
-
-LIBDOGECOIN_API void remove_eckey(eckey *key);
-
-LIBDOGECOIN_API int start_key();
 
 /* generate a new private key (hex) */
 LIBDOGECOIN_API int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
@@ -117,17 +66,8 @@ LIBDOGECOIN_API int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_mas
 /* verify that a HD master key and a dogecoin address matches a mnemonic */
 LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
 
-/* sign a message with a private key */
-LIBDOGECOIN_API char* signmsgwithprivatekey(char* privkey, char* msg);
-
-/* verify a message with a address */
-LIBDOGECOIN_API char* verifymessage(char* sig, char* msg);
-
+/* derive p2pkh address from private key */
 LIBDOGECOIN_API char* addressFromPrivkey(char* privkey);
-
-LIBDOGECOIN_API char* verifymessagewithsig(signature* sig, char* msg);
-
-LIBDOGECOIN_API signature* signmsgwitheckey(eckey* key, char* msg);
 
 LIBDOGECOIN_END_DECL
 

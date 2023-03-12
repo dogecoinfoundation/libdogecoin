@@ -29,8 +29,9 @@
 #ifndef __LIBDOGECOIN_KEY_H__
 #define __LIBDOGECOIN_KEY_H__
 
-#include <dogecoin/chainparams.h>
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/chainparams.h>
+#include <uthash/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -62,27 +63,58 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_is_valid(const dogecoin_pubkey* pu
 LIBDOGECOIN_API void dogecoin_pubkey_cleanse(dogecoin_pubkey* pubkey);
 LIBDOGECOIN_API void dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout);
 
-//get the hash160 (single SHA256 + RIPEMD160)
+// get the hash160 (single SHA256 + RIPEMD160)
 LIBDOGECOIN_API void dogecoin_pubkey_get_hash160(const dogecoin_pubkey* pubkey, uint160 hash160);
 
-//get the hex representation of a pubkey, strsize must be at leat 66 bytes
+// get the hex representation of a pubkey, strsize must be at leat 66 bytes
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_get_hex(const dogecoin_pubkey* pubkey, char* str, size_t* strsize);
 
-//sign a 32byte message/hash and returns a DER encoded signature (through *sigout)
+// sign a 32byte message/hash and returns a DER encoded signature (through *sigout)
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen);
 
-//sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout)
+// sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout)
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen);
 
-//sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
+// sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
 
-//verifies a DER encoded signature with given pubkey and return true if valid
+// verifies a DER encoded signature with given pubkey and return true if valid
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, size_t len);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
+
+/* hashmap functions */
+typedef struct eckey {
+    int idx;
+    dogecoin_key private_key;
+    char private_key_wif[128];
+    dogecoin_pubkey public_key;
+    char public_key_hex[128];
+    int recid;
+    UT_hash_handle hh;
+} eckey;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+static eckey *keys = NULL;
+#pragma GCC diagnostic pop
+
+// instantiates a new eckey
+LIBDOGECOIN_API eckey* new_eckey();
+
+// adds eckey structure to hash table
+LIBDOGECOIN_API void add_eckey(eckey *key);
+
+// find eckey from the hash table
+LIBDOGECOIN_API eckey* find_eckey(int idx);
+
+// remove eckey from the hash table
+LIBDOGECOIN_API void remove_eckey(eckey *key);
+
+// instantiates and adds key to the hash table
+LIBDOGECOIN_API int start_key();
 
 LIBDOGECOIN_END_DECL
 

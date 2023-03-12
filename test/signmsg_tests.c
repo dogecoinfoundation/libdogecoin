@@ -10,7 +10,9 @@
 #include "utest.h"
 
 #include <dogecoin/address.h>
+#include <dogecoin/key.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/sign.h>
 #include <dogecoin/tool.h>
 
 void test_signmsg() {
