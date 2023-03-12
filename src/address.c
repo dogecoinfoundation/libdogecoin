@@ -158,15 +158,12 @@ eckey* new_eckey() {
     dogecoin_pubkey_init(&key->public_key);
     dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
     assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
-    printf("privkey: %s\n", utils_uint8_to_hex((const uint8_t *)&key->private_key, 33));
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
-    printf("pubkey: %s\n", key->public_key_hex);
     uint8_t pkeybase58c[34];
     pkeybase58c[0] = dogecoin_chainparams_main.b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
-    printf("key->private_key_wif: %s\n", key->private_key_wif);
     key->recid = 0;
     key->idx = HASH_COUNT(keys) + 1;
     return key;
@@ -824,27 +821,22 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
         return 0;
     }
     int header = (sig[0] & 0xFF);
-    printf("header: %d\n", header);
     if (header >= 31) { // this is a compressed key signature
         pubkey.compressed = true;
         header -= 24;
     }
-    printf("header: %d\n", header);
     int recid = header - 24;
-    printf("recid: %d\n", recid);
     // sign compact for recovery of pubkey and free privkey:
     ret = dogecoin_key_sign_hash_compact_recoverable(&key, msgBytes, sigcmp, &outlencmp, &recid);
     if (!ret) {
         printf("key sign recoverable failed!\n");
         return false;
     }
-    printf("recid: %d\n", recid);
     ret = dogecoin_key_sign_recover_pubkey((const unsigned char*)sigcmp, msgBytes, recid, &pubkey);
     if (!ret) {
         printf("key sign recover failed!\n");
         return false;
     }
-    printf("recid: %d\n", recid);
     ret = dogecoin_pubkey_verify_sig(&pubkey, msgBytes, sig, outlen);
     if (!ret) {
         printf("pubkey sig verification failed!\n");
@@ -902,14 +894,13 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
     pub_key.compressed = false;
 
     int header = (out[0] & 0xFF);
-    printf("header: %d\n", header);
+
     if (header >= 31) { // this is a compressed key signature
         pub_key.compressed = true;
         header -= 24;
     }
-    printf("header: %d\n", header);
+
     int recid = header - 24;
-    printf("recid: %d\n", recid);
 
     // recover pubkey
     ret = dogecoin_key_sign_recover_pubkey((const unsigned char*)sigcomp_out, messageBytes, recid, &pub_key);
@@ -918,7 +909,6 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
         printf("key sign recover failed!\n");
         return ret;
     }
-    printf("pub_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&pub_key, 33));
     ret = dogecoin_pubkey_verify_sig(&pub_key, messageBytes, out, out_len);
     dogecoin_free(out);
     if (!ret) {
@@ -933,7 +923,6 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
         printf("derived address from pubkey failed!\n");
         return ret;
     }
-    printf("p2pkh_address: %s\n", p2pkh_address);
     dogecoin_pubkey_cleanse(&pub_key);
 
     // compare address derived from recovered pubkey:
@@ -949,13 +938,11 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
  * @param key The key to sign the message with.
  * @param message The message to be signed.
  * 
- * @return signature struct with base64 encoded signature and recid if successful, False (0) if not
+ * @return Signature struct with base64 encoded signature and recid if successful, False (0) if not
  * 
  */
 signature* signmsgwitheckey(eckey* key, char* msg) {
     if (!key || !msg) return false;
-
-    printf("----start sign----\n");
 
     // retrieve double sha256 hash of msg:
     uint256 msgBytes;
@@ -965,27 +952,6 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
     size_t outlen = 74, outlencmp = 64;
     unsigned char *sig = dogecoin_uchar_vla(outlen), 
     *sigcmp = dogecoin_uchar_vla(outlencmp);
-    // uint8_t sig[64];
-    // size_t siglen = 0;
-    // dogecoin_key_sign_hash_compact(privkey, sighash, sig, &siglen);
-    // assert(siglen == sizeof(sig));
-    // if (sigcompact_out) {
-    //     memcpy_safe(sigcompact_out, sig, siglen);
-    // }
-
-    // // form normalized DER signature & hashtype
-    // unsigned char sigder_plus_hashtype[74 + 1];
-    // size_t sigderlen = 75;
-    // dogecoin_ecc_compact_to_der_normalized(sig, sigder_plus_hashtype, &sigderlen);
-    // assert(sigderlen <= 74 && sigderlen >= 70);
-    // sigder_plus_hashtype[sigderlen] = sighashtype;
-    // sigderlen += 1; //+hashtype
-    // if (sigcompact_out) {
-    //     memcpy_safe(sigder_out, sigder_plus_hashtype, sigderlen);
-    // }
-    // if (sigder_len_out) {
-    //     *sigder_len_out = sigderlen;
-    // }
 
     // sign hash
     ret = dogecoin_key_sign_hash(&key->private_key, msgBytes, sig, &outlen);
@@ -993,52 +959,47 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
         printf("dogecoin_key_sign_hash failed!\n");
         return 0;
     }
+
     int header = (sig[0] & 0xFF);
-    printf("header: %d\n", header);
     if (header >= 31) { // this is a compressed key signature
         header -= 24;
     }
-    printf("header: %d\n", header);
+
     int recid = header - 24;
-    printf("recid: %d\n", recid);
+
     // sign compact for recovery of pubkey and free privkey:
     ret = dogecoin_key_sign_hash_compact_recoverable(&key->private_key, msgBytes, sigcmp, &outlencmp, &recid);
     if (!ret) {
         printf("key sign recoverable failed!\n");
         return false;
     }
-    printf("recid: %d\n", recid);
     ret = dogecoin_key_sign_recover_pubkey((const unsigned char*)sigcmp, msgBytes, recid, &key->public_key);
     if (!ret) {
         printf("key sign recover failed!\n");
         return false;
     }
-    printf("recid: %d\n", recid);
     ret = dogecoin_pubkey_verify_sig(&key->public_key, msgBytes, sig, outlen);
     if (!ret) {
         printf("pubkey sig verification failed!\n");
         return false;
     }
+
     key->recid = recid;
-    printf("key->recid: %d\n", key->recid);
     signature* working_sig = new_signature();
     working_sig->recid = recid;
 
-    printf("key->public_key: %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, &dogecoin_chainparams_main, working_sig->address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
-        return ret;
+        return false;
     }
-    printf("working_sig->address: %s\n", working_sig->address);
     dogecoin_free(sigcmp);
+
     // base64 encode output and free sig:
     working_sig->content = b64_encode(sig, outlen);
 
     dogecoin_free(sig);
-    printf("working_sig: %s\n", working_sig->content);
-    printf("----end sign----\n\n");
 
     return working_sig;
 }
@@ -1056,36 +1017,29 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
 char* verifymessagewithsig(signature* sig, char* msg) {
     if (!(sig || msg)) return false;
 
-    printf("----start verification----\n");
     char* signature_encoded = sig->content;
-    printf("sig->content: %s\n", signature_encoded);
-
 	size_t out_len = b64_decoded_size(signature_encoded);
-    printf("out_len: %d\n", out_len);
     unsigned char *out = dogecoin_uchar_vla(out_len), 
     *sigcomp_out = dogecoin_uchar_vla(65);
     int ret = b64_decode(signature_encoded, out, out_len);
 	if (!ret) {
         printf("b64_decode failed!\n");
-        return ret;
+        return false;
     }
 
     int recid = sig->recid;
-    printf("recid (vm): %d\n", recid);
-    printf("out: %s\n", utils_uint8_to_hex(out, out_len));
 
     // double sha256 hash message:
     uint256 messageBytes;
     ret = dogecoin_dblhash((const unsigned char*)msg, strlen(msg), messageBytes);
     if (!ret) {
         printf("messageBytes failed\n");
-        return ret;
+        return false;
     }
-    printf("out_len: %d\n", out_len);
     ret = dogecoin_ecc_der_to_compact(out, out_len, sigcomp_out);
     if (!ret) {
         printf("ecc der to compact failed!\n");
-        return ret;
+        return false;
     }
 
     dogecoin_pubkey pubkey;
@@ -1098,34 +1052,22 @@ char* verifymessagewithsig(signature* sig, char* msg) {
     dogecoin_free(sigcomp_out);
     if (!ret) {
         printf("key sign recover failed!\n");
-        return ret;
+        return false;
     }
-    printf("recid (vm): %d\n", recid);
-    printf("pub_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&pubkey, 33));
-    // printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
+
     ret = dogecoin_pubkey_verify_sig(&pubkey, messageBytes, out, out_len);
     if (!ret) {
         printf("pubkey sig verification failed!\n");
-        return ret;
+        return false;
     }
     dogecoin_free(out);
-    // return ret;
-    printf("ret: %d\n", ret);
-    printf("pub_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&pubkey, 33));
 
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     char* p2pkh_address = dogecoin_char_vla(34 + 1);
     ret = dogecoin_pubkey_getaddr_p2pkh(&pubkey, &dogecoin_chainparams_main, p2pkh_address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
-        return ret;
+        return false;
     }
-    printf("p2pkh_address: %s\n", p2pkh_address);
-    // dogecoin_pubkey_cleanse(&pubkey);
-    // printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
-    // ret = memcmp(&pubkey, &key->public_key, 33)==0;
-    // printf("ret: %d\n", ret);
-    // printf("strncmp(&pubkey.pubkey, &key->public_key.pubkey, 33): %d\n", strncmp(pubkey.pubkey, key->public_key.pubkey, 33));
-    printf("----end verification----\n\n");
     return p2pkh_address;
 }

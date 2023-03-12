@@ -32,13 +32,10 @@ void test_signmsg() {
 }
 
 void test_signmsg_ext() {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         // key 1:
         int key_id = start_key();
-        printf("key_id: %d\n", key_id);
         eckey* key = find_eckey(key_id);
-        printf("key: %s\n", key->private_key_wif);
-        printf("pubkey: %s\n", key->public_key_hex);
         char* msg = "This is a test message";
         signature* sig = signmsgwitheckey(key, msg);
         char* address = verifymessagewithsig(sig, msg);
@@ -49,16 +46,14 @@ void test_signmsg_ext() {
 
         // key 2:
         int key_id2 = start_key();
-        printf("key_id: %d\n", key_id2);
         eckey* key2 = find_eckey(key_id2);
-        printf("key: %s\n", key2->private_key_wif);
-        printf("pubkey: %s\n", key2->public_key_hex);
         char* msg2 = "This is a test message";
         signature* sig2 = signmsgwitheckey(key2, msg2);
-        printf("sig2->address: %s\n", sig2->address);
         char* address2 = verifymessagewithsig(sig2, msg2);
         u_assert_str_eq(address2, sig2->address);
         dogecoin_free(address2);
+
+        // test message signature verification failure:
         msg2 = "This is an altered test message";
         address2 = verifymessagewithsig(sig2, msg2);
         u_assert_str_not_eq(address2, sig2->address);
