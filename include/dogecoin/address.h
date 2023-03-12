@@ -121,7 +121,7 @@ LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey
 LIBDOGECOIN_API char* signmsgwithprivatekey(char* privkey, char* msg);
 
 /* verify a message with a address */
-LIBDOGECOIN_API dogecoin_bool verifymessage(char* address, char* sig, char* msg);
+LIBDOGECOIN_API char* verifymessage(char* sig, char* msg);
 
 LIBDOGECOIN_API char* addressFromPrivkey(char* privkey);
 

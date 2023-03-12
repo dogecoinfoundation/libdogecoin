@@ -20,14 +20,20 @@ void test_signmsg() {
     char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
     char* address = "D9HiLDU8ncvkcnajmJgxEQUJYnh3JQsaZE";
     char* sig = signmsgwithprivatekey(privkey, msg);
-    u_assert_int_eq(verifymessage(address, sig, msg), 1);
+    char* address2 = verifymessage(sig, msg);
+    u_assert_str_eq(address2, address);
+    dogecoin_free(address2);
 
     // testcase 2:
     // assert modified msg will cause verification failure:
     msg = "This is a new test message";
-    u_assert_int_eq(verifymessage(address, sig, msg), 0);
+    address2 = verifymessage(sig, msg);
+    u_assert_str_not_eq(address2, address);
+    dogecoin_free(address2);
     msg = "This is just a test message";
-    u_assert_int_eq(verifymessage(address, sig, msg), 1);
+    address2 = verifymessage(sig, msg);
+    u_assert_str_eq(address2, address);
+    dogecoin_free(address2);
     dogecoin_free(sig);
 }
 

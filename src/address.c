@@ -854,17 +854,17 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
 }
 
 /**
- * @brief Verify signed message
+ * @brief Verify signed message using non BIP32 encoded address.
  * 
  * @param address
  * @param sig
  * @param msg
  * 
- * @return True (1) if successful, False (0) otherwise
+ * @return P2PKH address if successful, False (0) otherwise
  * 
  */
-dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
-    if (!(address || sig || msg)) return false;
+char* verifymessage(char* sig, char* msg) {
+    if (!(sig || msg)) return false;
 
 	size_t out_len = b64_decoded_size(sig);
     unsigned char *out = dogecoin_uchar_vla(out_len), 
@@ -872,7 +872,7 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
     int ret = b64_decode(sig, out, out_len);
 	if (!ret) {
         printf("b64_decode failed!\n");
-        return ret;
+        return false;
     }
 
     // double sha256 hash message:
@@ -880,12 +880,12 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
     ret = dogecoin_dblhash((const unsigned char*)msg, strlen(msg), messageBytes);
     if (!ret) {
         printf("messageBytes failed\n");
-        return ret;
+        return false;
     }
     ret = dogecoin_ecc_der_to_compact(out, out_len, sigcomp_out);
     if (!ret) {
         printf("ecc der to compact failed!\n");
-        return ret;
+        return false;
     }
 
     // initialize empty pubkey
@@ -907,29 +907,24 @@ dogecoin_bool verifymessage(char* address, char* sig, char* msg) {
     dogecoin_free(sigcomp_out);
     if (!ret) {
         printf("key sign recover failed!\n");
-        return ret;
+        return false;
     }
     ret = dogecoin_pubkey_verify_sig(&pub_key, messageBytes, out, out_len);
     dogecoin_free(out);
     if (!ret) {
         printf("pubkey sig verification failed!\n");
-        return ret;
+        return false;
     }
 
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
-    char* p2pkh_address = dogecoin_char_vla(strlen(address) + 1);
+    char* p2pkh_address = dogecoin_char_vla(34 + 1);
     ret = dogecoin_pubkey_getaddr_p2pkh(&pub_key, &dogecoin_chainparams_main, p2pkh_address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
-        return ret;
+        return false;
     }
     dogecoin_pubkey_cleanse(&pub_key);
-
-    // compare address derived from recovered pubkey:
-    ret = strncmp(p2pkh_address, address, 35);
-
-    dogecoin_free(p2pkh_address);
-    return ret==0;
+    return p2pkh_address;
 }
 
 /**
