@@ -1025,9 +1025,17 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
     working_sig->recid = recid;
 
     printf("key->public_key: %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
+    // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
+    ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, &dogecoin_chainparams_main, working_sig->address);
+    if (!ret) {
+        printf("derived address from pubkey failed!\n");
+        return ret;
+    }
+    printf("working_sig->address: %s\n", working_sig->address);
     dogecoin_free(sigcmp);
     // base64 encode output and free sig:
     working_sig->content = b64_encode(sig, outlen);
+
     dogecoin_free(sig);
     printf("working_sig: %s\n", working_sig->content);
     printf("----end sign----\n\n");
@@ -1045,8 +1053,8 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
  * @return True (1) if successful, False (0) otherwise
  * 
  */
-dogecoin_bool verifymessagewitheckey(eckey* key, signature* sig, char* msg) {
-    if (!(key || sig || msg)) return false;
+char* verifymessagewithsig(signature* sig, char* msg) {
+    if (!(sig || msg)) return false;
 
     printf("----start verification----\n");
     char* signature_encoded = sig->content;
@@ -1094,19 +1102,30 @@ dogecoin_bool verifymessagewitheckey(eckey* key, signature* sig, char* msg) {
     }
     printf("recid (vm): %d\n", recid);
     printf("pub_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&pubkey, 33));
-    printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
+    // printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     ret = dogecoin_pubkey_verify_sig(&pubkey, messageBytes, out, out_len);
     if (!ret) {
         printf("pubkey sig verification failed!\n");
         return ret;
     }
     dogecoin_free(out);
+    // return ret;
     printf("ret: %d\n", ret);
     printf("pub_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&pubkey, 33));
-    printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
-    ret = memcmp(&pubkey, &key->public_key, 33)==0;
-    printf("ret: %d\n", ret);
-    printf("strncmp(&pubkey.pubkey, &key->public_key.pubkey, 33): %d\n", strncmp(pubkey.pubkey, key->public_key.pubkey, 33));
+
+    // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
+    char* p2pkh_address = dogecoin_char_vla(34 + 1);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&pubkey, &dogecoin_chainparams_main, p2pkh_address);
+    if (!ret) {
+        printf("derived address from pubkey failed!\n");
+        return ret;
+    }
+    printf("p2pkh_address: %s\n", p2pkh_address);
+    // dogecoin_pubkey_cleanse(&pubkey);
+    // printf("key->public_key (vm): %s\n", utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
+    // ret = memcmp(&pubkey, &key->public_key, 33)==0;
+    // printf("ret: %d\n", ret);
+    // printf("strncmp(&pubkey.pubkey, &key->public_key.pubkey, 33): %d\n", strncmp(pubkey.pubkey, key->public_key.pubkey, 33));
     printf("----end verification----\n\n");
-    return ret;
+    return p2pkh_address;
 }

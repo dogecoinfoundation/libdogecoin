@@ -39,11 +39,13 @@ void test_signmsg_ext() {
         eckey* key = find_eckey(key_id);
         printf("key: %s\n", key->private_key_wif);
         printf("pubkey: %s\n", key->public_key_hex);
-        char* address = addressFromPrivkey((char*)key->private_key.privkey);
-        printf("address: %s\n", address);
         char* msg = "This is a test message";
         signature* sig = signmsgwitheckey(key, msg);
-        u_assert_int_eq(verifymessagewitheckey(key, sig, msg), 1);
+        char* address = verifymessagewithsig(sig, msg);
+        u_assert_str_eq(address, sig->address);
+        remove_eckey(key);
+        free_signature(sig);
+        dogecoin_free(address);
 
         // key 2:
         int key_id2 = start_key();
@@ -51,19 +53,17 @@ void test_signmsg_ext() {
         eckey* key2 = find_eckey(key_id2);
         printf("key: %s\n", key2->private_key_wif);
         printf("pubkey: %s\n", key2->public_key_hex);
-        char* address2 = addressFromPrivkey((char*)key2->private_key.privkey);
-        printf("address: %s\n", address2);
         char* msg2 = "This is a test message";
         signature* sig2 = signmsgwitheckey(key2, msg2);
-        u_assert_int_eq(verifymessagewitheckey(key2, sig2, msg2), 1);
-
-        remove_eckey(key);
+        printf("sig2->address: %s\n", sig2->address);
+        char* address2 = verifymessagewithsig(sig2, msg2);
+        u_assert_str_eq(address2, sig2->address);
+        dogecoin_free(address2);
+        msg2 = "This is an altered test message";
+        address2 = verifymessagewithsig(sig2, msg2);
+        u_assert_str_not_eq(address2, sig2->address);
         remove_eckey(key2);
-
-        free_signature(sig);
         free_signature(sig2);
-
-        dogecoin_free(address);
         dogecoin_free(address2);
     }
 }

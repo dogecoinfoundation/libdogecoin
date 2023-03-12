@@ -49,6 +49,7 @@ typedef struct eckey {
 typedef struct signature {
     int idx;
     char* content;
+    char address[35];
     int recid;
     UT_hash_handle hh;
 } signature;
@@ -124,7 +125,7 @@ LIBDOGECOIN_API dogecoin_bool verifymessage(char* address, char* sig, char* msg)
 
 LIBDOGECOIN_API char* addressFromPrivkey(char* privkey);
 
-LIBDOGECOIN_API dogecoin_bool verifymessagewitheckey(eckey* key, signature* sig, char* msg);
+LIBDOGECOIN_API char* verifymessagewithsig(signature* sig, char* msg);
 
 LIBDOGECOIN_API signature* signmsgwitheckey(eckey* key, char* msg);
 
