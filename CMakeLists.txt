@@ -111,7 +111,7 @@ INSTALL(FILES
     include/dogecoin/transaction.h
     include/dogecoin/tx.h
     include/dogecoin/qrengine.h
-    include/uthash/uthash.h
+    include/dogecoin/uthash.h
     include/dogecoin/utils.h
     include/dogecoin/vector.h
     include/dogecoin/wow.h

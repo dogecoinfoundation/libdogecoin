@@ -28,7 +28,7 @@
 #ifndef __LIBDOGECOIN_CONSTANTS_H__
 #define __LIBDOGECOIN_CONSTANTS_H__
 
-#include <dogecoin/dogecoin.h>
+#include "dogecoin.h"
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -38,6 +38,11 @@ LIBDOGECOIN_BEGIN_DECL
 #define WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN 53
 #define DERIVED_PATH_STRINGLEN 33
 /* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
+
+#define DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH 65
+#define DOGECOIN_ECKEY_COMPRESSED_LENGTH 33
+#define DOGECOIN_ECKEY_PKEY_LENGTH 32
+#define DOGECOIN_HASH_LENGTH 32
 
 LIBDOGECOIN_END_DECL
 

@@ -13,7 +13,8 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 lib_LTLIBRARIES = libdogecoin.la
 include_HEADERS = \
     include/dogecoin/constants.h \
-    include/dogecoin/libdogecoin.h
+    include/dogecoin/libdogecoin.h \
+    include/dogecoin/uthash.h
 noinst_HEADERS = \
     include/bip39/index.h \
     include/dogecoin/address.h \
@@ -47,7 +48,6 @@ noinst_HEADERS = \
     include/dogecoin/tool.h \
     include/dogecoin/transaction.h \
     include/dogecoin/tx.h \
-    include/uthash/uthash.h \
     include/dogecoin/utils.h \
     include/dogecoin/vector.h \
     include/dogecoin/wow.h

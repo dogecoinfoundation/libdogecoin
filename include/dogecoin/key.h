@@ -31,7 +31,7 @@
 
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/chainparams.h>
-#include <uthash/uthash.h>
+#include <dogecoin/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -92,7 +92,6 @@ typedef struct eckey {
     char private_key_wif[128];
     dogecoin_pubkey public_key;
     char public_key_hex[128];
-    int recid;
     UT_hash_handle hh;
 } eckey;
 

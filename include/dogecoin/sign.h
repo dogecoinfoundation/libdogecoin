@@ -25,7 +25,7 @@
 #define __LIBDOGECOIN_SIGN_H__
 
 #include <dogecoin/dogecoin.h>
-#include <uthash/uthash.h>
+#include <dogecoin/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
 

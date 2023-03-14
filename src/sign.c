@@ -331,7 +331,6 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
         return false;
     }
 
-    key->recid = recid;
     signature* working_sig = new_signature();
     working_sig->recid = recid;
 

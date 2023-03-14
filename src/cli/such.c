@@ -48,7 +48,7 @@
 #include <dogecoin/winunistd.h>
 #endif
 
-#include <uthash/uthash.h>
+#include <dogecoin/uthash.h>
 
 #include <dogecoin/address.h>
 #include <dogecoin/bip32.h>
