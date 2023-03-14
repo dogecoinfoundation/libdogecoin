@@ -132,6 +132,7 @@ This function signs a message with a private key.
 
 _C usage:_
 ```c
+char* sig = signmsgwithprivatekey("QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2", "This is just a test message");
 ```
 
 _Python usage:_
@@ -216,6 +217,8 @@ This function verifies a signed message using non BIP32 derived address.
 
 _C usage:_
 ```c
+char* address2 = verifymessage(sig, msg);
+// address would need to be verified after this...
 ```
 
 _Python usage:_
@@ -299,6 +302,12 @@ This function signs a message but with `eckey` key structure.
 
 _C usage:_
 ```c
+...
+int key_id = start_key();
+eckey* key = find_eckey(key_id);
+char* msg = "This is a test message";
+signature* sig = signmsgwitheckey(key, msg);
+...
 ```
 
 _Python usage:_
@@ -318,11 +327,11 @@ char* verifymessagewithsig(signature* sig, char* msg) {
     if (!(sig || msg)) return false;
 
     char* signature_encoded = sig->content;
-	size_t out_len = b64_decoded_size(signature_encoded);
+	  size_t out_len = b64_decoded_size(signature_encoded);
     unsigned char *out = dogecoin_uchar_vla(out_len), 
     *sigcomp_out = dogecoin_uchar_vla(65);
     int ret = b64_decode(signature_encoded, out, out_len);
-	if (!ret) {
+	  if (!ret) {
         printf("b64_decode failed!\n");
         return false;
     }
@@ -377,6 +386,13 @@ This function verifies a signed message structure.
 
 _C usage:_
 ```c
+...
+char* address = verifymessagewithsig(sig, msg);
+u_assert_str_eq(address, sig->address);
+remove_eckey(key);
+free_signature(sig);
+dogecoin_free(address);
+...
 ```
 
 _Python usage:_
@@ -469,6 +485,7 @@ This function instantiates a new working signature, but does not add it to the h
 
 _C usage:_
 ```c
+signature* sig = new_signature();
 ```
 
 _Python usage:_
@@ -478,6 +495,7 @@ _Python usage:_
 _Golang usage:_
 ```go
 ```
+
 
 ---
 
@@ -500,58 +518,8 @@ This function takes a pointer to an existing working signature object and adds i
 
 _C usage:_
 ```c
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
----
-
-### **find_signature:**
-
-```c
-signature* find_signature(int idx) {
-    signature* sig;
-    HASH_FIND_INT(signatures, &idx, sig);
-    return sig;
-}
-```
-
-This function takes an index and returns the working signature associated with that index in the hash table.
-
-_C usage:_
-```c
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
----
-
-### **remove_signature:**
-
-```c
-void remove_signature(signature* sig) {
-    HASH_DEL(signatures, sig); /* delete it (signatures advances to next) */
-    sig->recid = 0;
-    dogecoin_free(sig);
-}
-```
-
-This function removes the specified working signature from the hash table and frees the signatures in memory.
-
-_C usage:_
-```c
+signature* sig = new_signature();
+add_signature(sig);
 ```
 
 _Python usage:_
@@ -579,6 +547,66 @@ This function creates a new signature, places it in the hash table, and returns 
 
 _C usage:_
 ```c
+int sig_id = start_signature();
+```
+
+_Python usage:_
+```py
+```
+
+_Golang usage:_
+```go
+```
+
+---
+
+### **find_signature:**
+
+```c
+signature* find_signature(int idx) {
+    signature* sig;
+    HASH_FIND_INT(signatures, &idx, sig);
+    return sig;
+}
+```
+
+This function takes an index and returns the working signature associated with that index in the hash table.
+
+_C usage:_
+```c
+...
+int sig_id = start_signature();
+signature* sig = find_signature(sig_id);
+...
+```
+
+_Python usage:_
+```py
+```
+
+_Golang usage:_
+```go
+```
+
+---
+
+### **remove_signature:**
+
+```c
+void remove_signature(signature* sig) {
+    HASH_DEL(signatures, sig); /* delete it (signatures advances to next) */
+    sig->recid = 0;
+    dogecoin_free(sig);
+}
+```
+
+This function removes the specified working signature from the hash table and frees the signatures in memory.
+
+_C usage:_
+```c
+int sig_id = start_signature();
+signature* sig = find_signature(sig_id);
+remove_signature(sig)
 ```
 
 _Python usage:_
@@ -605,6 +633,17 @@ This function frees the memory allocated for an signature.
 
 _C usage:_
 ```c
+...
+int key_id2 = start_key();
+eckey* key2 = find_eckey(key_id2);
+char* msg2 = "This is a test message";
+signature* sig2 = signmsgwitheckey(key2, msg2);
+char* address2 = verifymessagewithsig(sig2, msg2);
+u_assert_str_eq(address2, sig2->address);
+remove_eckey(key2);
+free_signature(sig2);
+dogecoin_free(address2);
+...
 ```
 
 _Python usage:_
