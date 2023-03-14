@@ -1,6 +1,7 @@
 /*
+
  The MIT License (MIT)
- 
+
  Copyright (c) 2023 bluezr
  Copyright (c) 2023 The Dogecoin Foundation
 
@@ -10,8 +11,10 @@
  the rights to use, copy, modify, merge, publish, distribute, sublicense,
  and/or sell copies of the Software, and to permit persons to whom the
  Software is furnished to do so, subject to the following conditions:
+
  The above copyright notice and this permission notice shall be included
  in all copies or substantial portions of the Software.
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -19,60 +22,50 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
+
 */
 
-#ifndef __LIBDOGECOIN_SIGN_H__
-#define __LIBDOGECOIN_SIGN_H__
+#ifndef __LIBDOGECOIN_ECKEY_H__
+#define __LIBDOGECOIN_ECKEY_H__
 
 #include <dogecoin/dogecoin.h>
-#include <dogecoin/eckey.h>
+#include <dogecoin/key.h>
 #include <dogecoin/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-typedef struct signature {
+/* hashmap functions */
+typedef struct eckey {
     int idx;
-    char* content;
-    char address[35];
-    int recid;
+    dogecoin_key private_key;
+    char private_key_wif[128];
+    dogecoin_pubkey public_key;
+    char public_key_hex[128];
     UT_hash_handle hh;
-} signature;
+} eckey;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-static signature *signatures = NULL;
+static eckey *keys = NULL;
 #pragma GCC diagnostic pop
 
-/* instantiates a new signature */
-LIBDOGECOIN_API signature* new_signature();
+// instantiates a new eckey
+LIBDOGECOIN_API eckey* new_eckey();
 
-/* adds a signature structure to hash table */
-LIBDOGECOIN_API void add_signature(signature *sig);
+// adds eckey structure to hash table
+LIBDOGECOIN_API void add_eckey(eckey *key);
 
-/* finds a signature from the hash table */
-LIBDOGECOIN_API signature* find_signature(int idx);
+// find eckey from the hash table
+LIBDOGECOIN_API eckey* find_eckey(int idx);
 
-/* remove the signature from the hash table */
-LIBDOGECOIN_API void remove_signature(signature *sig);
+// remove eckey from the hash table
+LIBDOGECOIN_API void remove_eckey(eckey *key);
 
-/* instantiates and adds signature to the hash table */
-LIBDOGECOIN_API int start_signature();
+LIBDOGECOIN_API void dogecoin_key_free(eckey* eckey);
 
-/* frees signature from memory */
-LIBDOGECOIN_API void free_signature(signature* sig);
-
-/* sign a message with a private key */
-LIBDOGECOIN_API char* signmsgwithprivatekey(char* privkey, char* msg);
-
-/* sign message with eckey structure */
-LIBDOGECOIN_API signature* signmsgwitheckey(eckey* key, char* msg);
-
-/* verify a message with a address */
-LIBDOGECOIN_API char* verifymessage(char* sig, char* msg);
-
-/* verify a message with a signature structure */
-LIBDOGECOIN_API char* verifymessagewithsig(signature* sig, char* msg);
+// instantiates and adds key to the hash table
+LIBDOGECOIN_API int start_key();
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_SIGN_H__
+#endif // __LIBDOGECOIN_ECKEY_H__

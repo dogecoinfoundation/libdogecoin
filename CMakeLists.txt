@@ -96,6 +96,7 @@ INSTALL(FILES
     include/dogecoin/ctaes.h
     include/dogecoin/dogecoin.h
     include/dogecoin/ecc.h
+    include/dogecoin/eckey.h
     include/dogecoin/hash.h
     include/dogecoin/key.h
     include/dogecoin/koinu.h
@@ -142,6 +143,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/cstr.c
     src/ctaes.c
     src/ecc.c
+    src/eckey.c
     src/key.c
     src/koinu.c
     src/mem.c

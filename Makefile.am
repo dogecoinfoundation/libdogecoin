@@ -31,6 +31,7 @@ noinst_HEADERS = \
     include/dogecoin/ctaes.h \
     include/dogecoin/dogecoin.h \
     include/dogecoin/ecc.h \
+    include/dogecoin/eckey.h \
     include/dogecoin/hash.h \
     include/dogecoin/key.h \
     include/dogecoin/koinu.h \
@@ -68,6 +69,7 @@ libdogecoin_la_SOURCES = \
     src/cstr.c \
     src/ctaes.c \
     src/ecc.c \
+    src/eckey.c \
     src/key.c \
     src/koinu.c \
     src/mem.c \

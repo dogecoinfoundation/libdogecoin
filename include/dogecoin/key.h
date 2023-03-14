@@ -85,36 +85,6 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* 
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
 
-/* hashmap functions */
-typedef struct eckey {
-    int idx;
-    dogecoin_key private_key;
-    char private_key_wif[128];
-    dogecoin_pubkey public_key;
-    char public_key_hex[128];
-    UT_hash_handle hh;
-} eckey;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static eckey *keys = NULL;
-#pragma GCC diagnostic pop
-
-// instantiates a new eckey
-LIBDOGECOIN_API eckey* new_eckey();
-
-// adds eckey structure to hash table
-LIBDOGECOIN_API void add_eckey(eckey *key);
-
-// find eckey from the hash table
-LIBDOGECOIN_API eckey* find_eckey(int idx);
-
-// remove eckey from the hash table
-LIBDOGECOIN_API void remove_eckey(eckey *key);
-
-// instantiates and adds key to the hash table
-LIBDOGECOIN_API int start_key();
-
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_KEY_H__

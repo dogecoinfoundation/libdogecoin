@@ -9,8 +9,7 @@
 
 #include "utest.h"
 
-#include <dogecoin/address.h>
-#include <dogecoin/key.h>
+#include <dogecoin/eckey.h>
 #include <dogecoin/mem.h>
 #include <dogecoin/sign.h>
 #include <dogecoin/tool.h>
