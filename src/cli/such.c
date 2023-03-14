@@ -57,8 +57,10 @@
 #include <dogecoin/cstr.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/ecc.h>
+#include <dogecoin/eckey.h>
 #include <dogecoin/koinu.h>
 #include <dogecoin/serialize.h>
+#include <dogecoin/sign.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/transaction.h>
 #include <dogecoin/tx.h>
@@ -629,8 +631,19 @@ static void print_version()
 static void print_usage()
     {
     print_version();
-    printf("Usage: such (-m|-derived_path <bip_derived_path>) (-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
-    printf("Available commands: generate_public_key (requires -p <wif>), p2pkh (requires -k <public key hex>), generate_private_key, bip32_extended_master_key, generate_mnemonic (-e <hex_entropy>, optional), mnemonic_to_addresses (requires -n <seed_phrase>, -o <account_int> optional, -g <change_level> optional, -i <address_index> optional, -a <pass_phrase> optional), print_keys (requires -p <private key hex>), derive_child_keys (requires -m <custom path> -p <private key>) \n");
+    printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
+    printf("Available commands:\n");
+    printf("generate_public_key (requires -p <wif>),\n");
+    printf("p2pkh (requires -k <public key hex>),\n");
+    printf("generate_private_key,\n");
+    printf("bip32_extended_master_key,\n");
+    printf("generate_mnemonic (-e <hex_entropy>, optional),\n");
+    printf("mnemonic_to_addresses (requires -n <seed_phrase>, -o <account_int> optional, -g <change_level> optional, -i <address_index> optional, -a <pass_phrase> optional),\n");
+    printf("print_keys (requires -p <private key hex>),\n");
+    printf("derive_child_keys (requires -m <custom path> -p <private key>),\n");
+    printf("sign (-x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -p <private key>),\n");
+    printf("comp2der (-s <compact signature>),\n");
+    printf("transaction\n");
     printf("\nExamples: \n");
     printf("Generate a testnet private ec keypair wif/hex:\n");
     printf("> such -c generate_private_key\n\n");
@@ -999,9 +1012,11 @@ int main(int argc, char* argv[])
         }
     else if (strcmp(cmd, "bip32maintotest") == 0) { /* Creating a bip32 master key from a private key. */
         dogecoin_hdnode node;
-        if (!dogecoin_hdnode_deserialize(pkey, chain, &node))
+        printf("pkey: %s\n", pkey);
+        if (!dogecoin_hdnode_deserialize(pkey, chain, &node)) {
+            printf("dogecoin_hd_deserialize failed!\n");
             return false;
-
+        }
         char masterkeyhex[200];
         int strsize = 200;
         dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_test, masterkeyhex, strsize);
