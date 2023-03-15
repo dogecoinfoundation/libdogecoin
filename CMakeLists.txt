@@ -105,9 +105,9 @@ INSTALL(FILES
     include/dogecoin/random.h
     include/dogecoin/rmd160.h
     include/dogecoin/script.h
-    include/dogecoin/sign.h
     include/dogecoin/serialize.h
     include/dogecoin/sha2.h
+    include/dogecoin/sign.h
     include/dogecoin/tool.h
     include/dogecoin/transaction.h
     include/dogecoin/tx.h
@@ -154,9 +154,9 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/random.c
     src/rmd160.c
     src/script.c
-    src/sign.c
     src/serialize.c
     src/sha2.c
+    src/sign.c
     src/cli/tool.c
     src/transaction.c
     src/tx.c
@@ -225,6 +225,7 @@ IF(USE_TESTS)
         test/rmd160_tests.c
         test/serialize_tests.c
         test/sha2_tests.c
+        test/signmsg_tests.c
         test/transaction_tests.c
         test/tx_tests.c
         test/utest.h
