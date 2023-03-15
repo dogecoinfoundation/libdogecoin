@@ -15,13 +15,15 @@ The `such` tool can be used by simply running the command `./such` in the top le
 - generate_public_key
 - p2pkh
 - bip32_extended_master_key
-- bip32maintotest
 - derive_child_keys
 - generate_mnemonic
 - mnemonic_to_addresses
 - print_keys
 - sign
 - comp2der
+- bip32maintotest
+- signmessage
+- verifymessage
 - transaction
 
 So an example run of `such` could be something like this:
@@ -62,6 +64,8 @@ Below is a list of all the commands and the flags that they require. As a remind
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
 | sign                      | -x, -s, -i, -h, -p     | -t   | See the definition of sign_raw_transaction in the Transaction API.
 | comp2der                  | -s                     | None | Convert a compact signature to a DER signature.
+| signmessage               | -x, -p                 | None | Sign a message and output a base64 encoded signature and address.
+| verifymessage             | -x, -s, -k             | None | Verify a message by public key recovery of base64 decoded signature and comparison of addresses.
 | transaction               | None                   | None | Start the interactive transaction app. [Usage instructions below.]() |
 
 Lastly, to display the version of `such`, simply run the following command, which overrides any previous ones specified:
@@ -137,6 +141,18 @@ Below are some examples on how to use the `such` tool in practice.
 
     ./such -c mnemonic_to_addresses -n "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote"
     > Address: DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT
+
+#### Sign an arbitrary message
+
+    ./such -c signmessage -x 'bleh' -p QUmvRbDqoBr4fB7WeyoWPmF725PGpCo1v3zD4NGa2smQs9Vvb3Fu
+    message: bleh
+    content: MEUCIQCVmEHMt9ND1J0RsUQLIkgiANZwJjt983EpEm+g5pXG+wIgYh4WoOS5FRDhWrhetB5sn36ryghae8luyOdXEUHM0IUxAA==
+    address: D5sS39EzjNoK699HBybyBnP6G52JvsjVm7
+
+#### Verify an arbitrary message
+
+    ./such -c verifymessage -x bleh -s MEUCIQCVmEHMt9ND1J0RsUQLIkgiANZwJjt983EpEm+g5pXG+wIgYh4WoOS5FRDhWrhetB5sn36ryghae8luyOdXEUHM0IUxAA== -k D5sS39EzjNoK699HBybyBnP6G52JvsjVm7
+    Message is verified!
 
 ### Interactive Transaction Building with `such`
 
