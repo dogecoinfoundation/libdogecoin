@@ -66,9 +66,6 @@ LIBDOGECOIN_API int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_mas
 /* verify that a HD master key and a dogecoin address matches a mnemonic */
 LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
 
-/* derive p2pkh address from private key */
-LIBDOGECOIN_API char* addressFromPrivkey(char* privkey);
-
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_ADDRESS_H__
