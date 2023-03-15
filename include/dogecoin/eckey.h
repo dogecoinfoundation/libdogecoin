@@ -50,7 +50,7 @@ static eckey *keys = NULL;
 #pragma GCC diagnostic pop
 
 // instantiates a new eckey
-LIBDOGECOIN_API eckey* new_eckey();
+LIBDOGECOIN_API eckey* new_eckey(dogecoin_bool is_testnet);
 
 LIBDOGECOIN_API eckey* new_eckey_from_privkey(char* key);
 
@@ -66,7 +66,7 @@ LIBDOGECOIN_API void remove_eckey(eckey *key);
 LIBDOGECOIN_API void dogecoin_key_free(eckey* eckey);
 
 // instantiates and adds key to the hash table
-LIBDOGECOIN_API int start_key();
+LIBDOGECOIN_API int start_key(dogecoin_bool is_testnet);
 
 LIBDOGECOIN_END_DECL
 

@@ -84,7 +84,7 @@ This is an empty collection of key structures and meant for internal consumption
 ### **new_eckey:**
 
 ```c
-eckey* new_eckey() {
+eckey* new_eckey(dogecoin_bool is_testnet) {
     eckey* key = (struct eckey*)dogecoin_calloc(1, sizeof *key);
     dogecoin_privkey_init(&key->private_key);
     assert(dogecoin_privkey_is_valid(&key->private_key) == 0);
@@ -95,7 +95,8 @@ eckey* new_eckey() {
     assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     uint8_t pkeybase58c[34];
-    pkeybase58c[0] = dogecoin_chainparams_main.b58prefix_secret_address;
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+    pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
@@ -108,7 +109,7 @@ This function instantiates a new working key, but does not add it to the hash ta
 
 _C usage:_
 ```c
-eckey* key = new_eckey();
+eckey* key = new_eckey(false);
 ```
 
 ---
@@ -119,7 +120,8 @@ eckey* key = new_eckey();
 eckey* new_eckey_from_privkey(char* private_key) {
     eckey* key = (struct eckey*)dogecoin_calloc(1, sizeof *key);
     dogecoin_privkey_init(&key->private_key);
-    if (!dogecoin_privkey_decode_wif(private_key, &dogecoin_chainparams_main, &key->private_key)) {
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(private_key);
+    if (!dogecoin_privkey_decode_wif(private_key, chain, &key->private_key)) {
         printf("decoding wif failed!\n");
         return false;
     }
@@ -129,7 +131,7 @@ eckey* new_eckey_from_privkey(char* private_key) {
     assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     uint8_t pkeybase58c[34];
-    pkeybase58c[0] = dogecoin_chainparams_main.b58prefix_secret_address;
+    pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
@@ -170,7 +172,7 @@ This function takes a pointer to an existing working eckey object and adds it to
 
 _C usage:_
 ```c
-eckey* key = new_eckey();
+eckey* key = new_eckey(false);
 add_eckey(key);
 ```
 
@@ -179,8 +181,8 @@ add_eckey(key);
 ### **start_key:**
 
 ```c
-int start_key() {
-    eckey* key = new_eckey();
+int start_key(dogecoin_bool is_testnet) {
+    eckey* key = new_eckey(is_testnet);
     int index = key->idx;
     add_eckey(key);
     return index;
@@ -191,7 +193,7 @@ This function creates a new eckey, places it in the hash table, and returns the 
 
 _C usage:_
 ```c
-int key_id = start_key();
+int key_id = start_key(false);
 ```
 
 ---
@@ -211,7 +213,7 @@ This function takes an index and returns the working eckey associated with that 
 _C usage:_
 ```c
 ...
-int key_id = start_key();
+int key_id = start_key(false);
 eckey* key = find_eckey(key_id);
 ...
 ```
@@ -233,7 +235,7 @@ This function removes the specified working eckey from the hash table and frees 
 
 _C usage:_
 ```c
-int key_id = start_key();
+int key_id = start_key(false);
 eckey* key = find_eckey(key_id);
 remove_eckey(key)
 ```

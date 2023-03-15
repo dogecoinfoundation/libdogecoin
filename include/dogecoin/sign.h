@@ -68,7 +68,7 @@ LIBDOGECOIN_API char* signmsgwithprivatekey(char* privkey, char* msg);
 LIBDOGECOIN_API signature* signmsgwitheckey(eckey* key, char* msg);
 
 /* verify a message with a address */
-LIBDOGECOIN_API char* verifymessage(char* sig, char* msg);
+LIBDOGECOIN_API int verifymessage(char* sig, char* msg, char* address);
 
 /* verify a message with a signature structure */
 LIBDOGECOIN_API char* verifymessagewithsig(signature* sig, char* msg);

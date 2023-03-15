@@ -134,11 +134,11 @@ char* sig = signmsgwithprivatekey("QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP
 ### **verifymessage:**
 
 ```c
-char* verifymessage(char* sig, char* msg) {
+int verifymessage(char* sig, char* msg, char* address) {
     if (!(sig || msg)) return false;
 
 	  size_t out_len = b64_decoded_size(sig);
-    unsigned char *out = dogecoin_uchar_vla(out_len), 
+    unsigned char *out = dogecoin_uchar_vla(out_len),
     *sigcomp_out = dogecoin_uchar_vla(65);
     int ret = b64_decode(sig, out, out_len);
 	  if (!ret) {
@@ -185,16 +185,19 @@ char* verifymessage(char* sig, char* msg) {
         return false;
     }
 
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(address);
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     char* p2pkh_address = dogecoin_char_vla(34 + 1);
-    ret = dogecoin_pubkey_getaddr_p2pkh(&pub_key, &dogecoin_chainparams_main, p2pkh_address);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&pub_key, chain, p2pkh_address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
         return false;
     }
     dogecoin_pubkey_cleanse(&pub_key);
 
-    return p2pkh_address;
+    ret = strcmp(p2pkh_address, address)==0;
+    dogecoin_free(p2pkh_address);
+    return ret;
 }
 ```
 
@@ -202,8 +205,11 @@ This function verifies a signed message using non BIP32 derived address.
 
 _C usage:_
 ```c
-char* address2 = verifymessage(sig, msg);
-// address would need to be verified after this...
+char* address = "DA8aeVkgQWwo78y3VCXtLqoWe8uWRoFuc1";
+int ret = verifymessage(sig, msg, address);
+if (!ret) {
+  return false;
+}
 ```
 
 ---
@@ -220,7 +226,7 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
 
     // vars for signing
     size_t outlen = 74, outlencmp = 64;
-    unsigned char *sig = dogecoin_uchar_vla(outlen), 
+    unsigned char *sig = dogecoin_uchar_vla(outlen),
     *sigcmp = dogecoin_uchar_vla(outlencmp);
 
     // sign hash
@@ -267,8 +273,9 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
         outlen += 2;
     }
 
+    const dogecoin_chainparams* chain = chain_from_b58_prefix((const char*)key->private_key_wif);
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
-    ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, &dogecoin_chainparams_main, working_sig->address);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, working_sig->address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
         return false;
@@ -289,7 +296,7 @@ This function signs a message but with `eckey` key structure.
 _C usage:_
 ```c
 ...
-int key_id = start_key();
+int key_id = start_key(false);
 eckey* key = find_eckey(key_id);
 char* msg = "This is a test message";
 signature* sig = signmsgwitheckey(key, msg);
@@ -352,9 +359,9 @@ char* verifymessagewithsig(signature* sig, char* msg) {
     }
     dogecoin_free(out);
 
-    // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     char* p2pkh_address = dogecoin_char_vla(34 + 1);
-    ret = dogecoin_pubkey_getaddr_p2pkh(&pubkey, &dogecoin_chainparams_main, p2pkh_address);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(sig->address);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
         return false;

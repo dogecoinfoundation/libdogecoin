@@ -1091,13 +1091,11 @@ int main(int argc, char* argv[])
             return showError("tx too large (max 100kb)\n");
             }
 
-        char* address = verifymessage(scripthex, txhex);
-        if (strcmp(address, pubkey)==0) {
+        if (verifymessage(scripthex, txhex, pubkey)) {
             printf("Message is verified!\n");
         } else {
             printf("Message is not valid!\n");
         }
-        dogecoin_free(address);
         }
     else if (strcmp(cmd, "transaction") == 0) {
         main_menu();

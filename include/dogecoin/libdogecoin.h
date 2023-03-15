@@ -256,7 +256,7 @@ void free_signature(signature* sig);
 char* signmsgwithprivatekey(char* privkey, char* msg);
 
 /* Verify signed message */
-char* verifymessage(char* sig, char* msg);
+int verifymessage(char* sig, char* msg, char* address);
 
 /* Sign message with eckey struct and output signature struct */
 signature* signmsgwitheckey(eckey* key, char* msg);

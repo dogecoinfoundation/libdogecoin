@@ -38,8 +38,8 @@
 /**
  * @brief This function instantiates a new working signature,
  * but does not add it to the hash table.
- * 
- * @return A pointer to the new working signature. 
+ *
+ * @return A pointer to the new working signature.
  */
 signature* new_signature() {
     signature* sig = (struct signature*)dogecoin_calloc(1, sizeof *sig);
@@ -51,9 +51,9 @@ signature* new_signature() {
 /**
  * @brief This function takes a pointer to an existing working
  * signature object and adds it to the hash table.
- * 
+ *
  * @param sig The pointer to the working signature.
- * 
+ *
  * @return Nothing.
  */
 void add_signature(signature *sig) {
@@ -70,9 +70,9 @@ void add_signature(signature *sig) {
 /**
  * @brief This function takes an index and returns the working
  * signature associated with that index in the hash table.
- * 
+ *
  * @param idx The index of the target working signature.
- * 
+ *
  * @return The pointer to the working signature associated with
  * the provided index.
  */
@@ -85,9 +85,9 @@ signature* find_signature(int idx) {
 /**
  * @brief This function removes the specified working signature
  * from the hash table and frees the signatures in memory.
- * 
+ *
  * @param sig The pointer to the signature to remove.
- * 
+ *
  * @return Nothing.
  */
 void remove_signature(signature* sig) {
@@ -100,7 +100,7 @@ void remove_signature(signature* sig) {
  * @brief This function creates a new sig, places it in
  * the hash table, and returns the index of the new sig,
  * starting from 1 and incrementing each subsequent call.
- * 
+ *
  * @return The index of the new sig.
  */
 int start_signature() {
@@ -113,9 +113,9 @@ int start_signature() {
 /**
  * @brief This function frees the memory allocated
  * for an sig.
- * 
+ *
  * @param sig The pointer to the sig to be freed.
- * 
+ *
  * @return Nothing.
  */
 void free_signature(signature* sig)
@@ -126,19 +126,19 @@ void free_signature(signature* sig)
 
 /**
  * @brief Sign message with private key
- * 
+ *
  * @param privkey The key to sign the message with.
  * @param message The message to be signed.
- * 
+ *
  * @return Base64 encoded signature if successful, False (0) if not
- * 
+ *
  */
 char* signmsgwithprivatekey(char* privkey, char* msg) {
     if (!privkey || !msg) return false;
 
     // vars for signing
     size_t outlen = 74, outlencmp = 64;
-    unsigned char *sig = dogecoin_uchar_vla(outlen), 
+    unsigned char *sig = dogecoin_uchar_vla(outlen),
     *sigcmp = dogecoin_uchar_vla(outlencmp);
 
     // retrieve double sha256 hash of msg:
@@ -148,7 +148,8 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     assert(dogecoin_privkey_is_valid(&key) == 0);
-    ret = dogecoin_privkey_decode_wif(privkey, &dogecoin_chainparams_main, &key);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(privkey);
+    ret = dogecoin_privkey_decode_wif(privkey, chain, &key);
     if (!ret) {
         return false;
     }
@@ -221,19 +222,19 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
 
 /**
  * @brief Verify signed message using non BIP32 encoded address.
- * 
- * @param address
+ *
  * @param sig
  * @param msg
- * 
+ * @param address
+ *
  * @return P2PKH address if successful, False (0) otherwise
- * 
+ *
  */
-char* verifymessage(char* sig, char* msg) {
+int verifymessage(char* sig, char* msg, char* address) {
     if (!(sig || msg)) return false;
 
 	size_t out_len = b64_decoded_size(sig);
-    unsigned char *out = dogecoin_uchar_vla(out_len), 
+    unsigned char *out = dogecoin_uchar_vla(out_len),
     *sigcomp_out = dogecoin_uchar_vla(65);
     int ret = b64_decode(sig, out, out_len);
 	if (!ret) {
@@ -280,26 +281,29 @@ char* verifymessage(char* sig, char* msg) {
         return false;
     }
 
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(address);
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     char* p2pkh_address = dogecoin_char_vla(34 + 1);
-    ret = dogecoin_pubkey_getaddr_p2pkh(&pub_key, &dogecoin_chainparams_main, p2pkh_address);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&pub_key, chain, p2pkh_address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
         return false;
     }
     dogecoin_pubkey_cleanse(&pub_key);
 
-    return p2pkh_address;
+    ret = strcmp(p2pkh_address, address)==0;
+    dogecoin_free(p2pkh_address);
+    return ret;
 }
 
 /**
  * @brief Sign message with private key
- * 
+ *
  * @param key The key to sign the message with.
- * @param message The message to be signed.
- * 
+ * @param msg The message to be signed.
+ *
  * @return Signature struct with base64 encoded signature and recid if successful, False (0) if not
- * 
+ *
  */
 signature* signmsgwitheckey(eckey* key, char* msg) {
     if (!key || !msg) return false;
@@ -310,7 +314,7 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
 
     // vars for signing
     size_t outlen = 74, outlencmp = 64;
-    unsigned char *sig = dogecoin_uchar_vla(outlen), 
+    unsigned char *sig = dogecoin_uchar_vla(outlen),
     *sigcmp = dogecoin_uchar_vla(outlencmp);
 
     // sign hash
@@ -357,8 +361,9 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
         outlen += 2;
     }
 
+    const dogecoin_chainparams* chain = chain_from_b58_prefix((const char*)key->private_key_wif);
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
-    ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, &dogecoin_chainparams_main, working_sig->address);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, working_sig->address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
         return false;
@@ -375,20 +380,20 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
 
 /**
  * @brief Verify signed message
- * 
+ *
  * @param address
  * @param sig
  * @param msg
- * 
+ *
  * @return P2PKH address if successful, False (0) otherwise
- * 
+ *
  */
 char* verifymessagewithsig(signature* sig, char* msg) {
     if (!(sig || msg)) return false;
 
     char* signature_encoded = sig->content;
 	size_t out_len = b64_decoded_size(signature_encoded);
-    unsigned char *out = dogecoin_uchar_vla(out_len), 
+    unsigned char *out = dogecoin_uchar_vla(out_len),
     *sigcomp_out = dogecoin_uchar_vla(65);
     int ret = b64_decode(signature_encoded, out, out_len);
 	if (!ret) {
@@ -434,9 +439,9 @@ char* verifymessagewithsig(signature* sig, char* msg) {
     }
     dogecoin_free(out);
 
-    // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     char* p2pkh_address = dogecoin_char_vla(34 + 1);
-    ret = dogecoin_pubkey_getaddr_p2pkh(&pubkey, &dogecoin_chainparams_main, p2pkh_address);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(sig->address);
+    ret = dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, p2pkh_address);
     if (!ret) {
         printf("derived address from pubkey failed!\n");
         return false;

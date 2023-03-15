@@ -204,40 +204,31 @@ int main() {
     char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
     char* address = "D6a52RGbfvKDzKTh8carkGd1vNdAurHmaS";
     char* sig = signmsgwithprivatekey(privkey, msg);
-    char* address2 = verifymessage(sig, msg);
-	if (strcmp(address, address2)==0) {
+	if (verifymessage(sig, msg, address)) {
 		printf("Addresses match!\n");
-		printf("%s\n%s\n", address, address2);
 	} else {
 		printf("Addresses do not match!\n");
 		return -1;
 	}
-    dogecoin_free(address2);
 
     // testcase 2:
     // assert modified msg will cause verification failure:
     msg = "This is a new test message";
-    address2 = verifymessage(sig, msg);
-	if (strcmp(address, address2) != 0) {
+	if (!verifymessage(sig, msg, address)) {
 		printf("Addresses do not match!\n");
-		printf("%s\n%s\n", address, address2);
 	} else {
 		printf("Addresses match!\n");
 		return -1;
 	}
-    dogecoin_free(address2);
 
 	// testcase 3:
     msg = "This is just a test message";
-    address2 = verifymessage(sig, msg);
-	if (strcmp(address, address2)==0) {
+	if (verifymessage(sig, msg, address)) {
 		printf("Addresses match!\n");
-		printf("%s\n%s\n", address, address2);
 	} else {
 		printf("Addresses do not match!\n");
 		return -1;
 	}
-    dogecoin_free(address2);
     dogecoin_free(sig);
 	// END ===========================================
 
