@@ -26,27 +26,7 @@ This document describes the process of message signing within libdogecoin. It ai
 
 ## Specification
 
-Cited from [BIP-137](https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki):
-
-### Background on ECDSA Signatures
-
-(For readers who already understand how ECDSA signatures work, you can skip this section as this is only intended as background information.) Elliptic Curve Digital Signature Algorithm or ECDSA is a cryptographic algorithm used by Bitcoin to ensure that funds can only be spent by their rightful owners.
-
-A few concepts related to ECDSA:
-
- - #### private key: A secret number, known only to the person that generated it. A private key is essentially a randomly generated number. In Bitcoin, someone with the private key that corresponds to funds on the block chain can spend the funds. In Bitcoin, a private key is a single unsigned 256 bit integer (32 bytes).
-
- - #### public key: A number that corresponds to a private key, but does not need to be kept secret. A public key can be calculated from a private key, but not vice versa. A public key can be used to determine if a signature is genuine (in other words, produced with the proper key) without requiring the private key to be divulged. In Bitcoin, public keys are either compressed or uncompressed. Compressed public keys are 33 bytes, consisting of a prefix either 0x02 or 0x03, and a 256-bit integer called x. The older uncompressed keys are 65 bytes, consisting of constant prefix (0x04), followed by two 256-bit integers called x and y (2 * 32 bytes). The prefix of a compressed key allows for the y value to be derived from the x value.
-
- - #### signature: A number that proves that a signing operation took place. A signature is mathematically generated from a hash of something to be signed, plus a private key. The signature itself is two numbers known as r and s. With the public key, a mathematical algorithm can be used on the signature to determine that it was originally produced from the hash and the private key, without needing to know the private key. Signatures are either 73, 72, or 71 bytes long, with probabilities approximately 25%, 50% and 25% respectively, although sizes even smaller than that are possible with exponentially decreasing probability.
-
-### Conventions with signatures used in Dogecoin
-
-Dogecoin signatures have the r and s values mentioned above, and a header. The header is a single byte and the r and s are each 32 bytes so a compact signature's size is 65 bytes. The header is used to specify information about the signature. It can be thought of as a bitmask with each bit in this byte having a meaning. The serialization format of a compact Dogecoin signature is as follows:
-
-[1][32][32]
-
-The header byte has a few components to it. First, it stores something known as the recId. This value is stored in the least significant 2 bits of the header.
+One caveat that differentiates this implementation from others is that if the `recid` is not equal to 0 it will be appended to the end of the signature prior to the base64 encoding and decoding steps as this allows the public key to be retrieved successfully on the client side, therefore a modicum of caution should be expressed when dealing with publicly accessible base64 encoded strings, addresses, et al.
 
 ## Basic Signing API
 
@@ -70,9 +50,10 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     assert(dogecoin_privkey_is_valid(&key) == 0);
-
-    // copy byte array utils_hex_to_uint8(privkey) to dogecoin_key.privkey:
-    memcpy(key.privkey, utils_hex_to_uint8(privkey), strlen(privkey) / 2 + 1);
+    ret = dogecoin_privkey_decode_wif(privkey, &dogecoin_chainparams_main, &key);
+    if (!ret) {
+        return false;
+    }
     ret = dogecoin_privkey_is_valid(&key);
     assert(ret == 1);
 
@@ -99,7 +80,9 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
         pubkey.compressed = true;
         header -= 24;
     }
+
     int recid = header - 24;
+
     // sign compact for recovery of pubkey and free privkey:
     ret = dogecoin_key_sign_hash_compact_recoverable(&key, msgBytes, sigcmp, &outlencmp, &recid);
     if (!ret) {
@@ -115,6 +98,17 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
     if (!ret) {
         printf("pubkey sig verification failed!\n");
         return false;
+    }
+
+    if (recid != 0) {
+        char tmp[2];
+        snprintf(tmp, 2, "%d", recid);
+        size_t i = 0;
+        for (i = 0; memcmp(&tmp[i], "\0", 1) != 0; i++) {
+            sig[outlen + i] = tmp[i];
+        }
+        memcpy(&sig[outlen + i], "\0", 1);
+        outlen += 2;
     }
 
     dogecoin_free(sigcmp);
@@ -135,14 +129,6 @@ _C usage:_
 char* sig = signmsgwithprivatekey("QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2", "This is just a test message");
 ```
 
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 ---
 
 ### **verifymessage:**
@@ -160,6 +146,12 @@ char* verifymessage(char* sig, char* msg) {
         return false;
     }
 
+    char* tmp = utils_uint8_to_hex(&out[out_len - 2], 1);
+    int recid = atoi(&tmp[1]);
+    if (recid != 0) {
+        out_len -= 2;
+    }
+
     // double sha256 hash message:
     uint256 messageBytes;
     ret = dogecoin_dblhash((const unsigned char*)msg, strlen(msg), messageBytes);
@@ -167,6 +159,7 @@ char* verifymessage(char* sig, char* msg) {
         printf("messageBytes failed\n");
         return false;
     }
+
     ret = dogecoin_ecc_der_to_compact(out, out_len, sigcomp_out);
     if (!ret) {
         printf("ecc der to compact failed!\n");
@@ -177,15 +170,6 @@ char* verifymessage(char* sig, char* msg) {
     dogecoin_pubkey pub_key;
     dogecoin_pubkey_init(&pub_key);
     pub_key.compressed = false;
-
-    int header = (out[0] & 0xFF);
-
-    if (header >= 31) { // this is a compressed key signature
-        pub_key.compressed = true;
-        header -= 24;
-    }
-
-    int recid = header - 24;
 
     // recover pubkey
     ret = dogecoin_key_sign_recover_pubkey((const unsigned char*)sigcomp_out, messageBytes, recid, &pub_key);
@@ -209,6 +193,7 @@ char* verifymessage(char* sig, char* msg) {
         return false;
     }
     dogecoin_pubkey_cleanse(&pub_key);
+
     return p2pkh_address;
 }
 ```
@@ -219,14 +204,6 @@ _C usage:_
 ```c
 char* address2 = verifymessage(sig, msg);
 // address would need to be verified after this...
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
 ```
 
 ---
@@ -277,9 +254,18 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
         return false;
     }
 
-    key->recid = recid;
     signature* working_sig = new_signature();
     working_sig->recid = recid;
+    if (recid != 0) {
+        char tmp[2];
+        snprintf(tmp, 2, "%d", recid);
+        size_t i = 0;
+        for (i = 0; memcmp(&tmp[i], "\0", 1) != 0; i++) {
+            sig[outlen + i] = tmp[i];
+        }
+        memcpy(&sig[outlen + i], "\0", 1);
+        outlen += 2;
+    }
 
     // derive p2pkh address from new injected dogecoin_pubkey with known hexadecimal public key:
     ret = dogecoin_pubkey_getaddr_p2pkh(&key->public_key, &dogecoin_chainparams_main, working_sig->address);
@@ -310,14 +296,6 @@ signature* sig = signmsgwitheckey(key, msg);
 ...
 ```
 
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 ---
 
 ### **verifymessagewithsig:**
@@ -337,6 +315,9 @@ char* verifymessagewithsig(signature* sig, char* msg) {
     }
 
     int recid = sig->recid;
+    if (recid != 0) {
+        out_len -= 2;
+    }
 
     // double sha256 hash message:
     uint256 messageBytes;
@@ -395,14 +376,6 @@ dogecoin_free(address);
 ...
 ```
 
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 
 ## Advanced Signing API
 
@@ -439,14 +412,6 @@ int main() {
 }
 ```
 
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 ---
 ### **signatures:**
 
@@ -458,14 +423,6 @@ This is an empty collection of signature structures and meant for internal consu
 
 _C usage:_
 ```c
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
 ```
 
 ---
@@ -487,15 +444,6 @@ _C usage:_
 ```c
 signature* sig = new_signature();
 ```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 
 ---
 
@@ -522,14 +470,6 @@ signature* sig = new_signature();
 add_signature(sig);
 ```
 
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 ---
 
 ### **start_signature:**
@@ -548,14 +488,6 @@ This function creates a new signature, places it in the hash table, and returns 
 _C usage:_
 ```c
 int sig_id = start_signature();
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
 ```
 
 ---
@@ -580,14 +512,6 @@ signature* sig = find_signature(sig_id);
 ...
 ```
 
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
-```
-
 ---
 
 ### **remove_signature:**
@@ -607,14 +531,6 @@ _C usage:_
 int sig_id = start_signature();
 signature* sig = find_signature(sig_id);
 remove_signature(sig)
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
 ```
 
 ---
@@ -644,12 +560,4 @@ remove_eckey(key2);
 free_signature(sig2);
 dogecoin_free(address2);
 ...
-```
-
-_Python usage:_
-```py
-```
-
-_Golang usage:_
-```go
 ```

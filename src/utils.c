@@ -492,7 +492,6 @@ void append(char* s, char* t)
     size_t i = 0, length = 0;
     /* get length of char* s */
     for (; memcmp(&s[i], "\0", 1) != 0; i++) length++;
-
     /*  append char* t to char* s */
     for (i = 0; memcmp(&t[i], "\0", 1) != 0; i++) {
         s[length + i] = t[i];

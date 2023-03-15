@@ -19,7 +19,7 @@ void test_signmsg() {
     // sign and verify:
     char* msg = "This is just a test message";
     char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
-    char* address = "D9HiLDU8ncvkcnajmJgxEQUJYnh3JQsaZE";
+    char* address = "D6a52RGbfvKDzKTh8carkGd1vNdAurHmaS";
     char* sig = signmsgwithprivatekey(privkey, msg);
     char* address2 = verifymessage(sig, msg);
     u_assert_str_eq(address2, address);
@@ -68,4 +68,20 @@ void test_signmsg_ext() {
         free_signature(sig2);
         dogecoin_free(address2);
     }
+
+    // key 1:
+    char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
+    eckey* key = new_eckey_from_privkey(privkey);
+    char* msg = "This is a test message";
+    signature* sig = signmsgwitheckey(key, msg);
+    char* address = verifymessagewithsig(sig, msg);
+    u_assert_str_eq(address, sig->address);
+    char* sig2 = signmsgwithprivatekey(privkey, msg);
+    char* address2 = verifymessage(sig2, msg);
+    u_assert_str_eq(address2, sig->address);
+    free_signature(sig);
+    dogecoin_free(sig2);
+    dogecoin_free(key);
+    dogecoin_free(address);
+    dogecoin_free(address2);
 }

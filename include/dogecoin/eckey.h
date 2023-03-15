@@ -52,6 +52,8 @@ static eckey *keys = NULL;
 // instantiates a new eckey
 LIBDOGECOIN_API eckey* new_eckey();
 
+LIBDOGECOIN_API eckey* new_eckey_from_privkey(char* key);
+
 // adds eckey structure to hash table
 LIBDOGECOIN_API void add_eckey(eckey *key);
 

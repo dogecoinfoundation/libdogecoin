@@ -10,6 +10,7 @@
     - [**eckey:**](#eckey)
     - [**keys:**](#keys)
     - [**new_eckey:**](#new_eckey)
+    - [**new_eckey_from_privkey:**](#new_eckey_from_privkey)
     - [**add_eckey:**](#add_eckey)
     - [**start_key:**](#start_key)
     - [**find_eckey:**](#find_eckey)
@@ -108,6 +109,44 @@ This function instantiates a new working key, but does not add it to the hash ta
 _C usage:_
 ```c
 eckey* key = new_eckey();
+```
+
+---
+
+### **new_eckey_from_privkey:**
+
+```c
+eckey* new_eckey_from_privkey(char* private_key) {
+    eckey* key = (struct eckey*)dogecoin_calloc(1, sizeof *key);
+    dogecoin_privkey_init(&key->private_key);
+    if (!dogecoin_privkey_decode_wif(private_key, &dogecoin_chainparams_main, &key->private_key)) {
+        printf("decoding wif failed!\n");
+        return false;
+    }
+    assert(dogecoin_privkey_is_valid(&key->private_key)==1);
+    dogecoin_pubkey_init(&key->public_key);
+    dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
+    assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
+    strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
+    uint8_t pkeybase58c[34];
+    pkeybase58c[0] = dogecoin_chainparams_main.b58prefix_secret_address;
+    pkeybase58c[33] = 1; /* always use compressed keys */
+    memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
+    assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
+    key->idx = HASH_COUNT(keys) + 1;
+    return key;
+}
+```
+
+This function instantiates a new working key from a `private_key` in WIF format, but does not add it to the hash table.
+
+_C usage:_
+```c
+char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
+eckey* key = new_eckey_from_privkey(privkey);
+...
+
+dogecoin_free(key);
 ```
 
 ---
