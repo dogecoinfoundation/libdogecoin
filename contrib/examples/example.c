@@ -202,7 +202,7 @@ int main() {
 	printf("\n\nBEGIN BASIC MESSAGE SIGNING:\n\n");
 	char* msg = "This is just a test message";
     char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
-    char* address = "D9HiLDU8ncvkcnajmJgxEQUJYnh3JQsaZE";
+    char* address = "D6a52RGbfvKDzKTh8carkGd1vNdAurHmaS";
     char* sig = signmsgwithprivatekey(privkey, msg);
     char* address2 = verifymessage(sig, msg);
 	if (strcmp(address, address2)==0) {
