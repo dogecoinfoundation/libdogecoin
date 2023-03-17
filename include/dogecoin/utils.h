@@ -35,6 +35,7 @@
 #include <dogecoin/cstr.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/vector.h>
 
 #define TO_UINT8_HEX_BUF_LEN 2048
 #define VARINT_LEN 20
@@ -69,6 +70,12 @@ LIBDOGECOIN_API char *b64_encode(const unsigned char *in, size_t len);
 LIBDOGECOIN_API int b64_decode(const char *in, unsigned char *out, size_t outlen);
 LIBDOGECOIN_API size_t b64_decoded_size(const char *in);
 LIBDOGECOIN_API char* itoa_s(int32_t i, char* buf);
+LIBDOGECOIN_API char* base64_encode(const unsigned char *src, size_t len);
+LIBDOGECOIN_API char* b64decode(const void* data, const size_t len);
+LIBDOGECOIN_API char* EncodeBase64(const char* str);
+LIBDOGECOIN_API char* _EncodeBase64(const unsigned char* pch, size_t len);
+LIBDOGECOIN_API char* DecodeBase64(const char* str);
+LIBDOGECOIN_API vector* _DecodeBase64(const char* p, bool* pfInvalid);
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */
