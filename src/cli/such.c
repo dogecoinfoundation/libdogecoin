@@ -1076,7 +1076,7 @@ int main(int argc, char* argv[])
         eckey* key = new_eckey_from_privkey(pkey);
         signature* sig = signmsgwitheckey(key, txhex);
         printf("message: %s\n", txhex);
-        printf("content: %s\n", sig->content);
+        printf("content: %s\n", sig->der);
         printf("address: %s\n", sig->address);
         dogecoin_free(key);
         free_signature(sig);

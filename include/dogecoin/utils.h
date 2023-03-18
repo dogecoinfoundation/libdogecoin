@@ -71,7 +71,7 @@ LIBDOGECOIN_API int b64_decode(const char *in, unsigned char *out, size_t outlen
 LIBDOGECOIN_API size_t b64_decoded_size(const char *in);
 LIBDOGECOIN_API char* itoa_s(int32_t i, char* buf);
 LIBDOGECOIN_API char* base64_encode(const unsigned char *src, size_t len);
-LIBDOGECOIN_API char* b64decode(const void* data, const size_t len);
+LIBDOGECOIN_API char* base64_decode(const void* data, const size_t len);
 LIBDOGECOIN_API char* EncodeBase64(const char* str);
 LIBDOGECOIN_API char* _EncodeBase64(const unsigned char* pch, size_t len);
 LIBDOGECOIN_API char* DecodeBase64(const char* str);

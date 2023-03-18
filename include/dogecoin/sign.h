@@ -32,7 +32,7 @@ LIBDOGECOIN_BEGIN_DECL
 
 typedef struct signature {
     int idx;
-    char* content;
+    char* der;
     char address[35];
     int recid;
     UT_hash_handle hh;

@@ -600,8 +600,8 @@ char *b64_encode(const unsigned char *in, size_t len)
 		return "";
 
 	elen = b64_encoded_size(len);
-	out  = malloc(elen+1);
-	out[elen] = '\0';
+	out  = dogecoin_char_vla((elen + 2 / 3 * 4) + 1);
+	out[elen + 2 / 3 * 4] = '\0';
 
 	for (i=0, j=0; i<len; i+=3, j+=4) {
 		v = in[i];
@@ -787,7 +787,7 @@ static const int B64index[256] = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 0,  0,  0, 63,  0, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51 };
 
-char* b64decode(const void* data, const size_t len)
+char* base64_decode(const void* data, const size_t len)
 {
     unsigned char* p = (unsigned char*)data;
     int pad = len > 0 && (len % 4 || p[len - 1] == '=');
@@ -830,23 +830,18 @@ char* _EncodeBase64(const unsigned char* pch, size_t len)
     // pch = utils_uint8_to_hex(pch, len);
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    size_t olen;
+    char* strRet = dogecoin_malloc(len);
+    strRet[len] = '\0';
 
-    olen = (((len + 2) / 3) * 4); /* 3-byte blocks to 4-byte */
-    if (olen < len)
-        return false; /* integer overflow */
-
-    char* strRet = ""; 
-    strRet = dogecoin_char_vla(olen);
+    if (strcmp(strRet, "")==0) return strRet;
 
     int mode=0, left=0;
     const unsigned char *pchEnd = pch + len;
-    int i = 0, j = 0;
+    int i = 0;
     while (pch < pchEnd)
     {
         int enc = *(pch++);
         i++;
-        j += 3;
         switch (mode)
         {
             case 0: // we have no bits

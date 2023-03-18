@@ -56,12 +56,12 @@ void test_base64() {
     static const char* vstrOut[] = {"","Zg==","Zm8=","Zm9v","Zm9vYg==","Zm9vYmE=","Zm9vYmFy"};
     for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
-        char* str_enc = b64_encode(vstrIn[i], strlen(vstrIn[i]));
+        char* str_enc = b64_encode((unsigned char*)vstrIn[i], strlen(vstrIn[i]));
         u_assert_str_eq(str_enc, vstrOut[i]);
         size_t outlen = b64_decoded_size(str_enc);
-        char* str_dec = dogecoin_char_vla(outlen);
+        char* str_dec = dogecoin_char_vla(outlen + 1);
         str_dec[outlen] = '\0';
-        int ret = b64_decode(str_enc, str_dec, outlen);
+        int ret = b64_decode(str_enc, (unsigned char*)str_dec, outlen);
         u_assert_int_eq(ret, 1);
         u_assert_str_eq(str_dec, vstrIn[i]);
         dogecoin_free(str_dec);

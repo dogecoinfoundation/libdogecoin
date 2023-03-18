@@ -17,17 +17,18 @@
 void test_signmsg() {
     // testcase 1:
     // sign and verify:
-    char* msg = "This is just a test message";
-    char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
-    char* address = "D6a52RGbfvKDzKTh8carkGd1vNdAurHmaS";
+    char* msg = "Hello World!";
+    char* privkey = "QWCcckTzUBiY1g3GFixihAscwHAKXeXY76v7Gcxhp3HUEAcBv33i";
+    char* address = "D8mQ2sKYpLbFCQLhGeHCPBmkLJRi6kRoSg";
     char* sig = signmsgwithprivatekey(privkey, msg);
+    printf("sig: %s\n", sig);
     u_assert_int_eq(verifymessage(sig, msg, address), 1);
 
     // testcase 2:
     // assert modified msg will cause verification failure:
     msg = "This is a new test message";
     u_assert_int_eq(verifymessage(sig, msg, address), 0);
-    msg = "This is just a test message";
+    msg = "Hello World!";
     u_assert_int_eq(verifymessage(sig, msg, address), 1);
     dogecoin_free(sig);
 }

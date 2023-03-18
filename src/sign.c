@@ -123,7 +123,7 @@ int start_signature() {
  */
 void free_signature(signature* sig)
 {
-    dogecoin_free(sig->content);
+    dogecoin_free(sig->der);
     dogecoin_free(sig);
 }
 
@@ -139,29 +139,27 @@ void free_signature(signature* sig)
 char* signmsgwithprivatekey(char* privkey, char* msg) {
     if (!privkey || !msg) return false;
 
+    // retrieve double sha256 hash of msg:
+    uint256 message_bytes;
+    size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
+    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 7);
+    tmp_msg[0] = msg_magic_len;
+    strncpy(tmp_msg + 1, msg_magic, msg_magic_len);
+    tmp_msg[msg_magic_len + 1] = msg_len;
+    strncpy(tmp_msg + msg_magic_len + 2, msg, msg_len + 1);
+    dogecoin_hash_sngl_sha256((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
+    dogecoin_free(tmp_msg);
+
     // vars for signing
     size_t outlen = 74, outlencmp = 64;
     unsigned char *sig = dogecoin_uchar_vla(outlen),
     *sigcmp = dogecoin_uchar_vla(outlencmp);
 
-    // retrieve double sha256 hash of msg:
-    uint256 message_bytes;
-    size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
-    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 1);
-    memcpy_safe(tmp_msg, msg_magic, msg_magic_len);
-    memcpy_safe(tmp_msg + msg_magic_len, msg, msg_len + 1);
-    int ret = dogecoin_dblhash((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
-    dogecoin_free(tmp_msg);
-    if (!ret) {
-        printf("double sha256 hash failed\n");
-        return false;
-    }
-
     dogecoin_key key;
     dogecoin_privkey_init(&key);
     assert(dogecoin_privkey_is_valid(&key) == 0);
     const dogecoin_chainparams* chain = chain_from_b58_prefix(privkey);
-    ret = dogecoin_privkey_decode_wif(privkey, chain, &key);
+    int ret = dogecoin_privkey_decode_wif(privkey, chain, &key);
     if (!ret) {
         printf("dogecoin_privkey_decode_wif failed!\n");
         return false;
@@ -218,13 +216,14 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
         outlen += 2;
     }
 
+    // base64 encode output and free sig:
+    char* out = b64_encode(sig, outlen);
+
+    dogecoin_free(sig);
     dogecoin_free(sigcmp);
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_cleanse(&pubkey);
 
-    // base64 encode output and free sig:
-    char* out = b64_encode(sig, outlen);
-    dogecoin_free(sig);
     return out;
 }
 
@@ -241,23 +240,21 @@ char* signmsgwithprivatekey(char* privkey, char* msg) {
 int verifymessage(char* sig, char* msg, char* address) {
     if (!(sig || msg || address)) return false;
 
-    // double sha256 hash message:
+    // retrieve double sha256 hash of msg:
     uint256 message_bytes;
     size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
-    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 1);
-    memcpy_safe(tmp_msg, msg_magic, msg_magic_len);
-    memcpy_safe(tmp_msg + msg_magic_len, msg, msg_len + 1);
-    int ret = dogecoin_dblhash((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
+    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 7);
+    tmp_msg[0] = msg_magic_len;
+    strncpy(tmp_msg + 1, msg_magic, msg_magic_len);
+    tmp_msg[msg_magic_len + 1] = msg_len;
+    strncpy(tmp_msg + msg_magic_len + 2, msg, msg_len + 1);
+    dogecoin_hash_sngl_sha256((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
     dogecoin_free(tmp_msg);
-    if (!ret) {
-        printf("message_bytes failed\n");
-        return false;
-    }
 
 	size_t outlen = b64_decoded_size(sig);
     unsigned char *out = dogecoin_uchar_vla(outlen),
     *sigcomp_out = dogecoin_uchar_vla(65);
-    ret = b64_decode(sig, out, outlen);
+    int ret = b64_decode(sig, out, outlen);
 	if (!ret) {
         printf("b64_decode failed!\n");
         return false;
@@ -283,13 +280,11 @@ int verifymessage(char* sig, char* msg, char* address) {
 
     // recover pubkey
     ret = dogecoin_key_sign_recover_pubkey((const unsigned char*)sigcomp_out, message_bytes, recid, &pub_key);
-    dogecoin_free(sigcomp_out);
     if (!ret) {
         printf("key sign recover failed!\n");
         return false;
     }
     ret = dogecoin_pubkey_verify_sig(&pub_key, message_bytes, out, outlen);
-    dogecoin_free(out);
     if (!ret) {
         printf("pubkey sig verification failed!\n");
         return false;
@@ -303,10 +298,16 @@ int verifymessage(char* sig, char* msg, char* address) {
         printf("derived address from pubkey failed!\n");
         return false;
     }
-    dogecoin_pubkey_cleanse(&pub_key);
+
+    printf("p2pkh_address: %s\n", p2pkh_address);
+    printf("address:       %s\n", address);
 
     ret = strcmp(p2pkh_address, address)==0;
+
+    dogecoin_free(out);
+    dogecoin_free(sigcomp_out);
     dogecoin_free(p2pkh_address);
+    dogecoin_pubkey_cleanse(&pub_key);
     return ret;
 }
 
@@ -325,23 +326,21 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
     // retrieve double sha256 hash of msg:
     uint256 message_bytes;
     size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
-    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 1);
-    memcpy_safe(tmp_msg, msg_magic, msg_magic_len);
-    memcpy_safe(tmp_msg + msg_magic_len, msg, msg_len + 1);
-    int ret = dogecoin_dblhash((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
+    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 7);
+    tmp_msg[0] = msg_magic_len;
+    strncpy(tmp_msg + 1, msg_magic, msg_magic_len);
+    tmp_msg[msg_magic_len + 1] = msg_len;
+    strncpy(tmp_msg + msg_magic_len + 2, msg, msg_len + 1);
+    dogecoin_hash_sngl_sha256((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
     dogecoin_free(tmp_msg);
-    if (!ret) {
-        printf("message_bytes failed!\n");
-        return false;
-    }
 
     // vars for signing
     size_t outlen = 74, outlencmp = 64;
     unsigned char *sig = dogecoin_uchar_vla(outlen),
-    *sigcmp = dogecoin_uchar_vla(outlencmp);
+    *sigcmp = dogecoin_uchar_vla(outlencmp + 1);
 
     // sign hash
-    ret = dogecoin_key_sign_hash(&key->private_key, message_bytes, sig, &outlen);
+    int ret = dogecoin_key_sign_hash(&key->private_key, message_bytes, sig, &outlen);
     if (!ret) {
         printf("dogecoin_key_sign_hash failed!\n");
         return 0;
@@ -386,12 +385,13 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
         printf("derived address from pubkey failed!\n");
         return false;
     }
-    dogecoin_free(sigcmp);
 
     // base64 encode output and free sig:
-    working_sig->content = b64_encode(sig, outlen);
+    working_sig->der = b64_encode(sig, outlen);
+    printf("working_sig->der: %s\n", working_sig->der);
 
     dogecoin_free(sig);
+    dogecoin_free(sigcmp);
 
     return working_sig;
 }
@@ -408,7 +408,18 @@ signature* signmsgwitheckey(eckey* key, char* msg) {
 char* verifymessagewithsig(signature* sig, char* msg) {
     if (!(sig || msg)) return false;
 
-    char* signature_encoded = sig->content;
+    // double sha256 hash message:
+    uint256 message_bytes;
+    size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
+    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 7);
+    tmp_msg[0] = msg_magic_len;
+    strncpy(tmp_msg + 1, msg_magic, msg_magic_len);
+    tmp_msg[msg_magic_len + 1] = msg_len;
+    strncpy(tmp_msg + msg_magic_len + 2, msg, msg_len + 1);
+    dogecoin_hash_sngl_sha256((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
+    dogecoin_free(tmp_msg);
+
+    char* signature_encoded = sig->der;
 	size_t outlen = b64_decoded_size(signature_encoded);
     unsigned char *out = dogecoin_uchar_vla(outlen),
     *sigcomp_out = dogecoin_uchar_vla(65);
@@ -421,19 +432,6 @@ char* verifymessagewithsig(signature* sig, char* msg) {
     int recid = sig->recid;
     if (recid != 0) {
         outlen -= 2;
-    }
-
-    // double sha256 hash message:
-    uint256 message_bytes;
-    size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
-    char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 1);
-    memcpy_safe(tmp_msg, msg_magic, msg_magic_len);
-    memcpy_safe(tmp_msg + msg_magic_len, msg, msg_len + 1);
-    ret = dogecoin_dblhash((const unsigned char*)tmp_msg, strlen(tmp_msg), message_bytes);
-    dogecoin_free(tmp_msg);
-    if (!ret) {
-        printf("message_bytes failed\n");
-        return false;
     }
 
     ret = dogecoin_ecc_der_to_compact(out, outlen, sigcomp_out);
