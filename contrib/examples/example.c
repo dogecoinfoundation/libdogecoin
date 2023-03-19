@@ -203,8 +203,8 @@ int main() {
 	char* msg = "This is just a test message";
     char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
     char* address = "D6a52RGbfvKDzKTh8carkGd1vNdAurHmaS";
-    char* sig = signmsgwithprivatekey(privkey, msg);
-	if (verifymessage(sig, msg, address)) {
+    char* sig = sign_message(privkey, msg);
+	if (verify_message(sig, msg, address)) {
 		printf("Addresses match!\n");
 	} else {
 		printf("Addresses do not match!\n");
@@ -214,7 +214,7 @@ int main() {
     // testcase 2:
     // assert modified msg will cause verification failure:
     msg = "This is a new test message";
-	if (!verifymessage(sig, msg, address)) {
+	if (!verify_message(sig, msg, address)) {
 		printf("Addresses do not match!\n");
 	} else {
 		printf("Addresses match!\n");
@@ -223,7 +223,7 @@ int main() {
 
 	// testcase 3:
     msg = "This is just a test message";
-	if (verifymessage(sig, msg, address)) {
+	if (verify_message(sig, msg, address)) {
 		printf("Addresses match!\n");
 	} else {
 		printf("Addresses do not match!\n");
@@ -237,50 +237,43 @@ int main() {
 	printf("\n\nBEGIN ADVANCED MESSAGE SIGNING:\n\n");
     for (int i = 0; i < 10; i++) {
         // key 1:
-        int key_id = start_key();
+        int key_id = start_key(false);
         eckey* key = find_eckey(key_id);
         char* msg = "This is a test message";
-        signature* sig = signmsgwitheckey(key, msg);
-        char* address = verifymessagewithsig(sig, msg);
-        if (strcmp(address, sig->address) == 0) {
+        char* sig = sign_message(key->private_key_wif, msg);
+        if (verify_message(sig, msg, key->address)) {
 			printf("Addresses match!\n");
-			printf("%s\n%s\n", address, sig->address);
 		} else {
 			printf("Message verification failed!\n");
 			return -1;
 		}
         remove_eckey(key);
-        free_signature(sig);
-        dogecoin_free(address);
+        dogecoin_free(sig);
 
         // key 2:
-        int key_id2 = start_key();
+        int key_id2 = start_key(true);
         eckey* key2 = find_eckey(key_id2);
         char* msg2 = "This is a test message";
-        signature* sig2 = signmsgwitheckey(key2, msg2);
-        char* address2 = verifymessagewithsig(sig2, msg2);
-        if (strcmp(address2, sig2->address) == 0) {
+        char* sig2 = sign_message(key2->private_key_wif, msg2);
+        if (verify_message(sig2, msg2, key2->address)) {
 			printf("Addresses match!\n");
-			printf("%s\n%s\n", address2, sig2->address);
 		} else {
 			printf("Message verification failed!\n");
 			return -1;
 		}
-        dogecoin_free(address2);
 
         // test message signature verification failure:
         msg2 = "This is an altered test message";
-        address2 = verifymessagewithsig(sig2, msg2);
-        if (strcmp(address2, sig2->address) != 0) {
+        if (!verify_message(sig2, msg2, key2->address)) {
 			printf("Addresses do not match!\n");
-			printf("%s\n%s\n", address2, sig2->address);
 		} else {
 			printf("Message verification failed!\n");
 			return -1;
 		}
         remove_eckey(key2);
-        free_signature(sig2);
-        dogecoin_free(address2);
+        dogecoin_free(sig2);
     }
+
+	printf("\nTESTS COMPLETE!\n");
 	dogecoin_ecc_stop();
 }

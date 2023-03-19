@@ -41,6 +41,7 @@ typedef struct eckey {
     char private_key_wif[128];
     dogecoin_pubkey public_key;
     char public_key_hex[128];
+    char address[35];
     UT_hash_handle hh;
 } eckey;
 

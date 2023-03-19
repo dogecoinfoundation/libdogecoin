@@ -3,7 +3,7 @@
  The MIT License (MIT)
 
  Copyright (c) 2016 Jonas Schnelli
- Copyright (c) 2022 bluezr
+ Copyright (c) 2023 bluezr
  Copyright (c) 2023 edtubbs
  Copyright (c) 2023 The Dogecoin Foundation
 
@@ -1074,12 +1074,12 @@ int main(int argc, char* argv[])
             }
 
         eckey* key = new_eckey_from_privkey(pkey);
-        signature* sig = signmsgwitheckey(key, txhex);
+        char* sig = sign_message(key->private_key_wif, txhex);
         printf("message: %s\n", txhex);
-        printf("content: %s\n", sig->der);
-        printf("address: %s\n", sig->address);
+        printf("content: %s\n", sig);
+        printf("address: %s\n", key->address);
         dogecoin_free(key);
-        free_signature(sig);
+        dogecoin_free(sig);
         }
     else if (strcmp(cmd, "verifymessage") == 0) {
         // ./such -c verifymessage -x "<message>" -s <signature> -k <address>
@@ -1091,7 +1091,7 @@ int main(int argc, char* argv[])
             return showError("tx too large (max 100kb)\n");
             }
 
-        if (verifymessage(scripthex, txhex, pubkey)) {
+        if (verify_message(scripthex, txhex, pubkey)) {
             printf("Message is verified!\n");
         } else {
             printf("Message is not valid!\n");

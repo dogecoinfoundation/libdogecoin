@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2015 Jonas Schnelli
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr, edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -79,12 +79,24 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact(const dogecoin_key*
 // sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid);
 
+// sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
+LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable_fcomp(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid);
+
+LIBDOGECOIN_API dogecoin_bool dogecoin_key_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
+
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
 
 // verifies a DER encoded signature with given pubkey and return true if valid
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, size_t len);
 
+// verifies a compact encoded signature with given pubkey and return true if valid
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sigcmp(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigcmp);
+
+// derive a p2pkh address from a public key
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
+
+// initializes an eckey pair
+LIBDOGECOIN_API dogecoin_bool init_keypair(char* privkeywif, dogecoin_key* key, dogecoin_pubkey* pubkey);
 
 LIBDOGECOIN_END_DECL
 

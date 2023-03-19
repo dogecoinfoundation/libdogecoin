@@ -294,17 +294,17 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
  * @return 1 if it is a valid Dogecoin address, 0 otherwise.
  */
 int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
+{
+    if (!p2pkh_pubkey || !len) return false;
+    /* check length */
+    unsigned char* dec = dogecoin_uchar_vla(len);
+    unsigned char d1[SHA256_DIGEST_LENGTH];
+    unsigned char d2[SHA256_DIGEST_LENGTH];
+    if (!dogecoin_base58_decode_check(p2pkh_pubkey, dec, len)) 
     {
-        if (!p2pkh_pubkey || !len) return false;
-        /* check length */
-        unsigned char* dec = dogecoin_uchar_vla(len);
-        unsigned char d1[SHA256_DIGEST_LENGTH];
-        unsigned char d2[SHA256_DIGEST_LENGTH];
-        if (!dogecoin_base58_decode_check(p2pkh_pubkey, dec, len)) 
-        {
-            free(dec);
-            return false;
-        }
+        free(dec);
+        return false;
+    }
     /* check validity */
     sha256_raw(dec, 21, d1);
     sha256_raw(d1, SHA256_DIGEST_LENGTH, d2);

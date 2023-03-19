@@ -198,6 +198,7 @@ typedef struct eckey {
     char private_key_wif[128];
     dogecoin_pubkey public_key;
     char public_key_hex[128];
+    char address[35];
     UT_hash_handle hh;
 } eckey;
 
@@ -221,45 +222,8 @@ void remove_eckey(eckey *key);
 // instantiates and adds key to the hash table
 int start_key();
 
-typedef struct signature {
-    int idx;
-    char* content;
-    char address[35];
-    int recid;
-    UT_hash_handle hh;
-} signature;
+/* sign a message with a private key */
+char* sign_message(char* privkey, char* msg);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static signature *signatures = NULL;
-#pragma GCC diagnostic pop
-
-/* instantiates a new signature */
-signature* new_signature();
-
-/* adds a signature structure to hash table */
-void add_signature(signature *sig);
-
-/* finds a signature from the hash table */
-signature* find_signature(int idx);
-
-/* remove the signature from the hash table */
-void remove_signature(signature *sig);
-
-/* instantiates and adds signature to the hash table */
-int start_signature();
-
-/* frees signature from memory */
-void free_signature(signature* sig);
-
-/* Sign message with a private key */
-char* signmsgwithprivatekey(char* privkey, char* msg);
-
-/* Verify signed message */
-int verifymessage(char* sig, char* msg, char* address);
-
-/* Sign message with eckey struct and output signature struct */
-signature* signmsgwitheckey(eckey* key, char* msg);
-
-/* Verify signed message with signature struct */
-char* verifymessagewithsig(signature* sig, char* msg);
+/* verify a message with a address */
+int verify_message(char* sig, char* msg, char* address);

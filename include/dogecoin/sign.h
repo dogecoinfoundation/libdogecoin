@@ -1,7 +1,7 @@
 /*
  The MIT License (MIT)
  
- Copyright (c) 2023 bluezr
+ Copyright (c) 2023 bluezr, edtubbs
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -26,52 +26,17 @@
 
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/eckey.h>
-#include <dogecoin/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-typedef struct signature {
-    int idx;
-    char* der;
-    char address[35];
-    int recid;
-    UT_hash_handle hh;
-} signature;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static signature *signatures = NULL;
-#pragma GCC diagnostic pop
-
-/* instantiates a new signature */
-LIBDOGECOIN_API signature* new_signature();
-
-/* adds a signature structure to hash table */
-LIBDOGECOIN_API void add_signature(signature *sig);
-
-/* finds a signature from the hash table */
-LIBDOGECOIN_API signature* find_signature(int idx);
-
-/* remove the signature from the hash table */
-LIBDOGECOIN_API void remove_signature(signature *sig);
-
-/* instantiates and adds signature to the hash table */
-LIBDOGECOIN_API int start_signature();
-
-/* frees signature from memory */
-LIBDOGECOIN_API void free_signature(signature* sig);
+/* double sha256 hash a message */
+LIBDOGECOIN_API void hash_message(char* msg, uint256 message_bytes);
 
 /* sign a message with a private key */
-LIBDOGECOIN_API char* signmsgwithprivatekey(char* privkey, char* msg);
-
-/* sign message with eckey structure */
-LIBDOGECOIN_API signature* signmsgwitheckey(eckey* key, char* msg);
+LIBDOGECOIN_API char* sign_message(char* privkey, char* msg);
 
 /* verify a message with a address */
-LIBDOGECOIN_API int verifymessage(char* sig, char* msg, char* address);
-
-/* verify a message with a signature structure */
-LIBDOGECOIN_API char* verifymessagewithsig(signature* sig, char* msg);
+LIBDOGECOIN_API int verify_message(char* sig, char* msg, char* address);
 
 LIBDOGECOIN_END_DECL
 

@@ -55,6 +55,7 @@ eckey* new_eckey(dogecoin_bool is_testnet) {
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
+    if (!dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, (char*)&key->address)) return false;
     key->idx = HASH_COUNT(keys) + 1;
     return key;
 }
@@ -69,10 +70,7 @@ eckey* new_eckey_from_privkey(char* private_key) {
     eckey* key = (struct eckey*)dogecoin_calloc(1, sizeof *key);
     dogecoin_privkey_init(&key->private_key);
     const dogecoin_chainparams* chain = chain_from_b58_prefix(private_key);
-    if (!dogecoin_privkey_decode_wif(private_key, chain, &key->private_key)) {
-        printf("decoding wif failed!\n");
-        return false;
-    }
+    if (!dogecoin_privkey_decode_wif(private_key, chain, &key->private_key)) return false;
     assert(dogecoin_privkey_is_valid(&key->private_key)==1);
     dogecoin_pubkey_init(&key->public_key);
     dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
@@ -83,6 +81,7 @@ eckey* new_eckey_from_privkey(char* private_key) {
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
+    if (!dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, (char*)&key->address)) return false;
     key->idx = HASH_COUNT(keys) + 1;
     return key;
 }

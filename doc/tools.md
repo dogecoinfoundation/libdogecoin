@@ -23,7 +23,7 @@ The `such` tool can be used by simply running the command `./such` in the top le
 - comp2der
 - bip32maintotest
 - signmessage
-- verifymessage
+- verify_message
 - transaction
 
 So an example run of `such` could be something like this:
@@ -65,7 +65,7 @@ Below is a list of all the commands and the flags that they require. As a remind
 | sign                      | -x, -s, -i, -h, -p     | -t   | See the definition of sign_raw_transaction in the Transaction API.
 | comp2der                  | -s                     | None | Convert a compact signature to a DER signature.
 | signmessage               | -x, -p                 | None | Sign a message and output a base64 encoded signature and address.
-| verifymessage             | -x, -s, -k             | None | Verify a message by public key recovery of base64 decoded signature and comparison of addresses.
+| verify_message             | -x, -s, -k             | None | Verify a message by public key recovery of base64 decoded signature and comparison of addresses.
 | transaction               | None                   | None | Start the interactive transaction app. [Usage instructions below.]() |
 
 Lastly, to display the version of `such`, simply run the following command, which overrides any previous ones specified:
@@ -144,14 +144,14 @@ Below are some examples on how to use the `such` tool in practice.
 
 #### Sign an arbitrary message
 
-    ./such -c signmessage -x 'bleh' -p QUmvRbDqoBr4fB7WeyoWPmF725PGpCo1v3zD4NGa2smQs9Vvb3Fu
+    ./such -c signmessage -x bleh -p QWCcckTzUBiY1g3GFixihAscwHAKXeXY76v7Gcxhp3HUEAcBv33i
     message: bleh
-    content: MEUCIQCVmEHMt9ND1J0RsUQLIkgiANZwJjt983EpEm+g5pXG+wIgYh4WoOS5FRDhWrhetB5sn36ryghae8luyOdXEUHM0IUxAA==
-    address: D5sS39EzjNoK699HBybyBnP6G52JvsjVm7
+    content: ICrbftD0KamyaB68IoXbeke3w4CpcIvv+Q4pncBNpMk8fF5+xsR9H9gqmfM0JrjlfzZZA3E8AJ0Nug1KWeoVw3g=
+    address: D8mQ2sKYpLbFCQLhGeHCPBmkLJRi6kRoSg
 
 #### Verify an arbitrary message
 
-    ./such -c verifymessage -x bleh -s MEUCIQCVmEHMt9ND1J0RsUQLIkgiANZwJjt983EpEm+g5pXG+wIgYh4WoOS5FRDhWrhetB5sn36ryghae8luyOdXEUHM0IUxAA== -k D5sS39EzjNoK699HBybyBnP6G52JvsjVm7
+    ./such -c verifymessage -x bleh -s ICrbftD0KamyaB68IoXbeke3w4CpcIvv+Q4pncBNpMk8fF5+xsR9H9gqmfM0JrjlfzZZA3E8AJ0Nug1KWeoVw3g= -k D8mQ2sKYpLbFCQLhGeHCPBmkLJRi6kRoSg
     Message is verified!
 
 ### Interactive Transaction Building with `such`

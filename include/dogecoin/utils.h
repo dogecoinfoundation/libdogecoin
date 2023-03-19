@@ -66,39 +66,12 @@ LIBDOGECOIN_API const char* get_build();
 LIBDOGECOIN_API void dogecoin_str_reverse(char s[]);
 LIBDOGECOIN_API void dogecoin_uitoa(int n, char s[]);
 LIBDOGECOIN_API bool dogecoin_network_enabled();
-LIBDOGECOIN_API char *b64_encode(const unsigned char *in, size_t len);
-LIBDOGECOIN_API int b64_decode(const char *in, unsigned char *out, size_t outlen);
-LIBDOGECOIN_API size_t b64_decoded_size(const char *in);
-LIBDOGECOIN_API char* itoa_s(int32_t i, char* buf);
-LIBDOGECOIN_API char* base64_encode(const unsigned char *src, size_t len);
-LIBDOGECOIN_API char* base64_decode(const void* data, const size_t len);
-LIBDOGECOIN_API char* EncodeBase64(const char* str);
-LIBDOGECOIN_API char* _EncodeBase64(const unsigned char* pch, size_t len);
-LIBDOGECOIN_API char* DecodeBase64(const char* str);
-LIBDOGECOIN_API vector* _DecodeBase64(const char* p, bool* pfInvalid);
 
-//Base64 char table function - used internally for decoding
-unsigned int b64_int(unsigned int ch);
-
-// in_size : the number bytes to be encoded.
-// Returns the recommended memory size to be allocated for the output buffer excluding the null byte
-unsigned int b64e_size(unsigned int in_size);
-
-// in_size : the number bytes to be decoded.
-// Returns the recommended memory size to be allocated for the output buffer
-unsigned int b64d_size(unsigned int in_size);
-
-// in : buffer of "raw" binary to be encoded.
-// in_len : number of bytes to be encoded.
-// out : pointer to buffer with enough memory, user is responsible for memory allocation, receives null-terminated string
-// returns size of output including null byte
-unsigned int base64encode(const unsigned char* in, unsigned int in_len, unsigned char* out);
-
-// in : buffer of base64 string to be decoded.
-// in_len : number of bytes to be decoded.
-// out : pointer to buffer with enough memory, user is responsible for memory allocation, receives "raw" binary
-// returns size of output excluding null byte
-unsigned int base64decode(const unsigned char* in, unsigned int in_len, unsigned char* out);
+unsigned int base64_int(unsigned int ch);
+unsigned int base64_encoded_size(unsigned int in_size);
+unsigned int base64_decoded_size(unsigned int in_size);
+unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out);
+unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */

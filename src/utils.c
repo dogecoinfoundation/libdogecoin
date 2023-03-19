@@ -571,470 +571,9 @@ bool dogecoin_network_enabled() {
 #endif
 }
 
-// start original implementation
+unsigned char base64_char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-size_t b64_encoded_size(size_t inlen)
-{
-	size_t ret;
-
-	ret = inlen;
-	if (inlen % 3 != 0)
-		ret += 3 - (inlen % 3);
-	ret /= 3;
-	ret *= 4;
-
-	return ret;
-}
-
-const char b64chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-char *b64_encode(const unsigned char *in, size_t len)
-{
-	char   *out;
-	size_t  elen;
-	size_t  i;
-	size_t  j;
-	size_t  v;
-
-	if (in == NULL || len == 0)
-		return "";
-
-	elen = b64_encoded_size(len);
-	out  = dogecoin_char_vla((elen + 2 / 3 * 4) + 1);
-	out[elen + 2 / 3 * 4] = '\0';
-
-	for (i=0, j=0; i<len; i+=3, j+=4) {
-		v = in[i];
-		v = i+1 < len ? v << 8 | in[i+1] : v << 8;
-		v = i+2 < len ? v << 8 | in[i+2] : v << 8;
-
-		out[j]   = b64chars[(v >> 18) & 0x3F];
-		out[j+1] = b64chars[(v >> 12) & 0x3F];
-		if (i+1 < len) {
-			out[j+2] = b64chars[(v >> 6) & 0x3F];
-		} else {
-			out[j+2] = '=';
-		}
-		if (i+2 < len) {
-			out[j+3] = b64chars[v & 0x3F];
-		} else {
-			out[j+3] = '=';
-		}
-	}
-
-	return out;
-}
-
-size_t b64_decoded_size(const char *in)
-{
-	size_t len;
-	size_t ret;
-	size_t i;
-
-	if (in == NULL)
-		return 0;
-
-	len = strlen(in);
-	ret = len / 4 * 3;
-
-	for (i=len; i-->0; ) {
-		if (in[i] == '=') {
-			ret--;
-		} else {
-			break;
-		}
-	}
-
-	return ret;
-}
-
-int b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
-	59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5,
-	6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28,
-	29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
-	43, 44, 45, 46, 47, 48, 49, 50, 51 };
-
-void b64_generate_decode_table()
-{
-	int    inv[80];
-	size_t i;
-
-	memset(inv, -1, sizeof(inv));
-	for (i=0; i<sizeof(b64chars)-1; i++) {
-		inv[b64chars[i]-43] = i;
-	}
-}
-
-int b64_isvalidchar(char c)
-{
-	if (c >= '0' && c <= '9')
-		return 1;
-	if (c >= 'A' && c <= 'Z')
-		return 1;
-	if (c >= 'a' && c <= 'z')
-		return 1;
-	if (c == '+' || c == '/' || c == '=')
-		return 1;
-	return 0;
-}
-
-int b64_decode(const char *in, unsigned char *out, size_t outlen)
-{
-	size_t len;
-	size_t i;
-	size_t j;
-	int    v;
-
-    if (strcmp(in, "") == 0) {
-        out = (unsigned char*)"";
-        return 1;
-    }
-
-	if (in == NULL || out == NULL)
-		return 0;
-
-    len = outlen < 6 ? outlen + 1 : strlen(in);
-    if (len > 6) {
-        if (outlen < b64_decoded_size(in) || len % 4 != 0)
-            return 0;
-    }
-
-	for (i=0; i<len; i++) {
-		if (!b64_isvalidchar(in[i])) {
-			return 0;
-		}
-	}
-
-	for (i=0, j=0; i < len; i+=4, j+=3) {
-		v = b64invs[in[i]-43];
-		v = (v << 6) | b64invs[in[i+1]-43];
-		v = in[i+2]=='=' ? v << 6 : (v << 6) | b64invs[in[i+2]-43];
-		v = in[i+3]=='=' ? v << 6 : (v << 6) | b64invs[in[i+3]-43];
-		out[j] = (v >> 16) & 0xFF;
-		if (in[i+2] != '=')
-			out[j+1] = (v >> 8) & 0xFF;
-		if (in[i+3] != '=')
-			out[j+2] = v & 0xFF;
-	}
-
-	return 1;
-}
-
-// end original implementation
-
-// start implementation 2
-
-static const unsigned char base64_table[65] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-/**
-* base64_encode - Base64 encode
-* @src: Data to be encoded
-* @len: Length of the data to be encoded
-* @out_len: Pointer to output length variable, or %NULL if not used
-* Returns: Allocated buffer of out_len bytes of encoded data,
-* or empty string on failure
-*/
-char* base64_encode(const unsigned char *src, size_t len)
-{
-    unsigned char *out, *pos;
-    const unsigned char *end, *in;
-
-    size_t olen;
-
-    olen = ((len + 2) / 3 * 4); /* 3-byte blocks to 4-byte */
-
-    if (olen < len)
-        return false; /* integer overflow */
-
-    char* outStr = dogecoin_char_vla(olen);
-    out = (unsigned char*)&outStr[0];
-
-    end = src + len;
-    in = src;
-    pos = out;
-    while (end - in >= 3) {
-        *pos++ = base64_table[in[0] >> 2];
-        *pos++ = base64_table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
-        *pos++ = base64_table[((in[1] & 0x0f) << 2) | (in[2] >> 6)];
-        *pos++ = base64_table[in[2] & 0x3f];
-        in += 3;
-    }
-
-    if (end - in) {
-        *pos++ = base64_table[in[0] >> 2];
-        if (end - in == 1) {
-            *pos++ = base64_table[(in[0] & 0x03) << 4];
-            *pos++ = '=';
-        }
-        else {
-            *pos++ = base64_table[((in[0] & 0x03) << 4) |
-                (in[1] >> 4)];
-            *pos++ = base64_table[(in[1] & 0x0f) << 2];
-        }
-        *pos++ = '=';
-    }
-
-    return outStr;
-}
-
-static const int B64index[256] = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 62, 63, 62, 62, 63, 52, 53, 54, 55,
-56, 57, 58, 59, 60, 61,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,
-7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,  0,
-0,  0,  0, 63,  0, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51 };
-
-char* base64_decode(const void* data, const size_t len)
-{
-    unsigned char* p = (unsigned char*)data;
-    int pad = len > 0 && (len % 4 || p[len - 1] == '=');
-    const size_t L = ((len + 3) / 4 - pad) * 4;
-    char* str = dogecoin_char_vla(L / 4 * 3 + pad);
-    str[L / 4 * 3 + pad] = '\0';
-
-    if (strcmp(data, "") == 0) {
-        str = "";
-        return str;
-    }
-
-    for (size_t i = 0, j = 0; i < L; i += 4)
-    {
-        int n = B64index[p[i]] << 18 | B64index[p[i + 1]] << 12 | B64index[p[i + 2]] << 6 | B64index[p[i + 3]];
-        str[j++] = n >> 16;
-        str[j++] = n >> 8 & 0xFF;
-        str[j++] = n & 0xFF;
-    }
-    if (pad)
-    {
-        int n = B64index[p[L]] << 18 | B64index[p[L + 1]] << 12;
-        str[strlen(str) - 1] = n >> 16;
-
-        if (len > L + 2 && p[L + 2] != '=')
-        {
-            n |= B64index[p[L + 2]] << 6;
-            str[strlen(str)] = n >> 8 & 0xFF;
-        }
-    }
-    return str;
-}
-
-// end one implementation
-
-// start stuff from core
-
-char* _EncodeBase64(const unsigned char* pch, size_t len)
-{
-    // pch = utils_uint8_to_hex(pch, len);
-    static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    char* strRet = dogecoin_malloc(len);
-    strRet[len] = '\0';
-
-    if (strcmp(strRet, "")==0) return strRet;
-
-    int mode=0, left=0;
-    const unsigned char *pchEnd = pch + len;
-    int i = 0;
-    while (pch < pchEnd)
-    {
-        int enc = *(pch++);
-        i++;
-        switch (mode)
-        {
-            case 0: // we have no bits
-                strRet[i] = pbase64[enc >> 2];
-                left = (enc & 3) << 4;
-                mode = 1;
-                break;
-
-            case 1: // we have two bits
-                strRet[i] = pbase64[left | (enc >> 4)];
-                left = (enc & 15) << 2;
-                mode = 2;
-                break;
-
-            case 2: // we have four bits
-                strRet[i] = pbase64[left | (enc >> 6)];
-                strRet[i] = pbase64[enc & 63];
-                mode = 0;
-                break;
-        }
-    }
-
-    if (mode)
-    {
-        strRet[i] = pbase64[left];
-        strRet[i] = '=';
-        if (mode == 1)
-            strRet[i] = '=';
-    }
-    return strRet;
-}
-
-char* EncodeBase64(const char* str)
-{
-    return _EncodeBase64((const unsigned char*)str, strlen(str));
-}
-
-vector* _DecodeBase64(const char* p, bool* pfInvalid)
-{
-    static const int decode64_table[256] =
-    {
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1,
-        -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28,
-        29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-        49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-    };
-
-    if (pfInvalid)
-        *pfInvalid = false;
-
-    vector* vchRet = vector_new(strlen(p)*3/4, NULL);
-    uint8_t* str_out = dogecoin_uint8_vla(strlen(p)*3/4);
-
-    int mode = 0;
-    int left = 0;
-
-    while (1)
-    {
-         int dec = decode64_table[(unsigned char)*p];
-         if (dec == -1) break;
-         p++;
-         switch (mode)
-         {
-             case 0: // we have no bits and get 6
-                 left = dec;
-                 mode = 1;
-                 break;
-
-              case 1: // we have 6 bits and keep 4
-                  str_out += (left<<2) | (dec>>4);
-                  left = dec & 15;
-                  mode = 2;
-                  break;
-
-             case 2: // we have 4 bits and get 6, we keep 2
-                 str_out += (left<<4) | (dec>>2);
-                 left = dec & 3;
-                 mode = 3;
-                 break;
-
-             case 3: // we have 2 bits and get 6
-                 str_out += (left<<6) | dec;
-                 mode = 0;
-                 break;
-         }
-    }
-
-    if (pfInvalid)
-        switch (mode)
-        {
-            case 0: // 4n base64 characters processed: ok
-                break;
-
-            case 1: // 4n+1 base64 character processed: impossible
-                *pfInvalid = true;
-                break;
-
-            case 2: // 4n+2 base64 characters processed: require '=='
-                if (left || p[0] != '=' || p[1] != '=' || decode64_table[(unsigned char)p[2]] != -1)
-                    *pfInvalid = true;
-                break;
-
-            case 3: // 4n+3 base64 characters processed: require '='
-                if (left || p[0] != '=' || decode64_table[(unsigned char)p[1]] != -1)
-                    *pfInvalid = true;
-                break;
-        }
-
-    vector_add(vchRet, str_out);
-    dogecoin_free(str_out);
-    return vchRet;
-}
-
-char* DecodeBase64(const char* str)
-{
-    vector* vchRet = _DecodeBase64(str, NULL);
-    return (vchRet->len == 0) ? "" : vector_idx(vchRet, 0);
-}
-
-// end stuff from core
-
-char *substring(char *string, int position, int length)
-{
-   char *p;
-   int c;
- 
-   p = malloc(length+1);
-   
-   if (p == NULL)
-   {
-      printf("Unable to allocate memory.\n");
-      exit(1);
-   }
- 
-   for (c = 0; c < length; c++)
-   {
-      *(p+c) = *(string+position-1);      
-      string++;  
-   }
- 
-   *(p+c) = '\0';
- 
-   return p;
-}
-
-/**
- * Convert an integer, positive or negative, to a character string radix 10.
- */
-char* itoa_s(int32_t i, char* buf)
-{
-    char* result = buf;
-
-    // Handle negative
-    if (i < 0)
-    {
-        *buf++ = '-';
-        i = -i;
-    }
-
-    // Output digits in reverse order
-    char* p = buf;
-    do
-    {
-        *p++ = (char)('0' + (i % 10));
-        i /= 10;
-    }
-    while (i);
-    *p-- = 0;
-
-    // Reverse the string
-    while (buf < p)
-    {
-        char c = *buf;
-        *buf++ = *p;
-        *p-- = c;
-    }
-
-    return result;
-}
-
-//Base64 char table - used internally for encoding
-unsigned char b64_chr[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-unsigned int b64_int(unsigned int ch) {
+unsigned int base64_int(unsigned int ch) {
 
 	// ASCII to base64_int
 	// 65-90  Upper Case  >>  0-25
@@ -1058,7 +597,7 @@ unsigned int b64_int(unsigned int ch) {
 	return 0;
 }
 
-unsigned int b64e_size(unsigned int in_size) {
+unsigned int base64_encoded_size(unsigned int in_size) {
 
 	// size equals 4*floor((1/3)*(in_size+2));
 	unsigned int i, j = 0;
@@ -1069,22 +608,22 @@ unsigned int b64e_size(unsigned int in_size) {
 	return (4*j);
 }
 
-unsigned int b64d_size(unsigned int in_size) {
+unsigned int base64_decoded_size(unsigned int in_size) {
 
 	return ((3*in_size)/4);
 }
 
-unsigned int base64encode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
+unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
 
 	unsigned int i=0, j=0, k=0, s[3];
 	
 	for (i=0;i<in_len;i++) {
 		s[j++]=*(in+i);
 		if (j==3) {
-			out[k+0] = b64_chr[ (s[0]&255)>>2 ];
-			out[k+1] = b64_chr[ ((s[0]&0x03)<<4)+((s[1]&0xF0)>>4) ];
-			out[k+2] = b64_chr[ ((s[1]&0x0F)<<2)+((s[2]&0xC0)>>6) ];
-			out[k+3] = b64_chr[ s[2]&0x3F ];
+			out[k+0] = base64_char[ (s[0]&255)>>2 ];
+			out[k+1] = base64_char[ ((s[0]&0x03)<<4)+((s[1]&0xF0)>>4) ];
+			out[k+2] = base64_char[ ((s[1]&0x0F)<<2)+((s[2]&0xC0)>>6) ];
+			out[k+3] = base64_char[ s[2]&0x3F ];
 			j=0; k+=4;
 		}
 	}
@@ -1092,10 +631,10 @@ unsigned int base64encode(const unsigned char* in, unsigned int in_len, unsigned
 	if (j) {
 		if (j==1)
 			s[1] = 0;
-		out[k+0] = b64_chr[ (s[0]&255)>>2 ];
-		out[k+1] = b64_chr[ ((s[0]&0x03)<<4)+((s[1]&0xF0)>>4) ];
+		out[k+0] = base64_char[ (s[0]&255)>>2 ];
+		out[k+1] = base64_char[ ((s[0]&0x03)<<4)+((s[1]&0xF0)>>4) ];
 		if (j==2)
-			out[k+2] = b64_chr[ ((s[1]&0x0F)<<2) ];
+			out[k+2] = base64_char[ ((s[1]&0x0F)<<2) ];
 		else
 			out[k+2] = '=';
 		out[k+3] = '=';
@@ -1107,12 +646,12 @@ unsigned int base64encode(const unsigned char* in, unsigned int in_len, unsigned
 	return k;
 }
 
-unsigned int base64decode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
+unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
 
 	unsigned int i=0, j=0, k=0, s[4];
 	
 	for (i=0;i<in_len;i++) {
-		s[j++]=b64_int(*(in+i));
+		s[j++]=base64_int(*(in+i));
 		if (j==4) {
 			out[k+0] = ((s[0]&255)<<2)+((s[1]&0x30)>>4);
 			if (s[2]!=64) {

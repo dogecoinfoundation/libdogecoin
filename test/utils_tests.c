@@ -57,11 +57,11 @@ void test_base64() {
     for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
     	int input_length = strlen(vstrIn[i]);
-        unsigned char* enc_output = dogecoin_uchar_vla(1+(sizeof(char)*b64e_size(input_length)));
-        unsigned int enc_out_len = base64encode((unsigned char*)vstrIn[i], input_length, enc_output);
+        unsigned char* enc_output = dogecoin_uchar_vla(1+(sizeof(char)*base64_encoded_size(input_length)));
+        unsigned int enc_out_len = base64_encode((unsigned char*)vstrIn[i], input_length, enc_output);
         u_assert_str_eq((const char*)enc_output, vstrOut[i]);
-        unsigned char* dec_output = dogecoin_uchar_vla(b64d_size(strlen((const char*)enc_output)+1)+1);
-        unsigned int dec_out_len = base64decode(enc_output, enc_out_len, dec_output);
+        unsigned char* dec_output = dogecoin_uchar_vla(base64_decoded_size(strlen((const char*)enc_output)+1)+1);
+        unsigned int dec_out_len = base64_decode(enc_output, enc_out_len, dec_output);
         u_assert_str_eq((const char*)dec_output, vstrIn[i]);
         u_assert_int_eq(input_length, dec_out_len);
         dogecoin_free(enc_output);
