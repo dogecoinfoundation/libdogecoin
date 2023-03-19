@@ -56,14 +56,15 @@ void test_base64() {
     static const char* vstrOut[] = {"","Zg==","Zm8=","Zm9v","Zm9vYg==","Zm9vYmE=","Zm9vYmFy"};
     for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
-        char* str_enc = b64_encode((unsigned char*)vstrIn[i], strlen(vstrIn[i]));
-        u_assert_str_eq(str_enc, vstrOut[i]);
-        size_t outlen = b64_decoded_size(str_enc);
-        char* str_dec = dogecoin_char_vla(outlen + 1);
-        str_dec[outlen] = '\0';
-        int ret = b64_decode(str_enc, (unsigned char*)str_dec, outlen);
-        u_assert_int_eq(ret, 1);
-        u_assert_str_eq(str_dec, vstrIn[i]);
-        dogecoin_free(str_dec);
+    	int input_length = strlen(vstrIn[i]);
+        unsigned char* enc_output = dogecoin_uchar_vla(1+(sizeof(char)*b64e_size(input_length)));
+        unsigned int enc_out_len = base64encode((unsigned char*)vstrIn[i], input_length, enc_output);
+        u_assert_str_eq((const char*)enc_output, vstrOut[i]);
+        unsigned char* dec_output = dogecoin_uchar_vla(b64d_size(strlen((const char*)enc_output)+1)+1);
+        unsigned int dec_out_len = base64decode(enc_output, enc_out_len, dec_output);
+        u_assert_str_eq((const char*)dec_output, vstrIn[i]);
+        u_assert_int_eq(input_length, dec_out_len);
+        dogecoin_free(enc_output);
+        dogecoin_free(dec_output);
     }
 }
