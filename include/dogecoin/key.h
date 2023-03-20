@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2015 Jonas Schnelli
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr, edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -29,8 +29,10 @@
 #ifndef __LIBDOGECOIN_KEY_H__
 #define __LIBDOGECOIN_KEY_H__
 
-#include <dogecoin/chainparams.h>
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/chainparams.h>
+#include <dogecoin/constants.h>
+#include <dogecoin/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
@@ -62,27 +64,39 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_is_valid(const dogecoin_pubkey* pu
 LIBDOGECOIN_API void dogecoin_pubkey_cleanse(dogecoin_pubkey* pubkey);
 LIBDOGECOIN_API void dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout);
 
-//get the hash160 (single SHA256 + RIPEMD160)
+// get the hash160 (single SHA256 + RIPEMD160)
 LIBDOGECOIN_API void dogecoin_pubkey_get_hash160(const dogecoin_pubkey* pubkey, uint160 hash160);
 
-//get the hex representation of a pubkey, strsize must be at leat 66 bytes
+// get the hex representation of a pubkey, strsize must be at leat 66 bytes
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_get_hex(const dogecoin_pubkey* pubkey, char* str, size_t* strsize);
 
-//sign a 32byte message/hash and returns a DER encoded signature (through *sigout)
+// sign a 32byte message/hash and returns a DER encoded signature (through *sigout)
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen);
 
-//sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout)
+// sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout)
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen);
 
-//sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
+// sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid);
+
+// sign a 32byte message/hash and returns a 64 byte compact signature (through *sigout) plus a 1byte recovery id
+LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_hash_compact_recoverable_fcomp(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid);
+
+LIBDOGECOIN_API dogecoin_bool dogecoin_key_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey);
 
-//verifies a DER encoded signature with given pubkey and return true if valid
+// verifies a DER encoded signature with given pubkey and return true if valid
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, size_t len);
 
+// verifies a compact encoded signature with given pubkey and return true if valid
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_verify_sigcmp(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigcmp);
+
+// derive a p2pkh address from a public key
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
+
+// initializes an eckey pair
+LIBDOGECOIN_API dogecoin_bool init_keypair(char* privkeywif, dogecoin_key* key, dogecoin_pubkey* pubkey);
 
 LIBDOGECOIN_END_DECL
 

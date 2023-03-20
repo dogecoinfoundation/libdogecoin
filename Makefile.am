@@ -13,7 +13,8 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 lib_LTLIBRARIES = libdogecoin.la
 include_HEADERS = \
     include/dogecoin/constants.h \
-    include/dogecoin/libdogecoin.h
+    include/dogecoin/libdogecoin.h \
+    include/dogecoin/uthash.h
 noinst_HEADERS = \
     include/bip39/index.h \
     include/dogecoin/address.h \
@@ -30,6 +31,7 @@ noinst_HEADERS = \
     include/dogecoin/ctaes.h \
     include/dogecoin/dogecoin.h \
     include/dogecoin/ecc.h \
+    include/dogecoin/eckey.h \
     include/dogecoin/hash.h \
     include/dogecoin/key.h \
     include/dogecoin/koinu.h \
@@ -42,12 +44,12 @@ noinst_HEADERS = \
     include/dogecoin/random.h \
     include/dogecoin/rmd160.h \
     include/dogecoin/script.h \
+    include/dogecoin/sign.h \
     include/dogecoin/serialize.h \
     include/dogecoin/sha2.h \
     include/dogecoin/tool.h \
     include/dogecoin/transaction.h \
     include/dogecoin/tx.h \
-    include/uthash/uthash.h \
     include/dogecoin/utils.h \
     include/dogecoin/vector.h \
     include/dogecoin/wow.h
@@ -68,6 +70,7 @@ libdogecoin_la_SOURCES = \
     src/cstr.c \
     src/ctaes.c \
     src/ecc.c \
+    src/eckey.c \
     src/key.c \
     src/koinu.c \
     src/mem.c \
@@ -79,6 +82,7 @@ libdogecoin_la_SOURCES = \
     src/random.c \
     src/rmd160.c \
     src/script.c \
+    src/sign.c \
     src/serialize.c \
     src/sha2.c \
     src/cli/tool.c \
@@ -115,6 +119,7 @@ tests_SOURCES = \
     test/rmd160_tests.c \
     test/serialize_tests.c \
     test/sha2_tests.c \
+    test/signmsg_tests.c \
     test/transaction_tests.c \
     test/tx_tests.c \
     test/utest.h \

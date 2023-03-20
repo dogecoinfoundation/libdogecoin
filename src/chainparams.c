@@ -118,10 +118,22 @@ const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
     memcpy(prefix, address, 1);
     int count = 0;
     switch (prefix[0]) {
+        case '9':
+            count++;
+            break;
+        case 'A':
+            count++;
+            break;
         case 'd':
             count++;
             break;
         case 'D':
+            count++;
+            break;
+        case 'Q':
+            count++;
+            break;
+        case '6':
             count++;
             break;
     }

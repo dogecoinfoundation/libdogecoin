@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2015 Jonas Schnelli
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr, edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -28,6 +28,8 @@
 
 #ifndef __LIBDOGECOIN_ECC_H__
 #define __LIBDOGECOIN_ECC_H__
+
+#include <stdbool.h>
 
 #include <dogecoin/dogecoin.h>
 
@@ -63,6 +65,12 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_sign_compact(const uint8_t* private_k
 //!create a compact recoverable (65bytes) signature with private key
 LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_sign_compact_recoverable(const uint8_t* private_key, const uint256 hash, unsigned char* sigcomprec, size_t* outlen, int* recid);
 
+//!create a compact recoverable (65bytes) signature with private key with compressed or uncompressed bytes flag
+LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_sign_compact_recoverable_fcomp(const uint8_t* private_key, const uint256 hash, unsigned char* sigrec, size_t* outlen, int* recid, bool fCompressed);
+
+//!recover a specific pubkey from a signature and recid
+LIBDOGECOIN_API dogecoin_bool dogecoin_recover_pubkey(const unsigned char* sigrec, const uint256 hash, const int recid, uint8_t* public_key, size_t* outlen);
+
 //!recover a pubkey from a signature and recid
 LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_recover_pubkey(const unsigned char* sigrec, const uint256 hash, const int recid, uint8_t* public_key, size_t* outlen);
 
@@ -74,6 +82,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_der_to_compact(unsigned char* sigder_
 
 //!verify DER signature with public key
 LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_verify_sig(const uint8_t* public_key, dogecoin_bool compressed, const uint256 hash, unsigned char* sigder, size_t siglen);
+
+//!verify compact signature with public key
+LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_verify_sigcmp(const uint8_t* public_key, dogecoin_bool compressed, const uint256 hash, unsigned char* sigcmp);
 
 LIBDOGECOIN_END_DECL
 

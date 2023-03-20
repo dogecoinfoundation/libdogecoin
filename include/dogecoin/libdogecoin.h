@@ -33,6 +33,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "constants.h"
+#include "uthash.h"
+
 /* basic address functions: return 1 if succesful
    ----------------------------------------------
 *///!init static ecc context
@@ -105,7 +108,7 @@ int dogecoin_seed_from_mnemonic(const MNEMONIC mnemonic, const PASS pass, SEED s
 /* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
 int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
 
-/*transaction creation functions - builds a dogecoin transaction
+/* Transaction creation functions - builds a dogecoin transaction
 ----------------------------------------------------------------
 */
 
@@ -168,5 +171,59 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 /*Store a raw transaction that's already formed, and give it a txindex in memory. (txindex) is returned as int. */
 int store_raw_transaction(char* incomingrawtx);
 
-/* Utilities */
+
+/* Memory functions
+--------------------------------------------------------------------------
+*/
 char* dogecoin_char_vla(size_t size);
+void dogecoin_free(void* ptr);
+
+
+/* Advanced API for signing arbitrary messages
+--------------------------------------------------------------------------
+*/
+
+typedef struct dogecoin_key_ {
+    uint8_t privkey[DOGECOIN_ECKEY_PKEY_LENGTH];
+} dogecoin_key;
+
+typedef struct dogecoin_pubkey_ {
+    dogecoin_bool compressed;
+    uint8_t pubkey[DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH];
+} dogecoin_pubkey;
+
+typedef struct eckey {
+    int idx;
+    dogecoin_key private_key;
+    char private_key_wif[128];
+    dogecoin_pubkey public_key;
+    char public_key_hex[128];
+    char address[35];
+    UT_hash_handle hh;
+} eckey;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+static eckey *keys = NULL;
+#pragma GCC diagnostic pop
+
+// instantiates a new eckey
+eckey* new_eckey();
+
+// adds eckey structure to hash table
+void add_eckey(eckey *key);
+
+// find eckey from the hash table
+eckey* find_eckey(int idx);
+
+// remove eckey from the hash table
+void remove_eckey(eckey *key);
+
+// instantiates and adds key to the hash table
+int start_key();
+
+/* sign a message with a private key */
+char* sign_message(char* privkey, char* msg);
+
+/* verify a message with a address */
+int verify_message(char* sig, char* msg, char* address);

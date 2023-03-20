@@ -28,7 +28,7 @@
 #include <stddef.h>    /* offsetof     */
 #include <stdio.h>     /* printf       */
 #include <string.h>    /* memset       */
-#include <uthash/uthash.h>
+#include <dogecoin/uthash.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/tx.h>
 

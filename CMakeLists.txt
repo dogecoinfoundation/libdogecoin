@@ -96,6 +96,7 @@ INSTALL(FILES
     include/dogecoin/ctaes.h
     include/dogecoin/dogecoin.h
     include/dogecoin/ecc.h
+    include/dogecoin/eckey.h
     include/dogecoin/hash.h
     include/dogecoin/key.h
     include/dogecoin/koinu.h
@@ -107,11 +108,12 @@ INSTALL(FILES
     include/dogecoin/script.h
     include/dogecoin/serialize.h
     include/dogecoin/sha2.h
+    include/dogecoin/sign.h
     include/dogecoin/tool.h
     include/dogecoin/transaction.h
     include/dogecoin/tx.h
     include/dogecoin/qrengine.h
-    include/uthash/uthash.h
+    include/dogecoin/uthash.h
     include/dogecoin/utils.h
     include/dogecoin/vector.h
     include/dogecoin/wow.h
@@ -142,6 +144,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/cstr.c
     src/ctaes.c
     src/ecc.c
+    src/eckey.c
     src/key.c
     src/koinu.c
     src/mem.c
@@ -155,6 +158,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/script.c
     src/serialize.c
     src/sha2.c
+    src/sign.c
     src/cli/tool.c
     src/transaction.c
     src/tx.c
@@ -224,6 +228,7 @@ IF(USE_TESTS)
         test/rmd160_tests.c
         test/serialize_tests.c
         test/sha2_tests.c
+        test/signmsg_tests.c
         test/transaction_tests.c
         test/tx_tests.c
         test/utest.h

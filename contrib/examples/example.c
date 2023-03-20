@@ -23,7 +23,8 @@
 int main() {
 	dogecoin_ecc_start();
 
-	// CALLING ADDRESS FUNCTIONS
+	// BASIC ADDRESS EXAMPLES
+	printf("\n\nBEGIN BASIC ADDRESSING:\n\n");
 	// create variables
 	
 	char wif_privkey[PRIVKEYWIFLEN];
@@ -57,7 +58,7 @@ int main() {
 		printf("Error occurred 3.\n");
 		return -1;
 	}
-	printf("\n\n");
+	printf("\n");
 
 	// keypair verification
 	if (verifyPrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
@@ -103,15 +104,18 @@ int main() {
 	}
 
 	if (verifyP2pkhAddress(p2pkh_child_pubkey, strlen(p2pkh_child_pubkey))) {
-		printf("Address %s is valid for mainnet 9.\n\n", p2pkh_child_pubkey);
+		printf("Address %s is valid for mainnet 9.\n", p2pkh_child_pubkey);
 	}
 	else {
 		printf("Address %s is not valid for mainnet 9.\n", p2pkh_child_pubkey);
 		return -1;
 	}
 	printf("\n");
+	// END ===========================================
 
-	// TEST DERIVED HD ADDRESS FUNCTIONS
+
+	// DERIVED HD ADDRESS EXAMPLE
+	printf("\n\nBEGIN HD ADDRESS DERIVATION EXAMPLE:\n\n");
 	size_t extoutsize = 112;
 	char* extout = dogecoin_char_vla(extoutsize);
 	char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
@@ -124,13 +128,17 @@ int main() {
 	}
 
 	if (getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true)) {
-		printf("Derived HD Addresses:\n%s\n%s\n\n", extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+		printf("Derived HD Addresses:\n%s\n%s\n", extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
 	} else {
 		printf("getDerivedHDAddressByPath failed!\n");
 		return -1;
 	}
+	dogecoin_free(extout);
+	// END ===========================================
 
-	// CALLING TRANSACTION FUNCTIONS
+
+	// BASIC TRANSACTION FORMATION EXAMPLE
+	printf("\n\nBEGIN TRANSACTION FORMATION AND SIGNING:\n\n");
 	// declare keys and previous hashes
 	char *external_p2pkh_addr = 	"nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
 	char *myprivkey = 				"ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy";
@@ -186,6 +194,86 @@ int main() {
 		printf("Error occurred.\n");
 		return -1;
 	}
+    remove_all();
+	// END ===========================================
 
+
+	// BASIC MESSAGE SIGNING EXAMPLE
+	printf("\n\nBEGIN BASIC MESSAGE SIGNING:\n\n");
+	char* msg = "This is just a test message";
+    char* privkey = "QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2";
+    char* address = "D6a52RGbfvKDzKTh8carkGd1vNdAurHmaS";
+    char* sig = sign_message(privkey, msg);
+	if (verify_message(sig, msg, address)) {
+		printf("Addresses match!\n");
+	} else {
+		printf("Addresses do not match!\n");
+		return -1;
+	}
+
+    // testcase 2:
+    // assert modified msg will cause verification failure:
+    msg = "This is a new test message";
+	if (!verify_message(sig, msg, address)) {
+		printf("Addresses do not match!\n");
+	} else {
+		printf("Addresses match!\n");
+		return -1;
+	}
+
+	// testcase 3:
+    msg = "This is just a test message";
+	if (verify_message(sig, msg, address)) {
+		printf("Addresses match!\n");
+	} else {
+		printf("Addresses do not match!\n");
+		return -1;
+	}
+    dogecoin_free(sig);
+	// END ===========================================
+
+
+	// ADVANCED MESSAGE SIGNING EXAMPLE
+	printf("\n\nBEGIN ADVANCED MESSAGE SIGNING:\n\n");
+    for (int i = 0; i < 10; i++) {
+        // key 1:
+        int key_id = start_key(false);
+        eckey* key = find_eckey(key_id);
+        char* msg = "This is a test message";
+        char* sig = sign_message(key->private_key_wif, msg);
+        if (verify_message(sig, msg, key->address)) {
+			printf("Addresses match!\n");
+		} else {
+			printf("Message verification failed!\n");
+			return -1;
+		}
+        remove_eckey(key);
+        dogecoin_free(sig);
+
+        // key 2:
+        int key_id2 = start_key(true);
+        eckey* key2 = find_eckey(key_id2);
+        char* msg2 = "This is a test message";
+        char* sig2 = sign_message(key2->private_key_wif, msg2);
+        if (verify_message(sig2, msg2, key2->address)) {
+			printf("Addresses match!\n");
+		} else {
+			printf("Message verification failed!\n");
+			return -1;
+		}
+
+        // test message signature verification failure:
+        msg2 = "This is an altered test message";
+        if (!verify_message(sig2, msg2, key2->address)) {
+			printf("Addresses do not match!\n");
+		} else {
+			printf("Message verification failed!\n");
+			return -1;
+		}
+        remove_eckey(key2);
+        dogecoin_free(sig2);
+    }
+
+	printf("\nTESTS COMPLETE!\n");
 	dogecoin_ecc_stop();
 }
