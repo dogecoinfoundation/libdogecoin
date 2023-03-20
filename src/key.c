@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2015 Jonas Schnelli
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr, edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -189,6 +189,24 @@ dogecoin_bool dogecoin_key_sign_hash_compact_recoverable(const dogecoin_key* pri
     return dogecoin_ecc_sign_compact_recoverable(privkey->privkey, hash, sigout, outlen, recid);
 }
 
+dogecoin_bool dogecoin_key_sign_hash_compact_recoverable_fcomp(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen, int* recid)
+{
+    return dogecoin_ecc_sign_compact_recoverable_fcomp(privkey->privkey, hash, sigout, outlen, recid, true);
+}
+
+dogecoin_bool dogecoin_key_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey)
+{
+    uint8_t pubkeybuf[128];
+    size_t outlen = 128;
+    if (!dogecoin_recover_pubkey(sig, hash, recid, pubkeybuf, &outlen) || outlen > DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH)
+        return 0;
+    dogecoin_mem_zero(pubkey->pubkey, sizeof(pubkey->pubkey));
+    memcpy_safe(pubkey->pubkey, pubkeybuf, outlen);
+    if (outlen == DOGECOIN_ECKEY_COMPRESSED_LENGTH)
+        pubkey->compressed = true;
+    return 1;
+}
+
 dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const uint256 hash, int recid, dogecoin_pubkey* pubkey)
 {
     uint8_t pubkeybuf[128];
@@ -205,6 +223,29 @@ dogecoin_bool dogecoin_key_sign_recover_pubkey(const unsigned char* sig, const u
 dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigder, size_t len)
 {
     return dogecoin_ecc_verify_sig(pubkey->pubkey, pubkey->compressed, hash, sigder, len);
+}
+
+dogecoin_bool dogecoin_pubkey_verify_sigcmp(const dogecoin_pubkey* pubkey, const uint256 hash, unsigned char* sigcmp)
+{
+    return dogecoin_ecc_verify_sigcmp(pubkey->pubkey, pubkey->compressed, hash, sigcmp);
+}
+
+dogecoin_bool init_keypair(char* privkeywif, dogecoin_key* key, dogecoin_pubkey* pubkey) {
+    dogecoin_privkey_init(key);
+    assert(dogecoin_privkey_is_valid(key) == 0);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(privkeywif);
+    if (!dogecoin_privkey_decode_wif(privkeywif, chain, key)) {
+        return false;
+    }
+    assert(dogecoin_privkey_is_valid(key) == 1);
+
+    dogecoin_pubkey_init(pubkey);
+    pubkey->compressed = false;
+    assert(dogecoin_pubkey_is_valid(pubkey) == 0);
+    dogecoin_pubkey_from_key(key, pubkey);
+    if (!dogecoin_pubkey_is_valid(pubkey)) return 0;
+    if (!dogecoin_privkey_verify_pubkey(key, pubkey)) return 0;
+    return true;
 }
 
 dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout)

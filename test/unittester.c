@@ -38,6 +38,7 @@
 extern void test_address();
 extern void test_aes();
 extern void test_base58();
+extern void test_base64();
 extern void test_bip32();
 extern void test_bip39();
 extern void test_bip44();
@@ -57,6 +58,8 @@ extern void test_serialize();
 extern void test_sha_256();
 extern void test_sha_512();
 extern void test_sha_hmac();
+extern void test_signmsg();
+extern void test_signmsg_ext();
 extern void test_transaction();
 extern void test_tx_serialization();
 extern void test_tx_sighash();
@@ -96,6 +99,7 @@ int main()
     u_run_test(test_address);
     u_run_test(test_aes);
     u_run_test(test_base58);
+    u_run_test(test_base64);
     u_run_test(test_bip32);
     u_run_test(test_bip39);
     u_run_test(test_bip44);
@@ -115,6 +119,8 @@ int main()
     u_run_test(test_sha_256);
     u_run_test(test_sha_512);
     u_run_test(test_sha_hmac);
+    u_run_test(test_signmsg);
+    u_run_test(test_signmsg_ext);
     u_run_test(test_transaction);
     u_run_test(test_tx_serialization);
     u_run_test(test_invalid_tx_deser);
