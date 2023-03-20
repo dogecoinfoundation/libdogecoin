@@ -31,7 +31,6 @@
 
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/chainparams.h>
-#include <dogecoin/constants.h>
 #include <dogecoin/uthash.h>
 
 LIBDOGECOIN_BEGIN_DECL
