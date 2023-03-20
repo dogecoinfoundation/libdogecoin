@@ -2,7 +2,7 @@
 
  The MIT License (MIT)
 
- Copyright (c) 2022 bluezr
+ Copyright (c) 2023 bluezr
  Copyright (c) 2023 edtubbs
  Copyright (c) 2023 The Dogecoin Foundation
 
@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "dogecoin.h"
 #include "constants.h"
 #include "uthash.h"
 
