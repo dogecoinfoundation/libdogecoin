@@ -52,7 +52,7 @@ DOCUMENTATION="`pwd`/doc/*.md README.md"
 DOCKER=""
 ERROR=""
 HOST=""
-LIB="`pwd`/.libs/libdogecoin.a `pwd`/include/dogecoin/libdogecoin.h"
+LIB="`pwd`/.libs/libdogecoin.a `pwd`/include/dogecoin/libdogecoin.h `pwd`/include/dogecoin/constants.h `pwd`/include/dogecoin/uthash.h"
 SHA=sha256sum
 BINARY_SUFFIX=""
 for i in "$@"
@@ -172,6 +172,8 @@ if [ ! -d "$BUILD_PREFIX/$BUILD_SUFFIX/include" ]; then
 fi
 
 mv "$BUILD_PREFIX/$BUILD_SUFFIX/libdogecoin.h" "$BUILD_PREFIX/$BUILD_SUFFIX/include/libdogecoin.h"
+mv "$BUILD_PREFIX/$BUILD_SUFFIX/constants.h" "$BUILD_PREFIX/$BUILD_SUFFIX/include/constants.h"
+mv "$BUILD_PREFIX/$BUILD_SUFFIX/uthash.h" "$BUILD_PREFIX/$BUILD_SUFFIX/include/uthash.h"
 
 if [ ! -d "$BUILD_PREFIX/$BUILD_SUFFIX/docs" ]; then
     mkdir -p "$BUILD_PREFIX/$BUILD_SUFFIX/docs"
