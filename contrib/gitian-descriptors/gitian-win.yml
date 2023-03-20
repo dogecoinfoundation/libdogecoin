@@ -1,5 +1,5 @@
 ---
-name: "libdogecoin-win-0.1.0"
+name: "libdogecoin-win-0.1.2"
 enable_cache: true
 suites:
 - "bionic"
@@ -115,7 +115,7 @@ script: |
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
-  git archive --format=tar --prefix=libdogecoin-0.1.0/ HEAD | gzip -9n > libdogecoin-0.1.0.tar.gz
+  git archive --format=tar --prefix=libdogecoin-0.1.2/ HEAD | gzip -9n > libdogecoin-0.1.2.tar.gz
   SOURCEDIST=`echo libdogecoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order
@@ -123,7 +123,7 @@ script: |
   pushd temp
   tar xf ../$SOURCEDIST
   find libdogecoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  tar tf ../$SOURCEDIST | zip -X@ ../libdogecoin-0.1.0.zip
+  tar tf ../$SOURCEDIST | zip -X@ ../libdogecoin-0.1.2.zip
   popd
 
   ORIGPATH="$PATH"
@@ -131,10 +131,10 @@ script: |
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     ./contrib/scripts/build.sh --host ${i} --depends
-    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.0"
+    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.2"
   done
 
   # Move them to gitian-builder/build/out/src
-  mv libdogecoin-0.1.0.zip `pwd`/output
+  mv libdogecoin-0.1.2.zip `pwd`/output
   mkdir -p $OUTDIR/src
   mv ~/build/libdogecoin/output/*.zip $OUTDIR/src
