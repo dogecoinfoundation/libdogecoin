@@ -34,6 +34,7 @@ noinst_HEADERS = \
     include/dogecoin/key.h \
     include/dogecoin/koinu.h \
     include/dogecoin/mem.h \
+    include/dogecoin/moon.h \
     include/dogecoin/portable_endian.h \
     include/qr/png.h \
     include/qr/qr.h \
@@ -70,6 +71,7 @@ libdogecoin_la_SOURCES = \
     src/key.c \
     src/koinu.c \
     src/mem.c \
+    src/moon.c \
     src/png.c \
     src/jpeg.c \
     src/qrengine.c \
@@ -106,6 +108,7 @@ tests_SOURCES = \
     test/key_tests.c \
     test/koinu_tests.c \
     test/mem_tests.c \
+    test/moon_tests.c \
     test/opreturn_tests.c \
     test/qr_tests.c \
     test/random_tests.c \
