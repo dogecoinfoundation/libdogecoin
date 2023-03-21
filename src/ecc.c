@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <dogecoin/constants.h>
 #include <dogecoin/random.h>
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/utils.h>
