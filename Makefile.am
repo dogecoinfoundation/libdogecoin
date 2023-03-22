@@ -68,6 +68,7 @@ libdogecoin_la_SOURCES = \
     src/key.c \
     src/koinu.c \
     src/mem.c \
+    src/moon.c \
     src/png.c \
     src/qrengine.c \
     src/qr.c \
@@ -80,8 +81,7 @@ libdogecoin_la_SOURCES = \
     src/transaction.c \
     src/tx.c \
     src/utils.c \
-    src/vector.c \
-    src/moon.c
+    src/vector.c
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -fPIC
 libdogecoin_la_LIBADD = $(LIBSECP256K1) $(LIBUNISTRING)
@@ -104,6 +104,7 @@ tests_SOURCES = \
     test/key_tests.c \
     test/koinu_tests.c \
     test/mem_tests.c \
+    test/moon_tests.c \
     test/opreturn_tests.c \
     test/qr_tests.c \
     test/random_tests.c \
@@ -115,8 +116,7 @@ tests_SOURCES = \
     test/utest.h \
     test/unittester.c \
     test/utils_tests.c \
-    test/vector_tests.c \
-    test/moon_tests.c
+    test/vector_tests.c
 
 tests_CFLAGS = $(libdogecoin_la_CFLAGS)
 tests_CPPFLAGS = -I$(top_srcdir)/src

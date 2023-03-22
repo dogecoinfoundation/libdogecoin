@@ -57,23 +57,23 @@ char* moon()
   jd -= D;                        // get negative of Julian days
   D = jd*8 + 1.5;	                // get fraction from 0-8 by rounding 0.5 to it               
 
-  switch (D & 8) {                // because the new moon = 0 is the same on 8 we convert to 0
-    case 1:
+  switch (D & 7) {                // because the new moon = 0 is the same on 8 we convert to 0
+    case 0:
       return "🌑";               // New Moon
-    case 2:
+    case 1:
       return "🌒";               // Waxing Crescent
-    case 3:
+    case 2:
       return "🌓";               // First Quarter Moon
-    case 4:
+    case 3:
       return "🌔";               // Waxing Gibbous
-    case 5:
+    case 4:
       return "🌕";               // Full Moon
-    case 6:
+    case 5:
       return "🌖";               // Waning Gibbous
-    case 7:
+    case 6:
       return "🌗";               // Third Quarter
-    case 8:
+    case 7:
       return "🌘";               // Waning Crescent
   }
-  return 0;
+  return "";
 }

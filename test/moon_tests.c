@@ -6,6 +6,8 @@
  **********************************************************************/
 
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <dogecoin/moon.h>
 
@@ -13,5 +15,5 @@ void test_moon()
 {
     /* initialize testing */
     char *m = moon();
-    assert(m!=0);
+    assert(strcmp(m, "")!=0);
 }
