@@ -28,6 +28,7 @@ jobs:
           - aarch64-linux
           - x86_64-linux-dbg
           - x86_64-macos
+          - arm64-macos
           - x86_64-win
           - i686-win
           - i686-linux
@@ -57,16 +58,27 @@ jobs:
             config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib -static-libgcc -static-libstdc++' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig --enable-static --disable-shared"
             goal: install
           - name: x86_64-macos
-            host: x86_64-apple-darwin14
+            host: x86_64-apple-darwin15
             os: macos-latest
             run-tests: true
             dep-opts: "SPEED=slow V=1"
             config-opts: "--enable-static --disable-shared"
             packages: cmake zlib xorriso
             goal: install
-            sdk: 12.1
-            sdk-build: 12A7403
-            sdk-shasum: "be17f48fd0b08fb4dcd229f55a6ae48d9f781d210839b4ea313ef17dd12d6ea5"
+            sdk: 12.2
+            sdk-build: 12B45b
+            sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
+          - name: arm64-macos
+            host: arm64-apple-darwin
+            os: macos-latest
+            run-tests: true
+            dep-opts: "SPEED=slow V=1"
+            config-opts: ""
+            packages: cmake zlib xorriso
+            goal: install
+            sdk: 12.2
+            sdk-build: 12B45b
+            sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
@@ -126,7 +138,7 @@ jobs:
 
       - name: install packages
         run: |
-          if ([ "${{ matrix.name }}" == "x86_64-macos" ]); then
+          if ([ "${{ matrix.name }}" == "x86_64-macos" ] || [ "${{ matrix.name }}" == "arm64-macos" ]); then
               brew update
               brew install automake coreutils ${{ matrix.packages }}
               echo PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH" >> ~/.bashrc

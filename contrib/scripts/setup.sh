@@ -77,10 +77,15 @@ if has_param '--host' "$@"; then
             TARGET_ARCH="i386"
             $USE_SUDO dpkg --add-architecture $TARGET_ARCH
         ;;
-        "x86_64-apple-darwin14")
+        "x86_64-apple-darwin15")
             OS_PACKAGES="cmake zlib xorriso go"
             ARCH_PACKAGES+="g++ cmake libz-dev libcap-dev libtinfo5 libplist-utils librsvg2-bin libz-dev libtiff-tools libncurses-dev lld python2-minimal golang"
             TARGET_ARCH="amd64"
+        ;;
+        "arm64-apple-darwin")
+            OS_PACKAGES="cmake zlib xorriso go"
+            ARCH_PACKAGES+="g++ cmake libz-dev libcap-dev libtinfo5 libplist-utils librsvg2-bin libz-dev libtiff-tools libncurses-dev lld python2-minimal golang"
+            TARGET_ARCH="arm64"
         ;;
         "x86_64-pc-linux-gnu") 
             ARCH_PACKAGES="python3-dev python3-dbg python2-minimal zip"
@@ -132,7 +137,15 @@ setup_linux() {
 
 OPTIONS=""
 case "$TARGET_HOST_TRIPLET" in
-    "x86_64-apple-darwin14")
+    "x86_64-apple-darwin15")
+        detect_os
+        case $machine in
+            "linux")    setup_linux;; 
+            "mac")      setup_brew;;
+        esac
+        contrib/scripts/sdk.sh
+    ;;
+    "arm64-apple-darwin")
         detect_os
         case $machine in
             "linux")    setup_linux;; 
@@ -145,7 +158,7 @@ case "$TARGET_HOST_TRIPLET" in
     ;;
 esac
 
-NO_X_COMPILE=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "x86_64-apple-darwin14");
+NO_X_COMPILE=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "x86_64-apple-darwin15" "arm64-apple-darwin");
 if [ "$DEPENDS" = "1" ]; then
     match=0
     for str in ${NO_X_COMPILE[@]}; do
