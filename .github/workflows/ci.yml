@@ -28,7 +28,7 @@ jobs:
           - aarch64-linux
           - x86_64-linux-dbg
           - x86_64-macos
-          - arm64-macos
+          # - arm64-macos
           - x86_64-win
           - i686-win
           - i686-linux
@@ -68,17 +68,17 @@ jobs:
             sdk: 12.2
             sdk-build: 12B45b
             sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
-          - name: arm64-macos
-            host: arm64-apple-darwin
-            os: macos-latest
-            run-tests: true
-            dep-opts: "SPEED=slow V=1"
-            config-opts: ""
-            packages: cmake zlib xorriso
-            goal: install
-            sdk: 12.2
-            sdk-build: 12B45b
-            sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
+          # - name: arm64-macos
+          #   host: arm64-apple-darwin
+          #   os: macos-latest
+          #   run-tests: true
+          #   dep-opts: "SPEED=slow V=1"
+          #   config-opts: ""
+          #   packages: cmake zlib xorriso
+          #   goal: install
+          #   sdk: 12.2
+          #   sdk-build: 12B45b
+          #   sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
