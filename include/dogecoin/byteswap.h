@@ -1,6 +1,7 @@
 // Copyright (c) 2014-2016 The Bitcoin Core developers
-// Copyright (c) 2022 bluezr
-// Copyright (c) 2022 The Dogecoin Foundation
+// Copyright (c) 2023 bluezr
+// Copyright (c) 2023 edtubbs
+// Copyright (c) 2023 The Dogecoin Foundation
 //
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -17,7 +18,7 @@ LIBDOGECOIN_BEGIN_DECL
 #endif
 
 #if defined(HAVE_CONFIG_H)
-#include "src/libdogecoin-config.h"
+#include "libdogecoin-config.h"
 #endif
 
 #include <stdint.h>

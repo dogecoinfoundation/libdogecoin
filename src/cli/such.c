@@ -35,7 +35,7 @@
 #endif
 
 #ifdef HAVE_CONFIG_H
-#  include "src/libdogecoin-config.h"
+#  include "libdogecoin-config.h"
 #endif
 #include <stdbool.h>
 #include <stdio.h>   /* printf */

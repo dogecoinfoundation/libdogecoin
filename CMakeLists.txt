@@ -77,49 +77,20 @@ ENDIF()
 IF(WITH_NET)
     ADD_DEFINITIONS(-DWITH_NET=1)
 ENDIF()
-FILE(TOUCH src/libdogecoin-config.h)
+FILE(TOUCH config/libdogecoin-config.h)
 
 ADD_LIBRARY(${LIBDOGECOIN_NAME})
+INSTALL(TARGETS
+    ${LIBDOGECOIN_NAME}
+    LIBRARY DESTINATION lib
+)
 
 INSTALL(FILES
-    include/dogecoin/address.h
-    include/dogecoin/aes.h
-    include/dogecoin/base58.h
-    include/dogecoin/bip32.h
-    include/dogecoin/bip39.h
-    include/dogecoin/bip44.h
-    include/dogecoin/block.h
-    include/dogecoin/buffer.h
-    include/dogecoin/byteswap.h
-    include/dogecoin/chainparams.h
-    include/dogecoin/cstr.h
-    include/dogecoin/ctaes.h
+    include/dogecoin/constants.h
     include/dogecoin/dogecoin.h
-    include/dogecoin/ecc.h
-    include/dogecoin/eckey.h
-    include/dogecoin/hash.h
-    include/dogecoin/key.h
-    include/dogecoin/koinu.h
-    include/dogecoin/mem.h
-    include/dogecoin/moon.h
-    include/dogecoin/portable_endian.h
-    include/dogecoin/random.h
-    include/dogecoin/rmd160.h
-    include/dogecoin/script.h
-    include/dogecoin/serialize.h
-    include/dogecoin/sha2.h
-    include/dogecoin/sign.h
-    include/dogecoin/tool.h
-    include/dogecoin/transaction.h
-    include/dogecoin/tx.h
-    include/dogecoin/qrengine.h
+    include/dogecoin/libdogecoin.h
     include/dogecoin/uthash.h
-    include/dogecoin/utils.h
-    include/dogecoin/vector.h
-    include/dogecoin/wow.h
-    include/qr/qr.h
-    include/qr/png.h
-    include/qr/jpeg.h
+    config/libdogecoin-config.h
     DESTINATION include/dogecoin
 )
 

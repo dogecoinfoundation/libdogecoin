@@ -77,10 +77,10 @@ configure
 libtool
 such
 sendtx
-src/libdogecoin-config.h
-src/libdogecoin-config.h.in
-src/libdogecoin-config.h.in~
-src/stamp-h1
+config/libdogecoin-config.h
+config/libdogecoin-config.h.in
+config/libdogecoin-config.h.in~
+config/stamp-h1
 m4/libtool.m4
 m4/ltoptions.m4
 m4/ltsugar.m4
