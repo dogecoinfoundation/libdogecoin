@@ -65,7 +65,7 @@ IF(WITH_NET)
         find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         find_path(LIBEVENT_INCLUDE_DIR event-config.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
-        FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)
+        FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)        
     ELSE()
         FIND_LIBRARY(LIBEVENT event REQUIRED)
         FIND_LIBRARY(LIBUNISTRING unistring REQUIRED)
@@ -248,6 +248,7 @@ IF(USE_TESTS)
         test/serialize_tests.c
         test/sha2_tests.c
         test/signmsg_tests.c
+        test/tpm_tests.c
         test/transaction_tests.c
         test/tx_tests.c
         include/test/utest.h
@@ -255,7 +256,7 @@ IF(USE_TESTS)
         test/utils_tests.c
         test/vector_tests.c
 )
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs)
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
     # move test/wordlist to build
     FILE(GLOB_RECURSE WORDLISTS "${PROJECT_SOURCE_DIR}/test/wordlist/*.txt")
