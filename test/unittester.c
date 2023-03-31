@@ -75,6 +75,13 @@ extern void test_utils();
 extern void test_vector();
 extern void test_qr();
 
+#ifdef WITH_LOGDB
+extern void test_red_black_tree();
+extern void test_logdb_memdb();
+extern void test_logdb_rbtree();
+extern void test_examples();
+#endif
+
 #ifdef WITH_TOOLS
 extern void test_tool();
 #endif
@@ -135,6 +142,14 @@ int main()
     u_run_test(test_utils);
     u_run_test(test_vector);
     u_run_test(test_qr);
+
+#ifdef WITH_LOGDB
+    u_run_test(test_red_black_tree);
+    u_run_test(test_logdb_memdb);
+    u_run_test(test_logdb_rbtree);
+    u_run_test(test_examples);
+#endif
+
 #ifdef WITH_TOOLS
     u_run_test(test_tool);
 #endif

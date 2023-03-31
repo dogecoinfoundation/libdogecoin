@@ -95,7 +95,7 @@ libdogecoin_la_SOURCES = \
     src/utils.c \
     src/vector.c
 
-libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -fPIC
+libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/logdb/include -fPIC
 libdogecoin_la_LIBADD = $(LIBSECP256K1) $(LIBUNISTRING)
 
 if USE_TESTS
@@ -136,6 +136,36 @@ tests_CPPFLAGS = -I$(top_srcdir)/src
 tests_LDADD += $(LIBSECP256K1) $(LIBUNISTRING)
 tests_LDFLAGS = -static
 TESTS = tests
+endif
+
+if WITH_LOGDB
+libdogecoin_la_SOURCES += \
+    src/logdb/logdb_core.c \
+    src/logdb/logdb_memdb_llist.c \
+    src/logdb/logdb_memdb_rbtree.c \
+    src/logdb/logdb_rec.c \
+    src/logdb/misc.c \
+    src/logdb/red_black_tree.c \
+    src/logdb/stack.c
+
+logdbincludedir = $(prefix)/include/logdb
+logdbinclude_HEADERS = \
+    src/logdb/include/logdb/logdb_base.h \
+    src/logdb/include/logdb/logdb_core.h \
+    src/logdb/include/logdb/logdb_memdb_llist.h \
+    src/logdb/include/logdb/logdb_memdb_rbtree.h \
+    src/logdb/include/logdb/logdb_rec.h \
+    src/logdb/include/logdb/logdb.h \
+    src/logdb/include/logdb/misc.h \
+    src/logdb/include/logdb/red_black_tree.h \
+    src/logdb/include/logdb/stack.h
+
+if USE_TESTS
+tests_SOURCES += \
+    src/logdb/test/logdb_tests.c \
+    src/logdb/test/tests_red_black_tree.c \
+    src/logdb/test/logdb_tests_sample.h
+endif
 endif
 
 if WITH_NET
