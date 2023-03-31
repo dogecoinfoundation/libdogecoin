@@ -10,12 +10,15 @@ LIBSECP256K1=src/secp256k1/libsecp256k1.la
 $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
+includedir = $(prefix)/include/dogecoin
+
 lib_LTLIBRARIES = libdogecoin.la
 include_HEADERS = \
     include/dogecoin/constants.h \
     include/dogecoin/dogecoin.h \
     include/dogecoin/libdogecoin.h \
-    include/dogecoin/uthash.h
+    include/dogecoin/uthash.h \
+    config/libdogecoin-config.h
 noinst_HEADERS = \
     include/bip39/index.h \
     include/dogecoin/address.h \

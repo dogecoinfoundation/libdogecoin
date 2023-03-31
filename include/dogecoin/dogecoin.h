@@ -2,6 +2,7 @@
 
  The MIT License (MIT)
  Copyright (c) 2023 bluezr
+ Copyright (c) 2023 edtubbs
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -34,7 +35,7 @@
 #include <string.h>
 
 #if defined(HAVE_CONFIG_H)
-#include "src/libdogecoin-config.h"
+#include "libdogecoin-config.h"
 #endif
 
 typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
