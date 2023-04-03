@@ -10,7 +10,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #include <dogecoin/address.h>
 #include <dogecoin/buffer.h>

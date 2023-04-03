@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/key.h>

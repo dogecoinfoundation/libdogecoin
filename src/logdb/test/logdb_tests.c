@@ -9,7 +9,7 @@
 #include <logdb/logdb.h>
 #include <dogecoin/utils.h>
 
-#include "test/utest.h"
+#include <test/utest.h>
 
 #include <unistd.h>
 #include <errno.h>

@@ -10,7 +10,7 @@
 #include <logdb/red_black_tree.h>
 #include <dogecoin/utils.h>
 
-#include "../../../test/utest.h"
+#include <test/utest.h>
 
 #include <string.h>
 #include <stdlib.h>

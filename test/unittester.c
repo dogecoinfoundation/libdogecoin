@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #ifdef HAVE_BUILTIN_EXPECT
 #define EXPECT(x, c) __builtin_expect((x), (c))

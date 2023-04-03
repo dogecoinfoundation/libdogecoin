@@ -18,7 +18,7 @@
 #include <dogecoin/mem.h>
 #include <dogecoin/utils.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 struct blockheadertest {
     char hexheader[160];

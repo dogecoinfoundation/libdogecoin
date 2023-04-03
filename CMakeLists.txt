@@ -208,7 +208,7 @@ IF(USE_TESTS)
         test/signmsg_tests.c
         test/transaction_tests.c
         test/tx_tests.c
-        test/utest.h
+        include/test/utest.h
         test/unittester.c
         test/utils_tests.c
         test/vector_tests.c
