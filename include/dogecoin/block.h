@@ -4,8 +4,9 @@
 
  Copyright (c) 2016 Thomas Kerin
  Copyright (c) 2016 libbtc developers
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr
+ Copyright (c) 2023 edtubbs
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -48,17 +49,21 @@ typedef struct dogecoin_block_header_ {
     uint32_t nonce;
 } dogecoin_block_header;
 
-/* Creating a new block header object. */
+typedef struct dogecoin_auxpow_block_ {
+    dogecoin_block_header* header;
+    dogecoin_tx* parent_coinbase;
+    uint256 parent_hash;
+    dogecoin_block_header* parent_header;
+} dogecoin_auxpow_block;
+
 LIBDOGECOIN_API dogecoin_block_header* dogecoin_block_header_new();
-/* A macro that is used to free the memory allocated for the `dogecoin_block_header` struct. */
 LIBDOGECOIN_API void dogecoin_block_header_free(dogecoin_block_header* header);
-/* Deserializing a block header from a buffer. */
+LIBDOGECOIN_API dogecoin_auxpow_block* dogecoin_auxpow_block_new();
+LIBDOGECOIN_API void dogecoin_auxpow_block_free(dogecoin_auxpow_block* block);
 LIBDOGECOIN_API int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf);
-/* A function that serializes a block header into a cstring. */
+LIBDOGECOIN_API int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer);
 LIBDOGECOIN_API void dogecoin_block_header_serialize(cstring* s, const dogecoin_block_header* header);
-/* A macro that is used to copy the contents of the `src` block header into the `dest` block header. */
 LIBDOGECOIN_API void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_block_header* src);
-/* This is a macro that is used to hash the contents of the `dogecoin_block_header` struct. */
 LIBDOGECOIN_API dogecoin_bool dogecoin_block_header_hash(dogecoin_block_header* header, uint256 hash);
 
 LIBDOGECOIN_END_DECL
