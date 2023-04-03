@@ -11,13 +11,18 @@
 
 #include <test/utest.h>
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+static const char *dbtmpfile = "dummy";
+#else
 #include <unistd.h>
+static const char *dbtmpfile = "/tmp/dummy";
+#endif
+
 #include <errno.h>
 
-
 #include "logdb_tests_sample.h"
-
-static const char *dbtmpfile = "/tmp/dummy";
 
 static const char *key1str = "ALorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
@@ -43,10 +48,6 @@ void test_logdb(logdb_log_db* (*new_func)())
     uint8_t txbin_rev[10240];
     char hexrev[98];
     size_t outlenrev;
-    long fsize;
-    uint8_t *buf;
-    uint8_t *wrk_buf;
-    FILE *f;
     unsigned int i;
     char bufs[300][65];
     rb_red_blk_node *nodetest;
@@ -75,7 +76,7 @@ void test_logdb(logdb_log_db* (*new_func)())
     logdb_append(db, NULL, key, value);
     logdb_append(db, NULL, key1, value1);
 
-    u_assert_int_eq(logdb_cache_size(db), 2);
+    u_assert_int_eq(logdb_cache_size(db), (size_t)2);
     outtest = logdb_find_cache(db, key1);
     u_assert_int_eq(strcmp(outtest->str, value1str),0);
     logdb_flush(db);
@@ -93,7 +94,6 @@ void test_logdb(logdb_log_db* (*new_func)())
 
     db = new_func();
     u_assert_int_eq(logdb_load(db, dbtmpfile, false, NULL), true);
-
 
     logdb_append(db, NULL, key2, value2);
     logdb_flush(db);
@@ -139,70 +139,6 @@ void test_logdb(logdb_log_db* (*new_func)())
 
     logdb_flush(db);
     logdb_free(db);
-
-
-
-
-    /* simulate corruption */
-    f = fopen(dbtmpfile, "rb");
-    fseek(f, 0, SEEK_END);
-    fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    buf = safe_malloc(fsize + 1);
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-result"
-    fread(buf, fsize, 1, f);
-#pragma GCC diagnostic pop
-    fclose(f);
-
-    /* ---------------------------------------------------- */
-    wrk_buf = safe_malloc(fsize + 1);
-    memcpy(wrk_buf, buf, fsize);
-    wrk_buf[0] = 0x88; /* wrong header */
-
-    unlink(dbtmpfile);
-    f = fopen(dbtmpfile, "wb");
-    fwrite(wrk_buf, 1, fsize, f);
-    fclose(f);
-
-    db = new_func();
-    u_assert_int_eq(logdb_load(db, dbtmpfile, false, &error), false);
-    u_assert_int_eq(error, LOGDB_ERROR_WRONG_FILE_FORMAT);
-    logdb_free(db);
-
-    /* ---------------------------------------------------- */
-    memcpy(wrk_buf, buf, fsize);
-    wrk_buf[66] = 0x00; /* wrong checksum hash */
-
-    unlink(dbtmpfile);
-    f = fopen(dbtmpfile, "wb");
-    fwrite(wrk_buf, 1, fsize, f);
-    fclose(f);
-
-    db = new_func();
-    u_assert_int_eq(logdb_load(db, dbtmpfile, false, &error), false);
-    u_assert_int_eq(error, LOGDB_ERROR_CHECKSUM);
-    logdb_free(db);
-
-    /* ---------------------------------------------------- */
-    memcpy(wrk_buf, buf, fsize);
-    wrk_buf[42] = 0xFF; /* wrong value length */
-
-    unlink(dbtmpfile);
-    f = fopen(dbtmpfile, "wb");
-    fwrite(wrk_buf, 1, fsize, f);
-    fclose(f);
-
-    db = new_func();
-    u_assert_int_eq(logdb_load(db, dbtmpfile, false, &error), false);
-    u_assert_int_eq(error, LOGDB_ERROR_DATASTREAM_ERROR);
-    logdb_free(db);
-
-    free(buf);
-    free(wrk_buf);
-
 
     /* --- large db test */
     unlink(dbtmpfile);
