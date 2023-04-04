@@ -29,9 +29,9 @@
 #ifndef __LIBLOGDB_REC_H__
 #define __LIBLOGDB_REC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
 
 #include <logdb/logdb_base.h>
 
@@ -64,8 +64,6 @@ LIBLOGDB_API size_t logdb_record_height(logdb_record* head);
 LIBLOGDB_API cstring * logdb_record_find_desc(logdb_record* head, cstring *key);
 LIBLOGDB_API logdb_record* logdb_record_rm_desc(logdb_record *usehead, cstring *key);
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBLOGDB_REC_H__ */

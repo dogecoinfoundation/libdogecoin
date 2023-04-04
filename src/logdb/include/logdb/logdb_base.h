@@ -32,6 +32,10 @@
 #ifndef __LIBLOGDB_BASE_H__
 #define __LIBLOGDB_BASE_H__
 
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
+
 #define UNUSED(x) (void)(x)
 
 typedef uint8_t logdb_bool; /*!serialize, c/c++ save bool*/
@@ -48,10 +52,6 @@ typedef uint8_t logdb_bool; /*!serialize, c/c++ save bool*/
 #define NULL 0
 #endif 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef LIBLOGDB_API
 #if defined(_WIN32)
 #ifdef LIBDOGECOIN_BUILD
@@ -66,8 +66,6 @@ extern "C" {
 #endif
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBLOGDB_BASE_H__ */

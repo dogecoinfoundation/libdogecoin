@@ -150,7 +150,11 @@ void test_logdb(logdb_log_db* (*new_func)())
     fseek(f, 0, SEEK_SET);
 
     buf = safe_malloc(fsize + 1);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
     fread(buf, fsize, 1, f);
+#pragma GCC diagnostic pop
     fclose(f);
 
     /* ---------------------------------------------------- */

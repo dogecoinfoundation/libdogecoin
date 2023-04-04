@@ -26,6 +26,9 @@
 
 */
 
+#ifndef __LIBLOGDB_STACK_H__
+#define __LIBLOGDB_STACK_H__
+
 #include <logdb/misc.h>
 
 /*  CONVENTIONS:  All data structures for stacks have the prefix */
@@ -47,12 +50,9 @@
 /*  stacks of void *, if they are defined then they will be stacks of the */
 /*  appropriate data_type */
 
-#ifndef __LIBLOGDB_STACK_H__
-#define __LIBLOGDB_STACK_H__
+#include <dogecoin/dogecoin.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+LIBDOGECOIN_BEGIN_DECL
 
 #ifndef DATA_TYPE
 #define DATA_TYPE void *
@@ -78,8 +78,6 @@ void *StackPop(stk_stack *theStack);
 int StackNotEmpty(stk_stack *);
 void StackDestroy(stk_stack *theStack,void DestFunc(void * a));
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBLOGDB_STACK_H__ */

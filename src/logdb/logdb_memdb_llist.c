@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2016 Jonas Schnelli
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),

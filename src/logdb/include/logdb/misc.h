@@ -32,6 +32,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
+
 /*  CONVENTIONS:  All data structures for red-black trees have the prefix */
 /*                "rb_" to prevent name conflicts. */
 /*                                                                      */
@@ -47,15 +51,9 @@
 /*                names beginning with "g".  An example of a global */
 /*                variable name is gNewtonsConstant. */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void Assert(int assertion, char *error);
 void *SafeMalloc(size_t size);
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBLOGDB_MISC_H__ */

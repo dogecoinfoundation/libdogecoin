@@ -78,8 +78,11 @@ void *SafeMalloc(size_t size) {
     return (0);
   }
 }
+
 /*  NullFunction does nothing it is included so that it can be passed */
 /*  as a function to RBTreeCreate when no other suitable function has */
 /*  been defined */
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void NullFunction(void *junk) { ; }
+#pragma GCC diagnostic pop

@@ -50,9 +50,9 @@
 #ifndef __LIBLOGDB_H__
 #define __LIBLOGDB_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <dogecoin/dogecoin.h>
+
+LIBDOGECOIN_BEGIN_DECL
 
 #include <stdlib.h>
 
@@ -61,8 +61,6 @@ extern "C" {
 #include <logdb/logdb_memdb_llist.h>
 #include <logdb/logdb_memdb_rbtree.h>
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBLOGDB_H__ */

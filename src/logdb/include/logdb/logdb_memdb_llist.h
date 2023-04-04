@@ -44,9 +44,7 @@
 #include <logdb/logdb_rec.h>
 #include <logdb/logdb_core.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+LIBDOGECOIN_BEGIN_DECL
 
 #include <stdint.h>
 #include <stddef.h>
@@ -64,6 +62,9 @@ LIBLOGDB_API cstring * logdb_llistdb_find(logdb_log_db* db, cstring *key);
 LIBLOGDB_API size_t logdb_llistdb_size(logdb_log_db* db);
 LIBLOGDB_API void logdb_llistdb_cleanup(void* ctx);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+/* static interface */
 static logdb_memmapper logdb_llistdb_mapper = {
     logdb_llistdb_append,
     logdb_llistdb_init,
@@ -71,9 +72,8 @@ static logdb_memmapper logdb_llistdb_mapper = {
     logdb_llistdb_find,
     logdb_llistdb_size
 };
+#pragma GCC diagnostic pop
 
-#ifdef __cplusplus
-}
-#endif
+LIBDOGECOIN_END_DECL
 
 #endif /* __LIBLOGDB_MEMDB_H__ */
