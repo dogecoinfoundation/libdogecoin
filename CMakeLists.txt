@@ -261,11 +261,14 @@ ENDIF()
 
 IF(WITH_NET)
     INSTALL(FILES
+        include/dogecoin/headersdb.h
+        include/dogecoin/headersdb_file.h
         include/dogecoin/protocol.h
         include/dogecoin/net.h
         DESTINATION include/dogecoin
     )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+        src/headersdb_file.c
         src/net.c
         src/protocol.c
     )

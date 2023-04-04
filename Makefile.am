@@ -171,10 +171,13 @@ endif
 
 if WITH_NET
 noinst_HEADERS += \
+    include/dogecoin/headersdb.h \
+    include/dogecoin/headersdb_file.h \
     include/dogecoin/protocol.h \
     include/dogecoin/net.h
 
 libdogecoin_la_SOURCES += \
+    src/headersdb_file.c \
     src/net.c \
     src/protocol.c
 
