@@ -28,6 +28,7 @@ noinst_HEADERS = \
     include/dogecoin/bip39.h \
     include/dogecoin/bip44.h \
     include/dogecoin/block.h \
+    include/dogecoin/blockchain.h \
     include/dogecoin/buffer.h \
     include/dogecoin/byteswap.h \
     include/dogecoin/chainparams.h \
