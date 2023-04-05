@@ -5,7 +5,7 @@
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
-#include "utest.h"
+#include <test/utest.h>
 
 #include <assert.h>
 #include <dogecoin/utils.h>

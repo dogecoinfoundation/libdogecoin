@@ -12,7 +12,7 @@
 #include <dogecoin/chainparams.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/protocol.h>
-#include "utest.h"
+#include <test/utest.h>
 
 #include <event2/util.h>
 

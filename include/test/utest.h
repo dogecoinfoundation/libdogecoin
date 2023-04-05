@@ -1,8 +1,8 @@
 /*
 
  Copyright (c) 2015 Douglas J. Bakkum
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,7 @@
 // Example code:
 //
 
-#include "utest.h"
+#include <test/utest.h>
 
  int U_TESTS_RUN = 0;
  int U_TESTS_FAIL = 0;
@@ -73,7 +73,6 @@
      return U_TESTS_FAIL;
  }
 */
-
 
 #ifndef _UTEST_H_
 #define _UTEST_H_

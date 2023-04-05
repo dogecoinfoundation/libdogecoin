@@ -11,6 +11,7 @@ INCLUDE(CTest)
 SET(USE_TESTS ${CMAKE_TESTING_ENABLED})
 SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
 SET(WITH_NET TRUE CACHE BOOL "enable net functions")
+SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
@@ -61,6 +62,7 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
 MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
 MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
+MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")
 MESSAGE(STATUS "")
 
 ADD_DEFINITIONS(
@@ -76,6 +78,9 @@ IF(WITH_TOOLS)
 ENDIF()
 IF(WITH_NET)
     ADD_DEFINITIONS(-DWITH_NET=1)
+ENDIF()
+IF(WITH_LOGDB)
+    ADD_DEFINITIONS(-DWITH_LOGDB=1)
 ENDIF()
 FILE(TOUCH config/libdogecoin-config.h)
 
@@ -171,6 +176,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE ${SECP256K1})
 
 INCLUDE_DIRECTORIES(
     include
+    src/logdb/include
     src/secp256k1
     src/secp256k1/include
     ${GMP_INSTALL_DIR}/include)
@@ -202,7 +208,7 @@ IF(USE_TESTS)
         test/signmsg_tests.c
         test/transaction_tests.c
         test/tx_tests.c
-        test/utest.h
+        include/test/utest.h
         test/unittester.c
         test/utils_tests.c
         test/vector_tests.c
@@ -215,6 +221,37 @@ IF(USE_TESTS)
         GET_FILENAME_COMPONENT(wordlist_name ${wordlist} NAME)
         CONFIGURE_FILE(${wordlist} "${CMAKE_CURRENT_BINARY_DIR}/test/wordlist/${wordlist_name}" COPYONLY)
     ENDFOREACH()
+ENDIF()
+
+IF(WITH_LOGDB)
+    TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+        src/logdb/logdb_core.c
+        src/logdb/logdb_memdb_llist.c
+        src/logdb/logdb_memdb_rbtree.c
+        src/logdb/logdb_rec.c
+        src/logdb/misc.c
+        src/logdb/red_black_tree.c
+        src/logdb/stack.c
+    )
+    INSTALL(FILES
+        src/logdb/include/logdb/logdb_base.h
+        src/logdb/include/logdb/logdb_core.h
+        src/logdb/include/logdb/logdb_memdb_llist.h
+        src/logdb/include/logdb/logdb_memdb_rbtree.h
+        src/logdb/include/logdb/logdb_rec.h
+        src/logdb/include/logdb/logdb.h
+        src/logdb/include/logdb/misc.h
+        src/logdb/include/logdb/red_black_tree.h
+        src/logdb/include/logdb/stack.h
+        DESTINATION include/logdb
+    )
+    IF(USE_TESTS)
+        TARGET_SOURCES(tests PRIVATE
+            src/logdb/test/logdb_tests.c
+            src/logdb/test/tests_red_black_tree.c
+            src/logdb/test/logdb_tests_sample.h
+        )
+    ENDIF()
 ENDIF()
 
 IF(WITH_NET)
