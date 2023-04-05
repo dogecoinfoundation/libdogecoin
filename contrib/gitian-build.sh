@@ -141,8 +141,8 @@ if [ ! -f "inputs/osslsigncode_1.7.1.orig.tar.gz" ]; then
     wget -P inputs https://depends.dogecoincore.org/osslsigncode_1.7.1.orig.tar.gz
 fi
 
-if [ ! -f "inputs/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz" ]; then
-    wget -P inputs https://bitcoincore.org/depends-sources/sdks/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
+if [ ! -f "inputs/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz" ]; then
+    wget -P inputs https://bitcoincore.org/depends-sources/sdks/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz
 fi
 
 make -C ../libdogecoin/depends download SOURCES_PATH=`pwd`/cache/common

@@ -19,7 +19,7 @@ define $(package)_preprocess_cmds
 endef
 else
 define $(package)_preprocess_cmds
-  ./autogen.sh
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux
 endef
 endif
 

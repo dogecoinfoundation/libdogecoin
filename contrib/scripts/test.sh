@@ -59,7 +59,7 @@ if has_param '--host' "$@"; then
         "i686-w64-mingw32")
             make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
         ;;
-        "x86_64-apple-darwin14")
+        "x86_64-apple-darwin15")
             if [[ detect_os == "darwin" ]]; then
                 ./tests
             fi

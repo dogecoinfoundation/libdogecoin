@@ -139,7 +139,7 @@ There may be times when you would like to build the library for a different oper
 - arm-linux-gnueabihf
 - aarch64-linux-gnu
 - x86_64-pc-linux-gnu
-- x86_64-apple-darwin14
+- x86_64-apple-darwin15
 - x86_64-w64-mingw32
 - i686-w64-mingw32
 - i686-pc-linux-gnu
