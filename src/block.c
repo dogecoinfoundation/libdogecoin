@@ -138,7 +138,6 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
 
     size_t consumedlength = 0;
     if (block->header->nonce == 0 && buffer->len > 0 && !dogecoin_tx_deserialize(buffer->p, buffer->len, block->parent_coinbase, &consumedlength)) {
-        printf("error deserializing transaction\n\n");
         return false;
         }
 

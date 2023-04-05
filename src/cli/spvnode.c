@@ -27,7 +27,13 @@
 */
 
 #include <assert.h>
+
+#ifndef _MSC_VER
 #include <getopt.h>
+#else
+#include <../../contrib/getopt/wingetopt.h>
+#endif
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
