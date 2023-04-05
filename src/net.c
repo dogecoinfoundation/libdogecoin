@@ -449,7 +449,7 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
     node_group->nodes = vector_new(1, dogecoin_node_free_cb);
     node_group->chainparams = (chainparams ? chainparams : &dogecoin_chainparams_main);
     node_group->parse_cmd_cb = NULL;
-    strcpy(node_group->clientstr, "libdogecoin 0.1");
+    strcpy(node_group->clientstr, "libdogecoin-spv-node");
 
     /* nullify callbacks */
     node_group->postcmd_cb = NULL;

@@ -265,12 +265,14 @@ IF(WITH_NET)
         include/dogecoin/headersdb_file.h
         include/dogecoin/protocol.h
         include/dogecoin/net.h
+        include/dogecoin/spv.h
         DESTINATION include/dogecoin
     )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
         src/headersdb_file.c
         src/net.c
         src/protocol.c
+        src/spv.c
     )
 
     TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
@@ -279,6 +281,7 @@ IF(WITH_NET)
         TARGET_SOURCES(tests PRIVATE
             test/net_tests.c
             test/protocol_tests.c
+            test/spv_tests.c
         )
     ENDIF()
 ENDIF()
@@ -300,7 +303,10 @@ IF(WITH_TOOLS)
         ADD_EXECUTABLE(sendtx src/cli/sendtx.c)
         INSTALL(TARGETS sendtx RUNTIME)
         TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME})
-
         TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
+        ADD_EXECUTABLE(spvnode src/cli/spvnode.c)
+        INSTALL(TARGETS spvnode RUNTIME)
+        TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME})
+        TARGET_INCLUDE_DIRECTORIES(spvnode PRIVATE src)        
     ENDIF()
 ENDIF()

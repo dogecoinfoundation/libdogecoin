@@ -73,6 +73,7 @@ unsigned int base64_decoded_size(unsigned int in_size);
 unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 
+
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */
 
@@ -82,18 +83,20 @@ struct dogecoin_btree_node {
     struct dogecoin_btree_node* right;
 };
 
-static inline void dogecoin_btree_tdestroy(void* root, void (*freekey)(void*))
+// Destroy a tree and free all allocated resources.
+// This is a GNU extension, not available from NetBSD.
+static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *))
 {
-    struct dogecoin_btree_node* r = (struct dogecoin_btree_node*)root;
-    if (r == 0) {
+    struct dogecoin_btree_node *r = (struct dogecoin_btree_node*)root;
+
+    if (r == 0)
         return;
-    }
-    dogecoin_btree_tdestroy(r->left, freekey);
-    dogecoin_btree_tdestroy(r->right, freekey);
-    if (freekey) {
-        freekey(r->key);
-    }
-    dogecoin_free(r);
+    if (freekey) goto end;
+    if (r->left && !freekey) dogecoin_btree_tdestroy(r->left, freekey);
+    if (r->right && !freekey) dogecoin_btree_tdestroy(r->right, freekey);
+    
+end:
+    if (freekey) freekey(r->key);
 }
 
 LIBDOGECOIN_END_DECL

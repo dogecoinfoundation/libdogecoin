@@ -34,10 +34,10 @@
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
 
-LIBDOGECOIN_BEGIN_DECL
-
 #include <logdb/logdb.h>
 #include <logdb/logdb_rec.h>
+
+LIBDOGECOIN_BEGIN_DECL
 
 /* headers database interface, flexible function pointers in
    order to support multiple backends

@@ -30,6 +30,7 @@
 #define __LIBDOGECOIN_HEADERSDB_FILE_H__
 
 #include <dogecoin/dogecoin.h>
+
 #include <dogecoin/blockchain.h>
 #include <dogecoin/buffer.h>
 #include <dogecoin/cstr.h>

@@ -85,7 +85,7 @@ dogecoin_headers_db* dogecoin_headers_db_new(const dogecoin_chainparams* chainpa
 
     db->read_write_file = !inmem_only;
     db->use_binary_tree = true;
-    db->max_hdr_in_mem = 144;
+    db->max_hdr_in_mem = 1440;
 
     db->genesis.height = 0;
     db->genesis.prev = NULL;
