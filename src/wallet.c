@@ -27,7 +27,6 @@
  */
 
 #include <assert.h>
-#include <search.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -522,7 +521,7 @@ dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet)
 
     //add it to the binary tree
     // tree manages memory
-    tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+    dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
     vector_add(wallet->waddr_vector, waddr);
 
     //serialize and store node
@@ -609,7 +608,7 @@ dogecoin_bool dogecoin_wallet_have_key(dogecoin_wallet* wallet, uint160 hash160)
     dogecoin_wallet_addr waddr_search;
     memcpy_safe(&waddr_search.pubkeyhash, hash160, sizeof(uint160));
 
-    dogecoin_wallet_addr *needle = tfind(&waddr_search, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare); /* read */
+    dogecoin_wallet_addr *needle = dogecoin_btree_tfind(&waddr_search, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare); /* read */
     if (needle) {
         needle = *(dogecoin_wallet_addr **)needle;
     }
@@ -723,7 +722,7 @@ int64_t dogecoin_wallet_get_debit_txi(dogecoin_wallet *wallet, const dogecoin_tx
     dogecoin_wtx wtx;
     memcpy_safe(wtx.tx_hash_cache, txin->prevout.hash, sizeof(wtx.tx_hash_cache));
 
-    dogecoin_wtx* prevwtx = tfind(&wtx, &wallet->wtxes_rbtree, dogecoin_wtx_compare);
+    dogecoin_wtx* prevwtx = dogecoin_btree_tfind(&wtx, &wallet->wtxes_rbtree, dogecoin_wtx_compare);
     if (prevwtx) {
         // remove existing wtx
         prevwtx = *(dogecoin_wtx **)prevwtx;
@@ -776,7 +775,7 @@ void dogecoin_wallet_add_to_spent(dogecoin_wallet* wallet, const dogecoin_wtx* w
 
             // add to binary tree
             // memory is managed there (will free on tdestroy
-            tfind(outpoint, &wallet->spends_rbtree, dogecoin_tx_outpoint_compare);
+            dogecoin_btree_tfind(outpoint, &wallet->spends_rbtree, dogecoin_tx_outpoint_compare);
         }
     }
 }
@@ -789,7 +788,7 @@ dogecoin_bool dogecoin_wallet_is_spent(dogecoin_wallet* wallet, uint256 hash, ui
     dogecoin_tx_outpoint outpoint;
     memcpy_safe(&outpoint.hash, hash, sizeof(uint256));
     outpoint.n = n;
-    dogecoin_tx_outpoint* possible_found = tfind(&outpoint, &wallet->spends_rbtree, dogecoin_tx_outpoint_compare);
+    dogecoin_tx_outpoint* possible_found = dogecoin_btree_tfind(&outpoint, &wallet->spends_rbtree, dogecoin_tx_outpoint_compare);
     if (possible_found) {
         possible_found = *(dogecoin_tx_outpoint **)possible_found;
     }
@@ -801,7 +800,7 @@ dogecoin_wtx * dogecoin_wallet_get_wtx(dogecoin_wallet* wallet, const uint256 ha
     dogecoin_wtx find;
     find.tx = NULL;
     dogecoin_hash_set(find.tx_hash_cache, hash);
-    dogecoin_wtx* check_wtx = tfind(&find, &wallet->wtxes_rbtree, dogecoin_wtx_compare);
+    dogecoin_wtx* check_wtx = dogecoin_btree_tfind(&find, &wallet->wtxes_rbtree, dogecoin_wtx_compare);
     if (check_wtx) {
         return *(dogecoin_wtx **)check_wtx;
     }

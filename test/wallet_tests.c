@@ -6,7 +6,6 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#include <search.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -161,7 +160,7 @@ void test_wallet()
     size_t outlen = 0;
     utils_hex_to_bin("e195b669de8e49f955749033fa2d79390732c435", waddr->pubkeyhash, 40, &outlen);
 
-    tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+    dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
 
     int64_t totalin = 0;
     unsigned int i;
