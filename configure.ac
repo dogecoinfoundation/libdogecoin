@@ -110,6 +110,12 @@ AC_ARG_ENABLE([logdb],
   [with_logdb=$enableval],
   [with_logdb=yes])
 
+AC_ARG_ENABLE([unistring],
+  [AS_HELP_STRING([--disable-unistring],
+  [disable unistring functions])],
+  [with_unistring=$enableval],
+  [with_unistring=yes])
+
 AC_ARG_ENABLE(tests,
   AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
   [use_tests=$enableval],
@@ -156,7 +162,11 @@ if test "x$with_logdb" = xyes; then
   AC_DEFINE_UNQUOTED([WITH_LOGDB],[1],[Define to 1 to enable logdb compilation])
 fi
 
-AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
+if test "x$with_unistring" = xyes; then
+  AC_CHECK_LIB([unistring],[main],LIBUNISTRING=-lunistring,AC_MSG_ERROR(libunistring missing))
+  LIBS="$LIBS $LIBUNISTRING"
+  AC_DEFINE(USE_UNISTRING, 1, [Define this symbol if libunistring works])
+fi
 
 AC_CONFIG_HEADERS([config/libdogecoin-config.h])
 AC_CONFIG_FILES([Makefile libdogecoin.pc])
@@ -184,6 +194,7 @@ echo "  with tests    = $with_tests"
 echo "  with tools    = $with_tools"
 echo "  with net      = $with_net"
 echo "  with logdb    = $with_logdb"
+echo "  with unistring = $with_unistring"
 echo
 echo "  host          = $host"
 echo "  target os     = $TARGET_OS"

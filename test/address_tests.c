@@ -161,6 +161,7 @@ void test_address()
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
 
+#if WIN32 || USE_UNISTRING
     // mnemonic to HD keys and addresses
     MNEMONIC seedphrase = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote";
     res = generateHDMasterPubKeypairFromMnemonic (extout, p2pkh_pubkey_test, seedphrase, NULL, true);
@@ -171,6 +172,7 @@ void test_address()
     u_assert_str_eq(p2pkh_pubkey_test, "naTzLkBZLpUVXykb3sSP1Wzzz9GzzM4BVU");
     res = getDerivedHDAddressFromMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, seedphrase, NULL, p2pkh_pubkey_main, false);
     u_assert_str_eq(p2pkh_pubkey_main, "DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT");
+#endif
 
     /*free up VLAs*/
     free(masterkey_main);

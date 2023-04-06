@@ -109,8 +109,10 @@ int main()
     u_run_test(test_base58);
     u_run_test(test_base64);
     u_run_test(test_bip32);
+#if WIN32 || USE_UNISTRING
     u_run_test(test_bip39);
     u_run_test(test_bip44);
+#endif
     u_run_test(test_block_header);
     u_run_test(test_buffer);
     u_run_test(test_cstr);
