@@ -153,11 +153,11 @@ jobs:
         run: ${{ matrix.postinstall }}
 
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: sdk cache
         if: ${{ matrix.sdk }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: sdk
         with:
@@ -177,7 +177,7 @@ jobs:
           tar -C depends/SDKs -xf depends/sdk-sources/${{ env.sdk-filename }}
 
       - name: dependency cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: depends
         with:
@@ -189,7 +189,7 @@ jobs:
           make $MAKEJOBS -C depends HOST=${{ matrix.host }} ${{ matrix.dep-opts }}
 
       - name: ccache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: ccache
         with:

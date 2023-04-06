@@ -33,7 +33,7 @@ jobs:
 
     steps:
     - name: checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: update system
       run: |
@@ -41,7 +41,7 @@ jobs:
         sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential python3
 
     - name: Dependency cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       env:
         cache-name: depends
       with:
