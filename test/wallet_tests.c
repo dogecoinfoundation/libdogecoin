@@ -1,13 +1,19 @@
 /**********************************************************************
  * Copyright (c) 2015 Jonas Schnelli                                  *
- * Copyright (c) 2022 bluezr                                          *
- * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Copyright (c) 2023 bluezr                                          *
+ * Copyright (c) 2023 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+static const char *wallettmpfile = "dummy";
+#else
 #include <unistd.h>
+static const char *wallettmpfile = "/tmp/dummy";
+#endif
 
 #include <test/utest.h>
 
@@ -16,8 +22,6 @@
 #include <dogecoin/base58.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/wallet.h>
-
-static const char *wallettmpfile = "/tmp/dummy";
 
 /* this are the tx_valid test vectors from Bitcoin Core 0.15, run through Bitcoin Core's SignatureHash function */
 static const char * wallet_txns[] = {

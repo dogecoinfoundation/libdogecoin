@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2016 Jonas Schnelli
- Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2023 bluezr
+ Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -29,12 +29,15 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#ifndef _MSC_VER
-#  include <unistd.h>
+
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#else
+#include <unistd.h>
 #endif
 
 #include <dogecoin/base58.h>
