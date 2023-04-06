@@ -36,19 +36,105 @@ void test_tpm()
     u_assert_uint32_eq (info.tpmVersion, TPM_VERSION_20);
  
     // Send TPM2_CC_GetRandom command
-    const BYTE cmd[] = {
+    const BYTE cmd_random[] = {
         0x80, 0x01,             // tag: TPM_ST_SESSIONS
         0x00, 0x00, 0x00, 0x0C, // commandSize: size of the entire command byte array
         0x00, 0x00, 0x01, 0x7B, // commandCode: TPM2_CC_GetRandom
         0x00, 0x20              // parameter: 32 bytes
     };
-    BYTE resp[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
-    UINT32 respSize =  TBS_IN_OUT_BUF_SIZE_MAX;
-    hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd, sizeof(cmd), resp, &respSize);
+    BYTE resp_random[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
+    UINT32 resp_randomSize =  TBS_IN_OUT_BUF_SIZE_MAX;
+    hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd_random, sizeof(cmd_random), resp_random, &resp_randomSize);
     u_assert_uint32_eq (hr, TBS_SUCCESS);
     char* rand_hex;
-    rand_hex = utils_uint8_to_hex(&resp[12], 0x20);
+    rand_hex = utils_uint8_to_hex(&resp_random[12], 0x20);
     debug_print ("TPM2_CC_GetRandom response: %s\n", rand_hex);
+
+    // Seal the random with the TPM2
+    const BYTE cmd_seal[] = {
+        0x80, 0x01,             // tag: TPM_ST_SESSIONS
+        0x00, 0x00, 0x00, 0x32, // commandSize: size of the entire command byte array
+        0x00, 0x00, 0x01, 0x28, // commandCode: TPM2_Create
+        0x00, 0x00, 0x00, 0x00, // parentHandle: handle of parent
+        0x00, 0x00, 0x00, 0x20, // inSensitive: size of sensitiveData
+        // sensitiveDataValue: <data to be sealed>
+        // Replace the following 32 bytes with the random data obtained from TPM2_CC_GetRandom response
+        resp_random[12], resp_random[13], resp_random[14], resp_random[15], resp_random[16], resp_random[17], resp_random[18], resp_random[19], 
+        resp_random[20], resp_random[21], resp_random[22], resp_random[23], resp_random[24], resp_random[25], resp_random[26], resp_random[27],
+        resp_random[28], resp_random[29], resp_random[30], resp_random[31], resp_random[32], resp_random[33], resp_random[34], resp_random[35],
+        resp_random[36], resp_random[37], resp_random[38], resp_random[39], resp_random[40], resp_random[41], resp_random[42], resp_random[43],
+    };
+
+    BYTE resp_seal[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
+    UINT32 resp_sealSize = TBS_IN_OUT_BUF_SIZE_MAX;
+    hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd_seal, sizeof(cmd_seal), resp_seal, &resp_sealSize);
+    u_assert_uint32_eq(hr, TBS_SUCCESS);
+    debug_print("TPM2_CreatePrimary response: %02X %02X %02X %02X\n", resp_seal[0], resp_seal[1], resp_seal[2], resp_seal[3]);
+
+    // Parse the TPM2_CreatePrimary response to get the handle of the created primary key
+    UINT32 handle = 0;
+    UINT32 offset = 10; // Skip tag (2 bytes) and commandSize (4 bytes)
+    memcpy(&handle, resp_seal + offset, sizeof(UINT32));
+    handle = ntohl(handle); // Convert handle from network byte order to host byte order
+/*
+    // Read the public portion of the created primary key
+    const BYTE cmd_readpublic[] = {
+        0x80, 0x01,                   // tag: TPM_ST_SESSIONS
+        0x00, 0x00, 0x00, 0x01,       // commandCode: TPM2_ReadPublic
+        0x00, 0x00, 0x00, 0x00,       // name: TPMI_DH_OBJECT: handle of the public area
+        (BYTE)(handle >> 24),         // handle: byte 1 (MSB)
+        (BYTE)(handle >> 16),         // handle: byte 2
+        (BYTE)(handle >> 8),          // handle: byte 3
+        (BYTE)handle,                 // handle: byte 4 (LSB)
+        0x00, 0x00, 0x00, 0x00,       // outPublic: TPMT_PUBLIC: public area
+        0x00, 0x00, 0x00, 0x00,       // outPublic: nameAlg: algorithm used for computing the Name of the object
+        0x00, 0x00, 0x00, 0x00,       // outPublic: objectType: type of the object
+        0x00, 0x00, 0x00, 0x00,       // outPublic: attributes: attributes of the object
+        0x00, 0x00, 0x00, 0x00,       // outPublic: authPolicy: authorization policy for the object
+        0x00, 0x00, 0x00, 0x00,       // outPublic: parameters: parameters of the object
+        0x00, 0x00,                   // outPublic: unique: unique field
+        0x00, 0x00, 0x00, 0x00,       // size of outPublic: TPMT_PUBLIC
+        0x00, 0x00, 0x00, 0x00,       // name: TPM2B_NAME: the Name of the object
+        0x00, 0x00,                   // size of name: TPM2B_NAME
+        0x00, 0x00, 0x00, 0x00,       // qualifiedName: TPM2B_NAME: qualified Name of the object
+        0x00, 0x00                    // size of qualifiedName: TPM2B_NAME
+    };
+
+    BYTE resp_readpublic[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
+    UINT32 resp_readpublicSize = TBS_IN_OUT_BUF_SIZE_MAX;
+    hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd_readpublic, sizeof(cmd_readpublic), resp_readpublic, &resp_readpublicSize);
+    u_assert_uint32_eq(hr, TBS_SUCCESS);
+    debug_print("TPM2_ReadPublic response: %02X %02X %02X %02X\n", resp_readpublic[0], resp_readpublic[1], resp_readpublic[2], resp_readpublic[3]);
+*/
+
+    // Unseal the random with the TPM2
+    const BYTE inPublic[] = {
+        0x00, 0x00, 0x00, 0x04, // inPublic: size of the TPM2B_PUBLIC structure
+        0x00, 0x00, 0x00, 0x00, // inPublic: TPM2B_PUBLIC: size
+        0x00, 0x00, 0x00, 0x00, // inPublic: TPM2B_PUBLIC: type
+        0x00, 0x00, 0x00, 0x00  // inPublic: TPM2B_PUBLIC: nameAlg
+    };
+
+    const BYTE cmd_unseal[] = {
+        0x80, 0x01,                         // tag: TPM_ST_SESSIONS
+        0x00, 0x00, 0x00, 0x18,             // commandSize: size of the entire command byte array
+        0x00, 0x00, 0x01, 0x5E,             // commandCode: TPM2_CC_Unseal
+        0x00, 0x00, 0x00, 0x04,             // inPublic: size of the TPM2B_PUBLIC structure
+        inPublic[0], inPublic[1], inPublic[2], inPublic[3], // inPublic: TPM2B_PUBLIC: size
+        inPublic[4], inPublic[5], inPublic[6], inPublic[7], // inPublic: TPM2B_PUBLIC: type
+        inPublic[8], inPublic[9], inPublic[10], inPublic[11] // inPublic: TPM2B_PUBLIC: nameAlg
+    };
+
+    BYTE resp_unseal[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
+    UINT32 resp_unsealSize =  TBS_IN_OUT_BUF_SIZE_MAX;
+    hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd_unseal, sizeof(cmd_unseal), resp_unseal, &resp_unsealSize);
+    u_assert_uint32_eq (hr, TBS_SUCCESS);
+
+    // Check unsealed random
+    BYTE* unsealedData = &resp_unseal[10]; // Unsealed data starts from the 10th byte of the response buffer
+    int unsealedDataSize = resp_unsealSize - 10; // Size of unsealed data is the remaining bytes in the response buffer
+
+    u_assert_mem_eq (unsealedData, resp_random + 12, 0x20);
 
 #endif
 
