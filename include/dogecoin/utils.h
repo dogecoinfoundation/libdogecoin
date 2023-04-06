@@ -30,6 +30,8 @@
 #ifndef __LIBDOGECOIN_UTILS_H__
 #define __LIBDOGECOIN_UTILS_H__
 
+#include <assert.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
 #include <dogecoin/cstr.h>
@@ -73,21 +75,22 @@ unsigned int base64_decoded_size(unsigned int in_size);
 unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 
-
+#define _SEARCH_PRIVATE
+#ifdef _SEARCH_PRIVATE
 /* support substitute for GNU only tdestroy */
 /* let's hope the node struct is always compatible */
-
-struct dogecoin_btree_node {
-    void* key;
-    struct dogecoin_btree_node* left;
-    struct dogecoin_btree_node* right;
-};
+typedef struct dogecoin_btree_node {
+    void *key;
+    struct dogecoin_btree_node *left, *right;
+} dogecoin_btree_node_t;
+#endif
+#define _DIAGASSERT assert
 
 // Destroy a tree and free all allocated resources.
 // This is a GNU extension, not available from NetBSD.
 static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *))
 {
-    struct dogecoin_btree_node *r = (struct dogecoin_btree_node*)root;
+    dogecoin_btree_node_t *r = (dogecoin_btree_node_t*)root;
 
     if (r == 0)
         return;
@@ -97,6 +100,73 @@ static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *))
     
 end:
     if (freekey) freekey(r->key);
+}
+
+/* delete node with given key */
+static inline void *
+dogecoin_btree_tdelete(const void *vkey,	/* key to be deleted */
+	void      **vrootp,	/* address of the root of tree */
+	int       (*compar)(const void *, const void *))
+{
+	dogecoin_btree_node_t **rootp = (dogecoin_btree_node_t **)vrootp;
+	dogecoin_btree_node_t *p, *q, *r;
+	int  cmp;
+
+	_DIAGASSERT((uintptr_t)compar != (uintptr_t)NULL);
+
+	if (rootp == NULL || (p = *rootp) == NULL)
+		return NULL;
+
+	while ((cmp = (*compar)(vkey, (*rootp)->key)) != 0) {
+		p = *rootp;
+		rootp = (cmp < 0) ?
+		    &(*rootp)->left :		/* follow left branch */
+		    &(*rootp)->right;		/* follow right branch */
+		if (*rootp == NULL)
+			return NULL;		/* key not found */
+	}
+	r = (*rootp)->right;			/* D1: */
+	if ((q = (*rootp)->left) == NULL)	/* Left NULL? */
+		q = r;
+	else if (r != NULL) {			/* Right link is NULL? */
+		if (r->left == NULL) {		/* D2: Find successor */
+			r->left = q;
+			q = r;
+		} else {			/* D3: Find NULL link */
+			for (q = r->left; q->left != NULL; q = r->left)
+				r = q;
+			r->left = q->right;
+			q->left = (*rootp)->left;
+			q->right = (*rootp)->right;
+		}
+	}
+	dogecoin_free(*rootp);				/* D4: Free node */
+	*rootp = q;				/* link parent to new node */
+	return p;
+}
+
+/* find a node, or return 0 */
+static inline void *
+dogecoin_btree_tfind (const void *vkey, void * const *vrootp,
+       int (*compar) (const void *, const void *))
+{
+  dogecoin_btree_node_t * const *rootp = (dogecoin_btree_node_t * const*)vrootp;
+
+  if (rootp == NULL)
+    return NULL;
+
+  while (*rootp != NULL)
+    {
+      /* T1: */
+      int r;
+
+      if ((r = (*compar)(vkey, (*rootp)->key)) == 0)	/* T2: */
+	return *rootp;		/* key found */
+      rootp = (r < 0) ?
+	  &(*rootp)->left :		/* T3: follow left branch */
+	  &(*rootp)->right;		/* T4: follow right branch */
+    }
+  return NULL;
 }
 
 LIBDOGECOIN_END_DECL

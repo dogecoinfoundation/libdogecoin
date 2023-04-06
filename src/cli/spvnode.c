@@ -30,8 +30,9 @@
 
 #ifndef _MSC_VER
 #include <getopt.h>
+#include <unistd.h>
 #else
-#include <../../contrib/getopt/wingetopt.h>
+#include <win/wingetopt.h>
 #endif
 
 #include <inttypes.h>
@@ -39,7 +40,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #if defined(HAVE_CONFIG_H)
 #include "libdogecoin-config.h"

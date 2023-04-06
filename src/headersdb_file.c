@@ -26,15 +26,13 @@
  
 */
 
+#include <sys/stat.h>
+
 #include <dogecoin/headersdb_file.h>
 #include <dogecoin/block.h>
 #include <dogecoin/common.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
-
-#include <sys/stat.h>
-
-#include <search.h>
 
 static const unsigned char file_hdr_magic[4] = {0xA8, 0xF0, 0x11, 0xC5}; /* header magic */
 static const uint32_t current_version = 2;
@@ -301,7 +299,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
             }
         }
         if (db->use_binary_tree) {
-            tsearch(blockindex, &db->tree_root, dogecoin_header_compare);
+            dogecoin_btree_tfind(blockindex, &db->tree_root, dogecoin_header_compare);
         }
 
         if (db->max_hdr_in_mem > 0) {
@@ -319,7 +317,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
 
                 if (scan_tip && i == db->max_hdr_in_mem && scan_tip != &db->genesis) {
                     if (scan_tip->prev && scan_tip->prev != &db->genesis) {
-                        tdelete(scan_tip->prev, &db->tree_root, dogecoin_header_compare);
+                        dogecoin_btree_tdelete(scan_tip->prev, &db->tree_root, dogecoin_header_compare);
                         dogecoin_free(scan_tip->prev);
                         scan_tip->prev = NULL;
                         db->chainbottom = scan_tip;
@@ -379,7 +377,7 @@ dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256 h
     {
         dogecoin_blockindex *blockindex = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
         memcpy_safe(blockindex->hash, hash, sizeof(uint256));
-        dogecoin_blockindex *blockindex_f = tfind(blockindex, &db->tree_root, dogecoin_header_compare); /* read */
+        dogecoin_blockindex *blockindex_f = dogecoin_btree_tfind(blockindex, &db->tree_root, dogecoin_header_compare); /* read */
         if (blockindex_f) {
             blockindex_f = *(dogecoin_blockindex **)blockindex_f;
         }
@@ -413,7 +411,7 @@ dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db) {
     {
         dogecoin_blockindex *oldtip = db->chaintip;
         db->chaintip = db->chaintip->prev;
-        tdelete(oldtip, &db->tree_root, dogecoin_header_compare);
+        dogecoin_btree_tdelete(oldtip, &db->tree_root, dogecoin_header_compare);
         dogecoin_free(oldtip);
         return true;
     }

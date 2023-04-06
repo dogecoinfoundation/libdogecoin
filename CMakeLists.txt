@@ -106,9 +106,9 @@ INSTALL(FILES
 
 IF(WIN32)
     INSTALL(FILES
-    include/dogecoin/winunistd.h
-    contrib/getopt/wingetopt.h
-    contrib/wintime/wingettime.h
+    include/win/winunistd.h
+    include/win/wingetopt.h
+    include/win/wingettime.h
     DESTINATION include/dogecoin)
 ENDIF()
 

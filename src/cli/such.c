@@ -30,8 +30,10 @@
 #include <assert.h>
 #ifndef _MSC_VER
 #include <getopt.h>
+#include <unistd.h>
 #else
-#include <../../contrib/getopt/wingetopt.h>
+#include <win/wingetopt.h>
+#include <win/winunistd.h>
 #endif
 
 #ifdef HAVE_CONFIG_H
@@ -41,12 +43,6 @@
 #include <stdio.h>   /* printf */
 #include <stdlib.h>  /* atoi, malloc */
 #include <string.h>  /* strcpy */
-
-#ifndef _MSC_VER
-#include <unistd.h>
-#else
-#include <dogecoin/winunistd.h>
-#endif
 
 #include <dogecoin/uthash.h>
 

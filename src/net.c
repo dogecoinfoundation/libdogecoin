@@ -27,7 +27,7 @@
 
 #ifdef _WIN32
 #ifdef _MSC_VER
-#include <../contrib/getopt/wingetopt.h>
+#include <win/wingetopt.h>
 #else
 #include <getopt.h>
 #endif
@@ -50,7 +50,7 @@
 //MLUMIN:MSVC
 #ifdef _MSC_VER
 #define HAVE_STRUCT_TIMESPEC
-#include <../../contrib/winpthreads/include/pthread.h>
+#include <win/pthread.h>
 #else
 #include <pthread.h>
 #endif
@@ -62,7 +62,6 @@
 #include <event2/util.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
-
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
