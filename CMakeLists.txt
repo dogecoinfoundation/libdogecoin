@@ -48,7 +48,7 @@ IF(WITH_NET)
         execute_process(COMMAND cmake --build .
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
         file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/build/include" DESTINATION "${PROJECT_SOURCE_DIR}")
-        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include" DESTINATION "${PROJECT_SOURCE_DIR}")
+        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include/event2" DESTINATION "${PROJECT_SOURCE_DIR}/include")
         find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include" REQUIRED)
         find_path(LIBEVENT_INCLUDE_DIR event-config.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
