@@ -53,16 +53,18 @@ void test_tpm()
     // Seal the random with the TPM2
     const BYTE cmd_seal[] = {
         0x80, 0x01,             // tag: TPM_ST_SESSIONS
-        0x00, 0x00, 0x00, 0x32, // commandSize: size of the entire command byte array
-        0x00, 0x00, 0x01, 0x28, // commandCode: TPM2_Create
-        0x00, 0x00, 0x00, 0x00, // parentHandle: handle of parent
-        0x00, 0x00, 0x00, 0x20, // inSensitive: size of sensitiveData
-        // sensitiveDataValue: <data to be sealed>
-        // Replace the following 32 bytes with the random data obtained from TPM2_CC_GetRandom response
+        0x00, 0x00, 0x00, 0x36, // commandSize: size of the entire command byte array
+        0x00, 0x00, 0x01, 0x91, // commandCode: TPM2_CC_CreateLoaded
+        0x40, 0x00, 0x00, 0x01, // parentHandle: Handle of a transient storage key, a persistent storage key, TPM_RH_ENDORSEMENT, TPM_RH_OWNER, TPM_RH_PLATFORM+{PP}, or TPM_RH_NULL
+        0x00, 0x00, 0x00, 0x20, // inSensitiveSize: size of the sensitive data
+        0x00, 0x00,             // inSensitive: userAuth: empty buffer (size 0)
+        // sensitiveDataValue: <data from TPM2_GetRandom response>
+        // Replace the following 32 bytes with the random data obtained from TPM2_GetRandom response
         resp_random[12], resp_random[13], resp_random[14], resp_random[15], resp_random[16], resp_random[17], resp_random[18], resp_random[19], 
         resp_random[20], resp_random[21], resp_random[22], resp_random[23], resp_random[24], resp_random[25], resp_random[26], resp_random[27],
         resp_random[28], resp_random[29], resp_random[30], resp_random[31], resp_random[32], resp_random[33], resp_random[34], resp_random[35],
         resp_random[36], resp_random[37], resp_random[38], resp_random[39], resp_random[40], resp_random[41], resp_random[42], resp_random[43],
+        0x00, 0x00,             // inPublic: size of the public template (0 bytes)
     };
 
     BYTE resp_seal[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
