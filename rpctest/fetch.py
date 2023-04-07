@@ -97,11 +97,11 @@ else:
 deps_path = ["dogecoind"]
 for f in deps_path:
     src = "dogecoin-1.14.6/bin/" + f
-    print(src)
     src_path = os.path.join(os.getcwd(), src)
     dst_path = os.path.join(os.getcwd(), "dogecoind")
     shutil.move(src_path, dst_path)
 
+subprocess.run([os.path.join(os.getcwd(), "rpctest/path.sh")])
 subprocess.run([os.path.join(os.getcwd(), "rpctest/spvtool.py")])
 
 rmlist = ['./dogecoin-*', 'dummy', 'dogecoind', '*.tar.gz', '*.zip', '*.asc']

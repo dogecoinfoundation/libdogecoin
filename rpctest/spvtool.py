@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 Jonas Schnelli
+# Copyright (c) 2023 bluezr
+# Copyright (c) 2023 The Dogecoin Foundation
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,20 +49,18 @@ class SPVToolTest (BitcoinTestFramework):
         log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
         
         #sync with no headers database (-f 0) and debug (-d) only against localhost
-        cmd = "./spvnode -f 0 -d -i 127.0.0.1:"+str(p2p_port(0))+" scan"
+        cmd = "./spvnode --regtest -f 0 -d -i 127.0.0.1:"+str(p2p_port(0))+" scan"
         data = self.execute_and_get_response(cmd)
-        print(data)
-        # assert("parsing 1 tx(s) from block at height: 100" in data)
+        assert("Sync completed, at height 100" in data)
         
         # do the same with a headers db
         try:
             os.remove("headers.db")
         except OSError:
             pass
-        cmd = "./spvnode -d -i 127.0.0.1:"+str(p2p_port(0))+" scan"
+        cmd = "./spvnode --regtest -d -i 127.0.0.1:"+str(p2p_port(0))+" scan"
         data = self.execute_and_get_response(cmd)
-        # assert("parsing 1 tx(s) from block at height: 100" in data)
-        print(data)
+        assert("Sync completed, at height 100" in data)
         try:
             os.remove("headers.db")
         except OSError:

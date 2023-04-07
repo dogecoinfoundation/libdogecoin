@@ -220,7 +220,7 @@ class BitcoinTestFramework(object):
         self.log.addHandler(ch)
 
         if self.options.trace_rpc:
-            rpc_logger = logging.getLogger("BitcoinRPC")
+            rpc_logger = logging.getLogger("DogecoinRPC")
             rpc_logger.setLevel(logging.DEBUG)
             rpc_handler = logging.StreamHandler(sys.stdout)
             rpc_handler.setLevel(logging.DEBUG)
@@ -241,10 +241,10 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "dogecoind"),
+                          default=os.getenv("DOGECOIND", "dogecoind"),
                           help="dogecoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("BITCOIND", "dogecoind"),
+                          default=os.getenv("DOGECOIND", "dogecoind"),
                           help="dogecoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
