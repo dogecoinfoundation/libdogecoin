@@ -21,6 +21,9 @@ LIBDOGECOIN_API
  * Defines
  */
 
+/* number of pbkdf2 iterations use for mnemonics */
+#define ITERATIONS 2048
+
 /* number of words in the language wordlist used for mnemonics */
 #define LANG_WORD_CNT 2048
 
