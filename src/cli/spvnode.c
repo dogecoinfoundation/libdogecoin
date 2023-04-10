@@ -57,6 +57,7 @@
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/wallet.h>
+#include <dogecoin/bip39.h>
 
 /* This is a list of all the options that can be used with the program. */
 static struct option long_options[] = {
@@ -65,6 +66,7 @@ static struct option long_options[] = {
         {"ips", no_argument, NULL, 'i'},
         {"debug", no_argument, NULL, 'd'},
         {"maxnodes", no_argument, NULL, 'm'},
+        {"mnemonic", no_argument, NULL, 'n'},
         {"dbfile", no_argument, NULL, 'f'},
         {"continuous", no_argument, NULL, 'c'},
         {"address", no_argument, NULL, 'a'},
@@ -154,6 +156,7 @@ int main(int argc, char* argv[]) {
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
     char* address;
     dogecoin_bool use_checkpoint = false;
+    char* mnemonic_in = 0;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
@@ -163,7 +166,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:f:a:p:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:p:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -185,6 +188,9 @@ int main(int argc, char* argv[]) {
                     break;
                 case 'm':
                     maxnodes = (int)strtol(optarg, (char**)NULL, 10); // value stored is never read
+                    break;
+                case 'n':
+                    mnemonic_in = optarg;
                     break;
                 case 'f':
                     dbfile = optarg;
@@ -227,11 +233,16 @@ int main(int argc, char* argv[]) {
         if (created) {
             // create a new key
             dogecoin_hdnode node;
-            uint8_t seed[32];
-            res = dogecoin_random_bytes(seed, sizeof(seed), true);
-            if (!res) {
-                fprintf(stdout, "Generating random bytes failed\n");
-                exit(EXIT_FAILURE);
+            uint8_t seed[64];
+            if (mnemonic_in) {
+                // generate seed from mnemonic
+                dogecoin_seed_from_mnemonic(mnemonic_in, NULL, seed);
+            } else {
+                res = dogecoin_random_bytes(seed, sizeof(seed), true);
+                if (!res) {
+                    fprintf(stdout, "Generating random bytes failed\n");
+                    exit(EXIT_FAILURE);
+                }
             }
             dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
             dogecoin_wallet_set_master_key_copy(wallet, &node);
@@ -266,7 +277,7 @@ int main(int argc, char* argv[]) {
         int num;
         FILE *fptr;
         if ((fptr = fopen("use_checkpoints","r")) == NULL) exit(1);
-        fscanf(fptr, "%d", &num);
+        if (!fscanf(fptr, "%d", &num)) exit(1);
         fclose(fptr);
 
         // if not equal with user input (-p | use_checkpoint) then write to file:
