@@ -37,6 +37,7 @@
 #include <dogecoin/block.h>
 #include <dogecoin/net.h>
 #include <dogecoin/spv.h>
+#include <dogecoin/utils.h>
 
 void test_spv_sync_completed(dogecoin_spv_client* client) {
     printf("Sync completed, at height %d\n", client->headers_db->getchaintip(client->headers_db_ctx)->height);
@@ -54,12 +55,23 @@ dogecoin_bool test_spv_header_message_processed(struct dogecoin_spv_client_ *cli
 
 void test_spv()
 {
-    unlink("headers.db");
-    dogecoin_spv_client* client = dogecoin_spv_client_new(&dogecoin_chainparams_test, false, true);
+    // set chain:
+    const dogecoin_chainparams* chain = &dogecoin_chainparams_test;
+
+    // concatenate chain to prefix of headers database:
+    char* header_suffix = "_headers.db";
+    char* header_prefix = (char*)chain->chainname;
+    char* headersfile = concat(header_prefix, header_suffix);
+
+    // unlink newly prefixed headers database:
+    unlink(headersfile);
+
+    // init new spv client with debugging off and syncing to memory:
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
-
-    dogecoin_spv_client_load(client, "headers.db");
+    dogecoin_spv_client_load(client, headersfile);
+    dogecoin_free(headersfile);
 
     printf("Discover peers...");
     dogecoin_spv_client_discover_peers(client, NULL);

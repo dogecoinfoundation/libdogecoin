@@ -200,11 +200,17 @@ int main(int argc, char* argv[]) {
         dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
+
 #if WITH_WALLET
         dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
         int error;
         dogecoin_bool created;
-        dogecoin_bool res = dogecoin_wallet_load(wallet, "wallet.db", &error, &created);
+        // prefix chain to wallet file name:
+        char* wallet_suffix = "_wallet.db";
+        char* wallet_prefix = (char*)chain->chainname;
+        char* walletfile = concat(wallet_prefix, wallet_suffix);
+        dogecoin_bool res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
+        dogecoin_free(walletfile);
         if (!res) {
             fprintf(stdout, "Loading wallet failed\n");
             exit(EXIT_FAILURE);
@@ -242,7 +248,13 @@ int main(int argc, char* argv[]) {
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;
 #endif
-        if (!dogecoin_spv_client_load(client, (dbfile ? dbfile : "headers.db"))) {
+        char* header_suffix = "_headers.db";
+        char* header_prefix = (char*)chain->chainname;
+        char* headersfile = concat(header_prefix, header_suffix);
+        printf("headersfile: %s\n", headersfile);
+        dogecoin_bool response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+        dogecoin_free(headersfile);
+        if (!response) {
             printf("Could not load or create headers database...aborting\n");
             ret = EXIT_FAILURE;
         } else {
