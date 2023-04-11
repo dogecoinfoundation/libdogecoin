@@ -64,8 +64,7 @@ typedef struct dogecoin_spv_client_
     void *sync_transaction_ctx;
 } dogecoin_spv_client;
 
-
-LIBDOGECOIN_API dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly);
+LIBDOGECOIN_API dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints);
 LIBDOGECOIN_API void dogecoin_spv_client_free(dogecoin_spv_client *client);
 LIBDOGECOIN_API dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *file_path);
 LIBDOGECOIN_API void dogecoin_spv_client_discover_peers(dogecoin_spv_client *client, const char *ips);

@@ -67,7 +67,7 @@ void test_spv()
     unlink(headersfile);
 
     // init new spv client with debugging off and syncing to memory:
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true);
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile);

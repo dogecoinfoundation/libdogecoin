@@ -88,7 +88,7 @@ void dogecoin_net_set_spv(dogecoin_node_group *nodegroup)
  * 
  * @return A pointer to a dogecoin_spv_client object.
  */
-dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly)
+dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints)
 {
     dogecoin_spv_client* client;
     client = dogecoin_calloc(1, sizeof(*client));
@@ -111,7 +111,7 @@ dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params,
     }
 
     if (params == &dogecoin_chainparams_main || params == &dogecoin_chainparams_test) {
-        client->use_checkpoints = true;
+        client->use_checkpoints = use_checkpoints;
     }
     client->headers_db = &dogecoin_headers_db_interface_file;
     client->headers_db_ctx = client->headers_db->init(params, headers_memonly);

@@ -252,13 +252,13 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     dogecoin_wallet* wallet = dogecoin_calloc(1, sizeof(*wallet));
     wallet->masterkey = NULL;
     wallet->chain = params;
-    wallet->spends = vector_new(10, NULL);
+    wallet->spends = vector_new(10, dogecoin_free);
     wallet->wtxes_rbtree = 0;
-    wallet->vec_wtxes = vector_new(10, NULL);
+    wallet->vec_wtxes = vector_new(10, dogecoin_free);
     wallet->hdkeys_rbtree = 0;
     wallet->waddr_rbtree = 0;
     wallet->spends_rbtree = 0;
-    wallet->waddr_vector = vector_new(10, NULL);
+    wallet->waddr_vector = vector_new(10, dogecoin_free);
     return wallet;
 }
 

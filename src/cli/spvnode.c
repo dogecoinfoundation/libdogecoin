@@ -67,6 +67,8 @@ static struct option long_options[] = {
         {"maxnodes", no_argument, NULL, 'm'},
         {"dbfile", no_argument, NULL, 'f'},
         {"continuous", no_argument, NULL, 'c'},
+        {"address", no_argument, NULL, 'a'},
+        {"checkpoint", no_argument, NULL, 'p'},
         {NULL, 0, NULL, 0} };
 
 /**
@@ -150,6 +152,8 @@ int main(int argc, char* argv[]) {
     int maxnodes = 10;
     char* dbfile = 0;
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
+    char* address;
+    dogecoin_bool use_checkpoint = false;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
@@ -159,7 +163,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:f:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:f:a:p:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -185,6 +189,12 @@ int main(int argc, char* argv[]) {
                 case 'f':
                     dbfile = optarg;
                     break;
+                case 'a':
+                    address = optarg;
+                    break;
+                case 'p':
+                    use_checkpoint = true;
+                    break;
                 case 'v':
                     print_version();
                     exit(EXIT_SUCCESS);
@@ -197,10 +207,9 @@ int main(int argc, char* argv[]) {
 
     if (strcmp(data, "scan") == 0) {
         dogecoin_ecc_start();
-        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false);
+        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
-
 #if WITH_WALLET
         dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
         int error;
@@ -244,14 +253,34 @@ int main(int argc, char* argv[]) {
             char* addr = vector_idx(addrs, i);
             printf("Addr: %s\n", addr);
         }
-        // vector_free(addrs, true);
+        vector_free(addrs, true);
+
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;
 #endif
         char* header_suffix = "_headers.db";
         char* header_prefix = (char*)chain->chainname;
         char* headersfile = concat(header_prefix, header_suffix);
-        printf("headersfile: %s\n", headersfile);
+
+        // read use_checkpoints to num variable:
+        int num;
+        FILE *fptr;
+        if ((fptr = fopen("use_checkpoints","r")) == NULL) exit(1);
+        fscanf(fptr, "%d", &num);
+        fclose(fptr);
+
+        // if not equal with user input (-p | use_checkpoint) then write to file:
+        if (num != use_checkpoint) {
+            ret = unlink(headersfile);
+            if(ret == 0) printf("%s unlinked successfully\n", headersfile);
+            else printf("Error: unable to unlink %s\n", headersfile);
+            fptr = fopen("use_checkpoints","w");
+            if(fptr == NULL) exit(1);
+            num = use_checkpoint;
+            fprintf(fptr,"%d",num);
+            fclose(fptr);
+        }
+
         dogecoin_bool response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
         dogecoin_free(headersfile);
         if (!response) {
