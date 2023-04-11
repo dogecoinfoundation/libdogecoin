@@ -47,6 +47,7 @@
 
 #include <dogecoin/chainparams.h>
 #include <dogecoin/base58.h>
+#include <dogecoin/bip39.h>
 #include <dogecoin/ecc.h>
 #include <dogecoin/net.h>
 #include <dogecoin/spv.h>
@@ -140,6 +141,7 @@ void spv_sync_completed(dogecoin_spv_client* client) {
         dogecoin_node_group_shutdown(client->nodegroup);
     } else {
         printf("Waiting for new blocks or relevant transactions...\n");
+        printf("Wallet balance: %ld\n", dogecoin_wallet_get_balance(client->sync_transaction_ctx));
     }
 }
 
@@ -157,6 +159,7 @@ int main(int argc, char* argv[]) {
     char* address;
     dogecoin_bool use_checkpoint = false;
     char* mnemonic_in = 0;
+    dogecoin_bool balance = false;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
@@ -168,6 +171,9 @@ int main(int argc, char* argv[]) {
     /* get arguments */
     while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:p:", long_options, &long_index)) != -1) {
         switch (opt) {
+                case 'b':
+                    balance = true;
+                    break;
                 case 'c':
                     quit_when_synced = false;
                     break;
@@ -233,7 +239,7 @@ int main(int argc, char* argv[]) {
         if (created) {
             // create a new key
             dogecoin_hdnode node;
-            uint8_t seed[64];
+            SEED seed;
             if (mnemonic_in) {
                 // generate seed from mnemonic
                 dogecoin_seed_from_mnemonic(mnemonic_in, NULL, seed);
