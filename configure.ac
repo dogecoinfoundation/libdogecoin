@@ -165,7 +165,10 @@ fi
 if test "x$with_net" = xyes; then
   AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
   AC_CHECK_LIB([event_core],[main],EVENT_LIBS=-levent_core,AC_MSG_ERROR(libevent_core missing))
-  LIBS="$LIBS $EVENT_LIBS"
+  if test "$host" = "mingw"; then
+    AC_CHECK_LIB([event_pthreads],[main],EVENT_PTHREADS_LIBS=-levent_pthreads,AC_MSG_ERROR(libevent_pthreads missing))
+  fi
+  LIBS="$LIBS $EVENT_LIBS $EVENT_PTHREADS_LIBS"
 fi
 
 if test "x$with_logdb" = xyes; then
