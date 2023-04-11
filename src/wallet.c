@@ -41,6 +41,7 @@
 #endif
 
 #include <dogecoin/base58.h>
+#include <dogecoin/bip44.h>
 #include <dogecoin/blockchain.h>
 #include <dogecoin/common.h>
 #include <dogecoin/koinu.h>
@@ -530,8 +531,17 @@ dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet)
     //for now, only m/k is possible
     dogecoin_wallet_addr *waddr = dogecoin_wallet_addr_new();
     dogecoin_hdnode *hdnode = dogecoin_hdnode_copy(wallet->masterkey);
-    dogecoin_hdnode_public_ckd(hdnode, wallet->next_childindex);
-    dogecoin_hdnode_get_hash160(hdnode, waddr->pubkeyhash);
+    dogecoin_hdnode *bip44_key = dogecoin_hdnode_new();
+    uint32_t index = wallet->next_childindex;
+
+    char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+
+    /* Derive the child private key at the index */
+    if (derive_bip44_extended_private_key(hdnode, 0, &index, "0", NULL, false, keypath, bip44_key) == -1) {
+        return -1;
+    }
+
+    dogecoin_hdnode_get_hash160(bip44_key, waddr->pubkeyhash);
     waddr->childindex = wallet->next_childindex;
 
     //add it to the binary tree

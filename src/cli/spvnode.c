@@ -272,14 +272,16 @@ int main(int argc, char* argv[]) {
             if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet)) {
                 exit(EXIT_FAILURE);
             }
-        } else {
-            waddr = dogecoin_wallet_next_addr(wallet);
-        }
+        } else if (wallet->waddr_vector->len == 0) {
+            for(int i=0;i<20;i++) {
+                waddr = dogecoin_wallet_next_addr(wallet);
+            }
 
-        size_t strsize = 128;
-        char str[strsize];
-        dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, strsize);
-        printf("Wallet addr: %s (child %d)\n", str, waddr->childindex);
+            size_t strsize = 128;
+            char str[strsize];
+            dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, strsize);
+            printf("Wallet addr: %s (child %d)\n", str, waddr->childindex);
+        }
 
         /* Creating a vector of addresses and storing them in the wallet. */
         vector* addrs = vector_new(1, free);

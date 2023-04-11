@@ -427,11 +427,6 @@ int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index
     /* Generate the root key from the seed */
     dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
 
-    /* Derive the BIP 44 extended key */
-    if (derive_bip44_extended_private_key(&node, account, NULL, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
-        return -1;
-    }
-
     /* Derive the child private key at the index */
     if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
         return -1;
