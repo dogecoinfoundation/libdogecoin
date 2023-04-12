@@ -222,6 +222,14 @@ int main(int argc, char* argv[]) {
         dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
+        
+        int num;
+        FILE *fptr;
+        fptr = fopen("use_checkpoints","w");
+        if(fptr == NULL) exit(1);
+        num = use_checkpoint;
+        fprintf(fptr,"%d",num);
+        fclose(fptr);
 #if WITH_WALLET
         dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
         int error;
@@ -280,8 +288,6 @@ int main(int argc, char* argv[]) {
         char* headersfile = concat(header_prefix, header_suffix);
 
         // read use_checkpoints to num variable:
-        int num;
-        FILE *fptr;
         if ((fptr = fopen("use_checkpoints","r")) == NULL) exit(1);
         if (!fscanf(fptr, "%d", &num)) exit(1);
         fclose(fptr);
