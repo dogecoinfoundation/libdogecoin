@@ -509,6 +509,11 @@ char* concat(char* prefix, char* suffix) {
     return file;
 }
 
+void slice(const char *str, char *result, size_t start, size_t end)
+{
+    strncpy(result, str + start, end - start);
+}
+
 /**
  * @brief function to convert ascii text to hexadecimal string
  *
