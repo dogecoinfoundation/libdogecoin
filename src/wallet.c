@@ -542,6 +542,30 @@ dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet)
     return waddr;
 }
 
+dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in, dogecoin_wallet_addr* addr, dogecoin_wallet* wallet) {
+    if (!address_in || !addr || !wallet || !wallet->masterkey) return false;
+    char p2pkh[35];
+    char script_pubkey[40];
+    char* script_hash = dogecoin_p2pkh_to_script_hash((char*)address_in);
+    slice(script_hash, script_pubkey, 6, 46);
+    dogecoin_free(script_hash);
+    memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(script_pubkey), 20);
+    if (!dogecoin_p2pkh_addr_from_hash160(addr->pubkeyhash, wallet->chain, p2pkh, strlen(address_in))) return false;
+    assert(strncmp(p2pkh, address_in, strlen(address_in))==0);
+    addr->childindex = wallet->next_childindex;
+    dogecoin_btree_tsearch(addr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+    vector_add(wallet->waddr_vector, addr);
+    //serialize and store node
+    cstring* record = cstr_new_sz(256);
+    dogecoin_wallet_addr_serialize(record, wallet->chain, addr);
+    if (!wallet_write_record(wallet, record, WALLET_DB_REC_TYPE_ADDR)) fprintf(stderr, "Writing wallet address failed\n");
+    cstr_free(record, true);
+    dogecoin_file_commit(wallet->dbfile);
+    //increase the in-memory counter (cache)
+    wallet->next_childindex++;
+    return true;
+}
+
 void dogecoin_wallet_get_addresses(dogecoin_wallet* wallet, vector* addr_out)
 {
     unsigned int i;

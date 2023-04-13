@@ -264,7 +264,16 @@ int main(int argc, char* argv[]) {
         // ensure we have a key
         // TODO
         }
-        dogecoin_wallet_addr* waddr = dogecoin_wallet_next_addr(wallet);
+
+        dogecoin_wallet_addr *waddr;
+
+        if (address != NULL) {
+            waddr = dogecoin_wallet_addr_new();
+            dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet);
+        } else {
+            waddr = dogecoin_wallet_next_addr(wallet);
+        }
+
         size_t strsize = 128;
         char str[strsize];
         dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, strsize);
