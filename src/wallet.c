@@ -544,14 +544,11 @@ dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet)
 
 dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in, dogecoin_wallet_addr* addr, dogecoin_wallet* wallet) {
     if (!address_in || !addr || !wallet || !wallet->masterkey) return false;
-    char p2pkh[35];
     char script_pubkey[40];
     char* script_hash = dogecoin_p2pkh_to_script_hash((char*)address_in);
     slice(script_hash, script_pubkey, 6, 46);
     dogecoin_free(script_hash);
     memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(script_pubkey), 20);
-    if (!dogecoin_p2pkh_addr_from_hash160(addr->pubkeyhash, wallet->chain, p2pkh, strlen(address_in))) return false;
-    assert(strncmp(p2pkh, address_in, strlen(address_in))==0);
     addr->childindex = wallet->next_childindex;
     dogecoin_btree_tsearch(addr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
     vector_add(wallet->waddr_vector, addr);
@@ -864,6 +861,11 @@ void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *tx, unsigned int 
     (void)(pindex);
     dogecoin_wallet *wallet = (dogecoin_wallet *)ctx;
     if (dogecoin_wallet_is_mine(wallet, tx) || dogecoin_wallet_is_from_me(wallet, tx)) {
+        dogecoin_wtx* wtx = dogecoin_wallet_wtx_new();
+        dogecoin_tx_copy(wtx->tx, tx);
+        dogecoin_wallet_add_wtx_move(wallet, wtx);
+        int64_t amount = dogecoin_wallet_get_balance(wallet);
+        printf("amount:     %ld\n", amount);
         printf("\nFound relevant transaction!\n");
     }
 }

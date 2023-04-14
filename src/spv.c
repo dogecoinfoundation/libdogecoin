@@ -486,7 +486,6 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
 
         // for now, turn of stall checks if we are near the tip
         if (pindex->header.timestamp > node->time_last_request - 30*60) {
-            printf("for now, turn of stall checks if we are near the tip\n");
             node->time_last_request = 0;
         }
 
