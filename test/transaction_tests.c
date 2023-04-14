@@ -379,11 +379,11 @@ void test_transaction()
     // ----------------------------------------------------------------
     // test conversion from p2pkh to script hash
 
-    char* res = dogecoin_p2pkh_to_script_hash(internal_p2pkh_address);
+    char* res = dogecoin_malloc(40 + 6 + 4 + 1);
+    u_assert_int_eq(dogecoin_p2pkh_to_pubkey_hash(internal_p2pkh_address, res), 1);
     u_assert_str_eq(res, utxo_scriptpubkey);
-    dogecoin_free(res);
-    
-    res = dogecoin_p2pkh_to_script_hash(external_p2pkh_address);
+
+    u_assert_int_eq(dogecoin_p2pkh_to_pubkey_hash(external_p2pkh_address, res), 1);
     u_assert_str_not_eq(res, utxo_scriptpubkey);
     dogecoin_free(res);
 

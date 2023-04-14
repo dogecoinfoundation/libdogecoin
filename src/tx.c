@@ -197,7 +197,7 @@ void dogecoin_tx_free(dogecoin_tx* tx)
  * 
  * @return int
  */
-int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_testnet) {
+int dogecoin_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p2pkh, int is_testnet) {
     if (!txout) return false;
 
     dogecoin_tx_out* copy = dogecoin_tx_out_new();
@@ -239,21 +239,21 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
     unencoded_address[23] = checksum[2];
     unencoded_address[24] = checksum[3];
 
-    char script_hash_to_p2pkh[35];
-    // base 58 encode check our unencoded_address into the script_hash_to_p2pkh:
-    if (!dogecoin_base58_encode_check(unencoded_address, 21, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh))) {
+    char pubkey_hash_to_p2pkh_address[35];
+    // base 58 encode check our unencoded_address into the pubkey_hash_to_p2pkh_address:
+    if (!dogecoin_base58_encode_check(unencoded_address, 21, pubkey_hash_to_p2pkh_address, sizeof(pubkey_hash_to_p2pkh_address))) {
         return false;
     }
     
     debug_print("doublesha:         %s\n", utils_uint8_to_hex(d1, sizeof(d1)));
     debug_print("checksum:          %s\n", utils_uint8_to_hex(checksum, sizeof(checksum)));
     debug_print("unencoded_address: %s\n", utils_uint8_to_hex(unencoded_address, sizeof(unencoded_address)));
-    debug_print("scripthash2p2pkh:  %s\n", script_hash_to_p2pkh);
+    debug_print("pubkey_hash2p2pkh: %s\n", pubkey_hash_to_p2pkh_address);
     
     // copy to out variable p2pkh, free tx_out copy and return true:
-    memcpy(p2pkh, script_hash_to_p2pkh, sizeof(script_hash_to_p2pkh));
+    memcpy(p2pkh, pubkey_hash_to_p2pkh_address, sizeof(pubkey_hash_to_p2pkh_address));
     dogecoin_tx_out_free(copy);
-    return memcmp(p2pkh, script_hash_to_p2pkh, strlen(script_hash_to_p2pkh)) == 0;
+    return memcmp(p2pkh, pubkey_hash_to_p2pkh_address, strlen(pubkey_hash_to_p2pkh_address)) == 0;
 }
 
 /**
@@ -265,7 +265,7 @@ int dogecoin_script_hash_to_p2pkh(dogecoin_tx_out* txout, char* p2pkh, int is_te
  * 
  * @return int
  */
-char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
+dogecoin_bool dogecoin_p2pkh_to_pubkey_hash(char* p2pkh, char* pubkey_hash) {
     if (!p2pkh) return false;
  
     // strlen(p2pkh) + 1 = 35
@@ -280,14 +280,11 @@ char* dogecoin_p2pkh_to_script_hash(char* p2pkh) {
     }
     
     //decoded bytes = [1-byte versionbits][20-byte hash][4-byte checksum]
-    char* b58_decode_hex =utils_uint8_to_hex((const uint8_t*)dec, decoded_length - 4);
-    
-    //2* (3-byte header + 20-byte hash + 2-byte footer) + 1-byte null terminator
-    char* tmp = dogecoin_malloc(40 + 6 + 4 + 1);
+    char* b58_decode_hex = utils_uint8_to_hex((const uint8_t*)dec, decoded_length - 4);
 
     //concatenate the fields
-    sprintf(tmp, "%02x%02x%02x%.40s%02x%02x", OP_DUP, OP_HASH160, 20, &b58_decode_hex[2], OP_EQUALVERIFY, OP_CHECKSIG);
-    return tmp;
+    sprintf(pubkey_hash, "%02x%02x%02x%.40s%02x%02x", OP_DUP, OP_HASH160, 20, &b58_decode_hex[2], OP_EQUALVERIFY, OP_CHECKSIG);
+    return true;
 }
 
 /**
@@ -335,7 +332,9 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_cleanse(&pubkey);
-    char* script_hash=dogecoin_p2pkh_to_script_hash(new_p2pkh_pubkey);
+    //2* (3-byte header + 20-byte hash + 2-byte footer) + 1-byte null terminator
+    char* script_hash = dogecoin_malloc(40 + 6 + 4 + 1);
+    if (!dogecoin_p2pkh_to_pubkey_hash(new_p2pkh_pubkey, script_hash)) return false;
     free(new_p2pkh_pubkey);
     return script_hash;
 }

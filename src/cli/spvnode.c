@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
     int maxnodes = 10;
     char* dbfile = 0;
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
-    char* address;
+    char* address = NULL;
     dogecoin_bool use_checkpoint = false;
     char* mnemonic_in = 0;
     dogecoin_bool balance = false;
@@ -269,7 +269,9 @@ int main(int argc, char* argv[]) {
 
         if (address != NULL) {
             waddr = dogecoin_wallet_addr_new();
-            dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet);
+            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet)) {
+                exit(EXIT_FAILURE);
+            }
         } else {
             waddr = dogecoin_wallet_next_addr(wallet);
         }
@@ -288,6 +290,7 @@ int main(int argc, char* argv[]) {
             printf("Addr: %s\n", addr);
         }
         vector_free(addrs, true);
+        dogecoin_wallet_addr_free(waddr);
 
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;
