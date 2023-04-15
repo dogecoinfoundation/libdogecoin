@@ -197,7 +197,7 @@ void dogecoin_tx_free(dogecoin_tx* tx)
  * 
  * @return int
  */
-int dogecoin_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p2pkh, int is_testnet) {
+int dogecoin_tx_out_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p2pkh, int is_testnet) {
     if (!txout) return false;
 
     dogecoin_tx_out* copy = dogecoin_tx_out_new();
@@ -262,10 +262,11 @@ int dogecoin_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p2pkh, i
  * prepends OP_DUP and OP_HASH160 and appends OP_EQUALVERIFY and OP_CHECKSIG.
  * 
  * @param p2pkh The variable out we want to contain the converted script hash in.
+ * @param pubkey_hash The variable that will store the pubkey hash.
  * 
  * @return int
  */
-dogecoin_bool dogecoin_p2pkh_to_pubkey_hash(char* p2pkh, char* pubkey_hash) {
+dogecoin_bool dogecoin_p2pkh_address_to_pubkey_hash(char* p2pkh, char* pubkey_hash) {
     if (!p2pkh) return false;
  
     // strlen(p2pkh) + 1 = 35
@@ -299,7 +300,7 @@ dogecoin_bool dogecoin_p2pkh_to_pubkey_hash(char* p2pkh, char* pubkey_hash) {
  * 
  * @return char* The script public key hash.
  */
-char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
+char* dogecoin_private_key_wif_to_pubkey_hash(char* private_key_wif) {
     if (!private_key_wif) {
         return false;
     }
@@ -334,7 +335,7 @@ char* dogecoin_private_key_wif_to_script_hash(char* private_key_wif) {
     dogecoin_pubkey_cleanse(&pubkey);
     //2* (3-byte header + 20-byte hash + 2-byte footer) + 1-byte null terminator
     char* script_hash = dogecoin_malloc(40 + 6 + 4 + 1);
-    if (!dogecoin_p2pkh_to_pubkey_hash(new_p2pkh_pubkey, script_hash)) return false;
+    if (!dogecoin_p2pkh_address_to_pubkey_hash(new_p2pkh_pubkey, script_hash)) return false;
     free(new_p2pkh_pubkey);
     return script_hash;
 }

@@ -561,7 +561,7 @@ dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in
 
     char script_pubkey[40];
     char* pubkey_hash = dogecoin_malloc(40 + 6 + 4 + 1);
-    if (!dogecoin_p2pkh_to_pubkey_hash((char*)address_in, pubkey_hash)) return false;
+    if (!dogecoin_p2pkh_address_to_pubkey_hash((char*)address_in, pubkey_hash)) return false;
     slice(pubkey_hash, script_pubkey, 6, 46);
     dogecoin_free(pubkey_hash);
     memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(script_pubkey), 20);

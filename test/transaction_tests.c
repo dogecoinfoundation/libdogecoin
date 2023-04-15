@@ -380,16 +380,16 @@ void test_transaction()
     // test conversion from p2pkh to script hash
 
     char* res = dogecoin_malloc(40 + 6 + 4 + 1);
-    u_assert_int_eq(dogecoin_p2pkh_to_pubkey_hash(internal_p2pkh_address, res), 1);
+    u_assert_int_eq(dogecoin_p2pkh_address_to_pubkey_hash(internal_p2pkh_address, res), 1);
     u_assert_str_eq(res, utxo_scriptpubkey);
 
-    u_assert_int_eq(dogecoin_p2pkh_to_pubkey_hash(external_p2pkh_address, res), 1);
+    u_assert_int_eq(dogecoin_p2pkh_address_to_pubkey_hash(external_p2pkh_address, res), 1);
     u_assert_str_not_eq(res, utxo_scriptpubkey);
     dogecoin_free(res);
 
     // ----------------------------------------------------------------
     // test conversion from private key (wif) to script hash
-    res = dogecoin_private_key_wif_to_script_hash(private_key_wif);
+    res = dogecoin_private_key_wif_to_pubkey_hash(private_key_wif);
 
     u_assert_str_eq(res, utxo_scriptpubkey);
     dogecoin_free(res);
