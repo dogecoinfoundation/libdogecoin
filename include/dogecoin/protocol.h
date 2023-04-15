@@ -71,6 +71,9 @@ enum service_bits {
     // Bitcoin Core nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     DOGECOIN_NODE_BLOOM = (1 << 2),
+    // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
+    // witness data.
+    NODE_WITNESS = (1 << 3),
     // NODE_XTHIN means the node supports Xtreme Thinblocks
     // If this is turned off then the node will not service nor make xthin requests
     DOGECOIN_NODE_XTHIN = (1 << 4),
@@ -79,15 +82,30 @@ enum service_bits {
 
 static const char* DOGECOIN_MSG_VERSION = "version";
 static const char* DOGECOIN_MSG_VERACK = "verack";
+static const char* DOGECOIN_MSG_ADDR = "addr";
+static const char* DOGECOIN_MSG_INV = "inv";
+static const char* DOGECOIN_MSG_GETDATA = "getdata";
+static const char* DOGECOIN_MSG_MERKLEBLOCK = "merkleblock";
+static const char* DOGECOIN_MSG_GETBLOCKS = "getblocks";
+static const char* DOGECOIN_MSG_GETHEADERS = "getheaders";
+static const char* DOGECOIN_MSG_TX = "tx";
+static const char* DOGECOIN_MSG_HEADERS = "headers";
+static const char* DOGECOIN_MSG_BLOCK = "block";
+static const char* DOGECOIN_MSG_GETADDR = "getaddr";
+static const char* DOGECOIN_MSG_MEMPOOL = "mempool";
 static const char* DOGECOIN_MSG_PING = "ping";
 static const char* DOGECOIN_MSG_PONG = "pong";
-static const char* DOGECOIN_MSG_GETDATA = "getdata";
-static const char* DOGECOIN_MSG_GETHEADERS = "getheaders";
-static const char* DOGECOIN_MSG_HEADERS = "headers";
-static const char* DOGECOIN_MSG_GETBLOCKS = "getblocks";
-static const char* DOGECOIN_MSG_BLOCK = "block";
-static const char* DOGECOIN_MSG_INV = "inv";
-static const char* DOGECOIN_MSG_TX = "tx";
+static const char* DOGECOIN_MSG_NOTFOUND = "notfound";
+static const char* DOGECOIN_MSG_FILTERLOAD = "filterload";
+static const char* DOGECOIN_MSG_FILTERADD = "filteradd";
+static const char* DOGECOIN_MSG_FILTERCLEAR = "filterclear";
+static const char* DOGECOIN_MSG_REJECT = "reject";
+static const char* DOGECOIN_MSG_SENDHEADERS = "sendheaders";
+static const char* DOGECOIN_MSG_FEEFILTER = "feefilter";
+static const char* DOGECOIN_MSG_SENDCMPCT = "sendcmpct";
+static const char* DOGECOIN_MSG_CMPCTBLOCK = "cmpctblock";
+static const char* DOGECOIN_MSG_GETBLOCKTXN = "getblocktxn";
+static const char* DOGECOIN_MSG_BLOCKTXN = "blocktxn";
 DISABLE_WARNING_POP
 
 enum DOGECOIN_INV_TYPE {
@@ -133,6 +151,7 @@ typedef struct dogecoin_p2p_version_msg_ {
 } dogecoin_p2p_version_msg;
 
 /** getdata message type flags */
+static const uint32_t MSG_WITNESS_FLAG = 1 << 30;
 static const uint32_t MSG_TYPE_MASK    = 0xffffffff >> 2;
 
 /** getdata / inv message types.
@@ -141,11 +160,15 @@ static const uint32_t MSG_TYPE_MASK    = 0xffffffff >> 2;
  */
 enum GetDataMsg
 {
+    UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
     // The following can only occur in getdata. Invs always use TX or BLOCK.
     MSG_FILTERED_BLOCK = 3,  //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,     //!< Defined in BIP152
+    MSG_WITNESS_BLOCK = MSG_BLOCK, //!< Defined in BIP144
+    MSG_WITNESS_TX = MSG_TX,       //!< Defined in BIP144
+    MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK,
 };
 
 /* =================================== */

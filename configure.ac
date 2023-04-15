@@ -204,7 +204,7 @@ AC_OUTPUT
 
 echo 
 echo "Options used to compile and link:"
-echo "  with tests      = $with_tests"
+echo "  with tests      = $use_tests"
 echo "  with tools      = $with_tools"
 echo "  with net        = $with_net"
 echo "  with logdb      = $with_logdb"

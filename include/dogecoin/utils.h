@@ -102,6 +102,7 @@ static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *))
     
 end:
     if (freekey) freekey(r->key);
+    dogecoin_free(r);
 }
 
 /* delete node with given key */

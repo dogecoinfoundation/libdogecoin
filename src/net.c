@@ -25,13 +25,17 @@
 
  */
 
-#ifdef _WIN32
+//MLUMIN:MSVC
 #ifdef _MSC_VER
 #include <win/wingetopt.h>
+#define HAVE_STRUCT_TIMESPEC
+#include <win/pthread.h>
 #else
 #include <getopt.h>
+#include <pthread.h>
 #endif
-
+//MLUMIN:MSVC
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
@@ -47,14 +51,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-//MLUMIN:MSVC
-#ifdef _MSC_VER
-#define HAVE_STRUCT_TIMESPEC
-#include <win/pthread.h>
-#else
-#include <pthread.h>
-#endif
-//MLUMIN:MSVC
 
 #include <time.h>
 
@@ -456,7 +452,7 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
     node_group->should_connect_to_more_nodes_cb = NULL;
     node_group->handshake_done_cb = NULL;
     node_group->log_write_cb = net_write_log_null;
-    node_group->desired_amount_connected_nodes = 25;
+    node_group->desired_amount_connected_nodes = 8;
 
     return node_group;
 }
@@ -467,7 +463,8 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
  * @param group The group to shutdown.
  */
 void dogecoin_node_group_shutdown(dogecoin_node_group *group) {
-    for (size_t i = 0; i < group->nodes->len; i++) {
+    size_t i = 0;
+    for (; i < group->nodes->len; i++) {
         dogecoin_node* node = vector_idx(group->nodes, i);
         dogecoin_node_disconnect(node);
     }
@@ -527,7 +524,8 @@ void dogecoin_node_group_add_node(dogecoin_node_group* group, dogecoin_node* nod
 int dogecoin_node_group_amount_of_connected_nodes(dogecoin_node_group* group, enum NODE_STATE state)
 {
     int count = 0;
-    for (size_t i = 0; i < group->nodes->len; i++) {
+    size_t i = 0;
+    for (; i < group->nodes->len; i++) {
         dogecoin_node* node = vector_idx(group->nodes, i);
         if ((node->state & state) == state)
             count++;
@@ -551,7 +549,8 @@ dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
         return true;
 
     connect_amount = connect_amount*3;
-    for (size_t i = 0; i < group->nodes->len; i++) {
+    size_t i = 0;
+    for (; i < group->nodes->len; i++) {
         dogecoin_node* node = vector_idx(group->nodes, i);
         if (
             !((node->state & NODE_CONNECTED) == NODE_CONNECTED) &&
