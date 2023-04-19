@@ -12,6 +12,7 @@ SET(USE_TESTS ${CMAKE_TESTING_ENABLED})
 SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
 SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
+SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
@@ -63,6 +64,7 @@ MESSAGE(STATUS "Options used to compile and link:")
 MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
 MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
 MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")
+MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "")
 
 ADD_DEFINITIONS(
@@ -81,6 +83,9 @@ IF(WITH_NET)
 ENDIF()
 IF(WITH_LOGDB)
     ADD_DEFINITIONS(-DWITH_LOGDB=1)
+ENDIF()
+IF(WITH_UNISTRING)
+    ADD_DEFINITIONS(-DUSE_UNISTRING=1)
 ENDIF()
 FILE(TOUCH config/libdogecoin-config.h)
 
