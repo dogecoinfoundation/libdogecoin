@@ -538,7 +538,7 @@ dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet)
 
     /* Derive the child private key at the index */
     if (derive_bip44_extended_private_key(hdnode, 0, &index, "0", NULL, false, keypath, bip44_key) == -1) {
-        return -1;
+        return NULL;
     }
 
     dogecoin_hdnode_get_hash160(bip44_key, waddr->pubkeyhash);
