@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
             }
         } else if (wallet->waddr_vector->len == 0) {
             for(int i=0;i<20;i++) {
-                waddr = dogecoin_wallet_next_addr(wallet);
+                waddr = dogecoin_wallet_next_bip44_addr(wallet);
             }
 
             size_t strsize = 128;

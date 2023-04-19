@@ -522,8 +522,39 @@ void dogecoin_wallet_set_master_key_copy(dogecoin_wallet* wallet, const dogecoin
     dogecoin_file_commit(wallet->dbfile);
 }
 
-
 dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet)
+{
+    if (!wallet || !wallet->masterkey)
+        return NULL;
+
+    //for now, only m/k is possible
+    dogecoin_wallet_addr *waddr = dogecoin_wallet_addr_new();
+    dogecoin_hdnode *hdnode = dogecoin_hdnode_copy(wallet->masterkey);
+    dogecoin_hdnode_public_ckd(hdnode, wallet->next_childindex);
+    dogecoin_hdnode_get_hash160(hdnode, waddr->pubkeyhash);
+    waddr->childindex = wallet->next_childindex;
+
+    //add it to the binary tree
+    // tree manages memory
+    dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+    vector_add(wallet->waddr_vector, waddr);
+
+    //serialize and store node
+    cstring* record = cstr_new_sz(256);
+    dogecoin_wallet_addr_serialize(record, wallet->chain, waddr);
+    if (!wallet_write_record(wallet, record, WALLET_DB_REC_TYPE_ADDR)) {
+        fprintf(stderr, "Writing wallet address failed\n");
+    }
+    cstr_free(record, true);
+    dogecoin_file_commit(wallet->dbfile);
+
+    //increase the in-memory counter (cache)
+    wallet->next_childindex++;
+
+    return waddr;
+}
+
+dogecoin_wallet_addr* dogecoin_wallet_next_bip44_addr(dogecoin_wallet* wallet)
 {
     if (!wallet || !wallet->masterkey)
         return NULL;
