@@ -223,12 +223,6 @@ int main(int argc, char* argv[]) {
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
 
-        int num;
-        FILE* fptr = fopen("use_checkpoints", "w");
-        if (fptr == NULL) exit(1);
-        num = use_checkpoint;
-        fprintf(fptr, "%d", num);
-        fclose(fptr);
 #if WITH_WALLET
         dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
         int error;
@@ -299,23 +293,6 @@ int main(int argc, char* argv[]) {
         char* header_suffix = "_headers.db";
         char* header_prefix = (char*)chain->chainname;
         char* headersfile = concat(header_prefix, header_suffix);
-
-        // read use_checkpoints to num variable:
-        if ((fptr = fopen("use_checkpoints", "r")) == NULL) exit(1);
-        if (!fscanf(fptr, "%d", &num)) exit(1);
-        fclose(fptr);
-
-        // if not equal with user input (-p | use_checkpoint) then write to file:
-        if (num != use_checkpoint) {
-            ret = unlink(headersfile);
-            if (ret == 0) printf("%s unlinked successfully\n", headersfile);
-            else printf("Error: unable to unlink %s\n", headersfile);
-            fptr = fopen("use_checkpoints", "w");
-            if (fptr == NULL) exit(1);
-            num = use_checkpoint;
-            fprintf(fptr, "%d", num);
-            fclose(fptr);
-        }
 
         dogecoin_bool response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
         dogecoin_free(headersfile);
