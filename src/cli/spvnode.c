@@ -283,9 +283,33 @@ int main(int argc, char* argv[]) {
         unsigned int i;
         for (i = 0; i < addrs->len; i++) {
             char* addr = vector_idx(addrs, i);
-            printf("Addr: %s\n", addr);
+            printf("Address: %s\n", addr);
             }
         vector_free(addrs, true);
+
+        vector* unspent = vector_new(1, free);
+        dogecoin_wallet_get_unspent(wallet, unspent);
+        if (unspent->len) {
+            char wallet_total[21];
+            uint64_t wallet_total_u64 = 0;
+            for (i = 0; i < unspent->len; i++) {
+                dogecoin_utxo* utxo = vector_idx(unspent, i);
+                printf("%s\n", "----------------------");
+                printf("txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof utxo->txid));
+                printf("vout:           %d\n", utxo->vout);
+                printf("address:        %s\n", utxo->address);
+                printf("script_pubkey:  %s\n", utils_uint8_to_hex((uint8_t*)utxo->script_pubkey->str, utxo->script_pubkey->len));
+                printf("amount:         %s\n", utxo->amount);
+                debug_print("confirmations:  %d\n", utxo->confirmations);
+                printf("spendable:      %d\n", utxo->spendable);
+                printf("solvable:       %d\n", utxo->solvable);
+                wallet_total_u64 += coins_to_koinu_str(utxo->amount);
+            }
+            koinu_to_coins_str(wallet_total_u64, wallet_total);
+
+            printf("Balance: %s\n", wallet_total);
+        }
+        vector_free(unspent, true);
 
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;

@@ -257,6 +257,71 @@ int dogecoin_tx_out_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p
 }
 
 /**
+ * It takes a pointer to a script_pubkey, copies to a new script_pubkey
+ * converts script_pubkey to a p2pkh address, and 
+ * frees the copy.
+ * 
+ * @param script_pubkey The data to be copied which contains the script hash we want.
+ * @param p2pkh The variable out we want to contain the converted script hash in.
+ * 
+ * @return int
+ */
+dogecoin_bool dogecoin_pubkey_hash_to_p2pkh_address(char* script_pubkey_hex, size_t script_pubkey_hex_length, char* p2pkh, const dogecoin_chainparams* chain) {
+    if (!script_pubkey_hex) return false;
+    size_t length = 2;
+    uint8_t* stripped_array = dogecoin_uint8_vla(script_pubkey_hex_length);
+    dogecoin_mem_zero(stripped_array, script_pubkey_hex_length * sizeof(stripped_array[0]));
+    // loop through 20 bytes of the script hash while stripping op codes
+    // and copy from index 2 to 21 after prefixing with version
+    // from chainparams:
+    for (; length < script_pubkey_hex_length - 4; length++) {
+        switch (script_pubkey_hex[length]) {
+            case OP_DUP:
+                break;
+            case (char)OP_HASH160:
+                break;
+            case (char)OP_EQUALVERIFY:
+                break;
+            case (char)OP_CHECKSIG:
+                break;
+            default:
+                script_pubkey_hex[2] = chain->b58prefix_pubkey_address;
+                memccpy(stripped_array, &script_pubkey_hex[2], 2, 21);
+                break;
+        }
+    }
+
+    unsigned char d1[SHA256_DIGEST_LENGTH], checksum[4], unencoded_address[25];
+    // double sha256 stripped array into d1:
+    dogecoin_dblhash((const unsigned char *)stripped_array, strlen((const char *)stripped_array), d1);
+    // copy check sum (4 bytes) into checksum var:
+    memcpy(checksum, d1, 4);
+    // copy stripped array into final var before passing to out variable:
+    memcpy(unencoded_address, stripped_array, 21);
+    dogecoin_free(stripped_array);
+    // copy checksum to the last 4 bytes of our unencoded_address:
+    unencoded_address[21] = checksum[0];
+    unencoded_address[22] = checksum[1];
+    unencoded_address[23] = checksum[2];
+    unencoded_address[24] = checksum[3];
+
+    char pubkey_hash_to_p2pkh_address[35];
+    // base 58 encode check our unencoded_address into the pubkey_hash_to_p2pkh_address:
+    if (!dogecoin_base58_encode_check(unencoded_address, 21, pubkey_hash_to_p2pkh_address, sizeof(pubkey_hash_to_p2pkh_address))) {
+        return false;
+    }
+    
+    debug_print("doublesha:         %s\n", utils_uint8_to_hex(d1, sizeof(d1)));
+    debug_print("checksum:          %s\n", utils_uint8_to_hex(checksum, sizeof(checksum)));
+    debug_print("unencoded_address: %s\n", utils_uint8_to_hex(unencoded_address, sizeof(unencoded_address)));
+    debug_print("pubkey_hash2p2pkh: %s\n", pubkey_hash_to_p2pkh_address);
+    
+    // copy to out variable p2pkh, free tx_out copy and return true:
+    memcpy(p2pkh, pubkey_hash_to_p2pkh_address, sizeof(pubkey_hash_to_p2pkh_address));
+    return memcmp(p2pkh, pubkey_hash_to_p2pkh_address, strlen(pubkey_hash_to_p2pkh_address)) == 0;
+}
+
+/**
  * It takes a p2pkh address and converts it to a compressed public key in
  * hexadecimal format. It then strips the network prefix and checksum and 
  * prepends OP_DUP and OP_HASH160 and appends OP_EQUALVERIFY and OP_CHECKSIG.
