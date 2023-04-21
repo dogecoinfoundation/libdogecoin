@@ -55,7 +55,7 @@ jobs:
             run-tests: true
             packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
-            config-opts: "LD_LIBRARY_PATH='`pwd`/depends/x86_64-pc-linux-gnu/lib/' CFLAGS='-I`pwd`/depends/x86_64-pc-linux-gnu/include/ -fPIC' LDFLAGS='-L`pwd`/depends/x86_64-pc-linux-gnu/lib -static-libgcc -static-libstdc++' PKG_CONFIG_PATH=`pwd`/depends/x86_64-pc-linux-gnu/lib/pkgconfig --enable-static --disable-shared"
+            config-opts: "--enable-debug"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin15
