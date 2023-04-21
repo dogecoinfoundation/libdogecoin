@@ -209,7 +209,7 @@ void test_wallet_basics()
     dogecoin_wallet_addr *wallet_addr2 = dogecoin_wallet_next_addr(wallet);
     u_assert_int_eq(wallet_addr2->childindex, 1);
     //should not be equal because we autoincrementing child index
-    u_assert_int_eq(memcmp(wallet_addr->pubkeyhash, wallet_addr2->pubkeyhash, sizeof(wallet_addr->pubkeyhash)) != 0, 1);
+    u_assert_int_eq(memcmp(wallet_addr->pubkeyhash, wallet_addr2->pubkeyhash, sizeof(*wallet_addr2->pubkeyhash)) != 0, 1);
 
     //force to regenerate child 1
     wallet->next_childindex = 1;
