@@ -474,8 +474,14 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
 
                 dogecoin_wtx *wtx = dogecoin_wallet_wtx_new();
                 dogecoin_wallet_wtx_deserialize(wtx, &cbuf);
+                uint256 tx_hash;
+                char hexbuf[161];
                 char* coin_amount[21];
                 dogecoin_mem_zero(coin_amount, 21);
+                dogecoin_tx_hash(wtx->tx, tx_hash);
+                utils_bin_to_hex(tx_hash, DOGECOIN_HASH_LENGTH, hexbuf);
+                utils_reverse_hex(hexbuf, DOGECOIN_HASH_LENGTH*2);
+                memcpy_safe(tx_hash, utils_hex_to_uint8(hexbuf), 64);
                 debug_print("%s", "\n---------------------\n");
                 debug_print("block height:       %d\n", wtx->height);
                 debug_print("tx_hash cache:      %s\n", utils_uint8_to_hex(wtx->tx_hash_cache, sizeof wtx->tx_hash_cache));
@@ -506,7 +512,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                             char* addr = vector_idx(addrs, i);
                             if (strncmp(p2pkh_from_script_pubkey, addr, P2PKH_ADDR_STRINGLEN - 1)==0) {
                                 dogecoin_utxo* utxo = dogecoin_wallet_utxo_new();
-                                dogecoin_hash_set(utxo->txid, wtx->tx_hash_cache);
+                                dogecoin_hash_set(utxo->txid, tx_hash);
                                 utxo->script_pubkey = cstr_new_sz(tx_out->script_pubkey->len);
                                 cstr_append_buf(utxo->script_pubkey,
                                                 tx_out->script_pubkey->str,
