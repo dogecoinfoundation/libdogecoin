@@ -203,6 +203,7 @@ dogecoin_utxo* dogecoin_wallet_utxo_new() {
 }
 
 void dogecoin_wallet_utxo_free(dogecoin_utxo* utxo) {
+    cstr_free(utxo->script_pubkey, true);
     dogecoin_free(utxo->amount);
     dogecoin_free(utxo);
 }
@@ -279,7 +280,7 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     wallet->unspent_rbtree = 0;
     wallet->spends = vector_new(10, dogecoin_free);
     wallet->spends_rbtree = 0;
-    wallet->vec_wtxes = vector_new(10, dogecoin_free);
+    wallet->vec_wtxes = vector_new(10, free);
     wallet->wtxes_rbtree = 0;
     wallet->waddr_vector = vector_new(10, dogecoin_free);
     wallet->waddr_rbtree = 0;
@@ -304,7 +305,7 @@ void dogecoin_wallet_free(dogecoin_wallet* wallet)
     }
 
     if (wallet->unspent) {
-        vector_free(wallet->unspent, true);
+        // vector_free(wallet->unspent, true);
         wallet->unspent = NULL;
     }
 
@@ -319,7 +320,7 @@ void dogecoin_wallet_free(dogecoin_wallet* wallet)
     }
 
     if (wallet->vec_wtxes) {
-        vector_free(wallet->vec_wtxes, true);
+        vector_free(wallet->vec_wtxes, false);
         wallet->vec_wtxes = NULL;
     }
 
@@ -465,6 +466,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                 dogecoin_btree_tfind(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
                 vector_add(wallet->waddr_vector, waddr);
                 wallet->next_childindex = waddr->childindex+1;
+                dogecoin_free(buf);
             } else if (rectype == WALLET_DB_REC_TYPE_TX) {
                 unsigned char* buf = dogecoin_uchar_vla(reclen);
                 struct const_buffer cbuf = {buf, reclen};
@@ -530,6 +532,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                 }
                 debug_print("locktime:           %d\n", wtx->tx->locktime);
                 dogecoin_wallet_add_wtx_intern_move(wallet, wtx); // hands memory management over to the binary tree
+                dogecoin_free(buf);
             } else {
                 fseek(wallet->dbfile , reclen, SEEK_CUR);
             }

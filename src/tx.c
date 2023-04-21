@@ -489,7 +489,9 @@ int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, do
     }
 
     //tx needs to be initialized
-    deser_s32(&tx->version, &buf);
+    if (!deser_s32(&tx->version, &buf)) {
+        return false;
+    }
 
     uint32_t vlen;
     if (!deser_varlen(&vlen, &buf)) {
