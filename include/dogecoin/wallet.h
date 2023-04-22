@@ -102,6 +102,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_wallet_wtx_deserialize(dogecoin_wtx* wtx,
 /** wallet utxo functions */
 LIBDOGECOIN_API dogecoin_utxo* dogecoin_wallet_utxo_new();
 LIBDOGECOIN_API void dogecoin_wallet_utxo_free(dogecoin_utxo* utxo);
+LIBDOGECOIN_API void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx);
 /** ------------------------------------ */
 
 /** wallet addr functions */
