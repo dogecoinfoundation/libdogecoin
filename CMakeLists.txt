@@ -86,12 +86,12 @@ ENDIF()
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
-MESSAGE(STATUS "  USE_TESTS     = ${USE_TESTS}")
-MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
-MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
-MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")
+MESSAGE(STATUS "  USE_TESTS      = ${USE_TESTS}")
+MESSAGE(STATUS "  WITH_TOOLS     = ${WITH_TOOLS}")
+MESSAGE(STATUS "  WITH_NET       = ${WITH_NET}")
+MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
 MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
-MESSAGE(STATUS "  WITH_WALLET   = ${WITH_WALLET}")
+MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
 MESSAGE(STATUS "")
 
 FILE(TOUCH config/libdogecoin-config.h)
@@ -110,14 +110,6 @@ INSTALL(FILES
     config/libdogecoin-config.h
     DESTINATION include/dogecoin
 )
-
-IF(WIN32)
-    INSTALL(FILES
-    include/win/winunistd.h
-    include/win/wingetopt.h
-    include/win/wingettime.h
-    DESTINATION include/dogecoin)
-ENDIF()
 
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/address.c
@@ -245,18 +237,6 @@ IF(WITH_LOGDB)
         src/logdb/red_black_tree.c
         src/logdb/stack.c
     )
-    INSTALL(FILES
-        src/logdb/include/logdb/logdb_base.h
-        src/logdb/include/logdb/logdb_core.h
-        src/logdb/include/logdb/logdb_memdb_llist.h
-        src/logdb/include/logdb/logdb_memdb_rbtree.h
-        src/logdb/include/logdb/logdb_rec.h
-        src/logdb/include/logdb/logdb.h
-        src/logdb/include/logdb/misc.h
-        src/logdb/include/logdb/red_black_tree.h
-        src/logdb/include/logdb/stack.h
-        DESTINATION include/logdb
-    )
     IF(USE_TESTS)
         TARGET_SOURCES(tests PRIVATE
             src/logdb/test/logdb_tests.c
@@ -267,10 +247,6 @@ IF(WITH_LOGDB)
 ENDIF()
 
 IF(WITH_WALLET)
-    INSTALL(FILES
-        include/dogecoin/wallet.h
-        DESTINATION include/dogecoin
-    )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
         src/wallet.c
     )
@@ -282,14 +258,6 @@ IF(WITH_WALLET)
 ENDIF()
 
 IF(WITH_NET)
-    INSTALL(FILES
-        include/dogecoin/headersdb.h
-        include/dogecoin/headersdb_file.h
-        include/dogecoin/protocol.h
-        include/dogecoin/net.h
-        include/dogecoin/spv.h
-        DESTINATION include/dogecoin
-    )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
         src/headersdb_file.c
         src/net.c

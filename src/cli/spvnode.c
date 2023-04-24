@@ -61,7 +61,6 @@
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/wallet.h>
-#include <dogecoin/bip39.h>
 
 /* This is a list of all the options that can be used with the program. */
 static struct option long_options[] = {
@@ -166,25 +165,27 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
     if (created) {
         // create a new key
         dogecoin_hdnode node;
+#ifdef WITH_UNISTRING
         SEED seed;
+#else
+        uint8_t seed[64];    
+#endif
         if (mnemonic_in) {
             // generate seed from mnemonic
             dogecoin_seed_from_mnemonic(mnemonic_in, NULL, seed);
-            }
-        else {
+        } else {
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
             if (!res) {
                 showError("Generating random bytes failed\n");
                 exit(EXIT_FAILURE);
-                }
             }
+        }
         dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
         dogecoin_wallet_set_master_key_copy(wallet, &node);
-        }
-    else {
+    } else {
         // ensure we have a key
         // TODO
-        }
+    }
 
     dogecoin_wallet_addr* waddr;
 
@@ -193,16 +194,22 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
         if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet)) {
             exit(EXIT_FAILURE);
         }
-    } else if (wallet->waddr_vector->len == 0) {
+    } 
+#ifdef USE_UNISTRING  
+    else if (wallet->waddr_vector->len == 0) {
         int i=0;
         for(;i<20;i++) {
             waddr = dogecoin_wallet_next_bip44_addr(wallet);
         }
-
         char str[P2PKH_ADDR_STRINGLEN];
         dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, P2PKH_ADDR_STRINGLEN);
         printf("Wallet addr: %s (child %d)\n", str, waddr->childindex);
     }
+#else
+    else if (wallet->waddr_vector->len == 0) {
+        waddr = dogecoin_wallet_next_addr(wallet);
+    }
+#endif
 
     /* Creating a vector of addresses and storing them in the wallet. */
     vector* addrs = vector_new(1, free);

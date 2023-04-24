@@ -121,7 +121,6 @@ dist/
 contrib/gitian/
 contrib/gitian/*
 example
-use_checkpoints
 
 # CMake files
 build/*
