@@ -13,6 +13,7 @@ SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
 SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
+SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
@@ -85,6 +86,7 @@ ENDIF()
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
+MESSAGE(STATUS "  USE_TESTS     = ${USE_TESTS}")
 MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
 MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
 MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")

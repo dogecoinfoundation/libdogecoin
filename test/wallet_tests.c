@@ -168,8 +168,8 @@ void test_wallet()
 
     int64_t totalin = 0;
     unsigned int i;
-    for (i = 0; i < (sizeof (wallet_txns) / sizeof (const char *)); i++) {
-        uint8_t tx_data[strlen(wallet_txns[i])/2+2];
+    for (i = 0; i < sizeof (wallet_txns) / sizeof (wallet_txns[0]); i++) {
+        uint8_t* tx_data = dogecoin_uint8_vla(strlen(wallet_txns[i])/2+2);
         size_t outlen = 0;
         utils_hex_to_bin(wallet_txns[i], tx_data, strlen(wallet_txns[i]), &outlen);
 
@@ -250,7 +250,7 @@ void test_wallet_basics()
     static const char *hextx_ntx = "0200000001991e9d80b6b97e2f67d5cfd479eeda888a106a0f716c1059c10b0c74537842cc0000000000ffffffff01c0aff629010000001600141e54a19491735b2d8a60b795525156e35bbf884b00000000";
 
     // form coinbase tx
-    uint8_t tx_data[strlen(hextx_coinbase) / 2];
+    uint8_t* tx_data = dogecoin_uint8_vla(strlen(hextx_coinbase) / 2);
     size_t outlen;
     utils_hex_to_bin(hextx_coinbase, tx_data, strlen(hextx_coinbase), &outlen);
     dogecoin_wtx* wtx = dogecoin_wallet_wtx_new();
@@ -277,7 +277,7 @@ void test_wallet_basics()
     u_assert_uint32_eq(amount, 0);
 
     // form normal tx
-    uint8_t tx_data_n[strlen(hextx_ntx) / 2];
+    uint8_t* tx_data_n = dogecoin_uint8_vla(strlen(hextx_ntx) / 2);
     utils_hex_to_bin(hextx_ntx, tx_data_n, strlen(hextx_ntx), &outlen);
     wtx = dogecoin_wallet_wtx_new();
     dogecoin_tx_deserialize(tx_data_n, outlen, wtx->tx, NULL);

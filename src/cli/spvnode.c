@@ -47,6 +47,7 @@
 #endif
 
 #include <dogecoin/chainparams.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/base58.h>
 #include <dogecoin/bip39.h>
 #include <dogecoin/ecc.h>
@@ -277,9 +278,8 @@ int main(int argc, char* argv[]) {
                 waddr = dogecoin_wallet_next_bip44_addr(wallet);
             }
 
-            size_t strsize = 128;
-            char str[strsize];
-            dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, strsize);
+            char str[P2PKH_ADDR_STRINGLEN];
+            dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, P2PKH_ADDR_STRINGLEN);
             printf("Wallet addr: %s (child %d)\n", str, waddr->childindex);
         }
 

@@ -44,6 +44,7 @@
 #include <dogecoin/bip44.h>
 #include <dogecoin/blockchain.h>
 #include <dogecoin/common.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/koinu.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/wallet.h>
@@ -425,7 +426,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
             } else if (rectype == WALLET_DB_REC_TYPE_ADDR) {
                 dogecoin_wallet_addr *waddr= dogecoin_wallet_addr_new();
                 size_t addr_len = 20+1+4;
-                unsigned char buf[addr_len];
+                unsigned char* buf = dogecoin_uchar_vla(addr_len);
                 struct const_buffer cbuf = {buf, addr_len};
                 if (fread(buf, addr_len, 1, wallet->dbfile) != 1) {
                     dogecoin_wallet_addr_free(waddr);
@@ -438,7 +439,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                 vector_add(wallet->waddr_vector, waddr);
                 wallet->next_childindex = waddr->childindex+1;
             } else if (rectype == WALLET_DB_REC_TYPE_TX) {
-                unsigned char buf[reclen];
+                unsigned char* buf = dogecoin_uchar_vla(reclen);
                 struct const_buffer cbuf = {buf, reclen};
                 if (fread(buf, reclen, 1, wallet->dbfile) != 1) {
                     return false;
@@ -651,10 +652,9 @@ dogecoin_wallet_addr* dogecoin_wallet_find_waddr_byaddr(dogecoin_wallet* wallet,
     if (!wallet || !search_addr)
         return NULL;
 
-
-    uint8_t hashdata[strlen(search_addr)];
+    uint8_t hashdata[P2PKH_ADDR_STRINGLEN];
     dogecoin_mem_zero(hashdata, sizeof(uint160));
-    int outlen = dogecoin_base58_decode_check(search_addr, hashdata, strlen(search_addr));
+    int outlen = dogecoin_base58_decode_check(search_addr, hashdata, P2PKH_ADDR_STRINGLEN);
 
     if (outlen > 0 && hashdata[0] == wallet->chain->b58prefix_pubkey_address) {
 
