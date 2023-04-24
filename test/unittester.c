@@ -82,6 +82,11 @@ extern void test_logdb_rbtree();
 extern void test_examples();
 #endif
 
+#ifdef WITH_WALLET
+extern void test_wallet_basics();
+extern void test_wallet();
+#endif
+
 #ifdef WITH_TOOLS
 extern void test_tool();
 #endif
@@ -151,6 +156,11 @@ int main()
     u_run_test(test_logdb_memdb);
     u_run_test(test_logdb_rbtree);
     u_run_test(test_examples);
+#endif
+
+#ifdef WITH_WALLET
+    u_run_test(test_wallet_basics);
+    u_run_test(test_wallet);
 #endif
 
 #ifdef WITH_TOOLS

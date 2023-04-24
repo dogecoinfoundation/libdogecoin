@@ -59,14 +59,6 @@ IF(WITH_NET)
     ENDIF()
 ENDIF()
 
-MESSAGE(STATUS "")
-MESSAGE(STATUS "Options used to compile and link:")
-MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
-MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
-MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")
-MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
-MESSAGE(STATUS "")
-
 ADD_DEFINITIONS(
     -DPACKAGE_NAME="${PROJECT_NAME}"
     -DPACKAGE_VERSION="${PROJECT_VERSION}"
@@ -87,6 +79,19 @@ ENDIF()
 IF(WITH_UNISTRING)
     ADD_DEFINITIONS(-DUSE_UNISTRING=1)
 ENDIF()
+IF(WITH_WALLET)
+    ADD_DEFINITIONS(-DWITH_WALLET=1)
+ENDIF()
+
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Options used to compile and link:")
+MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
+MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
+MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")
+MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
+MESSAGE(STATUS "  WITH_WALLET   = ${WITH_WALLET}")
+MESSAGE(STATUS "")
+
 FILE(TOUCH config/libdogecoin-config.h)
 
 ADD_LIBRARY(${LIBDOGECOIN_NAME})
@@ -255,6 +260,21 @@ IF(WITH_LOGDB)
             src/logdb/test/logdb_tests.c
             src/logdb/test/tests_red_black_tree.c
             src/logdb/test/logdb_tests_sample.h
+        )
+    ENDIF()
+ENDIF()
+
+IF(WITH_WALLET)
+    INSTALL(FILES
+        include/dogecoin/wallet.h
+        DESTINATION include/dogecoin
+    )
+    TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+        src/wallet.c
+    )
+    IF(USE_TESTS)
+        TARGET_SOURCES(tests PRIVATE
+            test/wallet_tests.c
         )
     ENDIF()
 ENDIF()

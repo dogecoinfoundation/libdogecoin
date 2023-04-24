@@ -56,6 +56,7 @@
 #include <dogecoin/tool.h>
 #include <dogecoin/tx.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/wallet.h>
 
 /* This is a list of all the options that can be used with the program. */
 static struct option long_options[] = {
@@ -199,6 +200,48 @@ int main(int argc, char* argv[]) {
         dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
+#if WITH_WALLET
+        dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
+        int error;
+        dogecoin_bool created;
+        dogecoin_bool res = dogecoin_wallet_load(wallet, "wallet.db", &error, &created);
+        if (!res) {
+            fprintf(stdout, "Loading wallet failed\n");
+            exit(EXIT_FAILURE);
+        }
+        if (created) {
+            // create a new key
+            dogecoin_hdnode node;
+            uint8_t seed[32];
+            res = dogecoin_random_bytes(seed, sizeof(seed), true);
+            if (!res) {
+                fprintf(stdout, "Generating random bytes failed\n");
+                exit(EXIT_FAILURE);
+            }
+            dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
+            dogecoin_wallet_set_master_key_copy(wallet, &node);
+        } else {
+        // ensure we have a key
+        // TODO
+        }
+        dogecoin_wallet_addr* waddr = dogecoin_wallet_next_addr(wallet);
+        size_t strsize = 128;
+        char str[strsize];
+        dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, str, strsize);
+        printf("Wallet addr: %s (child %d)\n", str, waddr->childindex);
+
+        /* Creating a vector of addresses and storing them in the wallet. */
+        vector* addrs = vector_new(1, free);
+        dogecoin_wallet_get_addresses(wallet, addrs);
+        unsigned int i;
+        for (i = 0; i < addrs->len; i++) {
+            char* addr = vector_idx(addrs, i);
+            printf("Addr: %s\n", addr);
+        }
+        // vector_free(addrs, true);
+        client->sync_transaction = dogecoin_wallet_check_transaction;
+        client->sync_transaction_ctx = wallet;
+#endif
         if (!dogecoin_spv_client_load(client, (dbfile ? dbfile : "headers.db"))) {
             printf("Could not load or create headers database...aborting\n");
             ret = EXIT_FAILURE;

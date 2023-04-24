@@ -61,6 +61,7 @@ LIBDOGECOIN_API int deser_u64(uint64_t* vo, struct const_buffer* buf);
 LIBDOGECOIN_API int deser_u256(uint8_t* vo, struct const_buffer* buf);
 
 LIBDOGECOIN_API int deser_varlen(uint32_t* lo, struct const_buffer* buf);
+LIBDOGECOIN_API int deser_varlen_from_file(uint32_t* lo, FILE* file);
 LIBDOGECOIN_API int deser_varlen_file(uint32_t* lo, FILE* file, uint8_t* rawdata, size_t* buflen_inout);
 LIBDOGECOIN_API int deser_str(char* so, struct const_buffer* buf, size_t maxlen);
 LIBDOGECOIN_API int deser_varstr(cstring** so, struct const_buffer* buf);

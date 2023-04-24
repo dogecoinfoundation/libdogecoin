@@ -169,6 +169,19 @@ tests_SOURCES += \
 endif
 endif
 
+if WITH_WALLET
+noinst_HEADERS += \
+    include/dogecoin/wallet.h
+
+libdogecoin_la_SOURCES += \
+    src/wallet.c
+
+if USE_TESTS
+tests_SOURCES += \
+    test/wallet_tests.c
+endif
+endif
+
 if WITH_NET
 noinst_HEADERS += \
     include/dogecoin/headersdb.h \
