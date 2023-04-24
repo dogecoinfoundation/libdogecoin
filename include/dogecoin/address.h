@@ -72,6 +72,16 @@ LIBDOGECOIN_API int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_mas
 /* verify that a HD master key and a dogecoin address matches a mnemonic */
 LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
 
+/* generates a new dogecoin address from a sealed seed and a slip44 key path */
+LIBDOGECOIN_API int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet);
+
+/* generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a sealed seed */
+LIBDOGECOIN_API int generateHDMasterPubKeypairFromSealedSeed(char* wif_privkey_master, char* p2pkh_pubkey_master, const dogecoin_bool is_testnet);
+
+/* verify that a HD master key and a dogecoin address matches a sealed seed */
+LIBDOGECOIN_API int verifyHDMasterPubKeypairFromSealedSeed(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const dogecoin_bool is_testnet);
+
+
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_ADDRESS_H__

@@ -8,6 +8,7 @@
 
 #include "utest.h"
 
+#include <dogecoin/seal.h>
 #include <dogecoin/utils.h>
 #include <stdlib.h>
 
@@ -17,6 +18,7 @@
 #endif
 #include <windows.h>
 #include <tbs.h>
+#include <ncrypt.h>
 
 void test_tpm()
 {
@@ -40,16 +42,34 @@ void test_tpm()
         0x80, 0x01,             // tag: TPM_ST_SESSIONS
         0x00, 0x00, 0x00, 0x0C, // commandSize: size of the entire command byte array
         0x00, 0x00, 0x01, 0x7B, // commandCode: TPM2_CC_GetRandom
-        0x00, 0x20              // parameter: 32 bytes
+        0x00, 0x40              // parameter: 32 bytes
     };
     BYTE resp_random[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
     UINT32 resp_randomSize =  TBS_IN_OUT_BUF_SIZE_MAX;
     hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd_random, sizeof(cmd_random), resp_random, &resp_randomSize);
     u_assert_uint32_eq (hr, TBS_SUCCESS);
     char* rand_hex;
-    rand_hex = utils_uint8_to_hex(&resp_random[12], 0x20);
+    rand_hex = utils_uint8_to_hex(&resp_random[12], 0x40);
     debug_print ("TPM2_CC_GetRandom response: %s\n", rand_hex);
 
+/*
+    SEED seed = {0xFF};
+    dogecoin_seal_seed (seed);
+
+    printf("BIP32 seed sealed inside TPM.\n");
+
+    SEED unseed = {0};
+    dogecoin_unseal_seed (unseed);
+
+    printf("BIP32 seed unsealed inside TPM.\n");
+*/
+
+    dogecoin_hdnode node;
+    
+    dogecoin_hdnode_from_tpm(&node);
+
+
+/*
     // Seal the random with the TPM2
     const BYTE cmd_seal[] = {
         0x80, 0x01,             // tag: TPM_ST_SESSIONS
@@ -78,6 +98,8 @@ void test_tpm()
     UINT32 offset = 10; // Skip tag (2 bytes) and commandSize (4 bytes)
     memcpy(&handle, resp_seal + offset, sizeof(UINT32));
     handle = ntohl(handle); // Convert handle from network byte order to host byte order
+    */
+
 /*
     // Read the public portion of the created primary key
     const BYTE cmd_readpublic[] = {

@@ -256,6 +256,15 @@ int dogecoin_seed_from_mnemonic(const MNEMONIC mnemonic, const PASS pass, SEED s
 /* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
 int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
 
+/* Seal a seed with the TPM */
+int dogecoin_seal_seed (const SEED seed);
+
+/* Unseal a seed with the TPM */
+int dogecoin_unseal_seed (SEED seed);
+
+/* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a sealed seed */
+int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet);
+
 /* Transaction creation functions - builds a dogecoin transaction
 ----------------------------------------------------------------
 */

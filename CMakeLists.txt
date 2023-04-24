@@ -48,15 +48,15 @@ IF(WITH_NET)
     IF(WIN32)
         # build libevent
         execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/src/libevent/build)
-        execute_process(COMMAND cmake .. 
-            -DEVENT__DISABLE_OPENSSL=ON 
-            -DEVENT__DISABLE_SAMPLES=ON 
-            -DEVENT__LIBRARY_TYPE=STATIC 
-            -DEVENT__DISABLE_TESTS=ON 
-            -DEVENT__DISABLE_THREAD_SUPPORT=OFF 
-            -DEVENT__DISABLE_MM_REPLACEMENT=ON 
-            -DEVENT__DISABLE_REGRESS=ON 
-            -DEVENT__DISABLE_BENCHMARK=ON 
+        execute_process(COMMAND cmake ..
+            -DEVENT__DISABLE_OPENSSL=ON
+            -DEVENT__DISABLE_SAMPLES=ON
+            -DEVENT__LIBRARY_TYPE=STATIC
+            -DEVENT__DISABLE_TESTS=ON
+            -DEVENT__DISABLE_THREAD_SUPPORT=OFF
+            -DEVENT__DISABLE_MM_REPLACEMENT=ON
+            -DEVENT__DISABLE_REGRESS=ON
+            -DEVENT__DISABLE_BENCHMARK=ON
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
         execute_process(COMMAND cmake --build .
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
@@ -65,7 +65,7 @@ IF(WITH_NET)
         find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         find_path(LIBEVENT_INCLUDE_DIR event-config.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
-        FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)        
+        FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)
     ELSE()
         FIND_LIBRARY(LIBEVENT event REQUIRED)
         FIND_LIBRARY(LIBUNISTRING unistring REQUIRED)
@@ -160,6 +160,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/rmd160.c
     src/script.c
     src/scrypt.c
+    src/seal.c
     src/serialize.c
     src/sha2.c
     src/sign.c
@@ -224,7 +225,7 @@ INCLUDE_DIRECTORIES(
 
 IF(USE_TESTS)
     ADD_EXECUTABLE(tests)
-    TARGET_SOURCES(tests ${visibility} 
+    TARGET_SOURCES(tests ${visibility}
         test/address_tests.c
         test/aes_tests.c
         test/base58_tests.c
@@ -256,7 +257,7 @@ IF(USE_TESTS)
         test/utils_tests.c
         test/vector_tests.c
 )
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs)
+    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt)
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
     # move test/wordlist to build
     FILE(GLOB_RECURSE WORDLISTS "${PROJECT_SOURCE_DIR}/test/wordlist/*.txt")
@@ -328,7 +329,7 @@ IF(WITH_TOOLS)
 
     ADD_EXECUTABLE(such src/cli/such.c)
     INSTALL(TARGETS such RUNTIME)
-    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING} ncrypt)
 
     TARGET_INCLUDE_DIRECTORIES(such ${visibility} src)
 

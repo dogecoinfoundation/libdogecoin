@@ -807,7 +807,7 @@ int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, S
         passphrase = "";
     }
 
-    /* get random binary seed */
+    /* get binary seed */
     if (get_root_seed(mnemonic, passphrase, seed) == -1) {
         fprintf(stderr, "ERROR: Failed to get root seed\n");
         return -1;
