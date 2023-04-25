@@ -52,7 +52,7 @@ void test_tpm()
     rand_hex = utils_uint8_to_hex(&resp_random[12], 0x40);
     debug_print ("TPM2_CC_GetRandom response: %s\n", rand_hex);
 
-/*
+
     SEED seed = {0xFF};
     dogecoin_seal_seed (seed);
 
@@ -62,7 +62,7 @@ void test_tpm()
     dogecoin_unseal_seed (unseed);
 
     printf("BIP32 seed unsealed inside TPM.\n");
-*/
+
 
     dogecoin_hdnode node;
     

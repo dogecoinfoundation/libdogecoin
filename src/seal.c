@@ -44,8 +44,13 @@ int dogecoin_seal_seed(const BYTE* seed)
     NCRYPT_KEY_HANDLE hKey;
     SECURITY_STATUS status;
     DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
-    DWORD cbKey = 64; // Change this to the actual length of the key
-    PBYTE Key = (PBYTE)seed; // Use the seed parameter as the key
+    DWORD cbKey = 64; // Change this to the actual length of the key in bytes
+    NCRYPT_KEY_BLOB_HEADER *pbCipherBlob;
+    pbCipherBlob = (NCRYPT_KEY_BLOB_HEADER *) malloc(cbKey);
+    pbCipherBlob->dwMagic = NCRYPT_CIPHER_KEY_BLOB_MAGIC;
+    pbCipherBlob->cbSize += sizeof(NCRYPT_KEY_BLOB_HEADER);
+    pbCipherBlob->cbAlgName = 0;
+    pbCipherBlob->cbKeyData = seed;
 
     status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
     if (status != ERROR_SUCCESS)
@@ -54,7 +59,7 @@ int dogecoin_seal_seed(const BYTE* seed)
         return -1;
     }
 
-    status = NCryptImportKey(hProvider, NULL, NCRYPT_OPAQUETRANSPORT_BLOB, NULL, &hKey, Key, cbKey, 0);
+    status = NCryptImportKey(hProvider, NULL, NCRYPT_CIPHER_KEY_BLOB, NULL, &hKey, (PBYTE) pbCipherBlob, sizeof(pbCipherBlob), 0);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to import key (0x%08x)\n", status);
@@ -114,7 +119,7 @@ int dogecoin_unseal_seed(BYTE* seed)
     }
 
     // Export the key as a BLOB containing the Bip32 seed
-    status = NCryptExportKey(hKey, NULL, NCRYPT_TPM_LOADABLE_KEY_BLOB, NULL, seed, dwBlobLen, &dwBlobLen, 0);
+    status = NCryptExportKey(hKey, NULL, NCRYPT_CIPHER_KEY_BLOB, NULL, seed, dwBlobLen, &dwBlobLen, 0);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to export key from TPM storage provider (0x%08x)\n", status);
@@ -174,12 +179,21 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     header.cbKeyData = &seed;
     header.cbSize = sizeof(NCRYPT_KEY_BLOB_HEADER);
 
-    status = NCryptCreatePersistedKey(hProvider, &hKey, NCRYPT_HMAC_SHA256_ALGORITHM, L"dogecoin seed", 0, dwFlags);
+    status = NCryptCreatePersistedKey(hProvider, &hKey, NCRYPT_ECDSA_P256_ALGORITHM, L"dogecoin seed", 0, dwFlags);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hProvider);
         return false;
     }
+
+    // Make the key exportable
+/*	DWORD dwExportPolicy = NCRYPT_ALLOW_EXPORT_FLAG;
+    status = NCryptSetProperty(hKey, NCRYPT_EXPORT_POLICY_PROPERTY, (PBYTE)&dwExportPolicy, sizeof(dwExportPolicy), NCRYPT_PERSIST_FLAG);
+    if (status != ERROR_SUCCESS) {
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+*/
 
     // Import the Bip32 seed into the TPM
 /*    status = NCryptImportKey(hProvider, NULL, NCRYPT_OPAQUETRANSPORT_BLOB, NULL, &hKey, (PBYTE) seed, 64, 0);
@@ -197,6 +211,33 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
         NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Export the private key
+    DWORD keyBlobLength;
+    status = NCryptExportKey(hKey, NULL, NCRYPT_CIPHER_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
+
+    if (status != ERROR_SUCCESS) {
+        NCryptFreeObject(hKey);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    NCRYPT_KEY_BLOB_HEADER* keyBlob = (BYTE*) malloc(keyBlobLength);
+
+    if (!keyBlob) {
+        NCryptFreeObject(hKey);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    status = NCryptExportKey(hKey, NULL, BCRYPT_ECCFULLPUBLIC_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, 0);
+
+    if (status != ERROR_SUCCESS) {
+        NCryptFreeObject(hKey);
+        NCryptFreeObject(hProvider);
+        free(keyBlob);
         return false;
     }
 
