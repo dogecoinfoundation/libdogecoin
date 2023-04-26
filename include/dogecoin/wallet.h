@@ -170,13 +170,14 @@ LIBDOGECOIN_API void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *t
  */
 LIBDOGECOIN_API dogecoin_wtx * dogecoin_wallet_get_wtx(dogecoin_wallet* wallet, const uint256 hash);
 
-LIBDOGECOIN_API int dogecoin_register_watch_address_with_node(dogecoin_wallet* wallet, char* address);
-LIBDOGECOIN_API int dogecoin_unregister_watch_address_with_node(dogecoin_wallet* wallet, char* address);
-LIBDOGECOIN_API uint64_t dogecoin_get_balance(dogecoin_wallet* wallet, char* address, int number_of_utxos);
-LIBDOGECOIN_API char* dogecoin_get_balance_str(dogecoin_wallet* wallet, char* address, int number_of_utxos);
-LIBDOGECOIN_API int dogecoin_get_utxo_vector(dogecoin_wallet* wallet, char* address, vector* utxos);
-LIBDOGECOIN_API char* dogecoin_get_utxo_txid_str(dogecoin_wallet* wallet, char* address, unsigned int index);
-LIBDOGECOIN_API uint256* dogecoin_get_utxo_txid(dogecoin_wallet* wallet, char* address, unsigned int index);
+LIBDOGECOIN_API dogecoin_wallet* dogecoin_wallet_read(char* address);
+LIBDOGECOIN_API int dogecoin_register_watch_address_with_node(char* address);
+LIBDOGECOIN_API int dogecoin_unregister_watch_address_with_node(char* address);
+LIBDOGECOIN_API uint64_t dogecoin_get_balance(char* address, int number_of_utxos);
+LIBDOGECOIN_API char* dogecoin_get_balance_str(char* address, int number_of_utxos);
+LIBDOGECOIN_API int dogecoin_get_utxo_vector(char* address, vector* utxos);
+LIBDOGECOIN_API char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);
+LIBDOGECOIN_API uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index);
 
 LIBDOGECOIN_END_DECL
 

@@ -1040,18 +1040,39 @@ void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *tx, unsigned int 
     }
 }
 
-int dogecoin_register_watch_address_with_node(dogecoin_wallet* wallet, char* address) {
-    if (!wallet || !address) return false;
+dogecoin_wallet* dogecoin_wallet_read(char* address) {
+    dogecoin_chainparams* chain = (dogecoin_chainparams*)chain_from_b58_prefix(address);
+    dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
+    int error;
+    dogecoin_bool created;
+    // prefix chain to wallet file name:
+    char* wallet_suffix = "_wallet.db";
+    char* wallet_prefix = (char*)chain->chainname;
+    char* walletfile = concat(wallet_prefix, wallet_suffix);
+    dogecoin_bool res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
+    dogecoin_free(walletfile);
+    if (!res) {
+        printf("Loading wallet failed: %d\n", error);
+        exit(EXIT_FAILURE);
+    }
+    return wallet;
+}
+
+int dogecoin_register_watch_address_with_node(char* address) {
+    if (!address) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     dogecoin_wallet_addr* waddr = dogecoin_wallet_addr_new();
     if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet)) {
         return false;
     }
     dogecoin_wallet_addr_free(waddr);
+    dogecoin_wallet_free(wallet);
     return true;
 }
 
-int dogecoin_unregister_watch_address_with_node(dogecoin_wallet* wallet, char* address) {
-    if (!wallet || !address) return false;
+int dogecoin_unregister_watch_address_with_node(char* address) {
+    if (!address) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     vector* addrs = vector_new(1, free);
     dogecoin_wallet_get_addresses(wallet, addrs);
     unsigned int i;
@@ -1062,11 +1083,13 @@ int dogecoin_unregister_watch_address_with_node(dogecoin_wallet* wallet, char* a
         }
     }
     vector_free(addrs, true);
+    dogecoin_wallet_free(wallet);
     return true;
 }
 
-uint64_t dogecoin_get_balance(dogecoin_wallet* wallet, char* address, int number_of_utxos) {
-    if (!wallet || !address) return false;
+uint64_t dogecoin_get_balance(char* address, int number_of_utxos) {
+    if (!address) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     vector* unspent = vector_new(1, free);
     dogecoin_wallet_get_unspent(wallet, unspent);
     uint64_t wallet_total_u64 = 0;
@@ -1084,19 +1107,23 @@ uint64_t dogecoin_get_balance(dogecoin_wallet* wallet, char* address, int number
         }
     }
     dogecoin_free(unspent);
+    dogecoin_wallet_free(wallet);
     return wallet_total_u64;
 }
 
-char* dogecoin_get_balance_str(dogecoin_wallet* wallet, char* address, int number_of_utxos) {
-    if (!wallet || !address) return false;
+char* dogecoin_get_balance_str(char* address, int number_of_utxos) {
+    if (!address) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     char* wallet_total = dogecoin_char_vla(21);
-    uint64_t wallet_total_u64 = dogecoin_get_balance(wallet, address, number_of_utxos);
+    uint64_t wallet_total_u64 = dogecoin_get_balance(address, number_of_utxos);
     koinu_to_coins_str(wallet_total_u64, wallet_total);
+    dogecoin_wallet_free(wallet);
     return wallet_total;
 }
 
-int dogecoin_get_utxo_vector(dogecoin_wallet* wallet, char* address, vector* utxos) {
-    if (!wallet || !address) return false;
+int dogecoin_get_utxo_vector(char* address, vector* utxos) {
+    if (!address) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     if (wallet->unspent->len) {
         unsigned int i;
         for (i = 0; i < wallet->unspent->len; i++) {
@@ -1106,13 +1133,15 @@ int dogecoin_get_utxo_vector(dogecoin_wallet* wallet, char* address, vector* utx
             }
         }
     } else return false;
+    dogecoin_wallet_free(wallet);
     return true;
 }
 
-char* dogecoin_get_utxo_txid_str(dogecoin_wallet* wallet, char* address, unsigned int index) {
-    if (!wallet || !address || !index) return false;
+char* dogecoin_get_utxo_txid_str(char* address, unsigned int index) {
+    if (!address || !index) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     vector* utxos = vector_new(1, free);
-    if (!dogecoin_get_utxo_vector(wallet, address, utxos)) return false;
+    if (!dogecoin_get_utxo_vector(address, utxos)) return false;
     char* txid = NULL;
     unsigned int i;
     for (i = 0; i < utxos->len; i++) {
@@ -1121,13 +1150,16 @@ char* dogecoin_get_utxo_txid_str(dogecoin_wallet* wallet, char* address, unsigne
             txid = utils_uint8_to_hex((const uint8_t*)utxo->txid, DOGECOIN_HASH_LENGTH);
         }
     }
+    dogecoin_wallet_free(wallet);
     return txid;
 }
 
-uint256* dogecoin_get_utxo_txid(dogecoin_wallet* wallet, char* address, unsigned int index) {
-    if (!wallet || !address || !index) return false;
+uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index) {
+    if (!address) return false;
+    dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     uint256* txid = dogecoin_uint256_vla(1);
-    char* txid_str = dogecoin_get_utxo_txid_str(wallet, address, index);
+    char* txid_str = dogecoin_get_utxo_txid_str(address, index);
     memcpy_safe(txid, utils_hex_to_uint8(txid_str), DOGECOIN_HASH_LENGTH*2);
-    return txid;
+    dogecoin_wallet_free(wallet);
+    return (uint8_t*)txid;
 }
