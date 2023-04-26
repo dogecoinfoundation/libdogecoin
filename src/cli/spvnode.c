@@ -343,8 +343,17 @@ int main(int argc, char* argv[]) {
         dogecoin_ecc_stop();
     } else if (strcmp(data, "wallet") == 0) {
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, mnemonic_in);
-        dogecoin_wallet_free(wallet);
+        if (address != NULL) {
+            int number_of_utxos = 0;
+            printf("balance:     %ld\n", dogecoin_get_balance(address, number_of_utxos));
+            printf("balance str: %s\n", dogecoin_get_balance_str(address, number_of_utxos));
+            vector* utxos = vector_new(1, free);
+            dogecoin_get_utxo_vector(address, utxos);
+            printf("utxos:       %ld\n", utxos->len);
+            printf("txid:      %s\n", dogecoin_get_utxo_txid_str(address, 1));
+            printf("txid:      %s\n", dogecoin_get_utxo_txid_str(address, 2));
+            vector_free(utxos, true);
+        }
 #endif
     } else {
         printf("Invalid command (use -?)\n");
