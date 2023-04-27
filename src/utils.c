@@ -685,3 +685,12 @@ unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigne
 
 	return k;
 }
+
+int integer_length(int x) {
+    int count = 0;
+    while (x > 0) {
+        x /= 10;
+        count++;
+    }
+    return count > 0 ? count : 1;
+}
