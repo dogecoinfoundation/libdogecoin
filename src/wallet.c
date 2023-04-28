@@ -27,6 +27,8 @@
  */
 
 #include <assert.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -1116,28 +1118,42 @@ unsigned int dogecoin_get_utxos_length(char* address) {
     return utxos_total;
 }
 
-int dogecoin_get_utxos(char* address, uint8_t* utxos) {
+uint8_t* dogecoin_get_utxos(char* address) {
     if (!address) return false;
     dogecoin_wallet* wallet = dogecoin_wallet_read(address);
+    char* concat_str = dogecoin_char_vla(wallet->unspent->len * 55);
+    dogecoin_mem_zero(concat_str, wallet->unspent->len * 55);
     if (wallet->unspent->len) {
         unsigned int i;
         for (i = 0; i < wallet->unspent->len; i++) {
             dogecoin_utxo* utxo = vector_idx(wallet->unspent, i);
             if (strncmp(utxo->address, address, strlen(utxo->address))==0) {
+                size_t concat_str_length = strlen(concat_str);
+                int utxo_index_length = integer_length(i);
+                char* utxo_index_hex = dogecoin_char_vla(utxo_index_length+1);
+                sprintf(utxo_index_hex, "%d", i);
+                // index
+                concat_str = concat(concat_str, utxo_index_hex);
                 char* txid_hex = utils_uint8_to_hex(utxo->txid, 32);
                 int vout_length = integer_length(utxo->vout);
                 char* vout_hex = dogecoin_char_vla(vout_length);
-                sprintf(vout_hex, "%d", utxo->vout + '0');
-                char* concat_str = concat(txid_hex, vout_hex);
-                concat_str = concat(concat_str, utxo->amount);
-                uint8_t* filtered_utxo = utils_hex_to_uint8(concat_str);
-                size_t length = strlen(utxos);
-                memcpy_safe(utxos + length, filtered_utxo, strlen(filtered_utxo));
+                sprintf(vout_hex, "%d", utxo->vout);
+                // txid
+                concat_str = concat(concat_str, txid_hex);
+                // vout index
+                concat_str = concat(concat_str, vout_hex);
+                char amount_hex[21];
+                uint64_t utxo_amount = coins_to_koinu_str(utxo->amount);
+                sprintf(amount_hex, "%" PRIx64, utxo_amount);
+                // amount
+                concat_str = concat(concat_str, amount_hex);
             }
         }
-    } else return false; 
+    } else return false;
+    uint8_t* utxos = utils_hex_to_uint8(concat_str);
+    dogecoin_free(concat_str);
     dogecoin_wallet_free(wallet);
-    return true;
+    return utxos;
 }
 
 char* dogecoin_get_utxo_txid_str(char* address, unsigned int index) {

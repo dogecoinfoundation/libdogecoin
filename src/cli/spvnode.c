@@ -344,19 +344,17 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(data, "wallet") == 0) {
 #if WITH_WALLET
         if (address != NULL) {
-            printf("balance:     %ld\n", dogecoin_get_balance(address));
-            printf("balance str: %s\n", dogecoin_get_balance_str(address));
+            printf("balance:        %ld\n", dogecoin_get_balance(address));
+            printf("balance str:    %s\n", dogecoin_get_balance_str(address));
             vector* utxos = vector_new(1, free);
             dogecoin_get_utxo_vector(address, utxos);
             unsigned int utxo_count = dogecoin_get_utxos_length(address);
-            printf("%d\n", utxo_count);
-            uint8_t* byte_array = (uint8_t*)dogecoin_malloc(utxo_count * 54);
-            dogecoin_get_utxos(address, byte_array);
-            printf("byte_array: %s\n", utils_uint8_to_hex(byte_array, strlen(byte_array)));
-            printf("byte_array length: %ld\n", strlen(byte_array));
-            printf("txid:      %s\n", dogecoin_get_utxo_txid_str(address, 1));
-            printf("txid:      %s\n", dogecoin_get_utxo_txid_str(address, 2));
-            dogecoin_free(byte_array);
+            printf("utxo count:     %d\n", utxo_count);
+            uint8_t* byte_array = dogecoin_get_utxos(address);
+            size_t byte_array_length = strlen((const char*)byte_array);
+            printf("byte_array:     %s\n", utils_uint8_to_hex(byte_array, byte_array_length));
+            printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, 1));
+            printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, 2));
             vector_free(utxos, true);
         }
 #endif
