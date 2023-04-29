@@ -290,9 +290,18 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
     dogecoin_wallet_addr* waddr;
 
     if (address != NULL) {
-        waddr = dogecoin_wallet_addr_new();
-        if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet)) {
-            exit(EXIT_FAILURE);
+        int init_size = strlen(address);
+        char delim[] = " ";
+
+        char *ptr = strtok(address, delim);
+
+        while(ptr != NULL)
+        {
+            waddr = dogecoin_wallet_addr_new();
+            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr, wallet)) {
+                exit(EXIT_FAILURE);
+            }
+            ptr = strtok(NULL, delim);
         }
     } 
 #ifdef USE_UNISTRING  
