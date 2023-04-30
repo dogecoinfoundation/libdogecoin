@@ -167,7 +167,9 @@ LIST(REMOVE_ITEM SECP256K1
     src/secp256k1/src/bench_ecdh.c
     src/secp256k1/src/bench_internal.c
     src/secp256k1/src/bench_schnorr_verify.c
-    src/secp256k1/src/valgrind_ctime_test.c)
+    src/secp256k1/src/valgrind_ctime_test.c
+    src/secp256k1/src/precompute_ecmult.c
+    src/secp256k1/src/precompute_ecmult_gen.c)
 ADD_DEFINITIONS(
     -DUSE_NUM_GMP
     -DUSE_FIELD_10X26
