@@ -8,17 +8,18 @@
 
 #include "utest.h"
 
+#include <dogecoin/sha2.h>
 #include <dogecoin/seal.h>
 #include <dogecoin/utils.h>
 #include <stdlib.h>
 
 #ifdef _WIN32
-#ifndef WINVER
-#define WINVER 0x0600
-#endif
 #include <windows.h>
 #include <tbs.h>
 #include <ncrypt.h>
+#ifndef WINVER
+#define WINVER 0x0600
+#endif
 
 void test_tpm()
 {
@@ -53,7 +54,8 @@ void test_tpm()
     debug_print ("TPM2_CC_GetRandom response: %s\n", rand_hex);
 
 
-    SEED seed = {0xFF};
+    SEED seed = {0};
+    sha512_raw(&resp_random[12], 32, seed);
     dogecoin_seal_seed (seed);
 
     printf("BIP32 seed sealed inside TPM.\n");
@@ -63,10 +65,47 @@ void test_tpm()
 
     printf("BIP32 seed unsealed inside TPM.\n");
 
+    dogecoin_hdnode node, node2;
+    const wchar_t* master_name = L"test master";
+    const wchar_t* seed_name = L"test seed";
+    const wchar_t* mnemonic_name = L"test mnemonic";
 
-    dogecoin_hdnode node;
+    // Generate a random HD node with the TPM2
+    dogecoin_bool ret = dogecoin_generate_hdnode_in_tpm (&node, master_name, true);
     
-    dogecoin_hdnode_from_tpm(&node);
+    // Generate a random HD node with the TPM2
+    ret = dogecoin_generate_hdnode_in_tpm (&node2, master_name, true);
+
+    // Export the HD node from the TPM2
+    ret = dogecoin_export_hdnode_from_tpm (master_name, &node2);
+
+    // Compare node and node2
+    //u_assert_mem_eq (&node, &node2, sizeof (dogecoin_hdnode));
+
+    // Erase the HD node from the TPM2
+    ret = dogecoin_erase_hdnode_from_tpm(master_name);
+
+    // Export the HD node from the TPM2
+    ret = dogecoin_export_hdnode_from_tpm (master_name, &node2);
+
+    // Generate a random seed with the TPM2
+    ret = dogecoin_generate_seed_in_tpm (&seed, seed_name, true);
+
+    // Export the seed from the TPM2
+    ret = dogecoin_export_seed_from_tpm (seed_name, &seed);
+
+    // Erase the seed from the TPM2
+    ret = dogecoin_erase_seed_from_tpm(seed_name);
+
+    // Export the seed from the TPM2
+    ret = dogecoin_export_seed_from_tpm (seed_name, &seed);
+
+    // Generate a mnemonic with the TPM2
+    MNEMONIC mnemonic = {0};
+
+    ret = dogecoin_generate_mnemonic_in_tpm (&mnemonic, mnemonic_name, true);
+
+    ret = dogecoin_hdnode_from_tpm (&node2);
 
 
 /*
