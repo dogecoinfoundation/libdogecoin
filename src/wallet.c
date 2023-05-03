@@ -387,7 +387,9 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
         // populate address vector if script_pubkey exists:
         if (wallet->waddr_vector->len && tx_out->script_pubkey->len) {
             char* p2pkh_from_script_pubkey = dogecoin_malloc(P2PKH_ADDR_STRINGLEN);
-            dogecoin_pubkey_hash_to_p2pkh_address(tx_out->script_pubkey->str, tx_out->script_pubkey->len, p2pkh_from_script_pubkey, wallet->chain);
+            if (!dogecoin_pubkey_hash_to_p2pkh_address(tx_out->script_pubkey->str, tx_out->script_pubkey->len, p2pkh_from_script_pubkey, wallet->chain)) {
+                printf("failed to convert pubkey hash to p2pkh address!\n");
+            }
             vector* addrs = vector_new(1, free);
             dogecoin_wallet_get_addresses(wallet, addrs);
             unsigned int i;
@@ -690,13 +692,8 @@ dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in
     }
     vector_free(addrs, true);
 
-    char script_pubkey[40];
-    char* pubkey_hash = dogecoin_malloc(40 + 6 + 4 + 1);
-    if (!dogecoin_p2pkh_address_to_pubkey_hash((char*)address_in, pubkey_hash)) return false;
-    slice(pubkey_hash, script_pubkey, 6, 46);
-    dogecoin_free(pubkey_hash);
-    memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(script_pubkey), 20);
-
+    char* pubkey_hash = dogecoin_address_to_pubkey_hash((char*)address_in);
+    memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(pubkey_hash), 20);
     // if no match add to rbtree, vector and db:
     if (!match) {
         addr->childindex = wallet->next_childindex;
@@ -1035,11 +1032,6 @@ void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *tx, unsigned int 
         dogecoin_tx_copy(wtx->tx, tx);
         dogecoin_wallet_scrape_utxos(wallet, wtx);
         dogecoin_wallet_add_wtx_move(wallet, wtx);
-        int64_t amount = dogecoin_wallet_get_balance(wallet);
-        char* coin_amount[21];
-        dogecoin_mem_zero(coin_amount, 21);
-        koinu_to_coins_str((uint64_t)amount, (char*)coin_amount);
-        printf("Wallet balance:             %s\n", (char*)coin_amount);
     }
 }
 
@@ -1128,7 +1120,6 @@ uint8_t* dogecoin_get_utxos(char* address) {
         for (i = 0; i < wallet->unspent->len; i++) {
             dogecoin_utxo* utxo = vector_idx(wallet->unspent, i);
             if (strncmp(utxo->address, address, strlen(utxo->address))==0) {
-                size_t concat_str_length = strlen(concat_str);
                 int utxo_index_length = integer_length(i);
                 char* utxo_index_hex = dogecoin_char_vla(utxo_index_length+1);
                 sprintf(utxo_index_hex, "%d", i);

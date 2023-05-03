@@ -290,7 +290,6 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
     dogecoin_wallet_addr* waddr;
 
     if (address != NULL) {
-        int init_size = strlen(address);
         char delim[] = " ";
 
         char *ptr = strtok(address, delim);
