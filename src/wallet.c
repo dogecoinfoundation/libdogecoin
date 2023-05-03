@@ -219,7 +219,6 @@ void dogecoin_wallet_wtx_cachehash(dogecoin_wtx* wtx) {
 */
 dogecoin_utxo* dogecoin_wallet_utxo_new() {
     dogecoin_utxo* utxo = dogecoin_calloc(1, sizeof(*utxo));
-    utxo->amount = dogecoin_char_vla(21);
     utxo->confirmations = 0;
     utxo->spendable = true;
     utxo->solvable = true;
@@ -300,11 +299,11 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     wallet->masterkey = NULL;
     wallet->chain = params;
     wallet->hdkeys_rbtree = 0;
-    wallet->unspent = vector_new(10, dogecoin_free);
+    wallet->unspent = vector_new(1, NULL);
     wallet->unspent_rbtree = 0;
     wallet->spends = vector_new(10, dogecoin_free);
     wallet->spends_rbtree = 0;
-    wallet->vec_wtxes = vector_new(10, free);
+    wallet->vec_wtxes = vector_new(10, dogecoin_free);
     wallet->wtxes_rbtree = 0;
     wallet->waddr_vector = vector_new(10, dogecoin_free);
     wallet->waddr_rbtree = 0;
@@ -329,7 +328,7 @@ void dogecoin_wallet_free(dogecoin_wallet* wallet)
     }
 
     if (wallet->unspent) {
-        // vector_free(wallet->unspent, true);
+        vector_free(wallet->unspent, true);
         wallet->unspent = NULL;
     }
 
@@ -386,7 +385,7 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
         dogecoin_tx_out* tx_out = vector_idx(wtx->tx->vout, j);
         // populate address vector if script_pubkey exists:
         if (wallet->waddr_vector->len && tx_out->script_pubkey->len) {
-            char* p2pkh_from_script_pubkey = dogecoin_malloc(P2PKH_ADDR_STRINGLEN);
+            char p2pkh_from_script_pubkey[P2PKH_ADDR_STRINGLEN];
             if (!dogecoin_pubkey_hash_to_p2pkh_address(tx_out->script_pubkey->str, tx_out->script_pubkey->len, p2pkh_from_script_pubkey, wallet->chain)) {
                 printf("failed to convert pubkey hash to p2pkh address!\n");
             }
@@ -406,7 +405,7 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
                                     tx_out->script_pubkey->str,
                                     tx_out->script_pubkey->len);
                     utxo->vout = j;
-                    utxo->address = p2pkh_from_script_pubkey;
+                    memcpy_safe(utxo->address, p2pkh_from_script_pubkey, P2PKH_ADDR_STRINGLEN);
                     koinu_to_coins_str(tx_out->value, utxo->amount);
                     dogecoin_btree_tfind(utxo, &wallet->unspent_rbtree, dogecoin_utxo_compare);
                     vector_add(wallet->unspent, utxo);

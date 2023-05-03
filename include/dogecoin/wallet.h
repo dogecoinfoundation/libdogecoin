@@ -36,6 +36,7 @@ LIBDOGECOIN_BEGIN_DECL
 #include <dogecoin/blockchain.h>
 #include <dogecoin/bip32.h>
 #include <dogecoin/buffer.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/tx.h>
 
 #include <stdint.h>
@@ -72,10 +73,10 @@ typedef struct dogecoin_wtx_ {
 typedef struct dogecoin_utxo_ {
     uint256 txid;
     int vout;
-    char* address;
+    char address[P2PKH_ADDR_STRINGLEN];
     char* account;
     cstring* script_pubkey;
-    char* amount;
+    char amount[KOINU_STRINGLEN];
     int confirmations;
     dogecoin_bool spendable;
     dogecoin_bool solvable;

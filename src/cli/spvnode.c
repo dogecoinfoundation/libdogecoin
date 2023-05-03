@@ -346,12 +346,11 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
             printf("spendable:      %d\n", utxo->spendable);
             printf("solvable:       %d\n", utxo->solvable);
             wallet_total_u64 += coins_to_koinu_str(utxo->amount);
-            dogecoin_wallet_utxo_free(utxo);
         }
         koinu_to_coins_str(wallet_total_u64, wallet_total);
         printf("Balance: %s\n", wallet_total);
     }
-    dogecoin_free(unspent);
+    vector_free(unspent, true);
     return wallet;
 }
 
