@@ -46,6 +46,7 @@
 #include <dogecoin/chainparams.h>
 #include <dogecoin/key.h>
 #include <dogecoin/random.h>
+#include <dogecoin/seal.h>
 #include <dogecoin/sha2.h>
 #include <dogecoin/base58.h>
 #include <dogecoin/tool.h>
@@ -480,7 +481,7 @@ int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index
     SEED seed = {0};
 
     /* Convert mnemonic to seed */
-    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed)) {
         return -1;
     }
 
@@ -525,7 +526,7 @@ int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_master, char* p2pkh
     SEED seed = {0};
 
     /* Convert mnemonic to seed */
-    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed)) {
         return -1;
     }
 
@@ -567,7 +568,7 @@ int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const c
     SEED seed = {0};
 
     /* Convert mnemonic to seed */
-    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed)) {
         return -1;
     }
 
@@ -617,7 +618,7 @@ int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t ind
     SEED seed = {0};
 
     /* Unseal the seed with the TPM */
-    if (dogecoin_unseal_seed (seed) == -1) {
+    if (dogecoin_unseal_seed (seed)) {
         return -1;
     }
 
@@ -654,7 +655,7 @@ int generateHDMasterPubKeypairFromSealedSeed(char* wif_privkey_master, char* p2p
     SEED seed = {0};
 
     /* Unseal the seed with the TPM */
-    if (dogecoin_unseal_seed (seed) == -1) {
+    if (dogecoin_unseal_seed (seed)) {
         return -1;
     }
 
@@ -688,7 +689,7 @@ int verifyHDMasterPubKeypairFromSealedSeed(const char* wif_privkey_master, const
     SEED seed = {0};
 
     /* Unseal the seed with the TPM */
-    if (dogecoin_unseal_seed (seed) == -1) {
+    if (dogecoin_unseal_seed (seed)) {
         return -1;
     }
 

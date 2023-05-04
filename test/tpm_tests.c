@@ -16,13 +16,18 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <tbs.h>
+#include <bcrypt.h>
 #include <ncrypt.h>
+#endif
+
 #ifndef WINVER
 #define WINVER 0x0600
 #endif
 
 void test_tpm()
 {
+#ifdef _WIN32
+
     // Create TBS context (TPM2)
     TBS_HCONTEXT hContext = 0;
     TBS_CONTEXT_PARAMS2 params;

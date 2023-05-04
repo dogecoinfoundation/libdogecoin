@@ -20,11 +20,11 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
+#ifdef _WIN32
 /*
  * Defines
  */
 #define BCRYPT_PCP_KEY_MAGIC 'MPCP' // Platform Crypto Provider Magic
-
 #define PCPTYPE_TPM20 (0x00000002)
 
 /*
@@ -57,6 +57,7 @@ typedef struct {
     USHORT blobSize;
     USHORT keySize;
 } ECDSAPrivateKeyHeader;
+#endif
 
 /* Seal a seed with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed (const SEED seed);
@@ -82,13 +83,13 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_seed_with_tpm (SEED seed);
 LIBDOGECOIN_API dogecoin_bool dogecoin_seal_hdnode_with_tpm (const dogecoin_hdnode* hdnode, const PASSPHRASE passphrase);
 
 /* Unseal a BIP32 HD node object with the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (dogecoin_hdnode* hdnode, const PASSPHRASE passphrase);
+LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (const PASSPHRASE passphrase, dogecoin_hdnode* hdnode);
 
 /* Generate a BIP39 mnemonic in the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemonic, const wchar_t* name, const dogecoin_bool overwrite);
 
 /* Export a BIP39 mnemonic from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(MNEMONIC mnemonic, const wchar_t* name);
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(const wchar_t* name, MNEMONIC mnemonic);
 
 /* Generate a BIP32 seed in the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wchar_t* name, const dogecoin_bool overwrite);
@@ -103,7 +104,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name);
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* out, const wchar_t* name, const dogecoin_bool overwrite);
 
 /* Export a BIP32 HD node object from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(dogecoin_hdnode* out, const wchar_t* name);
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* name, dogecoin_hdnode* out);
 
 /* Erase an object from the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_erase_object_from_tpm(const wchar_t* name);

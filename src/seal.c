@@ -52,6 +52,8 @@
 /* Seal a seed with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
 {
+#ifdef _WIN32
+
     NCRYPT_PROV_HANDLE hProvider;
     NCRYPT_KEY_HANDLE hKey;
     SECURITY_STATUS status;
@@ -74,7 +76,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
     header->pcrAlgId = 0;
 
     BYTE* public = malloc(header->cbPublic);
-    ECDSAPublicKeyHeader* publicKey = public;
+    ECDSAPublicKeyHeader* publicKey = (ECDSAPublicKeyHeader*) public;
 
     CryptStringToBinary("AHYAIwALAAQEcgAgnf/L82w4OuaZ+5ho3G3LidcVOIS+KAOSLBJBWL+tIq4AEAAQAAMAEAAg4rReSD8nHN/8xZrsUv13gU6p6vnlO7+RrLr8MnaZMjcAIGOEwnhfZwKk571j3CzQyM/4WyiOo/o7qOVU4VXgLC/h", 0, CRYPT_STRING_BASE64, public, &header->cbPublic, 0, 0);
 
@@ -104,7 +106,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
     }
 
     // Create a persisted key object with the specified key name and algorithm identifier
-    status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_ALGORITHM, "dogecoin seal", 0, NCRYPT_OVERWRITE_KEY_FLAG);
+    status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_ALGORITHM, L"dogecoin seal", 0, NCRYPT_OVERWRITE_KEY_FLAG);
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hProvider);
         return false;
@@ -161,7 +163,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
     status = NCryptSetProperty(
         hKey,
         BCRYPT_OPAQUE_KEY_BLOB,
-        header,
+        (PBYTE) header,
         blobSize,
         NCRYPT_PERSIST_FLAG
     );
@@ -181,7 +183,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
 
     // Export the private key
     DWORD keyBlobLength;
-    status = NCryptExportKey(hKey, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
@@ -189,7 +191,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
         return false;
     }
 
-    PCP_KEY_BLOB_WIN8* keyBlob = (BYTE*) malloc(keyBlobLength);
+    PCP_KEY_BLOB_WIN8* keyBlob = (PCP_KEY_BLOB_WIN8*) malloc(keyBlobLength);
 
     if (!keyBlob) {
         NCryptFreeObject(hKey);
@@ -197,7 +199,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
         return false;
     }
 
-    status = NCryptExportKey(hKey, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) keyBlob, keyBlobLength, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
@@ -309,6 +311,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
     free(keyBlob);
 
     return true;
+#else
+    return false;
+#endif
+
 }
 
 /**
@@ -322,6 +328,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
 /* Unseal a seed with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_seed(SEED seed)
 {
+#ifdef _WIN32
+
     NCRYPT_PROV_HANDLE hProv;
     NCRYPT_KEY_HANDLE hKey;
     SECURITY_STATUS status;
@@ -346,7 +354,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_seed(SEED seed)
     }
 
     // Export the key as a BLOB containing the Bip32 seed
-    status = NCryptExportKey(hKey, NULL, NCRYPT_CIPHER_KEY_BLOB, NULL, seed, dwBlobLen, &dwBlobLen, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, NCRYPT_CIPHER_KEY_BLOB, NULL, seed, dwBlobLen, &dwBlobLen, 0);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to export key from TPM storage provider (0x%08x)\n", status);
@@ -360,6 +368,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_seed(SEED seed)
     NCryptFreeObject(hProv);
 
     return true;
+#else
+    return false;
+#endif
+
 }
 
 /* Seal a mnemonic with the TPM */
@@ -393,7 +405,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_hdnode_with_tpm (const dogecoin_hdno
 }
 
 /* Unseal a BIP32 HD node object with the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (dogecoin_hdnode* hdnode, const PASSPHRASE passphrase)
+LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (const PASSPHRASE passphrase, dogecoin_hdnode* hdnode)
 {
     return true;
 }
@@ -401,7 +413,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (dogecoin_hdnode* 
 /* Generate a BIP39 mnemonic in the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemonic, const wchar_t* name, const dogecoin_bool overwrite)
 {
-    // Generate entropy
+#ifdef _WIN32
+
+    // Declare ncrypt variables
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
     NCRYPT_KEY_HANDLE hEntropy;
@@ -454,7 +468,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
 
     // Export the entropy from the TPM storage provider to allocate memory for the entropy BLOB
     DWORD entropyBlobLength = 0;
-    status = NCryptExportKey(hEntropy, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
+    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
     //status = NCryptExportKey(hEntropy, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -466,7 +480,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     }
 
     // Allocate memory for the entropy BLOB
-    BYTE* entropyBlob = (BYTE*)malloc(entropyBlobLength);
+    PCP_KEY_BLOB_WIN8* entropyBlob = (PCP_KEY_BLOB_WIN8*) malloc(entropyBlobLength);
 
     if (entropyBlob == NULL)
     {
@@ -477,7 +491,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     }
 
     // Export the entropy from the TPM storage provider
-    status = NCryptExportKey(hEntropy, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, entropyBlob, entropyBlobLength, &entropyBlobLength, 0);
+    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) entropyBlob, entropyBlobLength, &entropyBlobLength, 0);
     //status = NCryptExportKey(hEntropy, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -489,20 +503,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
         return false;
     }
 
-    // Copy the entropy from the BLOB into the entropy buffer
-    // The entropy generated by the TPM is a secure pseudorandom
-    // number and therefore suitable for use as a entropy
-    char entropy[MAX_ENTROPY_BITS / 8] = { 0 };
-    PCP_KEY_BLOB_WIN8* header = (PCP_KEY_BLOB_WIN8*) entropyBlob;
-    memcpy_safe(entropy, (BYTE*) header + header->cbHeader + header->cbPublic + sizeof(ECDSAPrivateKeyHeader), DOGECOIN_ECKEY_PKEY_LENGTH);
-
     // Free the entropy and provider objects and zero out the entropy buffer
     NCryptFreeObject(hEntropy);
     NCryptFreeObject(hProvider);
-    dogecoin_mem_zero(entropyBlob, entropyBlobLength);
-    free(entropyBlob);
 
-    // Generate the mnemonic from the entropy
+    // Declare the mnemonic generation variables
     const char* lang = "eng";     /* default english (eng) */
     const char* space = " ";      /* default utf8 ( ) */
     const char* size = "256";     /* default 256 bits of entropy */
@@ -519,18 +524,33 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     }
     memset(entropy_out, '\0', MAX_ENTROPY_STRING_SIZE);
 
+    // The entropy generated by the TPM is a secure pseudorandom
+    // number and therefore suitable for use as a entropy
     // Convert the entropy to a hex string
-    utils_bin_to_hex (entropy, MAX_ENTROPY_BITS / 8, entropy_out);
+    utils_bin_to_hex ((BYTE*) entropyBlob + entropyBlob->cbHeader + entropyBlob->cbPublic + sizeof(ECDSAPrivateKeyHeader), MAX_ENTROPY_BITS / 8, entropy_out);
 
     // Generate the mnemonic from the entropy
     if (dogecoin_generate_mnemonic (size, lang, space, entropy_out, words, NULL, &mnemonic_size, mnemonic) == -1) {
-        dogecoin_free (entropy_out);
+
+        fprintf(stderr, "ERROR: Failed to generate mnemonic\n");
+        dogecoin_mem_zero(entropy_out, MAX_ENTROPY_STRING_SIZE);
+        dogecoin_mem_zero(entropyBlob, entropyBlobLength);
+        dogecoin_free(entropyBlob);
+        dogecoin_free(entropy_out);
         return -1;
     }
 
-    dogecoin_free (entropy_out);
+    // Zero out the entropy buffer and free the entropy BLOB
+    dogecoin_mem_zero(entropy_out, MAX_ENTROPY_STRING_SIZE);
+    dogecoin_mem_zero(entropyBlob, entropyBlobLength);
+    dogecoin_free(entropyBlob);
+    dogecoin_free(entropy_out);
 
     return true;
+#else
+    return false;
+#endif
+
 }
 
 /* Export a BIP39 mnemonic from the TPM */
@@ -542,6 +562,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(const wchar_t* n
 /* Generate a BIP32 seed in the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wchar_t* name, const dogecoin_bool overwrite)
 {
+#ifdef _WIN32
+
     // Generate a new master seed
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
@@ -595,7 +617,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
 
     // Export the seed from the TPM storage provider to allocate memory for the seed BLOB
     DWORD seedBlobLength = 0;
-    status = NCryptExportKey(hSeed, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
     //status = NCryptExportKey(hSeed, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -618,7 +640,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     }
 
     // Export the seed from the TPM storage provider
-    status = NCryptExportKey(hSeed, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, seedBlob, seedBlobLength, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, seedBlob, seedBlobLength, &seedBlobLength, 0);
     //status = NCryptExportKey(hSeed, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -643,12 +665,17 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     free(seedBlob);
 
     return true;
+#else
+    return false;
+#endif
 
 }
 
 /* Export a BIP32 seed from the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name, SEED seed)
 {
+#ifdef _WIN32
+
     // Export the master key
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
@@ -676,7 +703,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     DWORD seedBlobLength;
 
     // Export the seed from the TPM storage provider to get the size of the seed BLOB
-    status = NCryptExportKey(hSeed, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hSeed);
@@ -685,7 +712,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     }
 
     // Allocate memory for the seed BLOB
-    PCP_KEY_BLOB_WIN8* seedBlob = (BYTE*) malloc(seedBlobLength);
+    PCP_KEY_BLOB_WIN8* seedBlob = (PCP_KEY_BLOB_WIN8*) malloc(seedBlobLength);
 
     if (!seedBlob) {
         NCryptFreeObject(hSeed);
@@ -694,7 +721,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     }
 
     // Export the seed from the TPM storage provider
-    status = NCryptExportKey(hSeed, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, seedBlob, seedBlobLength, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) seedBlob, seedBlobLength, &seedBlobLength, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hSeed);
@@ -716,12 +743,17 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     free(seedBlob);
 
     return true;
+#else
+    return false;
+#endif
 
 }
 
 /* Erase a BIP32 seed from the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name)
 {
+#ifdef _WIN32
+
     // Initialize variables
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
@@ -759,6 +791,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name)
     NCryptFreeObject(hProvider);
 
     return true;
+#else
+    return false;
+#endif
 
 }
 
@@ -773,6 +808,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name)
  */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* out, const wchar_t* name, dogecoin_bool overwrite)
 {
+#ifdef _WIN32
+
     // Initialize variables
     dogecoin_mem_zero(out, sizeof(dogecoin_hdnode));
     out->depth = 0;
@@ -832,7 +869,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
 
     // Export the key from the TPM storage provider to allocate memory for the key BLOB
     DWORD keyBlobLength = 0;
-    status = NCryptExportKey(hKey, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
     //status = NCryptExportKey(hKey, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -855,7 +892,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     }
 
     // Export the key from the TPM storage provider
-    status = NCryptExportKey(hKey, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, 0);
     //status = NCryptExportKey(hKey, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -885,6 +922,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     free(keyBlob);
 
     return true;
+#else
+    return false;
+#endif
 
 }
 
@@ -898,6 +938,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
  */
 LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* name, dogecoin_hdnode* out)
 {
+#ifdef _WIN32
+
     // Initialize variables
     dogecoin_mem_zero(out, sizeof(dogecoin_hdnode));
     out->depth = 0;
@@ -931,7 +973,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     DWORD keyBlobLength;
 
     // Export the key from the TPM storage provider to get the size of the key BLOB
-    status = NCryptExportKey(hKey, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
@@ -940,7 +982,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     }
 
     // Allocate memory for the key BLOB
-    PCP_KEY_BLOB_WIN8* keyBlob = (BYTE*) malloc(keyBlobLength);
+    PCP_KEY_BLOB_WIN8* keyBlob = (PCP_KEY_BLOB_WIN8*) malloc(keyBlobLength);
 
     if (!keyBlob) {
         NCryptFreeObject(hKey);
@@ -949,7 +991,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     }
 
     // Export the key from the TPM storage provider
-    status = NCryptExportKey(hKey, NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) keyBlob, keyBlobLength, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
@@ -976,6 +1018,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     free(keyBlob);
 
     return true;
+#else
+    return false;
+#endif
 
 }
 
@@ -988,6 +1033,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
  */
 LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const wchar_t name)
 {
+#ifdef _WIN32
     // Initialize variables
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
@@ -1025,6 +1071,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const wchar_t name)
     NCryptFreeObject(hProvider);
 
     return true;
+#else
+    return false;
+#endif
 
 }
 
@@ -1040,6 +1089,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const wchar_t name)
  */
 dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
 {
+#ifdef _WIN32
+
     // Initialize variables
     dogecoin_mem_zero(out, sizeof(dogecoin_hdnode));
     out->depth = 0;
@@ -1151,7 +1202,7 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     status = NCryptSetProperty(
         hKey,
         BCRYPT_OPAQUE_KEY_BLOB,
-        header,
+        (PBYTE) header,
         blobSize,
         NCRYPT_PERSIST_FLAG
     );
@@ -1238,7 +1289,7 @@ dogecoin_bool dogecoin_hdnode_from_tpm_ecc (dogecoin_hdnode *out)
     ecckeyBlob->dwMagic = BCRYPT_ECDSA_PRIVATE_P256_MAGIC; // Set the magic value for BCRYPT_ECCKEY_BLOB
     ecckeyBlob->cbKey = 32; // Set the key size to 32 bytes (P-256 curve)
 
-    status = NCryptExportKey(hKey, NULL, BCRYPT_ECCPUBLIC_BLOB, NULL, keyBlob + sizeof(BCRYPT_ECCKEY_BLOB), dwBlobLen - sizeof(BCRYPT_ECCKEY_BLOB), &dwBlobLen, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_ECCPUBLIC_BLOB, NULL, keyBlob + sizeof(BCRYPT_ECCKEY_BLOB), dwBlobLen - sizeof(BCRYPT_ECCKEY_BLOB), &dwBlobLen, 0);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to export private key from TPM storage provider (0x%08x)\n", status);
@@ -1262,6 +1313,9 @@ dogecoin_bool dogecoin_hdnode_from_tpm_ecc (dogecoin_hdnode *out)
     NCryptFreeObject(hKey);
     NCryptFreeObject(hProv);
     return true;
+#else
+    return false;
+#endif
 
 }
 
