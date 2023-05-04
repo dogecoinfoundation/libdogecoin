@@ -106,7 +106,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed(const SEED seed)
     }
 
     // Create a persisted key object with the specified key name and algorithm identifier
-    status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_ALGORITHM, L"dogecoin seal", 0, NCRYPT_OVERWRITE_KEY_FLAG);
+    status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_P256_ALGORITHM, L"dogecoin seal", 0, NCRYPT_OVERWRITE_KEY_FLAG);
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hProvider);
         return false;
@@ -354,7 +354,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_seed(SEED seed)
     }
 
     // Export the key as a BLOB containing the Bip32 seed
-    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, NCRYPT_CIPHER_KEY_BLOB, NULL, seed, dwBlobLen, &dwBlobLen, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, seed, dwBlobLen, &dwBlobLen, 0);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to export key from TPM storage provider (0x%08x)\n", status);
@@ -433,7 +433,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     if (overwrite)
     {
         // Create a new entropy in the TPM storage provider
-        status = NCryptCreatePersistedKey(hProvider, &hEntropy, BCRYPT_ECDSA_ALGORITHM, name, 0, dwFlags);
+        status = NCryptCreatePersistedKey(hProvider, &hEntropy, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, dwFlags);
 
         if (status != ERROR_SUCCESS)
         {
@@ -582,7 +582,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     if (overwrite)
     {
         // Create a new seed in the TPM storage provider
-        status = NCryptCreatePersistedKey(hProvider, &hSeed, BCRYPT_ECDSA_ALGORITHM, name, 0, dwFlags);
+        status = NCryptCreatePersistedKey(hProvider, &hSeed, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, dwFlags);
 
         if (status != ERROR_SUCCESS)
         {
@@ -834,7 +834,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     if (overwrite)
     {
         // Create a new key in the TPM storage provider
-        status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_ALGORITHM, L"dogecoin master", 0, dwFlags);
+        status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_P256_ALGORITHM, L"dogecoin master", 0, dwFlags);
 
         if (status != ERROR_SUCCESS)
         {
@@ -1147,7 +1147,7 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     DWORD blobSize = sizeof(PCP_KEY_BLOB_WIN8) + header->cbPublic + header->cbPrivate;
 
     // Create the seed key
-    status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_ALGORITHM, L"dogecoin seed", 0, dwFlags);
+    status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_P256_ALGORITHM, L"dogecoin seed", 0, dwFlags);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hProvider);
@@ -1155,7 +1155,7 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     }
 
     BCRYPT_ALG_HANDLE hAlg;
-    status = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_ECDSA_ALGORITHM, NULL, 0);
+    status = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_ECDSA_P256_ALGORITHM, NULL, 0);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
