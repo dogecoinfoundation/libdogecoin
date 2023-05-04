@@ -226,8 +226,6 @@ dogecoin_utxo* dogecoin_wallet_utxo_new() {
 }
 
 void dogecoin_wallet_utxo_free(dogecoin_utxo* utxo) {
-    cstr_free(utxo->script_pubkey, true);
-    dogecoin_free(utxo->amount);
     dogecoin_free(utxo);
 }
 
@@ -400,10 +398,7 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
                     char* hexbuf = utils_uint8_to_hex((const uint8_t*)utxo->txid, DOGECOIN_HASH_LENGTH);
                     utils_reverse_hex(hexbuf, DOGECOIN_HASH_LENGTH*2);
                     memcpy_safe(utxo->txid, utils_hex_to_uint8(hexbuf), 64);
-                    utxo->script_pubkey = cstr_new_sz(tx_out->script_pubkey->len);
-                    cstr_append_buf(utxo->script_pubkey,
-                                    tx_out->script_pubkey->str,
-                                    tx_out->script_pubkey->len);
+                    memcpy_safe(utxo->script_pubkey, utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len), SCRIPT_PUBKEY_STRINGLEN);
                     utxo->vout = j;
                     memcpy_safe(utxo->address, p2pkh_from_script_pubkey, P2PKH_ADDR_STRINGLEN);
                     koinu_to_coins_str(tx_out->value, utxo->amount);

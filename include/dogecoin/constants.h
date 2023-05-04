@@ -39,6 +39,7 @@ LIBDOGECOIN_BEGIN_DECL
 #define DERIVED_PATH_STRINGLEN 33
 /* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
 #define KOINU_STRINGLEN 21
+#define SCRIPT_PUBKEY_STRINGLEN 51
 
 LIBDOGECOIN_END_DECL
 

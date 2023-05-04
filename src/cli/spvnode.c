@@ -340,7 +340,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
             printf("txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof utxo->txid));
             printf("vout:           %d\n", utxo->vout);
             printf("address:        %s\n", utxo->address);
-            printf("script_pubkey:  %s\n", utils_uint8_to_hex((uint8_t*)utxo->script_pubkey->str, utxo->script_pubkey->len));
+            printf("script_pubkey:  %s\n", utxo->script_pubkey);
             printf("amount:         %s\n", utxo->amount);
             debug_print("confirmations:  %d\n", utxo->confirmations);
             printf("spendable:      %d\n", utxo->spendable);

@@ -75,7 +75,7 @@ typedef struct dogecoin_utxo_ {
     int vout;
     char address[P2PKH_ADDR_STRINGLEN];
     char* account;
-    cstring* script_pubkey;
+    char script_pubkey[SCRIPT_PUBKEY_STRINGLEN];
     char amount[KOINU_STRINGLEN];
     int confirmations;
     dogecoin_bool spendable;
