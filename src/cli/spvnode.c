@@ -489,18 +489,18 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(data, "wallet") == 0) {
 #if WITH_WALLET
         if (address != NULL) {
-            printf("balance:        %ld\n", dogecoin_get_balance(address));
-            printf("balance str:    %s\n", dogecoin_get_balance_str(address));
-            vector* utxos = vector_new(1, free);
-            dogecoin_get_utxo_vector(address, utxos);
-            unsigned int utxo_count = dogecoin_get_utxos_length(address);
-            printf("utxo count:     %d\n", utxo_count);
-            uint8_t* byte_array = dogecoin_get_utxos(address);
-            size_t byte_array_length = strlen((const char*)byte_array);
-            printf("byte_array:     %s\n", utils_uint8_to_hex(byte_array, byte_array_length));
-            printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, 1));
-            printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, 2));
-            vector_free(utxos, true);
+            uint64_t amount = dogecoin_get_balance(address);
+            if (amount > 0) {
+                printf("amount:         %s\n", dogecoin_get_balance_str(address));
+                unsigned int utxo_count = dogecoin_get_utxos_length(address);
+                if (utxo_count) {
+                    printf("utxo count:     %d\n", utxo_count);
+                    unsigned int i = 1;
+                    for (; i <= utxo_count; i++) {
+                        printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, i));
+                    }
+                }
+            }
         }
 #endif
     } else {
