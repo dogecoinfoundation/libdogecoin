@@ -30,8 +30,10 @@
 #include <assert.h>
 #ifndef _MSC_VER
 #include <getopt.h>
+#include <unistd.h>
 #else
-#include <../../contrib/getopt/wingetopt.h>
+#include <win/wingetopt.h>
+#include <win/winunistd.h>
 #endif
 
 #ifdef HAVE_CONFIG_H
@@ -41,12 +43,6 @@
 #include <stdio.h>   /* printf */
 #include <stdlib.h>  /* atoi, malloc */
 #include <string.h>  /* strcpy */
-
-#ifndef _MSC_VER
-#include <unistd.h>
-#else
-#include <dogecoin/winunistd.h>
-#endif
 
 #include <dogecoin/uthash.h>
 
@@ -164,7 +160,7 @@ void signing_menu(int txindex, int is_testnet) {
                 case 1:
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
+                    script_pubkey = dogecoin_private_key_wif_to_pubkey_hash(private_key_wif);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     raw_hexadecimal_tx = get_raw_transaction(txindex);
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
@@ -176,7 +172,7 @@ void signing_menu(int txindex, int is_testnet) {
                 case 2:
                     input_to_sign = atoi(getl("input to sign")); // 0
                     private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                    script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
+                    script_pubkey = dogecoin_private_key_wif_to_pubkey_hash(private_key_wif);
                     raw_hexadecimal_tx = (char*)get_raw_tx("raw transaction");
                     // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                     debug_print("input_to_sign: %d\n", input_to_sign);
@@ -315,7 +311,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                                         printf("\nediting script signature:\n\n");
                                         input_to_sign = i;
                                         private_key_wif = (char*)get_private_key("private_key"); // ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy
-                                        script_pubkey = dogecoin_private_key_wif_to_script_hash(private_key_wif);
+                                        script_pubkey = dogecoin_private_key_wif_to_pubkey_hash(private_key_wif);
                                         cstr_erase(tx_in->script_sig, 0, tx_in->script_sig->len);
                                         // 76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac
                                         raw_hexadecimal_tx = get_raw_transaction(txindex);

@@ -39,7 +39,7 @@
 #include <time.h>
 #if defined _WIN32
 #ifdef _MSC_VER
-#include <dogecoin/winunistd.h>
+#include <win/winunistd.h>
 #endif
 #else
 #include <unistd.h>

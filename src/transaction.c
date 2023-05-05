@@ -400,7 +400,7 @@ char* finalize_transaction(int txindex, char* destinationaddress, char* subtract
         char p2pkh[36]; //mlumin: this was originally 17, caused problems if < 25.  p2pkh len is 24-36.
         //MLUMIN:MSVC
         dogecoin_mem_zero(p2pkh, sizeof(p2pkh));
-        p2pkh_count = dogecoin_script_hash_to_p2pkh(tx_out_tmp, (char *)p2pkh, is_testnet);
+        p2pkh_count = dogecoin_tx_out_pubkey_hash_to_p2pkh_address(tx_out_tmp, (char *)p2pkh, is_testnet);
         if (i == length - 1 && changeaddress) {
             // manually make change and send back to our public key address
             if (make_change(txindex, changeaddress, subtractedfee_koinu, out_koinu_for_verification - tx_out_total)) {

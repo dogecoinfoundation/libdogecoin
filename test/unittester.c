@@ -82,6 +82,11 @@ extern void test_logdb_rbtree();
 extern void test_examples();
 #endif
 
+#ifdef WITH_WALLET
+extern void test_wallet_basics();
+extern void test_wallet();
+#endif
+
 #ifdef WITH_TOOLS
 extern void test_tool();
 #endif
@@ -90,6 +95,7 @@ extern void test_tool();
 extern void test_net_basics_plus_download_block();
 extern void test_protocol();
 extern void test_net_flag_defined();
+extern void test_spv();
 #else
 extern void test_net_flag_not_defined();
 #endif
@@ -152,6 +158,11 @@ int main()
     u_run_test(test_examples);
 #endif
 
+#ifdef WITH_WALLET
+    u_run_test(test_wallet_basics);
+    u_run_test(test_wallet);
+#endif
+
 #ifdef WITH_TOOLS
     u_run_test(test_tool);
 #endif
@@ -160,6 +171,7 @@ int main()
     u_run_test(test_net_flag_defined);
     u_run_test(test_net_basics_plus_download_block);
     u_run_test(test_protocol);
+    u_run_test(test_spv);
 #else
     u_run_test(test_net_flag_not_defined);
 #endif

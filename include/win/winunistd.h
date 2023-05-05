@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 #include <io.h>
-#include <..\contrib\getopt\wingetopt.h>
+#include <win/wingetopt.h>
 #include <process.h> /* for getpid() and the exec..() family */
 #include <direct.h> /* for _getcwd() and _chdir() */
 

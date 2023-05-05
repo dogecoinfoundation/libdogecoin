@@ -13,6 +13,7 @@ SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
 SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
+SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
@@ -48,8 +49,8 @@ IF(WITH_NET)
         execute_process(COMMAND cmake --build .
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
         file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/build/include" DESTINATION "${PROJECT_SOURCE_DIR}")
-        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include" DESTINATION "${PROJECT_SOURCE_DIR}")
-        find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include" REQUIRED)
+        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include/event2" DESTINATION "${PROJECT_SOURCE_DIR}/include")
+        find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         find_path(LIBEVENT_INCLUDE_DIR event-config.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
         FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
         FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)
@@ -58,14 +59,6 @@ IF(WITH_NET)
         FIND_LIBRARY(LIBUNISTRING unistring REQUIRED)
     ENDIF()
 ENDIF()
-
-MESSAGE(STATUS "")
-MESSAGE(STATUS "Options used to compile and link:")
-MESSAGE(STATUS "  WITH_TOOLS    = ${WITH_TOOLS}")
-MESSAGE(STATUS "  WITH_NET      = ${WITH_NET}")
-MESSAGE(STATUS "  WITH_LOGDB    = ${WITH_LOGDB}")
-MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
-MESSAGE(STATUS "")
 
 ADD_DEFINITIONS(
     -DPACKAGE_NAME="${PROJECT_NAME}"
@@ -87,6 +80,20 @@ ENDIF()
 IF(WITH_UNISTRING)
     ADD_DEFINITIONS(-DUSE_UNISTRING=1)
 ENDIF()
+IF(WITH_WALLET)
+    ADD_DEFINITIONS(-DWITH_WALLET=1)
+ENDIF()
+
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Options used to compile and link:")
+MESSAGE(STATUS "  USE_TESTS      = ${USE_TESTS}")
+MESSAGE(STATUS "  WITH_TOOLS     = ${WITH_TOOLS}")
+MESSAGE(STATUS "  WITH_NET       = ${WITH_NET}")
+MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
+MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
+MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
+MESSAGE(STATUS "")
+
 FILE(TOUCH config/libdogecoin-config.h)
 
 ADD_LIBRARY(${LIBDOGECOIN_NAME})
@@ -103,14 +110,6 @@ INSTALL(FILES
     config/libdogecoin-config.h
     DESTINATION include/dogecoin
 )
-
-IF(WIN32)
-    INSTALL(FILES
-    include/dogecoin/winunistd.h
-    contrib/getopt/wingetopt.h
-    contrib/wintime/wingettime.h
-    DESTINATION include/dogecoin)
-ENDIF()
 
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/address.c
@@ -238,18 +237,6 @@ IF(WITH_LOGDB)
         src/logdb/red_black_tree.c
         src/logdb/stack.c
     )
-    INSTALL(FILES
-        src/logdb/include/logdb/logdb_base.h
-        src/logdb/include/logdb/logdb_core.h
-        src/logdb/include/logdb/logdb_memdb_llist.h
-        src/logdb/include/logdb/logdb_memdb_rbtree.h
-        src/logdb/include/logdb/logdb_rec.h
-        src/logdb/include/logdb/logdb.h
-        src/logdb/include/logdb/misc.h
-        src/logdb/include/logdb/red_black_tree.h
-        src/logdb/include/logdb/stack.h
-        DESTINATION include/logdb
-    )
     IF(USE_TESTS)
         TARGET_SOURCES(tests PRIVATE
             src/logdb/test/logdb_tests.c
@@ -259,15 +246,23 @@ IF(WITH_LOGDB)
     ENDIF()
 ENDIF()
 
-IF(WITH_NET)
-    INSTALL(FILES
-        include/dogecoin/protocol.h
-        include/dogecoin/net.h
-        DESTINATION include/dogecoin
-    )
+IF(WITH_WALLET)
     TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+        src/wallet.c
+    )
+    IF(USE_TESTS)
+        TARGET_SOURCES(tests PRIVATE
+            test/wallet_tests.c
+        )
+    ENDIF()
+ENDIF()
+
+IF(WITH_NET)
+    TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+        src/headersdb_file.c
         src/net.c
         src/protocol.c
+        src/spv.c
     )
 
     TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
@@ -276,6 +271,7 @@ IF(WITH_NET)
         TARGET_SOURCES(tests PRIVATE
             test/net_tests.c
             test/protocol_tests.c
+            test/spv_tests.c
         )
     ENDIF()
 ENDIF()
@@ -297,7 +293,10 @@ IF(WITH_TOOLS)
         ADD_EXECUTABLE(sendtx src/cli/sendtx.c)
         INSTALL(TARGETS sendtx RUNTIME)
         TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME})
-
         TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
+        ADD_EXECUTABLE(spvnode src/cli/spvnode.c)
+        INSTALL(TARGETS spvnode RUNTIME)
+        TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME})
+        TARGET_INCLUDE_DIRECTORIES(spvnode PRIVATE src)        
     ENDIF()
 ENDIF()

@@ -246,6 +246,13 @@ volatile void* dogecoin_mem_zero(volatile void* dst, size_t len)
     return 0;
 }
 
+uint8_t* dogecoin_uint8_vla(size_t size)
+{
+    uint8_t* outarray;
+    outarray = (uint8_t*)malloc(size * sizeof(uint8_t));
+    return outarray;
+}
+
 uint32_t* dogecoin_uint32_vla(size_t size)
 {
     uint32_t* outarray;
@@ -253,10 +260,9 @@ uint32_t* dogecoin_uint32_vla(size_t size)
     return outarray;
 }
 
-uint8_t* dogecoin_uint8_vla(size_t size)
-{
-    uint8_t* outarray;
-    outarray = (uint8_t*)malloc(size * sizeof(uint8_t));
+uint256* dogecoin_uint256_vla(size_t size) {
+    uint256* outarray;
+    outarray = (uint256*)dogecoin_malloc(size * sizeof(uint256));
     return outarray;
 }
 

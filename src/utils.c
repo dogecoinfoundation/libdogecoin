@@ -501,6 +501,19 @@ void append(char* s, char* t)
     memcpy(&s[length + i], "\0", 1);
     }
 
+char* concat(char* prefix, char* suffix) {
+    size_t suffix_length = strlen(suffix), prefix_length = strlen(prefix);
+    char* file = dogecoin_char_vla(prefix_length + suffix_length + 1);
+    memcpy_safe(file, prefix, prefix_length + 1);
+    memcpy_safe(file + prefix_length, suffix, suffix_length + 1);
+    return file;
+}
+
+void slice(const char *str, char *result, size_t start, size_t end)
+{
+    strncpy(result, str + start, end - start);
+}
+
 /**
  * @brief function to convert ascii text to hexadecimal string
  *

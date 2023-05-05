@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #ifdef _MSC_VER
-#include "../../contrib/wintime/wingettime.h"
+#include "win/wingettime.h"
 #else
 #include "sys/time.h"
 #endif

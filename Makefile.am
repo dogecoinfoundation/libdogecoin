@@ -28,6 +28,7 @@ noinst_HEADERS = \
     include/dogecoin/bip39.h \
     include/dogecoin/bip44.h \
     include/dogecoin/block.h \
+    include/dogecoin/blockchain.h \
     include/dogecoin/buffer.h \
     include/dogecoin/byteswap.h \
     include/dogecoin/chainparams.h \
@@ -168,14 +169,32 @@ tests_SOURCES += \
 endif
 endif
 
-if WITH_NET
+if WITH_WALLET
 noinst_HEADERS += \
-    include/dogecoin/protocol.h \
-    include/dogecoin/net.h
+    include/dogecoin/wallet.h
 
 libdogecoin_la_SOURCES += \
+    src/wallet.c
+
+if USE_TESTS
+tests_SOURCES += \
+    test/wallet_tests.c
+endif
+endif
+
+if WITH_NET
+noinst_HEADERS += \
+    include/dogecoin/headersdb.h \
+    include/dogecoin/headersdb_file.h \
+    include/dogecoin/protocol.h \
+    include/dogecoin/net.h \
+    include/dogecoin/spv.h
+
+libdogecoin_la_SOURCES += \
+    src/headersdb_file.c \
     src/net.c \
-    src/protocol.c
+    src/protocol.c \
+    src/spv.c
 
 libdogecoin_la_LIBADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 libdogecoin_la_CFLAGS += $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
@@ -183,7 +202,8 @@ libdogecoin_la_CFLAGS += $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 if USE_TESTS
 tests_SOURCES += \
     test/net_tests.c \
-    test/protocol_tests.c
+    test/protocol_tests.c \
+    test/spv_tests.c
 tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 endif
 endif
@@ -210,6 +230,14 @@ sendtx_SOURCES = \
 sendtx_CFLAGS = $(libdogecoin_la_CFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 sendtx_CPPFLAGS = -I$(top_srcdir)/src
 sendtx_LDFLAGS = -static
+
+inst_PROGRAMS += spvnode
+spvnode_LDADD = libdogecoin.la
+spvnode_SOURCES = \
+    src/cli/spvnode.c
+spvnode_CFLAGS = $(libdogecoin_la_CFLAGS)
+spvnode_CPPFLAGS = -I$(top_srcdir)/src
+spvnode_LDFLAGS = -static
 endif
 endif
 
