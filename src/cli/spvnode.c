@@ -481,6 +481,9 @@ int main(int argc, char* argv[]) {
             dogecoin_spv_client_runloop(client);
             dogecoin_spv_client_free(client);
             ret = EXIT_SUCCESS;
+#if WITH_WALLET
+            dogecoin_wallet_free(wallet);
+#endif
             }
         dogecoin_ecc_stop();
     } else if (strcmp(data, "wallet") == 0) {
