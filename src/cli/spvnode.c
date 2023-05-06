@@ -26,7 +26,12 @@
 
 */
 
+#ifndef WIN32
+#include <sys/stat.h>
+#include <syslog.h>
+#include <fcntl.h>
 #include <assert.h>
+#endif
 
 #ifndef _MSC_VER
 #include <getopt.h>
@@ -62,6 +67,101 @@
 #include <dogecoin/utils.h>
 #include <dogecoin/wallet.h>
 
+#ifndef WIN32
+#define BD_NO_CHDIR          01 /* Don't chdir ("/") */
+#define BD_NO_CLOSE_FILES    02 /* Don't close all open files */
+#define BD_NO_REOPEN_STD_FDS 04 /* Don't reopen stdin, stdout, and stderr
+                                   to /dev/null */
+#define BD_NO_UMASK0        010 /* Don't do a umask(0) */
+#define BD_MAX_CLOSE       8192 /* Max file descriptors to close if
+                                   sysconf(_SC_OPEN_MAX) is indeterminate */
+
+int // returns 0 on success -1 on error
+become_daemon(int flags)
+{
+  int maxfd, fd;
+
+  /* The first fork will change our pid
+   * but the sid and pgid will be the
+   * calling process.
+   */
+  switch(fork())                    // become background process
+  {
+    case -1: return -1;
+    case 0: break;                  // child falls through
+    default: _exit(EXIT_SUCCESS);   // parent terminates
+  }
+
+  /*
+   * Run the process in a new session without a controlling
+   * terminal. The process group ID will be the process ID
+   * and thus, the process will be the process group leader.
+   * After this call the process will be in a new session,
+   * and it will be the progress group leader in a new
+   * process group.
+   */
+  if(setsid() == -1)                // become leader of new session
+    return -1;
+
+  /*
+   * We will fork again, also known as a
+   * double fork. This second fork will orphan
+   * our process because the parent will exit.
+   * When the parent process exits the child
+   * process will be adopted by the init process
+   * with process ID 1.
+   * The result of this second fork is a process
+   * with the parent as the init process with an ID
+   * of 1. The process will be in it's own session
+   * and process group and will have no controlling
+   * terminal. Furthermore, the process will not
+   * be the process group leader and thus, cannot
+   * have the controlling terminal if there was one.
+   */
+  switch(fork())
+  {
+    case -1: return -1;
+    case 0: break;                  // child breaks out of case
+    default: _exit(EXIT_SUCCESS);   // parent process will exit
+  }
+
+  if(!(flags & BD_NO_UMASK0))
+    umask(0);                       // clear file creation mode mask
+
+//   if(!(flags & BD_NO_CHDIR))
+//     chdir("/");                     // change to root directory
+
+  if(!(flags & BD_NO_CLOSE_FILES))  // close all open files
+  {
+    maxfd = sysconf(_SC_OPEN_MAX);
+    if(maxfd == -1)
+      maxfd = BD_MAX_CLOSE;         // if we don't know then guess
+    for(fd = 0; fd < maxfd; fd++)
+      close(fd);
+  }
+
+  if(!(flags & BD_NO_REOPEN_STD_FDS))
+  {
+    /* now time to go "dark"!
+     * we'll close stdin
+     * then we'll point stdout and stderr
+     * to /dev/null
+     */
+    close(STDIN_FILENO);
+
+    fd = open("/dev/null", O_RDWR);
+    if(fd != STDIN_FILENO)
+      return -1;
+    if(dup2(STDIN_FILENO, STDOUT_FILENO) != STDOUT_FILENO)
+      return -2;
+    if(dup2(STDIN_FILENO, STDERR_FILENO) != STDERR_FILENO)
+      return -3;
+  }
+
+  return 0;
+}
+#endif
+
 /* This is a list of all the options that can be used with the program. */
 static struct option long_options[] = {
         {"testnet", no_argument, NULL, 't'},
@@ -75,7 +175,7 @@ static struct option long_options[] = {
         {"address", no_argument, NULL, 'a'},
         {"full_sync", no_argument, NULL, 'b'},
         {"checkpoint", no_argument, NULL, 'p'},
-        {"wallet_cmd", no_argument, NULL, 'w'},
+        {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
 /**
@@ -190,9 +290,17 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
     dogecoin_wallet_addr* waddr;
 
     if (address != NULL) {
-        waddr = dogecoin_wallet_addr_new();
-        if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(address, waddr, wallet)) {
-            exit(EXIT_FAILURE);
+        char delim[] = " ";
+
+        char *ptr = strtok(address, delim);
+
+        while(ptr != NULL)
+        {
+            waddr = dogecoin_wallet_addr_new();
+            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr, wallet)) {
+                exit(EXIT_FAILURE);
+            }
+            ptr = strtok(NULL, delim);
         }
     } 
 #ifdef USE_UNISTRING  
@@ -232,18 +340,17 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
             printf("txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof utxo->txid));
             printf("vout:           %d\n", utxo->vout);
             printf("address:        %s\n", utxo->address);
-            printf("script_pubkey:  %s\n", utils_uint8_to_hex((uint8_t*)utxo->script_pubkey->str, utxo->script_pubkey->len));
+            printf("script_pubkey:  %s\n", utxo->script_pubkey);
             printf("amount:         %s\n", utxo->amount);
             debug_print("confirmations:  %d\n", utxo->confirmations);
             printf("spendable:      %d\n", utxo->spendable);
             printf("solvable:       %d\n", utxo->solvable);
             wallet_total_u64 += coins_to_koinu_str(utxo->amount);
-            dogecoin_wallet_utxo_free(utxo);
         }
         koinu_to_coins_str(wallet_total_u64, wallet_total);
         printf("Balance: %s\n", wallet_total);
     }
-    dogecoin_free(unspent);
+    vector_free(unspent, true);
     return wallet;
 }
 
@@ -260,6 +367,7 @@ int main(int argc, char* argv[]) {
     dogecoin_bool use_checkpoint = false;
     char* mnemonic_in = 0;
     dogecoin_bool full_sync = false;
+    dogecoin_bool have_decl_daemon = false;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
@@ -269,7 +377,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:bp:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:bpz:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -300,6 +408,9 @@ int main(int argc, char* argv[]) {
                     break;
                 case 'p':
                     use_checkpoint = true;
+                    break;
+                case 'z':
+                    have_decl_daemon = true;
                     break;
                 case 'v':
                     print_version();
@@ -332,6 +443,37 @@ int main(int argc, char* argv[]) {
             printf("Could not load or create headers database...aborting\n");
             ret = EXIT_FAILURE;
         } else {
+            if (have_decl_daemon) {
+#if defined(HAVE_DECL_DAEMON) && !defined(WIN32)
+                const char *LOGNAME = "libdogecoin-spvnode";
+
+                // turn this process into a daemon
+                ret = become_daemon(0);
+                if(ret)
+                {
+                    syslog(LOG_USER | LOG_ERR, "error starting");
+                    closelog();
+                    return EXIT_FAILURE;
+                }
+
+                // we are now a daemon!
+                // printf now will go to /dev/null
+
+                // open up the system log
+                openlog(LOGNAME, LOG_PID, LOG_USER);
+                syslog(LOG_USER | LOG_INFO, "starting");
+
+                // run forever in the background
+                while(1)
+                {
+                    sleep(60);
+                    syslog(LOG_USER | LOG_INFO, "running");
+                }
+#else
+            fprintf(stderr, "Error: -z | --daemon is not supported on this operating system\n");
+            return false;
+#endif
+            }
             printf("done\n");
             printf("Discover peers...\n");
             dogecoin_spv_client_discover_peers(client, ips);
@@ -339,12 +481,27 @@ int main(int argc, char* argv[]) {
             dogecoin_spv_client_runloop(client);
             dogecoin_spv_client_free(client);
             ret = EXIT_SUCCESS;
+#if WITH_WALLET
+            dogecoin_wallet_free(wallet);
+#endif
             }
         dogecoin_ecc_stop();
     } else if (strcmp(data, "wallet") == 0) {
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, mnemonic_in);
-        dogecoin_wallet_free(wallet);
+        if (address != NULL) {
+            uint64_t amount = dogecoin_get_balance(address);
+            if (amount > 0) {
+                printf("amount:         %s\n", dogecoin_get_balance_str(address));
+                unsigned int utxo_count = dogecoin_get_utxos_length(address);
+                if (utxo_count) {
+                    printf("utxo count:     %d\n", utxo_count);
+                    unsigned int i = 1;
+                    for (; i <= utxo_count; i++) {
+                        printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, i));
+                    }
+                }
+            }
+        }
 #endif
     } else {
         printf("Invalid command (use -?)\n");

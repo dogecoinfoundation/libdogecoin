@@ -76,6 +76,7 @@ unsigned int base64_encoded_size(unsigned int in_size);
 unsigned int base64_decoded_size(unsigned int in_size);
 unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out);
+int integer_length(int x);
 
 #define _SEARCH_PRIVATE
 #ifdef _SEARCH_PRIVATE

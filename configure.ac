@@ -133,6 +133,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
   [ AC_MSG_RESULT([no])
   ])
 
+# Check for daemon(3)
+AC_CHECK_DECLS([daemon])
+
 m4_include(m4/macros/with.m4)
 ARG_WITH_SET([random-device], [/dev/urandom], [set the device to read random data from])
 if test "x$random_device" = x"/dev/urandom"; then

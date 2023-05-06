@@ -36,6 +36,7 @@ LIBDOGECOIN_BEGIN_DECL
 #include <dogecoin/blockchain.h>
 #include <dogecoin/bip32.h>
 #include <dogecoin/buffer.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/tx.h>
 
 #include <stdint.h>
@@ -72,10 +73,10 @@ typedef struct dogecoin_wtx_ {
 typedef struct dogecoin_utxo_ {
     uint256 txid;
     int vout;
-    char* address;
+    char address[P2PKH_ADDR_STRINGLEN];
     char* account;
-    cstring* script_pubkey;
-    char* amount;
+    char script_pubkey[SCRIPT_PUBKEY_STRINGLEN];
+    char amount[KOINU_STRINGLEN];
     int confirmations;
     dogecoin_bool spendable;
     dogecoin_bool solvable;
@@ -169,6 +170,17 @@ LIBDOGECOIN_API void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *t
  * memory is managed by the transaction tree
  */
 LIBDOGECOIN_API dogecoin_wtx * dogecoin_wallet_get_wtx(dogecoin_wallet* wallet, const uint256 hash);
+
+LIBDOGECOIN_API dogecoin_wallet* dogecoin_wallet_read(char* address);
+LIBDOGECOIN_API int dogecoin_register_watch_address_with_node(char* address);
+LIBDOGECOIN_API int dogecoin_unregister_watch_address_with_node(char* address);
+LIBDOGECOIN_API int dogecoin_get_utxo_vector(char* address, vector* utxos);
+LIBDOGECOIN_API uint8_t* dogecoin_get_utxos(char* address);
+LIBDOGECOIN_API unsigned int dogecoin_get_utxos_length(char* address);
+LIBDOGECOIN_API char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);
+LIBDOGECOIN_API uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index);
+LIBDOGECOIN_API uint64_t dogecoin_get_balance(char* address);
+LIBDOGECOIN_API char* dogecoin_get_balance_str(char* address);
 
 LIBDOGECOIN_END_DECL
 
