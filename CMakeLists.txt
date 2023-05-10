@@ -7,7 +7,7 @@ SET(CMAKE_C_STANDARD_REQUIRED TRUE)
 SET(LIBDOGECOIN_NAME dogecoin)
 PROJECT(lib${LIBDOGECOIN_NAME} VERSION 0.1)
 
-option(BUILD_SHARED_LIBS "Build the shared library" ON)
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 if(BUILD_SHARED_LIBS)
   set(library_type "Shared")
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -46,7 +46,7 @@ endif()
 IF(WITH_NET)
     IF(WIN32)
         # build libevent
-        execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/src/libevent/build/include)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/src/libevent/build)
         execute_process(COMMAND cmake .. 
             -DEVENT__DISABLE_OPENSSL=ON 
             -DEVENT__DISABLE_SAMPLES=ON 
@@ -107,6 +107,7 @@ MESSAGE(STATUS "  WITH_NET       = ${WITH_NET}")
 MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
 MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
+MESSAGE(STATUS "")
 message(STATUS "  library type   = ${library_type}")
 MESSAGE(STATUS "")
 
@@ -277,9 +278,9 @@ IF(WITH_WALLET)
         src/wallet.c
     )
     IF(USE_TESTS)
-            TARGET_SOURCES(tests ${visibility}
-                test/wallet_tests.c
-            )
+        TARGET_SOURCES(tests ${visibility}
+            test/wallet_tests.c
+        )
     ENDIF()
 ENDIF()
 
