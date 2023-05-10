@@ -39,7 +39,45 @@
 #ifndef WINVER
 #define WINVER 0x0600
 #endif
+#ifdef _WIN32
 
+/*
+ * Defines
+ */
+#define BCRYPT_PCP_KEY_MAGIC 'MPCP' // Platform Crypto Provider Magic
+#define PCPTYPE_TPM20 (0x00000002)
+
+/*
+ * Type definitions
+ */
+typedef struct PCP_KEY_BLOB_WIN8
+{
+    DWORD magic; // BCRYPT_PCP_KEY_MAGIC
+    DWORD cbHeader; // Size of the header structure
+    DWORD pcpType; // TPM type
+    DWORD flags; // PCP_KEY_FLAGS_WIN8 Key flags
+    ULONG cbPublic; // Size of Public key
+    ULONG cbPrivate; // Size of Private key blob
+    ULONG cbMigrationPublic; // Size of Public migration authorization object
+    ULONG cbMigrationPrivate; // Size of Private migration authorization object
+    ULONG cbPolicyDigestList; // Size of List of policy digest branches
+    ULONG cbPCRBinding; // Size of PCR binding mask
+    ULONG cbPCRDigest; // Size of PCR binding digest
+    ULONG cbEncryptedSecret; // Size of hostage import symmetric key
+    ULONG cbTpm12HostageBlob; // Size of hostage import private key
+    ULONG pcrAlgId;
+} PCP_KEY_BLOB_WIN8, *PPCP_KEY_BLOB_WIN8;
+
+typedef struct {
+    USHORT blobSize;
+    USHORT keySize;
+} ECDSAPublicKeyHeader;
+
+typedef struct {
+    USHORT blobSize;
+    USHORT keySize;
+} ECDSAPrivateKeyHeader;
+#endif
 
 /**
  * @brief This function seals the seed with Trusted Platform Module (TPM)
@@ -337,7 +375,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_seed(SEED seed)
     DWORD dwBlobLen = 64; // Size of the Bip32 seed in bytes
 
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProv, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProv, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -411,7 +449,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (const PASSPHRASE 
 }
 
 /* Generate a BIP39 mnemonic in the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemonic, const wchar_t* name, const dogecoin_bool overwrite)
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemonic, const int slot, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words)
 {
 #ifdef _WIN32
 
@@ -419,10 +457,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
     NCRYPT_KEY_HANDLE hEntropy;
-    DWORD dwFlags = NCRYPT_OVERWRITE_KEY_FLAG; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+
+    // Format the name of the mnemonic
+    wchar_t* name = MNEMONIC_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), MNEMONIC_OBJECT_NAME_FORMAT, slot);
 
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -433,7 +475,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     if (overwrite)
     {
         // Create a new entropy in the TPM storage provider
-        status = NCryptCreatePersistedKey(hProvider, &hEntropy, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, dwFlags);
+        status = NCryptCreatePersistedKey(hProvider, &hEntropy, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, NCRYPT_OVERWRITE_KEY_FLAG);
 
         if (status != ERROR_SUCCESS)
         {
@@ -453,22 +495,19 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
             return false;
         }
     }
-    else
-    {
-        // Open the existing entropy in the TPM storage provider
-        status = NCryptOpenKey(hProvider, &hEntropy, name, 0, dwFlags);
 
-        if (status != ERROR_SUCCESS)
-        {
-            printf("Error: Failed to open entropy in TPM storage provider (0x%08x)\n", status);
-            NCryptFreeObject(hProvider);
-            return false;
-        }
+    // Open the existing entropy in the TPM storage provider
+    status = NCryptOpenKey(hProvider, &hEntropy, name, 0, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open entropy in TPM storage provider (0x%08x)\n", status);
+        NCryptFreeObject(hProvider);
+        return false;
     }
 
     // Export the entropy from the TPM storage provider to allocate memory for the entropy BLOB
     DWORD entropyBlobLength = 0;
-    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
+    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &entropyBlobLength, dwFlags);
     //status = NCryptExportKey(hEntropy, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -491,7 +530,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     }
 
     // Export the entropy from the TPM storage provider
-    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) entropyBlob, entropyBlobLength, &entropyBlobLength, 0);
+    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) entropyBlob, entropyBlobLength, &entropyBlobLength, dwFlags);
     //status = NCryptExportKey(hEntropy, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -508,10 +547,6 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     NCryptFreeObject(hProvider);
 
     // Declare the mnemonic generation variables
-    const char* lang = "eng";     /* default english (eng) */
-    const char* space = " ";      /* default utf8 ( ) */
-    const char* size = "256";     /* default 256 bits of entropy */
-    const char* words = 0;        /* default no custom words (NULL) */
     char* entropy_out = 0;
     size_t mnemonic_size = 0;
 
@@ -524,13 +559,13 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
     }
     memset(entropy_out, '\0', MAX_ENTROPY_STRING_SIZE);
 
-    // The entropy generated by the TPM is a secure pseudorandom
+    // The entropy generated by the TPM is a 256-bit secure random
     // number and therefore suitable for use as a entropy
     // Convert the entropy to a hex string
     utils_bin_to_hex ((BYTE*) entropyBlob + entropyBlob->cbHeader + entropyBlob->cbPublic + sizeof(ECDSAPrivateKeyHeader), MAX_ENTROPY_BITS / 8, entropy_out);
 
     // Generate the mnemonic from the entropy
-    if (dogecoin_generate_mnemonic (size, lang, space, entropy_out, words, NULL, &mnemonic_size, mnemonic) == -1) {
+    if (dogecoin_generate_mnemonic ("256", lang, space, entropy_out, words, NULL, &mnemonic_size, mnemonic) == -1) {
 
         fprintf(stderr, "ERROR: Failed to generate mnemonic\n");
         dogecoin_mem_zero(entropy_out, MAX_ENTROPY_STRING_SIZE);
@@ -553,14 +588,323 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemoni
 
 }
 
-/* Export a BIP39 mnemonic from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(const wchar_t* name, MNEMONIC mnemonic)
+LIBDOGECOIN_API int generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int slot, const dogecoin_bool overwrite)
 {
+    // Generate an English mnemonic in the TPM
+    return dogecoin_generate_mnemonic_in_tpm(mnemonic, slot, overwrite, "eng", " ", NULL);
+}
+
+/* Export a BIP39 mnemonic from the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(const int slot, MNEMONIC mnemonic, const char* lang, const char* space, const char* words)
+{
+#ifdef _WIN32
+
+    // Declare ncrypt variables
+    SECURITY_STATUS status;
+    NCRYPT_PROV_HANDLE hProvider;
+    NCRYPT_KEY_HANDLE hEntropy;
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+
+    // Format the name of the mnemonic
+    wchar_t* name = MNEMONIC_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), MNEMONIC_OBJECT_NAME_FORMAT, slot);
+
+    // Open the TPM storage provider
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
+        return false;
+    }
+
+    // Open the existing entropy in the TPM storage provider
+    status = NCryptOpenKey(hProvider, &hEntropy, name, 0, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open entropy in TPM storage provider (0x%08x)\n", status);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Export the entropy from the TPM storage provider to allocate memory for the entropy BLOB
+    DWORD entropyBlobLength = 0;
+    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &entropyBlobLength, dwFlags);
+    //status = NCryptExportKey(hEntropy, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
+
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to export entropy from TPM storage provider (0x%08x)\n", status);
+        NCryptFreeObject(hEntropy);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Allocate memory for the entropy BLOB
+    PCP_KEY_BLOB_WIN8* entropyBlob = (PCP_KEY_BLOB_WIN8*) malloc(entropyBlobLength);
+
+    if (entropyBlob == NULL)
+    {
+        printf("Error: Failed to allocate memory for entropy BLOB\n");
+        NCryptFreeObject(hEntropy);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Export the entropy from the TPM storage provider
+    status = NCryptExportKey(hEntropy, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) entropyBlob, entropyBlobLength, &entropyBlobLength, dwFlags);
+    //status = NCryptExportKey(hEntropy, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &entropyBlobLength, 0);
+
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to export entropy from TPM storage provider (0x%08x)\n", status);
+        free(entropyBlob);
+        NCryptFreeObject(hEntropy);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Free the entropy and provider objects and zero out the entropy buffer
+    NCryptFreeObject(hEntropy);
+    NCryptFreeObject(hProvider);
+
+    // Declare the mnemonic generation variables
+    char* entropy_out = 0;
+    size_t mnemonic_size = 0;
+
+    // Allocate memory for the entropy out
+    entropy_out = malloc(sizeof(char) * MAX_ENTROPY_STRING_SIZE);
+    if (entropy_out == NULL) {
+
+        fprintf(stderr, "ERROR: Failed to allocate memory for mnemonic\n");
+        return -1;
+    }
+    memset(entropy_out, '\0', MAX_ENTROPY_STRING_SIZE);
+
+    // The entropy generated by the TPM is a 256-bit secure random
+    // number and therefore suitable for use as a entropy
+    // Convert the entropy to a hex string
+    utils_bin_to_hex ((BYTE*) entropyBlob + entropyBlob->cbHeader + entropyBlob->cbPublic + sizeof(ECDSAPrivateKeyHeader), MAX_ENTROPY_BITS / 8, entropy_out);
+
+    // Generate the mnemonic from the entropy
+    if (dogecoin_generate_mnemonic ("256", lang, space, entropy_out, words, NULL, &mnemonic_size, mnemonic) == -1) {
+
+        fprintf(stderr, "ERROR: Failed to generate mnemonic\n");
+        dogecoin_mem_zero(entropy_out, MAX_ENTROPY_STRING_SIZE);
+        dogecoin_mem_zero(entropyBlob, entropyBlobLength);
+        dogecoin_free(entropyBlob);
+        dogecoin_free(entropy_out);
+        return -1;
+    }
+
+    // Zero out the entropy buffer and free the entropy BLOB
+    dogecoin_mem_zero(entropy_out, MAX_ENTROPY_STRING_SIZE);
+    dogecoin_mem_zero(entropyBlob, entropyBlobLength);
+    dogecoin_free(entropyBlob);
+    dogecoin_free(entropy_out);
+
     return true;
+#else
+    return false;
+#endif
+
+}
+
+LIBDOGECOIN_API int exportEnglishMnemonicTPM(const int slot, MNEMONIC mnemonic)
+{
+    // Generate an English mnemonic in the TPM
+    return dogecoin_export_mnemonic_from_tpm(slot, mnemonic, "eng", " ", NULL);
+}
+
+/* Erase a BIP39 mnemonic from the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_erase_mnemonic_from_tpm(const int slot)
+{
+#ifdef _WIN32
+
+    // Initialize variables
+    SECURITY_STATUS status;
+    NCRYPT_PROV_HANDLE hProvider;
+    NCRYPT_KEY_HANDLE hEntropy;
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+
+    // Format the name of the mnemonic
+    wchar_t* name = MNEMONIC_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), MNEMONIC_OBJECT_NAME_FORMAT, slot);
+
+    // Open the TPM storage provider
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
+        return false;
+    }
+
+    // Open the existing mnemonic in the TPM storage provider
+    status = NCryptOpenKey(hProvider, &hEntropy, name, 0, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open mnemonic in TPM storage provider (0x%08x)\n", status);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Delete the mnemonic from the TPM storage provider
+    status = NCryptDeleteKey(hEntropy, 0);
+
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to delete mnemonic from TPM storage provider (0x%08x)\n", status);
+        NCryptFreeObject(hProvider);
+        return false;
+    }
+
+    // Free the entropy and provider objects
+    NCryptFreeObject(hEntropy);
+    NCryptFreeObject(hProvider);
+
+    return true;
+#else
+    return false;
+#endif
+
+}
+
+/* List all the objects in the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_list_objects_in_tpm(wchar_t* names[], size_t* count)
+{
+#ifdef _WIN32
+
+    // Declare ncrypt variables
+    SECURITY_STATUS status;
+    NCRYPT_PROV_HANDLE hProvider;
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+    PVOID ppEnumState = NULL;
+
+    // Open the TPM storage provider
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
+        return false;
+    }
+
+    // Enumerate the keys in the TPM storage provider
+    NCryptKeyName* keyList = NULL;
+
+    while (true)
+    {
+        // Get the next key in the list
+        status = NCryptEnumKeys(hProvider, NULL, &keyList, &ppEnumState, dwFlags);
+        if (status == NTE_NO_MORE_ITEMS)
+        {
+            break;
+        }
+        else if (status != ERROR_SUCCESS)
+        {
+            printf("Error: Failed to enumerate keys in TPM storage provider (0x%08x)\n", status);
+            NCryptFreeObject(hProvider);
+            return false;
+        }
+
+        // Allocate memory for the name
+        names[*count] = malloc((wcslen(keyList->pszName) + 1) * sizeof(wchar_t));
+
+        if (names[*count] == NULL)
+        {
+            printf("Error: Failed to allocate memory for object name\n");
+            NCryptFreeObject(hProvider);
+            return false;
+        }
+
+        // Copy the name
+        swprintf(names[*count], (wcslen(keyList->pszName) + 1) * sizeof(wchar_t), L"%ls", keyList->pszName);
+
+        // Increment the count of keys
+        (*count)++;
+    }
+
+    NCryptFreeObject(hProvider);
+    NCryptFreeBuffer(ppEnumState);
+
+    return true;
+#else
+    return false;
+#endif
+
+}
+
+/* List all the mnemonics in the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_list_mnemonics_in_tpm(wchar_t* names[], size_t* count)
+{
+#ifdef _WIN32
+
+    // Declare ncrypt variables
+    SECURITY_STATUS status;
+    NCRYPT_PROV_HANDLE hProvider;
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+    PVOID ppEnumState = NULL;
+
+    // Open the TPM storage provider
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
+        return false;
+    }
+
+    // Enumerate the keys in the TPM storage provider
+    NCryptKeyName* keyList = NULL;
+
+    while (true)
+    {
+        // Get the next key in the list
+        status = NCryptEnumKeys(hProvider, NULL, &keyList, &ppEnumState, dwFlags);
+        if (status == NTE_NO_MORE_ITEMS)
+        {
+            break;
+        }
+        else if (status != ERROR_SUCCESS)
+        {
+            printf("Error: Failed to enumerate keys in TPM storage provider (0x%08x)\n", status);
+            NCryptFreeObject(hProvider);
+            return false;
+        }
+
+        // Check if the name matches the mnemonic format
+        if (wcsncmp(keyList->pszName, MNEMONIC_OBJECT_NAME_FORMAT, wcslen(MNEMONIC_OBJECT_NAME_FORMAT) - 4) != 0)
+        {
+            continue;
+        }
+
+        // Allocate memory for the name
+        names[*count] = malloc((wcslen(keyList->pszName) + 1) * sizeof(wchar_t));
+
+        if (names[*count] == NULL)
+        {
+            printf("Error: Failed to allocate memory for mnemonic name\n");
+            NCryptFreeObject(hProvider);
+            return false;
+        }
+
+        // Copy the name
+        swprintf(names[*count], (wcslen(keyList->pszName) + 1) * sizeof(wchar_t), L"%ls", keyList->pszName);
+
+        // Increment the count of keys
+        (*count)++;
+    }
+
+    // Free the provider object and the enumeration state
+    NCryptFreeObject(hProvider);
+    NCryptFreeBuffer(ppEnumState);
+
+    return true;
+#else
+    return false;
+#endif
+
 }
 
 /* Generate a BIP32 seed in the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wchar_t* name, const dogecoin_bool overwrite)
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const int slot, const dogecoin_bool overwrite)
 {
 #ifdef _WIN32
 
@@ -568,10 +912,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
     NCRYPT_KEY_HANDLE hSeed;
-    DWORD dwFlags = NCRYPT_OVERWRITE_KEY_FLAG; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+
+    // Format the name of the mnemonic
+    wchar_t* name = SEED_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), SEED_OBJECT_NAME_FORMAT, slot);
 
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -582,7 +930,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     if (overwrite)
     {
         // Create a new seed in the TPM storage provider
-        status = NCryptCreatePersistedKey(hProvider, &hSeed, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, dwFlags);
+        status = NCryptCreatePersistedKey(hProvider, &hSeed, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, NCRYPT_OVERWRITE_KEY_FLAG);
 
         if (status != ERROR_SUCCESS)
         {
@@ -606,7 +954,6 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     {
         // Open the existing seed in the TPM storage provider
         status = NCryptOpenKey(hProvider, &hSeed, name, 0, dwFlags);
-
         if (status != ERROR_SUCCESS)
         {
             printf("Error: Failed to open seed in TPM storage provider (0x%08x)\n", status);
@@ -617,7 +964,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
 
     // Export the seed from the TPM storage provider to allocate memory for the seed BLOB
     DWORD seedBlobLength = 0;
-    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, dwFlags);
     //status = NCryptExportKey(hSeed, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -640,7 +987,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
     }
 
     // Export the seed from the TPM storage provider
-    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, seedBlob, seedBlobLength, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, seedBlob, seedBlobLength, &seedBlobLength, dwFlags);
     //status = NCryptExportKey(hSeed, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -672,7 +1019,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wch
 }
 
 /* Export a BIP32 seed from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name, SEED seed)
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const int slot, SEED seed)
 {
 #ifdef _WIN32
 
@@ -682,8 +1029,12 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     NCRYPT_KEY_HANDLE hSeed;
     DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
 
+    // Format the name of the mnemonic
+    wchar_t* name = SEED_OBJECT_NAME_FORMAT;
+    swprintf(name, sizeof(name) * sizeof(wchar_t), L"seed %d", slot);
+
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -703,7 +1054,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     DWORD seedBlobLength;
 
     // Export the seed from the TPM storage provider to get the size of the seed BLOB
-    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &seedBlobLength, dwFlags);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hSeed);
@@ -721,7 +1072,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
     }
 
     // Export the seed from the TPM storage provider
-    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) seedBlob, seedBlobLength, &seedBlobLength, 0);
+    status = NCryptExportKey(hSeed, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) seedBlob, seedBlobLength, &seedBlobLength, dwFlags);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hSeed);
@@ -750,7 +1101,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name,
 }
 
 /* Erase a BIP32 seed from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name)
+LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const int slot)
 {
 #ifdef _WIN32
 
@@ -760,8 +1111,12 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name)
     NCRYPT_KEY_HANDLE hSeed;
     DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
 
+    // Format the name of the seed
+    wchar_t* name = SEED_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), SEED_OBJECT_NAME_FORMAT, slot);
+
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -806,7 +1161,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name)
  * @param overwrite Whether or not to overwrite the existing HD node object
  * @return Returns true if the keypair and chain_code are generated successfully, false otherwise.
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* out, const wchar_t* name, dogecoin_bool overwrite)
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* out, const int slot, dogecoin_bool overwrite)
 {
 #ifdef _WIN32
 
@@ -820,10 +1175,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
     NCRYPT_KEY_HANDLE hKey;
-    DWORD dwFlags = NCRYPT_OVERWRITE_KEY_FLAG; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+    DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
+
+    // Format the name of the HD node
+    wchar_t* name = HDNODE_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), HDNODE_OBJECT_NAME_FORMAT, slot);
 
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -834,7 +1193,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     if (overwrite)
     {
         // Create a new key in the TPM storage provider
-        status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_P256_ALGORITHM, L"dogecoin master", 0, dwFlags);
+        status = NCryptCreatePersistedKey(hProvider, &hKey, BCRYPT_ECDSA_P256_ALGORITHM, name, 0, NCRYPT_OVERWRITE_KEY_FLAG);
 
         if (status != ERROR_SUCCESS)
         {
@@ -857,8 +1216,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     else
     {
         // Open the existing key in the TPM storage provider
-        status = NCryptOpenKey(hProvider, &hKey, L"dogecoin master", 0, dwFlags);
-
+        status = NCryptOpenKey(hProvider, &hKey, name, 0, dwFlags);
         if (status != ERROR_SUCCESS)
         {
             printf("Error: Failed to open key in TPM storage provider (0x%08x)\n", status);
@@ -869,7 +1227,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
 
     // Export the key from the TPM storage provider to allocate memory for the key BLOB
     DWORD keyBlobLength = 0;
-    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, dwFlags);
     //status = NCryptExportKey(hKey, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -892,7 +1250,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
     }
 
     // Export the key from the TPM storage provider
-    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, keyBlob, keyBlobLength, &keyBlobLength, dwFlags);
     //status = NCryptExportKey(hKey, NULL, BCRYPT_ECCPRIVATE_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
 
     if (status != ERROR_SUCCESS)
@@ -936,7 +1294,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* o
  * @param out The HD node object to export
  * @return Returns true if the keypair and chain_code are exported successfully, false otherwise.
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* name, dogecoin_hdnode* out)
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const int slot, dogecoin_hdnode* out)
 {
 #ifdef _WIN32
 
@@ -952,8 +1310,12 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     NCRYPT_KEY_HANDLE hKey;
     DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
 
+    // Format the name of the HD node
+    wchar_t* name = HDNODE_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), HDNODE_OBJECT_NAME_FORMAT, slot);
+
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -961,7 +1323,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     }
 
     // Open the key in the TPM storage provider
-    status = NCryptOpenKey(hProvider, &hKey, L"dogecoin master", 0, dwFlags);
+    status = NCryptOpenKey(hProvider, &hKey, name, 0, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open key in TPM storage provider (0x%08x)\n", status);
@@ -973,7 +1335,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     DWORD keyBlobLength;
 
     // Export the key from the TPM storage provider to get the size of the key BLOB
-    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, NULL, 0, &keyBlobLength, dwFlags);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
@@ -991,7 +1353,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
     }
 
     // Export the key from the TPM storage provider
-    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) keyBlob, keyBlobLength, &keyBlobLength, 0);
+    status = NCryptExportKey(hKey, (NCRYPT_KEY_HANDLE) NULL, BCRYPT_OPAQUE_KEY_BLOB, NULL, (PBYTE) keyBlob, keyBlobLength, &keyBlobLength, dwFlags);
 
     if (status != ERROR_SUCCESS) {
         NCryptFreeObject(hKey);
@@ -1031,17 +1393,22 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* nam
  * 
  * @return Returns true if the master key was erased successfully
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const wchar_t name)
+LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const int slot)
 {
 #ifdef _WIN32
+
     // Initialize variables
     SECURITY_STATUS status;
     NCRYPT_PROV_HANDLE hProvider;
     NCRYPT_KEY_HANDLE hKey;
     DWORD dwFlags = 0; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
 
+    // Format the name of the HD node
+    wchar_t* name = HDNODE_OBJECT_NAME_FORMAT;
+    swprintf(name, (wcslen(name) + 1) * sizeof(wchar_t), HDNODE_OBJECT_NAME_FORMAT, slot);
+
     // Open the TPM storage provider
-    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, 0);
+    status = NCryptOpenStorageProvider(&hProvider, MS_PLATFORM_CRYPTO_PROVIDER, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open TPM storage provider (0x%08x)\n", status);
@@ -1049,7 +1416,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const wchar_t name)
     }
 
     // Open the key in the TPM storage provider
-    status = NCryptOpenKey(hProvider, &hKey, L"dogecoin master", 0, dwFlags);
+    status = NCryptOpenKey(hProvider, &hKey, name, 0, dwFlags);
     if (status != ERROR_SUCCESS)
     {
         printf("Error: Failed to open key in TPM storage provider (0x%08x)\n", status);
@@ -1096,8 +1463,6 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     out->depth = 0;
     out->fingerprint = 0x00000000;
     out->child_num = 0;
-
-    BCryptBufferDesc params;
 
     DWORD dwFlags = NCRYPT_OVERWRITE_KEY_FLAG; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
 
@@ -1173,7 +1538,7 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
         return false;
     }
 
-    BCRYPT_PROVIDER_NAME* provList = NULL;
+    BCRYPT_ALGORITHM_IDENTIFIER* provList = NULL;
     DWORD numProv = 0;
 
     status = BCryptEnumAlgorithms(BCRYPT_SIGNATURE_OPERATION, &numProv, &provList, 0);
@@ -1234,10 +1599,16 @@ dogecoin_bool dogecoin_hdnode_from_tpm(dogecoin_hdnode* out)
     NCryptFreeObject(hProvider);
 
     return true;
+#else
+    return false;
+#endif
+
 }
 
 dogecoin_bool dogecoin_hdnode_from_tpm_ecc (dogecoin_hdnode *out)
 {
+#ifdef _WIN32
+
     // Create a new key in the TPM storage provider with BCRYPT_ECDSA_P256_ALGORITHM
     DWORD dwFlags = NCRYPT_OVERWRITE_KEY_FLAG; // Use NCRYPT_MACHINE_KEY_FLAG for machine-level keys or 0 for user-level keys
     NCRYPT_PROV_HANDLE hProv;

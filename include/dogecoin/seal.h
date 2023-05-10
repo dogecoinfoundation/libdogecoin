@@ -12,52 +12,38 @@
 #include <dogecoin/bip32.h>
 #include <dogecoin/bip39.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#include <bcrypt.h>
-#include <ncrypt.h>
-#endif
 
 LIBDOGECOIN_BEGIN_DECL
 
-#ifdef _WIN32
+LIBDOGECOIN_API
+
 /*
  * Defines
  */
-#define BCRYPT_PCP_KEY_MAGIC 'MPCP' // Platform Crypto Provider Magic
-#define PCPTYPE_TPM20 (0x00000002)
 
-/*
- * Type definitions
- */
-typedef struct PCP_KEY_BLOB_WIN8
-{
-    DWORD magic; // BCRYPT_PCP_KEY_MAGIC
-    DWORD cbHeader; // Size of the header structure
-    DWORD pcpType; // TPM type
-    DWORD flags; // PCP_KEY_FLAGS_WIN8 Key flags
-    ULONG cbPublic; // Size of Public key
-    ULONG cbPrivate; // Size of Private key blob
-    ULONG cbMigrationPublic; // Size of Public migration authorization object
-    ULONG cbMigrationPrivate; // Size of Private migration authorization object
-    ULONG cbPolicyDigestList; // Size of List of policy digest branches
-    ULONG cbPCRBinding; // Size of PCR binding mask
-    ULONG cbPCRDigest; // Size of PCR binding digest
-    ULONG cbEncryptedSecret; // Size of hostage import symmetric key
-    ULONG cbTpm12HostageBlob; // Size of hostage import private key
-    ULONG pcrAlgId;
-} PCP_KEY_BLOB_WIN8, *PPCP_KEY_BLOB_WIN8;
+/* no slot specified */
+#define NO_SLOT -1
 
-typedef struct {
-    USHORT blobSize;
-    USHORT keySize;
-} ECDSAPublicKeyHeader;
+/* default slot to use for TPM storage */
+#define DEFAULT_SLOT 0
 
-typedef struct {
-    USHORT blobSize;
-    USHORT keySize;
-} ECDSAPrivateKeyHeader;
-#endif
+/* number of slots (per object type) to use for TPM storage */
+#define MAX_SLOTS 1000
+
+/* define test slot */
+#define TEST_SLOT 999
+
+/* format string for mnemonic object names */
+/* e.g. mnemonic 000, mnemonic 001, mnemonic 002, etc. */
+#define MNEMONIC_OBJECT_NAME_FORMAT L"dogecoin mnemonic %03d"
+
+/* format string for seed object names */
+/* e.g. seed 000, seed 001, seed 002, etc. */
+#define SEED_OBJECT_NAME_FORMAT L"dogecoin seed %03d"
+
+/* format string for HD node object names */
+/* e.g. master 000, master 001, master 002, etc. */
+#define HDNODE_OBJECT_NAME_FORMAT L"dogecoin master %03d"
 
 /* Seal a seed with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_seal_seed (const SEED seed);
@@ -85,29 +71,44 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_seal_hdnode_with_tpm (const dogecoin_hdno
 /* Unseal a BIP32 HD node object with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_unseal_hdnode_with_tpm (const PASSPHRASE passphrase, dogecoin_hdnode* hdnode);
 
+/* List all objects in the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_list_objects_in_tpm(wchar_t* names[], size_t* count);
+
+/* List all the mnemonic objects in the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_list_mnemonics_in_tpm(wchar_t* names[], size_t* count);
+
 /* Generate a BIP39 mnemonic in the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemonic, const wchar_t* name, const dogecoin_bool overwrite);
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_in_tpm(MNEMONIC mnemonic, const int slot, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words);
 
 /* Export a BIP39 mnemonic from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(const wchar_t* name, MNEMONIC mnemonic);
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_mnemonic_from_tpm(const int slot, MNEMONIC mnemonic, const char* lang, const char* space, const char* words);
+
+/* Erase a BIP39 mnemonic from the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_erase_mnemonic_from_tpm(const int slot);
 
 /* Generate a BIP32 seed in the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const wchar_t* name, const dogecoin_bool overwrite);
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_seed_in_tpm(SEED seed, const int slot, const dogecoin_bool overwrite);
 
 /* Export a BIP32 seed from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const wchar_t* name, SEED seed);
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_seed_from_tpm(const int slot, SEED seed);
 
 /* Erase a BIP32 seed from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const wchar_t* name);
+LIBDOGECOIN_API dogecoin_bool dogecoin_erase_seed_from_tpm(const int slot);
 
 /* Generate a BIP32 HD node object in the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* out, const wchar_t* name, const dogecoin_bool overwrite);
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_in_tpm(dogecoin_hdnode* out, const int slot, const dogecoin_bool overwrite);
 
 /* Export a BIP32 HD node object from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const wchar_t* name, dogecoin_hdnode* out);
+LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const int slot, dogecoin_hdnode* out);
 
-/* Erase an object from the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_erase_object_from_tpm(const wchar_t* name);
+/* Erase an hdnode from the TPM */
+LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const int slot);
+
+/* Generate a 256-bit random english mnemonic in the TPM */
+LIBDOGECOIN_API int generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int slot, const dogecoin_bool overwrite);
+
+/* Export an english mnemonic from the TPM */
+LIBDOGECOIN_API int exportEnglishMnemonicTPM(const int slot, MNEMONIC mnemonic);
 
 LIBDOGECOIN_END_DECL
 

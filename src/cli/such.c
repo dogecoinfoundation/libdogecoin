@@ -55,6 +55,7 @@
 #include <dogecoin/ecc.h>
 #include <dogecoin/eckey.h>
 #include <dogecoin/koinu.h>
+#include <dogecoin/seal.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/sign.h>
 #include <dogecoin/tool.h>
@@ -618,7 +619,9 @@ static struct option long_options[] =
         {"account_int", required_argument, NULL, 'o'},
         {"change_level", required_argument, NULL, 'g'},
         {"address_index", required_argument, NULL, 'i'},
+        {"object_slot", required_argument, NULL, 'y'},
         {"command", required_argument, NULL, 'c'},
+        {"overwrite", no_argument, NULL, 'w'},
         {"testnet", no_argument, NULL, 't'},
         {"regtest", no_argument, NULL, 'r'},
         {"version", no_argument, NULL, 'v'},
@@ -638,8 +641,10 @@ static void print_usage()
     printf("p2pkh (requires -k <public key hex>),\n");
     printf("generate_private_key,\n");
     printf("bip32_extended_master_key,\n");
-    printf("generate_mnemonic (-e <hex_entropy>, optional),\n");
-    printf("mnemonic_to_addresses (requires -n <seed_phrase>, -o <account_int> optional, -g <change_level> optional, -i <address_index> optional, -a <pass_phrase> optional),\n");
+    printf("generate_mnemonic (-e <hex_entropy> optional, -y <object_slot> optional),\n");
+    printf("list_mnemonics_in_tpm,\n");
+    printf("erase_mnemonic_from_tpm (-y <object_slot>),\n");
+    printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <object_slot>, -o <account_int> optional, -g <change_level> optional, -i <address_index> optional, -a <pass_phrase> optional),\n");
     printf("print_keys (requires -p <private key hex>),\n");
     printf("derive_child_keys (requires -m <custom path> -p <private key>),\n");
     printf("sign (-x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -p <private key>),\n");
@@ -675,6 +680,9 @@ int main(int argc, char* argv[])
     char* pass = 0;
     char* entropy = 0;
     MNEMONIC mnemonic = { 0 };
+    dogecoin_bool tpm = false;
+    dogecoin_bool overwrite = false;
+    int slot = NO_SLOT;
 
     char* txhex = 0;
     char* scripthex = 0;
@@ -684,7 +692,7 @@ int main(int argc, char* argv[])
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:a:c:trv", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:a:y:c:trvw", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'p':
                     pkey = optarg;
@@ -724,6 +732,13 @@ int main(int argc, char* argv[])
                 case 'v':
                     print_version();
                     exit(EXIT_SUCCESS);
+                    break;
+                case 'w':
+                    overwrite = true;
+                    break;
+                case 'y':
+                    tpm = true;
+                    slot = (int)strtol(optarg, (char**)NULL, 10);
                     break;
                 case 'x':
                     txhex = optarg;
@@ -1039,17 +1054,89 @@ int main(int argc, char* argv[])
         }
     else if (strcmp(cmd, "generate_mnemonic") == 0) { /* Creating a bip32 master key from a mnemonic. */
 
-        /* generate mnemonic with entropy out */
-        if (generateEnglishMnemonic(entropy, "256", mnemonic) == -1) {
+        /* if tpm is enabled, generate mnemonic with tpm */
+        if (tpm) {
+
+            /* generate mnemonic with tpm */
+            if (generateRandomEnglishMnemonicTPM (mnemonic, slot, overwrite) == -1) {
+                dogecoin_ecc_stop();
+                return -1;
+                }
+            }
+        else if (generateEnglishMnemonic(entropy, "256", mnemonic) == -1) {
+                dogecoin_ecc_stop();
+                return -1;
+                }
+
+        printf("%s\n", mnemonic);
+        }
+    else if (strcmp(cmd, "list_mnemonics_in_tpm") == 0) {
+
+        /* list mnemonics in tpm */
+        wchar_t *names[MAX_SLOTS] = {0};
+        size_t count = 0;
+
+        if (dogecoin_list_mnemonics_in_tpm(names, &count) == false) {
             dogecoin_ecc_stop();
             return -1;
             }
 
-        printf("%s\n", mnemonic);
+        /* display mnemonics and slot numbers */
+        printf("Mnemonics in TPM:\n");
+        for (int i = 0; i < count; i++) {
+            wprintf(L"%ls\n", names[i]);
+            }
+
+        /* free memory */
+        for (int i = 0; i < count; i++) {
+            dogecoin_free(names[i]);
+            }
+        }
+    else if (strcmp(cmd, "list_objects_in_tpm") == 0) {
+
+        /* list objects in tpm */
+        wchar_t *names[MAX_SLOTS] = {0};
+        size_t count = 0;
+
+        if (dogecoin_list_objects_in_tpm(names, &count) == false) {
+            dogecoin_ecc_stop();
+            return -1;
+            }
+
+        /* display objects names */
+        printf("Objects in TPM:\n");
+        for (int i = 0; i < count; i++) {
+            wprintf(L"%ls\n", names[i]);
+            }
+
+        /* free memory */
+        for (int i = 0; i < count; i++) {
+            dogecoin_free(names[i]);
+            }
+        }
+    else if (strcmp(cmd, "erase_mnemonic_from_tpm") == 0) {
+
+        /* if tpm is enabled, erase mnemonic from tpm */
+        if (tpm) {
+            if (dogecoin_erase_mnemonic_from_tpm(slot) == -1) {
+                dogecoin_ecc_stop();
+                return -1;
+                }
+            }
         }
     else if (strcmp(cmd, "mnemonic_to_addresses") == 0) { /* Creating wif addresses from a mnemonic via slip44. */
 
         char hd_pubkey_address[53];
+
+        /* if tpm is enabled, get mnemonic from tpm */
+        if (tpm) {
+
+            /* get mnemonic from tpm */
+            if (generateRandomEnglishMnemonicTPM(mnemonic_in, slot, overwrite) == -1) {
+                dogecoin_ecc_stop();
+                return -1;
+                }
+            }
 
         /* generate wif address for slip44 account, index, and change_level, from bip39 mnemonic and password (optional) */
         if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, mnemonic_in, pass, hd_pubkey_address, (chain == &dogecoin_chainparams_test)) == -1) {

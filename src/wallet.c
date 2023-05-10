@@ -314,7 +314,7 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     return wallet;
 }
 
-dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* mnemonic_in, const char* name) {
+dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* mnemonic_in, const char* name, dogecoin_bool tpm, int object_slot) {
     dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
     int error;
     dogecoin_bool created;
@@ -360,6 +360,14 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
         if (mnemonic_in) {
             // generate seed from mnemonic
             dogecoin_seed_from_mnemonic(mnemonic_in, NULL, seed);
+        }
+        else if (tpm) {
+            // export mnemonic from TPM
+            MNEMONIC mnemonic = {0};
+            exportEnglishMnemonicTPM (object_slot, mnemonic);
+
+            // generate seed from mnemonic
+            dogecoin_seed_from_mnemonic(mnemonic, NULL, seed);
         } else {
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
             if (!res) {
@@ -1324,7 +1332,7 @@ dogecoin_wallet* dogecoin_wallet_read(char* address) {
     char* wallet_suffix = "_wallet.db";
     char* wallet_prefix = (char*)chain->chainname;
     char* walletfile = concat(wallet_prefix, wallet_suffix);
-    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, 0, walletfile);
+    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, 0, walletfile, false, 0);
     wallet->filename = concat(wallet_prefix, wallet_suffix);
     dogecoin_free(walletfile);
     return wallet;
@@ -1478,7 +1486,7 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                             goto copy;
                         }
                     }
-copy:                    
+copy:
                     dogecoin_wallet_scrape_utxos(wallet_new, wtx);
                     dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
                 } else {

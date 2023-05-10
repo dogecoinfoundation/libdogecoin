@@ -58,6 +58,7 @@
 #include <dogecoin/ecc.h>
 #include <dogecoin/koinu.h>
 #include <dogecoin/net.h>
+#include <dogecoin/seal.h>
 #include <dogecoin/spv.h>
 #include <dogecoin/protocol.h>
 #include <dogecoin/random.h>
@@ -177,6 +178,7 @@ static struct option long_options[] = {
         {"checkpoint", no_argument, NULL, 'p'},
         {"wallet_file", required_argument, NULL, 'w'},
         {"headers_file", required_argument, NULL, 'h'},
+        {"object_slot", required_argument, NULL, 'y'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -259,6 +261,8 @@ int main(int argc, char* argv[]) {
     char* headers_name = 0;
     dogecoin_bool full_sync = false;
     dogecoin_bool have_decl_daemon = false;
+    dogecoin_bool tpm = false;
+    int slot = NO_SLOT;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
@@ -268,7 +272,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:w:h:bpz:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:y:a:w:h:bpz:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -305,6 +309,9 @@ int main(int argc, char* argv[]) {
                     break;
                 case 'h':
                     headers_name = optarg;
+                case 'y':
+                    tpm = true;
+                    slot = (int)strtol(optarg, (char**)NULL, 10);
                     break;
                 case 'z':
                     have_decl_daemon = true;
@@ -326,7 +333,7 @@ int main(int argc, char* argv[]) {
         client->sync_completed = spv_sync_completed;
 
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, mnemonic_in, name);
+        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, mnemonic_in, name, tpm, slot);
         print_utxos(wallet);
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;

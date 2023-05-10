@@ -6,8 +6,7 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#include "utest.h"
-
+#include <test/utest.h>
 #include <dogecoin/sha2.h>
 #include <dogecoin/seal.h>
 #include <dogecoin/utils.h>
@@ -71,46 +70,55 @@ void test_tpm()
     printf("BIP32 seed unsealed inside TPM.\n");
 
     dogecoin_hdnode node, node2;
-    const wchar_t* master_name = L"test master";
-    const wchar_t* seed_name = L"test seed";
-    const wchar_t* mnemonic_name = L"test mnemonic";
 
     // Generate a random HD node with the TPM2
-    dogecoin_bool ret = dogecoin_generate_hdnode_in_tpm (&node, master_name, true);
+    dogecoin_bool ret = dogecoin_generate_hdnode_in_tpm (&node, TEST_SLOT, true);
     
     // Generate a random HD node with the TPM2
-    ret = dogecoin_generate_hdnode_in_tpm (&node2, master_name, true);
+    ret = dogecoin_generate_hdnode_in_tpm (&node2, TEST_SLOT, true);
 
     // Export the HD node from the TPM2
-    ret = dogecoin_export_hdnode_from_tpm (master_name, &node2);
+    ret = dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2);
 
     // Compare node and node2
     //u_assert_mem_eq (&node, &node2, sizeof (dogecoin_hdnode));
 
     // Erase the HD node from the TPM2
-    ret = dogecoin_erase_hdnode_from_tpm(master_name);
+    ret = dogecoin_erase_hdnode_from_tpm(TEST_SLOT);
 
     // Export the HD node from the TPM2
-    ret = dogecoin_export_hdnode_from_tpm (master_name, &node2);
+    ret = dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2);
 
     // Generate a random seed with the TPM2
-    ret = dogecoin_generate_seed_in_tpm (&seed, seed_name, true);
+    ret = dogecoin_generate_seed_in_tpm (seed, TEST_SLOT, true);
 
     // Export the seed from the TPM2
-    ret = dogecoin_export_seed_from_tpm (seed_name, &seed);
+    ret = dogecoin_export_seed_from_tpm (TEST_SLOT, seed);
 
     // Erase the seed from the TPM2
-    ret = dogecoin_erase_seed_from_tpm(seed_name);
+    ret = dogecoin_erase_seed_from_tpm(TEST_SLOT);
 
     // Export the seed from the TPM2
-    ret = dogecoin_export_seed_from_tpm (seed_name, &seed);
+    ret = dogecoin_export_seed_from_tpm (TEST_SLOT, seed);
 
     // Generate a mnemonic with the TPM2
     MNEMONIC mnemonic = {0};
 
-    ret = dogecoin_generate_mnemonic_in_tpm (&mnemonic, mnemonic_name, true);
+    // Generate a random mnemonic with the TPM2
+    ret = dogecoin_generate_mnemonic_in_tpm (mnemonic, TEST_SLOT, true, "eng", " ", NULL);
 
-    ret = dogecoin_hdnode_from_tpm (&node2);
+    // Export the mnemonic from the TPM2
+    ret = dogecoin_export_mnemonic_from_tpm (TEST_SLOT, mnemonic, "eng", " ", NULL);
+
+    // Generate an hdnode with the TPM2
+    ret = dogecoin_generate_hdnode_in_tpm (&node2, TEST_SLOT, true);
+
+    // Export the hdnode from the TPM2
+    ret = dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2);
+
+    // Erase the hdnode from the TPM2
+    ret = dogecoin_erase_hdnode_from_tpm(TEST_SLOT);
+
 
 
 /*

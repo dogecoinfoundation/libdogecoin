@@ -309,7 +309,7 @@ IF(WITH_NET)
         src/spv.c
     )
 
-    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
+    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING} ncrypt crypt32)
 
     IF(USE_TESTS)
         TARGET_SOURCES(tests ${visibility}
@@ -340,7 +340,7 @@ IF(WITH_TOOLS)
         TARGET_INCLUDE_DIRECTORIES(sendtx ${visibility} src)
         ADD_EXECUTABLE(spvnode src/cli/spvnode.c)
         INSTALL(TARGETS spvnode RUNTIME)
-        TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME})
+        TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME} ncrypt)
         TARGET_INCLUDE_DIRECTORIES(spvnode ${visibility} src)
     ENDIF()
 ENDIF()
