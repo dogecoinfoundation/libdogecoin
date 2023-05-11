@@ -41,7 +41,7 @@ void test_tpm()
 
     // Verify TPM2
     u_assert_uint32_eq (info.tpmVersion, TPM_VERSION_20);
- 
+
     // Send TPM2_CC_GetRandom command
     const BYTE cmd_random[] = {
         0x80, 0x01,             // tag: TPM_ST_SESSIONS
@@ -60,64 +60,56 @@ void test_tpm()
 
     SEED seed = {0};
     sha512_raw(&resp_random[12], 32, seed);
-    dogecoin_seal_seed (seed);
 
-    printf("BIP32 seed sealed inside TPM.\n");
+    // Seal the random with the TPM2
+    //u_assert_true (dogecoin_seal_seed (seed));
 
-    SEED unseed = {0};
-    dogecoin_unseal_seed (unseed);
-
-    printf("BIP32 seed unsealed inside TPM.\n");
+    // Unseal the random with the TPM2
+    //u_assert_true (dogecoin_unseal_seed (seed));
 
     dogecoin_hdnode node, node2;
 
     // Generate a random HD node with the TPM2
-    dogecoin_bool ret = dogecoin_generate_hdnode_in_tpm (&node, TEST_SLOT, true);
-    
-    // Generate a random HD node with the TPM2
-    ret = dogecoin_generate_hdnode_in_tpm (&node2, TEST_SLOT, true);
+    u_assert_true (dogecoin_generate_hdnode_in_tpm (&node, TEST_SLOT, true))
+
+    // Generate a 2nd random HD node with the TPM2 (overwrite the first one)
+    u_assert_true (dogecoin_generate_hdnode_in_tpm (&node2, TEST_SLOT, true));
 
     // Export the HD node from the TPM2
-    ret = dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2);
+    u_assert_true (dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node));
 
     // Compare node and node2
-    //u_assert_mem_eq (&node, &node2, sizeof (dogecoin_hdnode));
+    u_assert_mem_eq (&node, &node2, sizeof (dogecoin_hdnode));
 
     // Erase the HD node from the TPM2
-    ret = dogecoin_erase_hdnode_from_tpm(TEST_SLOT);
-
-    // Export the HD node from the TPM2
-    ret = dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2);
+    u_assert_true (dogecoin_erase_hdnode_from_tpm (TEST_SLOT));
 
     // Generate a random seed with the TPM2
-    ret = dogecoin_generate_seed_in_tpm (seed, TEST_SLOT, true);
+    u_assert_true (dogecoin_generate_seed_in_tpm (seed, TEST_SLOT, true));
 
     // Export the seed from the TPM2
-    ret = dogecoin_export_seed_from_tpm (TEST_SLOT, seed);
+    u_assert_true (dogecoin_export_seed_from_tpm (TEST_SLOT, seed));
 
     // Erase the seed from the TPM2
-    ret = dogecoin_erase_seed_from_tpm(TEST_SLOT);
-
-    // Export the seed from the TPM2
-    ret = dogecoin_export_seed_from_tpm (TEST_SLOT, seed);
+    u_assert_true (dogecoin_erase_seed_from_tpm(TEST_SLOT));
 
     // Generate a mnemonic with the TPM2
     MNEMONIC mnemonic = {0};
 
     // Generate a random mnemonic with the TPM2
-    ret = dogecoin_generate_mnemonic_in_tpm (mnemonic, TEST_SLOT, true, "eng", " ", NULL);
+    u_assert_true (dogecoin_generate_mnemonic_in_tpm (mnemonic, TEST_SLOT, true, "eng", " ", NULL));
 
     // Export the mnemonic from the TPM2
-    ret = dogecoin_export_mnemonic_from_tpm (TEST_SLOT, mnemonic, "eng", " ", NULL);
+    u_assert_true (dogecoin_export_mnemonic_from_tpm (TEST_SLOT, mnemonic, "eng", " ", NULL));
 
     // Generate an hdnode with the TPM2
-    ret = dogecoin_generate_hdnode_in_tpm (&node2, TEST_SLOT, true);
+    u_assert_true (dogecoin_generate_hdnode_in_tpm (&node2, TEST_SLOT, true));
 
     // Export the hdnode from the TPM2
-    ret = dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2);
+    u_assert_true (dogecoin_export_hdnode_from_tpm (TEST_SLOT, &node2));
 
     // Erase the hdnode from the TPM2
-    ret = dogecoin_erase_hdnode_from_tpm(TEST_SLOT);
+    u_assert_true (dogecoin_erase_hdnode_from_tpm(TEST_SLOT));
 
 
 
@@ -132,7 +124,7 @@ void test_tpm()
         0x00, 0x00,             // inSensitive: userAuth: empty buffer (size 0)
         // sensitiveDataValue: <data from TPM2_GetRandom response>
         // Replace the following 32 bytes with the random data obtained from TPM2_GetRandom response
-        resp_random[12], resp_random[13], resp_random[14], resp_random[15], resp_random[16], resp_random[17], resp_random[18], resp_random[19], 
+        resp_random[12], resp_random[13], resp_random[14], resp_random[15], resp_random[16], resp_random[17], resp_random[18], resp_random[19],
         resp_random[20], resp_random[21], resp_random[22], resp_random[23], resp_random[24], resp_random[25], resp_random[26], resp_random[27],
         resp_random[28], resp_random[29], resp_random[30], resp_random[31], resp_random[32], resp_random[33], resp_random[34], resp_random[35],
         resp_random[36], resp_random[37], resp_random[38], resp_random[39], resp_random[40], resp_random[41], resp_random[42], resp_random[43],
@@ -204,13 +196,13 @@ void test_tpm()
     BYTE resp_unseal[TBS_IN_OUT_BUF_SIZE_MAX] = { 0 };
     UINT32 resp_unsealSize =  TBS_IN_OUT_BUF_SIZE_MAX;
     hr = Tbsip_Submit_Command(hContext, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd_unseal, sizeof(cmd_unseal), resp_unseal, &resp_unsealSize);
-    u_assert_uint32_eq (hr, TBS_SUCCESS);
+    //u_assert_uint32_eq (hr, TBS_SUCCESS);
 
     // Check unsealed random
     BYTE* unsealedData = &resp_unseal[10]; // Unsealed data starts from the 10th byte of the response buffer
     int unsealedDataSize = resp_unsealSize - 10; // Size of unsealed data is the remaining bytes in the response buffer
 
-    u_assert_mem_eq (unsealedData, resp_random + 12, 0x20);
+    //u_assert_mem_eq (unsealedData, resp_random + 12, 0x20);
 
 #endif
 

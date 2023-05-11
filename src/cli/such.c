@@ -116,7 +116,7 @@ void broadcasting_menu(int txindex, int is_testnet) {
                 }
             // if on last iteration, jump into switch case pausing loop
             // execution so user has ability to reset loop index in order
-            // to target desired input to edit. otherwise set loop index to 
+            // to target desired input to edit. otherwise set loop index to
             // length thus finishing final iteration and set running to 0 to
             // escape encompassing while loop so we return to previous menu
             if (i == length) {
@@ -335,7 +335,7 @@ void transaction_input_menu(int txindex, int is_testnet) {
                 }
             // if on last iteration, jump into switch case pausing loop
             // execution so user has ability to reset loop index in order
-            // to target desired input to edit. otherwise set loop index to 
+            // to target desired input to edit. otherwise set loop index to
             // length thus finishing final iteration and set running to 0 to
             // escape encompassing while loop so we return to previous menu
             if (i == length - 1) {
@@ -427,7 +427,7 @@ void transaction_output_menu(int txindex, int is_testnet) {
                 }
             // if on last iteration, jump into switch case pausing loop
             // execution so user has ability to reset loop index in order
-            // to target desired input to edit. otherwise set loop index to 
+            // to target desired input to edit. otherwise set loop index to
             // length thus finishing final iteration and set running to 0 to
             // escape encompassing while loop so we return to previous menu
             if (i == length - 1) {
@@ -621,6 +621,7 @@ static struct option long_options[] =
         {"address_index", required_argument, NULL, 'i'},
         {"object_slot", required_argument, NULL, 'y'},
         {"command", required_argument, NULL, 'c'},
+        {"silent", no_argument, NULL, 'b'},
         {"overwrite", no_argument, NULL, 'w'},
         {"testnet", no_argument, NULL, 't'},
         {"regtest", no_argument, NULL, 'r'},
@@ -635,16 +636,19 @@ static void print_version()
 static void print_usage()
     {
     print_version();
-    printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-t[--testnet]) (-r[--regtest]) -c <command>\n");
+    printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) \
+(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-w[--overwrite]) (-b[--silent]) (-t[--testnet]) (-r[--regtest])\n");
     printf("Available commands:\n");
     printf("generate_public_key (requires -p <wif>),\n");
     printf("p2pkh (requires -k <public key hex>),\n");
     printf("generate_private_key,\n");
     printf("bip32_extended_master_key,\n");
-    printf("generate_mnemonic (-e <hex_entropy> optional, -y <object_slot> optional),\n");
+    printf("generate_mnemonic (-e <hex_entropy> or -y <object_slot>, -w and -b (both optional)),\n");
     printf("list_mnemonics_in_tpm,\n");
+    printf("list_objects_in_tpm,\n");
     printf("erase_mnemonic_from_tpm (-y <object_slot>),\n");
-    printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <object_slot>, -o <account_int> optional, -g <change_level> optional, -i <address_index> optional, -a <pass_phrase> optional),\n");
+    printf("export_mnemonic_from_tpm (-y <object_slot>),\n");
+    printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <object_slot>, -w, -b, -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase> (all optional)), \n");
     printf("print_keys (requires -p <private key hex>),\n");
     printf("derive_child_keys (requires -m <custom path> -p <private key>),\n");
     printf("sign (-x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -p <private key>),\n");
@@ -682,6 +686,7 @@ int main(int argc, char* argv[])
     MNEMONIC mnemonic = { 0 };
     dogecoin_bool tpm = false;
     dogecoin_bool overwrite = false;
+    dogecoin_bool silent = false;
     int slot = NO_SLOT;
 
     char* txhex = 0;
@@ -692,7 +697,7 @@ int main(int argc, char* argv[])
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:a:y:c:trvw", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:a:y:c:trvbw", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'p':
                     pkey = optarg;
@@ -735,6 +740,9 @@ int main(int argc, char* argv[])
                     break;
                 case 'w':
                     overwrite = true;
+                    break;
+                case 'b':
+                    silent = true;
                     break;
                 case 'y':
                     tpm = true;
@@ -1042,8 +1050,7 @@ int main(int argc, char* argv[])
     else if (strcmp(cmd, "bip32maintotest") == 0) { /* Creating a bip32 master key from a private key. */
         dogecoin_hdnode node;
         if (!dogecoin_hdnode_deserialize(pkey, chain, &node)) {
-            printf("dogecoin_hd_deserialize failed!\n");
-            return false;
+            return showError("dogecoin_hd_deserialize failed!\n");
             }
         char masterkeyhex[200];
         int strsize = 200;
@@ -1057,18 +1064,36 @@ int main(int argc, char* argv[])
         /* if tpm is enabled, generate mnemonic with tpm */
         if (tpm) {
 
+            /* if overwrite is enabled, ask for confirmation */
+            if (overwrite) {
+                printf("Overwrite? Y/N\n");
+
+                /* get user input */
+                char c = getchar();
+                if (c != 'Y' && c != 'y') {
+
+                    /* if not confirmed, abort */
+                    printf("aborted\n");
+                    dogecoin_ecc_stop();
+                    return 1;
+                    }
+            }
+
             /* generate mnemonic with tpm */
-            if (generateRandomEnglishMnemonicTPM (mnemonic, slot, overwrite) == -1) {
-                dogecoin_ecc_stop();
-                return -1;
+            if (generateRandomEnglishMnemonicTPM (mnemonic, slot, overwrite) == false) {
+                printf("generate_mnemonic -e <hex_entropy> or -y <object_slot>, -w (overwrite), -b (silent)\n");
                 }
             }
-        else if (generateEnglishMnemonic(entropy, "256", mnemonic) == -1) {
-                dogecoin_ecc_stop();
-                return -1;
-                }
 
-        printf("%s\n", mnemonic);
+        /* else generate mnemonic with ecc */
+        else if (generateEnglishMnemonic(entropy, "256", mnemonic) == -1) {
+            return showError("failed to generate mnemonic\n");
+            }
+
+        /* if not silent, display mnemonic */
+        if (!silent) {
+            printf("%s\n", mnemonic);
+            }
         }
     else if (strcmp(cmd, "list_mnemonics_in_tpm") == 0) {
 
@@ -1077,15 +1102,16 @@ int main(int argc, char* argv[])
         size_t count = 0;
 
         if (dogecoin_list_mnemonics_in_tpm(names, &count) == false) {
-            dogecoin_ecc_stop();
-            return -1;
+            return showError("failed to list mnemonics in tpm\n");
             }
 
         /* display mnemonics and slot numbers */
-        printf("Mnemonics in TPM:\n");
+        printf("object            slot\n");
+
         for (int i = 0; i < count; i++) {
-            wprintf(L"%ls\n", names[i]);
-            }
+            /* display mnemonic and slot number */
+            printf("%ls\n", names[i]);
+        }
 
         /* free memory */
         for (int i = 0; i < count; i++) {
@@ -1099,12 +1125,10 @@ int main(int argc, char* argv[])
         size_t count = 0;
 
         if (dogecoin_list_objects_in_tpm(names, &count) == false) {
-            dogecoin_ecc_stop();
-            return -1;
+            return showError("failed to list objects in tpm\n");
             }
 
         /* display objects names */
-        printf("Objects in TPM:\n");
         for (int i = 0; i < count; i++) {
             wprintf(L"%ls\n", names[i]);
             }
@@ -1118,10 +1142,47 @@ int main(int argc, char* argv[])
 
         /* if tpm is enabled, erase mnemonic from tpm */
         if (tpm) {
-            if (dogecoin_erase_mnemonic_from_tpm(slot) == -1) {
-                dogecoin_ecc_stop();
-                return -1;
+            printf("Erase? Y/N\n");
+
+            /* get user input */
+            char c = getchar();
+            if (c == 'Y' || c == 'y') {
+
+                /* erase mnemonic from tpm */
+                if (dogecoin_erase_mnemonic_from_tpm(slot) == false) {
+                    return showError("failed to erase mnemonic from tpm\n");
+                    }
                 }
+            else {
+
+                /* if not confirmed, abort */
+                printf("aborted\n");
+                dogecoin_ecc_stop();
+                return 1;
+                }
+            }
+        /* else display usage */
+        else {
+            return showError("erase_mnemonic_from_tpm (-y <object_slot>)\n");
+            }
+        }
+    else if (strcmp(cmd, "export_mnemonic_from_tpm") == 0) {
+
+        /* if tpm is enabled, export mnemonic from tpm */
+        if (tpm) {
+
+            /* export mnemonic from tpm */
+            if (exportEnglishMnemonicTPM(slot, mnemonic) == false) {
+                return showError("failed to export mnemonic from tpm\n");
+                }
+
+            /* display mnemonic */
+            printf("%s\n", mnemonic);
+            }
+
+        /* else display usage */
+        else {
+            return showError("export_mnemonic_from_tpm (-y <object_slot>)\n");
             }
         }
     else if (strcmp(cmd, "mnemonic_to_addresses") == 0) { /* Creating wif addresses from a mnemonic via slip44. */
@@ -1132,16 +1193,19 @@ int main(int argc, char* argv[])
         if (tpm) {
 
             /* get mnemonic from tpm */
-            if (generateRandomEnglishMnemonicTPM(mnemonic_in, slot, overwrite) == -1) {
-                dogecoin_ecc_stop();
-                return -1;
+            if (exportEnglishMnemonicTPM(slot, mnemonic) == false) {
+                return showError("failed to export mnemonic from tpm\n");
                 }
             }
 
+        /* else display usage */
+        else {
+            return showError("mnemonic_to_addresses (requires -n <seed_phrase> or -y <object_slot>, -w, -b, -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase> (all optional))\n");
+            }
+
         /* generate wif address for slip44 account, index, and change_level, from bip39 mnemonic and password (optional) */
-        if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, mnemonic_in, pass, hd_pubkey_address, (chain == &dogecoin_chainparams_test)) == -1) {
-            dogecoin_ecc_stop();
-            return -1;
+        if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, tpm ? mnemonic : mnemonic_in, pass, hd_pubkey_address, (chain == &dogecoin_chainparams_test)) == -1) {
+            return showError("failed to generate wif address from mnemonic\n");
             }
 
         printf("Address: %s\n", hd_pubkey_address);

@@ -745,7 +745,7 @@ int dogecoin_generate_mnemonic (const ENTROPY_SIZE entropy_size, const char* lan
 
             /* Verify size of the string equals the entropy_size specified */
             if (strlen(entropy) != expected_entropy_size) {
-                fprintf(stderr, "ERROR: invalid entropy string, expected %ld bytes\n", expected_entropy_size);
+                fprintf(stderr, "ERROR: invalid entropy string, expected %ld characters\n", expected_entropy_size);
 
                 /* Free memory for custom words */
                 if (filepath != NULL) {

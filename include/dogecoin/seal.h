@@ -105,10 +105,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_export_hdnode_from_tpm(const int slot, do
 LIBDOGECOIN_API dogecoin_bool dogecoin_erase_hdnode_from_tpm(const int slot);
 
 /* Generate a 256-bit random english mnemonic in the TPM */
-LIBDOGECOIN_API int generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int slot, const dogecoin_bool overwrite);
+LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int slot, const dogecoin_bool overwrite);
 
 /* Export an english mnemonic from the TPM */
-LIBDOGECOIN_API int exportEnglishMnemonicTPM(const int slot, MNEMONIC mnemonic);
+LIBDOGECOIN_API dogecoin_bool exportEnglishMnemonicTPM(const int slot, MNEMONIC mnemonic);
 
 LIBDOGECOIN_END_DECL
 
