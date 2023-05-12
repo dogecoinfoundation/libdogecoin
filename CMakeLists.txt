@@ -7,6 +7,17 @@ SET(CMAKE_C_STANDARD_REQUIRED TRUE)
 SET(LIBDOGECOIN_NAME dogecoin)
 PROJECT(lib${LIBDOGECOIN_NAME} VERSION 0.1)
 
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
+if(BUILD_SHARED_LIBS)
+  set(library_type "Shared")
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  SET(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
+  set(visibility PUBLIC)
+else()
+  set(library_type "Static")
+  set(visibility PRIVATE)
+endif()
+
 INCLUDE(CTest)
 SET(USE_TESTS ${CMAKE_TESTING_ENABLED})
 SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
@@ -65,6 +76,10 @@ ADD_DEFINITIONS(
     -DPACKAGE_VERSION="${PROJECT_VERSION}"
     -DRANDOM_DEVICE="${RANDOM_DEVICE}"
 )
+IF(BUILD_SHARED_LIBS)
+ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+ENDIF()
+
 IF(USE_TESTS)
     ADD_DEFINITIONS(-DUSE_TESTS=1)
 ENDIF()
@@ -93,6 +108,8 @@ MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
 MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
 MESSAGE(STATUS "")
+message(STATUS "  library type   = ${library_type}")
+MESSAGE(STATUS "")
 
 FILE(TOUCH config/libdogecoin-config.h)
 
@@ -120,7 +137,6 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/bip44.c
     src/block.c
     src/buffer.c
-    src/chainparams.c
     src/cstr.c
     src/ctaes.c
     src/ecc.c
@@ -145,9 +161,12 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/utils.c
     src/vector.c
 )
+TARGET_SOURCES(${LIBDOGECOIN_NAME} PUBLIC
+    src/chainparams.c
+)
 
 IF(WIN32)
-TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
     contrib/getopt/wingetopt.c
     contrib/wintime/wingettime.c
 )
@@ -158,6 +177,8 @@ FILE(GLOB SECP256K1 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 LIST(REMOVE_ITEM SECP256K1
     src/secp256k1/src/tests.c
     src/secp256k1/src/tests_exhaustive.c
+    src/secp256k1/src/bench.c
+    src/secp256k1/src/bench.h
     src/secp256k1/src/bench_ecdh.c
     src/secp256k1/src/bench_ecmult.c
     src/secp256k1/src/bench_recover.c
@@ -178,7 +199,7 @@ ADD_DEFINITIONS(
     -DENABLE_MODULE_RECOVERY
     -DECMULT_WINDOW_SIZE=15
     -DECMULT_GEN_PREC_BITS=4)
-TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE ${SECP256K1})
+TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility} ${SECP256K1})
 
 INCLUDE_DIRECTORIES(
     include
@@ -189,7 +210,7 @@ INCLUDE_DIRECTORIES(
 
 IF(USE_TESTS)
     ADD_EXECUTABLE(tests)
-    TARGET_SOURCES(tests PRIVATE
+    TARGET_SOURCES(tests ${visibility} 
         test/address_tests.c
         test/aes_tests.c
         test/base58_tests.c
@@ -230,7 +251,7 @@ IF(USE_TESTS)
 ENDIF()
 
 IF(WITH_LOGDB)
-    TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+    TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
         src/logdb/logdb_core.c
         src/logdb/logdb_memdb_llist.c
         src/logdb/logdb_memdb_rbtree.c
@@ -240,7 +261,7 @@ IF(WITH_LOGDB)
         src/logdb/stack.c
     )
     IF(USE_TESTS)
-        TARGET_SOURCES(tests PRIVATE
+        TARGET_SOURCES(tests ${visibility}
             src/logdb/test/logdb_tests.c
             src/logdb/test/tests_red_black_tree.c
             src/logdb/test/logdb_tests_sample.h
@@ -249,18 +270,22 @@ IF(WITH_LOGDB)
 ENDIF()
 
 IF(WITH_WALLET)
-    TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+    INSTALL(FILES
+        include/dogecoin/wallet.h
+        DESTINATION include/dogecoin
+    )
+    TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
         src/wallet.c
     )
     IF(USE_TESTS)
-        TARGET_SOURCES(tests PRIVATE
+        TARGET_SOURCES(tests ${visibility}
             test/wallet_tests.c
         )
     ENDIF()
 ENDIF()
 
 IF(WITH_NET)
-    TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
+    TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
         src/headersdb_file.c
         src/net.c
         src/protocol.c
@@ -270,7 +295,7 @@ IF(WITH_NET)
     TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
 
     IF(USE_TESTS)
-        TARGET_SOURCES(tests PRIVATE
+        TARGET_SOURCES(tests ${visibility}
             test/net_tests.c
             test/protocol_tests.c
             test/spv_tests.c
@@ -280,7 +305,7 @@ ENDIF()
 
 IF(WITH_TOOLS)
     IF(USE_TESTS)
-        TARGET_SOURCES(tests PRIVATE
+        TARGET_SOURCES(tests ${visibility}
             test/tool_tests.c
         )
     ENDIF()
@@ -289,16 +314,16 @@ IF(WITH_TOOLS)
     INSTALL(TARGETS such RUNTIME)
     TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
 
-    TARGET_INCLUDE_DIRECTORIES(such PRIVATE src)
+    TARGET_INCLUDE_DIRECTORIES(such ${visibility} src)
 
     IF(WITH_NET)
         ADD_EXECUTABLE(sendtx src/cli/sendtx.c)
         INSTALL(TARGETS sendtx RUNTIME)
         TARGET_LINK_LIBRARIES(sendtx ${LIBDOGECOIN_NAME})
-        TARGET_INCLUDE_DIRECTORIES(sendtx PRIVATE src)
+        TARGET_INCLUDE_DIRECTORIES(sendtx ${visibility} src)
         ADD_EXECUTABLE(spvnode src/cli/spvnode.c)
         INSTALL(TARGETS spvnode RUNTIME)
         TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME})
-        TARGET_INCLUDE_DIRECTORIES(spvnode PRIVATE src)        
+        TARGET_INCLUDE_DIRECTORIES(spvnode ${visibility} src)
     ENDIF()
 ENDIF()
