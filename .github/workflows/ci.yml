@@ -67,7 +67,7 @@ jobs:
             goal: install
             sdk: 12.2
             sdk-build: 12B45b
-            sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
+            sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
           # - name: arm64-macos
           #   host: arm64-apple-darwin
           #   os: macos-latest
@@ -78,7 +78,7 @@ jobs:
           #   goal: install
           #   sdk: 12.2
           #   sdk-build: 12B45b
-          #   sdk-shasum: "66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1"
+          #   sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
