@@ -42,6 +42,12 @@
 #define TO_UINT8_HEX_BUF_LEN 2048
 #define VARINT_LEN 20
 
+#define BEGIN(a)            ((char*)&(a))
+#define END(a)              ((char*)&((&(a))[1]))
+#define UBEGIN(a)           ((unsigned char*)&(a))
+#define UEND(a)             ((unsigned char*)&((&(a))[1]))
+#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
+
 #define strlens(s) (s == NULL ? 0 : strlen(s))
 
 LIBDOGECOIN_BEGIN_DECL
@@ -53,6 +59,9 @@ LIBDOGECOIN_API uint8_t* utils_hex_to_uint8(const char* str);
 LIBDOGECOIN_API char* utils_uint8_to_hex(const uint8_t* bin, size_t l);
 LIBDOGECOIN_API void utils_reverse_hex(char* h, size_t len);
 LIBDOGECOIN_API void utils_uint256_sethex(char* psz, uint8_t* out);
+LIBDOGECOIN_API uint256* uint256S(const char *str);
+LIBDOGECOIN_API unsigned char* parse_hex(const char* psz);
+LIBDOGECOIN_API void swap_bytes(uint8_t *buf, int buf_size);
 LIBDOGECOIN_API void* safe_malloc(size_t size);
 LIBDOGECOIN_API void dogecoin_cheap_random_bytes(uint8_t* buf, size_t len);
 LIBDOGECOIN_API void dogecoin_get_default_datadir(cstring* path_out);

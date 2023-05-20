@@ -49,6 +49,7 @@ noinst_HEADERS = \
     include/dogecoin/random.h \
     include/dogecoin/rmd160.h \
     include/dogecoin/script.h \
+    include/dogecoin/scrypt.h \
     include/dogecoin/sign.h \
     include/dogecoin/serialize.h \
     include/dogecoin/sha2.h \
@@ -87,6 +88,7 @@ libdogecoin_la_SOURCES = \
     src/random.c \
     src/rmd160.c \
     src/script.c \
+    src/scrypt.c \
     src/sign.c \
     src/serialize.c \
     src/sha2.c \
@@ -122,6 +124,7 @@ tests_SOURCES = \
     test/qr_tests.c \
     test/random_tests.c \
     test/rmd160_tests.c \
+    test/scrypt_tests.c \
     test/serialize_tests.c \
     test/sha2_tests.c \
     test/signmsg_tests.c \
