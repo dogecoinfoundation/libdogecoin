@@ -25,6 +25,7 @@ SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
 SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
+SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
@@ -98,6 +99,9 @@ ENDIF()
 IF(WITH_WALLET)
     ADD_DEFINITIONS(-DWITH_WALLET=1)
 ENDIF()
+IF(USE_SSE2)
+    ADD_DEFINITIONS(-DUSE_SSE2=1)
+ENDIF()
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
@@ -107,6 +111,8 @@ MESSAGE(STATUS "  WITH_NET       = ${WITH_NET}")
 MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
 MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
+MESSAGE(STATUS "")
+MESSAGE(STATUS "  USE_SSE2       = ${USE_SSE2}")
 MESSAGE(STATUS "")
 message(STATUS "  library type   = ${library_type}")
 MESSAGE(STATUS "")
@@ -152,6 +158,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/random.c
     src/rmd160.c
     src/script.c
+    src/scrypt.c
     src/serialize.c
     src/sha2.c
     src/sign.c
@@ -164,6 +171,12 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PUBLIC
     src/chainparams.c
 )
+
+IF(USE_SSE2)
+TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
+    src/scrypt-sse2.c
+)
+ENDIF()
 
 IF(WIN32)
 TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
@@ -230,6 +243,7 @@ IF(USE_TESTS)
         test/qr_tests.c
         test/random_tests.c
         test/rmd160_tests.c
+        test/scrypt_tests.c
         test/serialize_tests.c
         test/sha2_tests.c
         test/signmsg_tests.c
