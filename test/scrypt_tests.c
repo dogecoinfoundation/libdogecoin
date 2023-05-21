@@ -18,8 +18,8 @@ void test_scrypt() {
         memcpy_safe(inputbytes, parse_hex(inputhex[i]), 80);
 #if defined(USE_SSE2)
         // Test SSE2 scrypt
-        scrypt_1024_1_1_256_sp_sse2((const char*)&inputbytes[0], scrypthash, scratchpad);
-        strcmp(utils_uint8_to_hex(scrypthash, 32), expected[i]);
+        scrypt_1024_1_1_256_sp_sse2((const char*)&inputbytes[0], BEGIN(scrypthash), scratchpad);
+        u_assert_str_eq(utils_uint8_to_hex(scrypthash, 32), expected[i]);
 #endif
         // Test generic scrypt
         scrypt_1024_1_1_256_sp_generic((const char*)&inputbytes[0], BEGIN(scrypthash), scratchpad);

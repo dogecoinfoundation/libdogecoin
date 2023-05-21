@@ -98,6 +98,11 @@ libdogecoin_la_SOURCES = \
     src/utils.c \
     src/vector.c
 
+if USE_SSE2
+libdogecoin_la_SOURCES += \
+    src/scrypt-sse2.c
+endif
+
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/logdb/include -fPIC
 libdogecoin_la_LIBADD = $(LIBSECP256K1)
 

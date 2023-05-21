@@ -85,6 +85,12 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
     CFLAGS="$saved_CFLAGS"
   ])
 
+AC_ARG_ENABLE([scrypt-sse2],
+  [AS_HELP_STRING([--enable-scrypt-sse2],
+  [Build with scrypt sse2 implementation (default is no)])],
+  [use_scrypt_sse2=$enableval],
+  [use_scrypt_sse2=no])
+
 # Enable debug
 AC_ARG_ENABLE([debug],
   [AS_HELP_STRING([--enable-debug],
@@ -147,6 +153,11 @@ if test "x$random_device" = x"/dev/random"; then
   AC_DEFINE([RANDOM_DEVICE],["/dev/random"],[Define to set random file handle])
 fi
 
+# Configure Scrypt SSE2
+if test x$use_scrypt_sse2 = xyes; then
+  AC_DEFINE(USE_SSE2, 1, [Define this symbol if SSE2 works])
+fi
+
 if test "x$with_tools" = xyes; then
   AC_DEFINE_UNQUOTED([WITH_TOOLS],[1],[Define to 1 to enable tool compilation])
 fi
@@ -196,6 +207,7 @@ AM_CONDITIONAL([WITH_TOOLS], [test "x$with_tools" = "xyes"])
 AM_CONDITIONAL([WITH_NET], [test "x$with_net" = "xyes"])
 AM_CONDITIONAL([WITH_LOGDB], [test "x$with_logdb" = "xyes"])
 AM_CONDITIONAL([WITH_WALLET], [test "x$with_wallet" = "xyes"])
+AM_CONDITIONAL([USE_SSE2], [test "x$use_scrypt_sse2" = "xyes"])
 AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
 AC_SUBST(LIB_VERSION_REVISION, _LIB_VERSION_REVISION)
 AC_SUBST(LIB_VERSION_AGE, _LIB_VERSION_AGE)
@@ -213,6 +225,8 @@ echo "  with net        = $with_net"
 echo "  with logdb      = $with_logdb"
 echo "  with wallet     = $with_wallet"
 echo "  with unistring  = $with_unistring"
+echo
+echo "  SSE2 Scrypt     = $use_scrypt_sse2"
 echo
 echo "  host            = $host"
 echo "  target os       = $TARGET_OS"
