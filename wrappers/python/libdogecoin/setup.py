@@ -10,7 +10,7 @@ libdoge_extension = [Extension(
                         "include",
                         "include/dogecoin",
                         "secp256k1/include"],
-    libraries =         ["event", "event_core", "pthread", "m"],
+    libraries =         ["event", "event_core", "pthread", "m", "unistring"],
     extra_objects=      [".libs/libdogecoin.a", 
                         "src/secp256k1/.libs/libsecp256k1.a", 
                         "src/secp256k1/.libs/libsecp256k1_precomputed.a"]
