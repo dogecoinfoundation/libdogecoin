@@ -331,8 +331,8 @@ uint256* uint256S(const char *str)
 
 unsigned char* parse_hex(const char* psz)
 {
-    // convert hex dump to vector
-    vector* vch = vector_new(1, NULL);
+    int i = 0;
+    unsigned char* input = dogecoin_uchar_vla(strlen(psz));
     while (true)
     {
         while (isspace(*psz))
@@ -345,14 +345,9 @@ unsigned char* parse_hex(const char* psz)
         if (c == (signed char)-1)
             break;
         n |= c;
-        vector_add(vch, n);
+        input[i] = n;
+        i++;
     }
-    unsigned int h = 0;
-	unsigned char* input = dogecoin_uchar_vla(vch->len);
-	for (; h < vch->len; h++) {
-		input[h] = (unsigned char)vector_idx(vch, h);
-	}
-    vector_free(vch, true);
     return input;
 }
 
@@ -369,6 +364,23 @@ void swap_bytes(uint8_t *buf, int buf_size) {
     }
 }
 
+// Returns a pointer to the first byte of needle inside haystack, 
+uint8_t* bytes_find(uint8_t* haystack, size_t haystackLen, uint8_t* needle, size_t needleLen) {
+    if (needleLen > haystackLen) {
+        return false;
+    }
+    uint8_t* match = memchr(haystack, needle[0], haystackLen);
+    if (match != NULL) {
+        size_t remaining = haystackLen - ((uint8_t*)match - haystack);
+        if (needleLen <= remaining) {
+            if (memcmp(match, needle, needleLen) == 0) {
+                return match;
+            }
+        }
+    }
+    return NULL;
+}
+
 const char *find_needle(const char *haystack, size_t haystack_length, const char *needle, size_t needle_length) {
     size_t haystack_index = 0;
     for (; haystack_index < haystack_length; haystack_index++) {
@@ -376,8 +388,8 @@ const char *find_needle(const char *haystack, size_t haystack_length, const char
         bool needle_found = true;
         size_t needle_index = 0;
         for (; needle_index < needle_length; needle_index++) {
-            const auto haystack_character = haystack[haystack_index + needle_index];
-            const auto needle_character = needle[needle_index];
+            const int haystack_character = haystack[haystack_index + needle_index];
+            const int needle_character = needle[needle_index];
             if (haystack_character == needle_character) {
                 continue;
             } else {
@@ -392,6 +404,21 @@ const char *find_needle(const char *haystack, size_t haystack_length, const char
     }
 
     return NULL;
+}
+
+char* to_string(uint8_t* x) {
+    return utils_uint8_to_hex(x, 32);
+}
+
+char* hash_to_string(uint8_t* x) {
+    char* hexbuf = to_string(x);
+    utils_reverse_hex(hexbuf, DOGECOIN_HASH_LENGTH*2);
+    return hexbuf;
+}
+
+uint8_t* hash_to_bytes(uint8_t* x) {
+    char* hexbuf = hash_to_string(x);
+    return utils_hex_to_uint8(hexbuf);
 }
 
 /**

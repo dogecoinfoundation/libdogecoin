@@ -125,6 +125,21 @@
         } while (0);                                                     \
     }
 
+#define u_assert_uint64_eq(R, E)                                         \
+    {                                                                    \
+        uint64_t r_ = (R);                                               \
+        uint64_t e_ = (E);                                               \
+        do {                                                             \
+            if (r_ != e_) {                                              \
+                printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
+                printf("\tExpect: \t%" PRIu64 "\n", e_);                 \
+                printf("\tReceive:\t%" PRIu64 "\n", r_);                 \
+                U_TESTS_FAIL++;                                          \
+                return;                                                  \
+            };                                                           \
+        } while (0);                                                     \
+    }
+
 #define u_assert_long_double_eq(R, E)                                    \
     {                                                                    \
         long double r_ = (R);                                            \

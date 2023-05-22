@@ -35,7 +35,7 @@
 #include <string.h>
 
 #if defined(HAVE_CONFIG_H)
-#include "libdogecoin-config.h"
+#include <config/libdogecoin-config.h>
 #endif
 
 typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool

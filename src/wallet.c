@@ -714,51 +714,51 @@ dogecoin_bool dogecoin_wallet_load_transaction(dogecoin_wallet* wallet, uint32_t
     return true;
 }
 
-dogecoin_bool dogecoin_wallet_replace(dogecoin_wallet* wallet, const char* file_path, cstring* record, uint8_t record_type, int *error)
-{
-    if (!wallet) return false;
+// dogecoin_bool dogecoin_wallet_replace(dogecoin_wallet* wallet, const char* file_path, cstring* record, uint8_t record_type, int *error)
+// {
+//     if (!wallet) return false;
 
-    struct stat buffer;
-    if (stat(file_path, &buffer) != 0) {
-        *error = 1;
-        return false;
-    }
+//     struct stat buffer;
+//     if (stat(file_path, &buffer) != 0) {
+//         *error = 1;
+//         return false;
+//     }
 
-    wallet->filename = file_path;
-    wallet->dbfile = fopen(file_path, "w+b");
+//     wallet->filename = file_path;
+//     wallet->dbfile = fopen(file_path, "w+b");
 
-    // file header magic, version and genesis lengths:
-    size_t skip_length = 4 + sizeof(uint32_t) + sizeof(uint256);
-    fseek(wallet->dbfile, skip_length, SEEK_CUR);
+//     // file header magic, version and genesis lengths:
+//     size_t skip_length = 4 + sizeof(uint32_t) + sizeof(uint256);
+//     fseek(wallet->dbfile, skip_length, SEEK_CUR);
 
-    while (!feof(wallet->dbfile))
-    {
-        uint8_t buf[sizeof(file_rec_magic)];
-        if (fread(buf, sizeof(buf), 1, wallet->dbfile) != 1 ) {
-            // no more record, break
-            break;
-        }
-        if (memcmp(buf, file_rec_magic, sizeof(file_rec_magic))) {
-            fprintf(stderr, "Wallet file: error reading record file (invalid magic). Wallet file is corrupt\n");
-            return false;
-        }
-        uint32_t reclen = 0;
-        if (!deser_varlen_from_file(&reclen, wallet->dbfile)) return false;
+//     while (!feof(wallet->dbfile))
+//     {
+//         uint8_t buf[sizeof(file_rec_magic)];
+//         if (fread(buf, sizeof(buf), 1, wallet->dbfile) != 1 ) {
+//             // no more record, break
+//             break;
+//         }
+//         if (memcmp(buf, file_rec_magic, sizeof(file_rec_magic))) {
+//             fprintf(stderr, "Wallet file: error reading record file (invalid magic). Wallet file is corrupt\n");
+//             return false;
+//         }
+//         uint32_t reclen = 0;
+//         if (!deser_varlen_from_file(&reclen, wallet->dbfile)) return false;
 
-        uint8_t rectype;
-        if (fread(&rectype, 1, 1, wallet->dbfile) != 1) return false;
+//         uint8_t rectype;
+//         if (fread(&rectype, 1, 1, wallet->dbfile) != 1) return false;
 
-        if (rectype == WALLET_DB_REC_TYPE_MASTERPUBKEY) {
-            if (!dogecoin_load_wallet_masterpubkey(wallet)) return false;
-        } else if (rectype == WALLET_DB_REC_TYPE_ADDR) {
-            if (!dogecoin_wallet_load_address(wallet)) return false;
-        } else if (rectype == WALLET_DB_REC_TYPE_TX) {
-            if (!dogecoin_wallet_load_transaction(wallet, reclen)) return false;
-        }
-    }
-    dogecoin_file_commit(wallet->dbfile);
-    return true;
-}
+//         if (rectype == WALLET_DB_REC_TYPE_MASTERPUBKEY) {
+//             if (!dogecoin_load_wallet_masterpubkey(wallet)) return false;
+//         } else if (rectype == WALLET_DB_REC_TYPE_ADDR) {
+//             if (!dogecoin_wallet_load_address(wallet)) return false;
+//         } else if (rectype == WALLET_DB_REC_TYPE_TX) {
+//             if (!dogecoin_wallet_load_transaction(wallet, reclen)) return false;
+//         }
+//     }
+//     dogecoin_file_commit(wallet->dbfile);
+//     return true;
+// }
 
 dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_path, int *error, dogecoin_bool *created)
 {
@@ -792,8 +792,6 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
             fprintf(stderr, "Wallet file: different network\n");
             return false;
         }
-
-        dogecoin_wallet_addr *waddr;
 
         // read
         while (!feof(wallet->dbfile))
@@ -1359,20 +1357,20 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
         while((ptr = strtok_r(address_copy, delim, &address_copy)))
         {
             dogecoin_wallet* wallet = dogecoin_wallet_read(ptr);
-            int found = 0, error = 0, j = 0;
+            int found = 0, error = 0;
             dogecoin_bool created;
             // set up new wallet to store everything except our soon to be unregistered watch address:
             dogecoin_wallet* wallet_new = dogecoin_wallet_new(wallet->chain);
             char path[256];
-            getcwd(path, 256);
-            char win_delim[] = "\\";
-            char unix_delim[] = "/";
+            memcpy_safe(path, getcwd(path, 256), 256);
 #ifdef WIN32
+            char win_delim[] = "\\";
             char* oldname = concat(path, concat(win_delim, "temp.bin"));
-            char* newname = concat(path, concat(win_delim, wallet->filename));
+            char* newname = concat(path, concat(win_delim, (char*)wallet->filename));
 #else
+            char unix_delim[] = "/";
             char* oldname = concat(path, concat(unix_delim, "temp.bin"));
-            char* newname = concat(path, concat(unix_delim, wallet->filename));
+            char* newname = concat(path, concat(unix_delim, (char*)wallet->filename));
 #endif
             dogecoin_wallet_load(wallet_new, oldname, &error, &created);
             wallet_new->filename = oldname;

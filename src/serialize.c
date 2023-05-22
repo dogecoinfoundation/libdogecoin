@@ -7,6 +7,7 @@
 
 #include <dogecoin/cstr.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/portable_endian.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
 
@@ -25,7 +26,6 @@ void ser_bytes(cstring* s, const void* p, size_t len)
 {
     cstr_append_buf(s, p, len);
 }
-
 
 /**
  * @brief This function takes 2 unsigned bytes and

@@ -83,7 +83,7 @@ void postcmd(struct dogecoin_node_ *node, dogecoin_p2p_msg_hdr *hdr, struct cons
     if (strcmp(hdr->command, "block") == 0)
     {
         dogecoin_block_header header;
-        if (!dogecoin_block_header_deserialize(&header, buf)) return;
+        if (!dogecoin_block_header_deserialize(&header, buf, node->nodegroup->chainparams)) return;
 
         uint32_t vsize;
         if (!deser_varlen(&vsize, buf)) return;
