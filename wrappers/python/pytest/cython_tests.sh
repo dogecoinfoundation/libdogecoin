@@ -17,7 +17,7 @@ if test -f "$FILE"; then
 fi
 
 # build:
-python3 wrappers/python/libdogecoin/setup.py build_ext --build-lib `pwd`/wrappers/python/pytest/ --build-temp `pwd`/ --force --user
+python3 wrappers/python/setup.py build_ext --build-lib `pwd`/wrappers/python/pytest/ --build-temp `pwd`/ --force --user
 
 # # run:
 python3 wrappers/python/pytest/address_test.py 
