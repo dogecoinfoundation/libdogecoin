@@ -1,7 +1,7 @@
 """Testing module for wrappers from transaction.c"""
 
 import unittest
-import libdogecoin as l
+from libdogecoin import libdogecoin as l
 
 # internal keys (set 1)
 privkey_wif =       "ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy"
