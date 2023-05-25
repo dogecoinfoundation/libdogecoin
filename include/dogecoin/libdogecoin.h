@@ -173,6 +173,13 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 int store_raw_transaction(char* incomingrawtx);
 
 
+/* Koinu functions
+--------------------------------------------------------------------------
+*/
+int koinu_to_coins_str(uint64_t koinu, char* str);
+uint64_t coins_to_koinu_str(char* coins);
+
+
 /* Memory functions
 --------------------------------------------------------------------------
 */
