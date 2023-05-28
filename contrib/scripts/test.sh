@@ -79,7 +79,7 @@ if has_param '--extended' "$@"; then
         python3 tooltests.py
     fi
     if has_param '--cython' "$@"; then
-        ./wrappers/python/test/cython_tests.sh --host $TARGET_HOST_TRIPLET
+        ./wrappers/python/tests/cython_tests.sh --host $TARGET_HOST_TRIPLET
     fi
     if has_param '--go' "$@"; then
         ./wrappers/golang/libdogecoin/build.sh
