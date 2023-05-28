@@ -21,21 +21,21 @@ virtualenv_dest=${wrappers_python_abspath}/.venv
 cd $wrappers_python_abspath
 
 #alias
-alias python="python3 "
-alias pip="pip3 "
+#alias python="python3 "
+#alias pip="pip3 "
 
 set +x
 
 # install
-python -m venv --clear $virtualenv_dest
+python3 -m venv --clear $virtualenv_dest
 source ${virtualenv_dest}/bin/activate
-python -m pip install --upgrade cython setuptools pip pytest
+python3 -m pip install --upgrade cython setuptools pip pytest
 
 # build
-pip install -v -e .
+python3 -m pip install -v -e .
 # test
 cd $virtualenv_dest
-pytest -v ${tests_dir}
+python3 -m pytest -v ${tests_dir}
 
 # uninstall venv
 deactivate
