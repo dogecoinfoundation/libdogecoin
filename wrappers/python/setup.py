@@ -8,7 +8,7 @@ from Cython.Distutils import build_ext
 # build extersions without beware working directory
 setup_py_dir = pathlib.Path(__file__).parent
 setup_py_relative_path = "wrappers/python"
-libdogecoin_project_root_directory = str(setup_py_dir).removesuffix(setup_py_relative_path)
+libdogecoin_project_root_directory = setup_py_dir.parent.parent.as_posix()
 
 include_dirs=       [".",
                      "include",
@@ -46,7 +46,7 @@ else:
 package_data = {
     'libdogecoin': ['*.pxd', "*" + lib_ext, "*.pxi"]
 }
-long_description = (setup_py_dir / "README.md").read_text()
+long_description = setup_py_dir.joinpath("README.md").read_text()
 
 setup(
     name=                           "libdogecoin",
