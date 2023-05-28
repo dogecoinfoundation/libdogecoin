@@ -1,52 +1,79 @@
-cimport cython as cy
+cimport cython
 from libc.string cimport strncpy, memset
+from libc.stdint cimport uint32_t, uint8_t
 
-# FUNCTIONS FROM STATIC LIBRARY
-#========================================================
-cdef extern from "libdogecoin.h":
-    # ecc.c
-    void dogecoin_ecc_start()
-    void dogecoin_ecc_stop()
-
-    # address.c
-    int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bint is_testnet)
-    int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bint is_testnet)
-    int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
-    int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bint is_testnet)
-    int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bint is_testnet)
-    int verifyP2pkhAddress(char* p2pkh_pubkey, cy.size_t len)
-
-    # transaction.c
-    int start_transaction()
-    int add_utxo(int txindex, char* hex_utxo_txid, int vout)
-    int add_output(int txindex, char* destinationaddress, char* amount)
-    char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress)
-    char* get_raw_transaction(int txindex) 
-    void clear_transaction(int txindex)
-    int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey)
-    int sign_transaction(int txindex, char* script_pubkey, char* privkey)
-    int store_raw_transaction(char* incomingrawtx)
+from . import error
+from . import constants
+from . cimport defines
+from . cimport types
+from . cimport _wow
+from . cimport _libdogecoin
 
 
 # PYTHON INTERFACE
 #========================================================
+# wow.h
+def wow():
+    """ wow.h wow """
+    _wow.wow()
+# end wow.h
+
+#
+# mnemonic
+def generateRandomEnglishMnemonic(entropy_size):
+    """libdogecoin.h generateRandomEnglishMnemonic
+    
+    :param int entropy_size: constants.ENTROPY_SIZE_LIST
+    :returns: mnemonic string
+    :rtype: str
+    """
+    assert entropy_size in constants.ENTROPY_SIZE_LIST
+    cdef types.MNEMONIC mnemonic
+
+    entropy_size_bytes = str(entropy_size).encode("utf-8")
+    res = _libdogecoin.generateRandomEnglishMnemonic(entropy_size_bytes, mnemonic)
+    if res != 0:
+        raise error.LibdogecoinAPIException("generateRandomEnglishMnemonic")
+    
+    return mnemonic.decode('utf-8')
+
+def generateEnglishMnemonic(entropy, entropy_size):
+    """ libdogecoin.h generateEnglishMnemonic
+
+    :param bytes entropy:
+    :param int entropy_size: constants.ENTROPY_SIZE_LIST
+    :returns: mnemonic
+    :rtype: str
+    """
+    assert entropy_size in constants.ENTROPY_SIZE_LIST
+    cdef types.MNEMONIC mnemonic
+
+    entropy_size_bytes = str(entropy_size).encode("utf-8")
+    res = _libdogecoin.generateEnglishMnemonic(entropy, entropy_size_bytes, mnemonic)
+    if res != 0:
+        raise error.LibdogecoinAPIException("generateEnglishMnemonic")
+
+    return mnemonic.decode('utf-8')
+
+# end mnemonic
+
 
 # ADDRESS FUNCTIONS
-def w_context_start():
+def context_start():
     """Start the secp256k1 context necessary for key pair 
     generation. Must be started before calling any functions
     dealing with private or public keys.
     """
-    dogecoin_ecc_start()
+    _libdogecoin.dogecoin_ecc_start()
 
-def w_context_stop():
+def context_stop():
     """Stop the current instance of the secp256k1 context. It is
     advised to wait until the session is completely over before
     stopping the context.
     """
-    dogecoin_ecc_stop()
+    _libdogecoin.dogecoin_ecc_stop()
 
-def w_generate_priv_pub_key_pair(chain_code=0):
+def generate_priv_pub_key_pair(chain_code=0):
     """Generate a valid private key paired with the corresponding
     p2pkh address.
     Keyword arguments:
@@ -61,16 +88,16 @@ def w_generate_priv_pub_key_pair(chain_code=0):
     cdef bint is_testnet = chain_code
 
     # call c function
-    generatePrivPubKeypair(privkey, p2pkh_pubkey, chain_code)
+    _libdogecoin.generatePrivPubKeypair(privkey, p2pkh_pubkey, chain_code)
 
     # return keys as bytes object
     return privkey, p2pkh_pubkey
 
 
-def w_generate_hd_master_pub_key_pair(chain_code=0):
+def generate_hd_master_pub_key_pair(chain_code=0):
     """Generate a master private and public key pair for use in
     hierarchical deterministic wallets. Public key can be used for
-    child key derivation using w_generate_derived_hd_pub_key().
+    child key derivation using generate_derived_hd_pub_key().
     Keyword arguments:
     chain_code -- 0 for mainnet pair, 1 for testnet pair
     """
@@ -82,14 +109,14 @@ def w_generate_hd_master_pub_key_pair(chain_code=0):
     cdef char master_p2pkh_pubkey[35]
 
     # call c function
-    generateHDMasterPubKeypair(master_privkey, master_p2pkh_pubkey, chain_code)
+    _libdogecoin.generateHDMasterPubKeypair(master_privkey, master_p2pkh_pubkey, chain_code)
 
     # return keys
     # TODO: extra bytes added to end of testnet keys?? truncate after 34 as a temp patch 
     return master_privkey, master_p2pkh_pubkey[:34]
 
 
-def w_generate_derived_hd_pub_key(wif_privkey_master):
+def generate_derived_hd_pub_key(wif_privkey_master):
     """Given a HD master private key, derive a child key from it.
     Keyword arguments:
     wif_privkey_master -- HD master public key as wif-encoded string
@@ -103,13 +130,13 @@ def w_generate_derived_hd_pub_key(wif_privkey_master):
     cdef char child_p2pkh_pubkey[128]
 
     # call c function
-    generateDerivedHDPubkey(wif_privkey_master, child_p2pkh_pubkey)
+    _libdogecoin.generateDerivedHDPubkey(wif_privkey_master, child_p2pkh_pubkey)
 
     # return results in bytes
     return child_p2pkh_pubkey
 
 
-def w_verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
+def verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
     """Given a private/public key pair, verify that the keys are
     valid and are associated with each other.
     Keyword arguments:
@@ -129,13 +156,13 @@ def w_verify_priv_pub_keypair(wif_privkey, p2pkh_pubkey, chain_code=0):
         p2pkh_pubkey = p2pkh_pubkey.encode('utf-8')
 
     # call c function
-    res = verifyPrivPubKeypair(wif_privkey, p2pkh_pubkey, chain_code)
+    res = _libdogecoin.verifyPrivPubKeypair(wif_privkey, p2pkh_pubkey, chain_code)
 
     # return boolean result
     return res
 
 
-def w_verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chain_code=0):
+def verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, chain_code=0):
     """Given a keypair from generate_hd_master_pub_key_pair, verify that the
     keys are valid and are associated with each other.
     Keyword arguments:
@@ -155,13 +182,13 @@ def w_verify_master_priv_pub_keypair(wif_privkey_master, p2pkh_pubkey_master, ch
         p2pkh_pubkey_master = p2pkh_pubkey_master.encode('utf-8')
 
     # call c function
-    res = verifyHDMasterPubKeypair(wif_privkey_master, p2pkh_pubkey_master, chain_code)
+    res = _libdogecoin.verifyHDMasterPubKeypair(wif_privkey_master, p2pkh_pubkey_master, chain_code)
 
     # return boolean result
     return res
 
 
-def w_verify_p2pkh_address(p2pkh_pubkey):
+def verify_p2pkh_address(p2pkh_pubkey):
     """Given a p2pkh address, confirm address is in correct Dogecoin
     format.
     Keyword arguments:
@@ -175,7 +202,7 @@ def w_verify_p2pkh_address(p2pkh_pubkey):
         p2pkh_pubkey = p2pkh_pubkey.encode('utf-8')
 
     # call c function
-    res = verifyP2pkhAddress(p2pkh_pubkey, len(p2pkh_pubkey))
+    res = _libdogecoin.verifyP2pkhAddress(p2pkh_pubkey, len(p2pkh_pubkey))
 
     # return boolean result
     return res
@@ -184,16 +211,16 @@ def w_verify_p2pkh_address(p2pkh_pubkey):
 
 # TRANSACTION FUNCTIONS
 
-def w_start_transaction():
+def start_transaction():
     """Create a new, empty dogecoin transaction."""
     # call c function
-    res = start_transaction()
+    res = _libdogecoin.start_transaction()
 
     # return boolean result
     return res
 
 
-def w_add_utxo(tx_index, hex_utxo_txid, vout):
+def add_utxo(tx_index, hex_utxo_txid, vout):
     """Given the index of a working transaction, add another
     input to it.
     Keyword arguments:
@@ -211,13 +238,13 @@ def w_add_utxo(tx_index, hex_utxo_txid, vout):
         hex_utxo_txid = hex_utxo_txid.encode('utf-8')
 
     # call c function
-    res = add_utxo(tx_index, hex_utxo_txid, vout)
+    res = _libdogecoin.add_utxo(tx_index, hex_utxo_txid, vout)
 
     # return boolean result
     return res
 
 
-def w_add_output(tx_index, destination_address, amount):
+def add_output(tx_index, destination_address, amount):
     """Given the index of a working transaction, add another
     output to it.
     Keyword arguments:
@@ -236,13 +263,13 @@ def w_add_output(tx_index, destination_address, amount):
     amount = str(amount).encode('utf-8')
 
     # call c function
-    res = add_output(tx_index, destination_address, amount)
+    res = _libdogecoin.add_output(tx_index, destination_address, amount)
 
     # return boolean result
     return res
 
 
-def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress):
+def finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress):
     """Given the index of a working transaction, prepares it
     for signing by specifying the recipient and fee to subtract,
     directing extra change back to the sender.
@@ -272,7 +299,7 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
     # call c function
     cdef void* res
     cdef char* finalized_transaction_hex
-    res = finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress)
+    res = _libdogecoin.finalize_transaction(tx_index, destination_address, subtracted_fee, out_dogeamount_for_verification, changeaddress)
 
     # return hex result
     try:
@@ -284,7 +311,7 @@ def w_finalize_transaction(tx_index, destination_address, subtracted_fee, out_do
         return 0
 
 
-def w_get_raw_transaction(tx_index):
+def get_raw_transaction(tx_index):
     """Given the index of a working transaction, returns
     the serialized object in hex format.
     Keyword arguments:
@@ -296,7 +323,7 @@ def w_get_raw_transaction(tx_index):
     # call c function
     cdef void* res
     cdef char* raw_transaction_hex
-    res = get_raw_transaction(tx_index)
+    res = _libdogecoin.get_raw_transaction(tx_index)
 
     # return hex result
     try:
@@ -308,7 +335,7 @@ def w_get_raw_transaction(tx_index):
         return 0
         
 
-def w_clear_transaction(tx_index):
+def clear_transaction(tx_index):
     """Discard a working transaction.
     Keyword arguments:
     tx_index -- the index of the working transaction
@@ -317,10 +344,10 @@ def w_clear_transaction(tx_index):
     assert isinstance(tx_index, int)
 
     # call c function
-    clear_transaction(tx_index)
+    _libdogecoin.clear_transaction(tx_index)
 
 
-def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, privkey):
+def sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type, privkey):
     """Sign a finalized raw transaction using the specified
     private key.
     Keyword arguments:
@@ -351,14 +378,14 @@ def w_sign_raw_transaction(tx_index, incoming_raw_tx, script_hex, sig_hash_type,
     strncpy(c_incoming_raw_tx, incoming_raw_tx, len(incoming_raw_tx))
     
     # call c function and return result
-    if sign_raw_transaction(tx_index, c_incoming_raw_tx, script_hex, sig_hash_type, privkey):
+    if _libdogecoin.sign_raw_transaction(tx_index, c_incoming_raw_tx, script_hex, sig_hash_type, privkey):
         res = c_incoming_raw_tx.decode('utf-8')
         return res
     else:
         return 0
 
 
-def w_sign_transaction(tx_index, script_pubkey, privkey):
+def sign_transaction(tx_index, script_pubkey, privkey):
     """Sign all the inputs of a working transaction using the
     specified private key and public key script.
     Keyword arguments:
@@ -377,13 +404,13 @@ def w_sign_transaction(tx_index, script_pubkey, privkey):
         privkey = privkey.encode('utf-8')
     
     # call c function
-    res = sign_transaction(tx_index, script_pubkey, privkey)
+    res = _libdogecoin.sign_transaction(tx_index, script_pubkey, privkey)
 
     # return result
     return res    
 
 
-def w_store_raw_transaction(incoming_raw_tx):
+def store_raw_transaction(incoming_raw_tx):
     """Stores a raw transaction at the next available index
     in the hash table.
     Keyword arguments:
@@ -397,7 +424,7 @@ def w_store_raw_transaction(incoming_raw_tx):
         incoming_raw_tx = incoming_raw_tx.encode('utf-8')
     
     # call c function
-    res = store_raw_transaction(incoming_raw_tx)
+    res = _libdogecoin.store_raw_transaction(incoming_raw_tx)
 
     # return result
     return res

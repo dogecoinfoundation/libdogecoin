@@ -1,30 +1,44 @@
 #!/bin/bash
 # helper script to install dependencies, clean, build and run cython unit tests:
 
-# install:
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install --upgrade cython setuptools
+set -u
+set -x
+set -e
 
-# clean:
-FILE=`pwd`/wrappers/python/libdogecoin/libdogecoin.c
-if test -f "$FILE"; then
-    rm `pwd`/wrappers/python/libdogecoin/libdogecoin.c
-fi
-FILE=`pwd`/wrappers/python/libdogecoin/libdogecoin.o
-if test -f "$FILE"; then
-    rm `pwd`/wrappers/python/libdogecoin/libdogecoin.o
-fi
+# get wrappers/python dir
+script_abspath=$(realpath "${BASH_SOURCE:-$0}")
+script_dirname=$(dirname $script_abspath)
 
-# build:
-python3 wrappers/python/setup.py build_ext --build-lib `pwd`/wrappers/python/pytest/ --build-temp `pwd`/ --force --user
+# wrappers/python
+wrappers_python_abspath=$(cd $script_dirname && cd .. && pwd)
 
-# # run:
-python3 wrappers/python/pytest/address_test.py 
-# PYTHONDEBUG=1 PYTHONMALLOC=debug valgrind --tool=memcheck --leak-check=full --track-origins=yes -s \
-# --suppressions=`pwd`/wrappers/python/pytest/valgrind-python.supp \
-# --log-file=`pwd`/wrappers/python/pytest/minimal.valgrind.log \
-# python3-dbg -Wd -X tracemalloc=5 wrappers/python/pytest/transaction_test.py -v
-python3 wrappers/python/pytest/transaction_test.py -v
+# wrappers/python/tests
+tests_dir=${script_dirname}
+
+# wrappers/python/.venv
+virtualenv_dest=${wrappers_python_abspath}/.venv
+
+cd $wrappers_python_abspath
+
+#alias
+alias python="python3 "
+alias pip="pip3 "
+
+set +x
+
+# install
+python -m venv --clear $virtualenv_dest
+source ${virtualenv_dest}/bin/activate
+python -m pip install --upgrade cython setuptools pip pytest
+
+# build
+pip install -v -e .
+# test
+cd $virtualenv_dest
+pytest -v ${tests_dir}
+
+# uninstall venv
 deactivate
-rm -rf .venv
+rm -rf ${virtualenv_dest}
+
+exit 0

@@ -1,12 +1,12 @@
 """This module runs a mini command line interface to test python libdogecoin wrappers."""
 
-import libdogecoin
+import libdogecoin.libdogecoin as l
 
 # MAIN METHOD
 if __name__ == "__main__":
 
     # start context
-    libdogecoin.context_start()
+    l.context_start()
 
     # print option menu
     cmd_lst = ["gen_keypair <which_chain | 0:main, 1:test>",
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             if not args or not args[0].isdigit() or int(args[0])>1:
                 print(cmd+": enter valid chain code (0:main, 1:test)")
             else:
-                res = libdogecoin.generate_priv_pub_key_pair(int(args[0]))
+                res = l.generate_priv_pub_key_pair(int(args[0]))
                 print("WIF-encoded private key:", res[0].decode('utf-8'))
                 print("P2PKH address:", res[1].decode('utf-8'))
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
             if not args or not args[0].isdigit() or int(args[0])>1:
                 print(cmd+": enter valid chain code (0:main, 1:test)")
             else:
-                res = libdogecoin.generate_hd_master_pub_key_pair(int(args[0]))
+                res = l.generate_hd_master_pub_key_pair(int(args[0]))
                 print("WIF-encoded master private key:", res[0].decode('utf-8'))
                 print("Master P2PKH address:", res[1].decode('utf-8'))
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
             elif len(args[0]) < 50:
                 print(cmd+": private key must be WIF-encoded")
             else:
-                res = libdogecoin.generate_derived_hd_pub_key(args[0])
+                res = l.generate_derived_hd_pub_key(args[0])
                 print("New derived child P2PKH address:", res.decode('utf-8'))
 
         # verify private and p2pkh address pair
@@ -71,7 +71,7 @@ if __name__ == "__main__":
             elif len(args) < 3 or not args[2].isdigit():
                 print(cmd+": enter valid chain code")
             else:
-                res = libdogecoin.verify_priv_pub_keypair(args[0], args[1], int(args[2]))
+                res = l.verify_priv_pub_keypair(args[0], args[1], int(args[2]))
                 if res:
                     print("Keypair is valid.")
                 else:
@@ -86,7 +86,7 @@ if __name__ == "__main__":
             elif len(args) < 3 or not args[2].isdigit():
                 print(cmd+": enter valid chain code")
             else:
-                res = libdogecoin.verify_master_priv_pub_keypair(args[0], args[1], int(args[2]))
+                res = l.verify_master_priv_pub_keypair(args[0], args[1], int(args[2]))
                 if res:
                     print("Keypair is valid.")
                 else:
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             if not args:
                 print(cmd+": enter P2PKH address")
             else:
-                res = libdogecoin.verify_p2pkh_address(args[0])
+                res = l.verify_p2pkh_address(args[0])
                 if res:
                     print("Address is valid.")
                 else:
@@ -112,4 +112,4 @@ if __name__ == "__main__":
         inp = input("$ ").split()
 
     # stop context
-    libdogecoin.context_stop()
+    l.context_stop()

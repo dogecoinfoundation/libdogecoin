@@ -1,4 +1,4 @@
-libdogecoin - libdogecoin cython wrapper
+libdogecoin - libdogecoin python/cython wrapper
 =====
 This library is a new set of wrappers using Cython on top of libdogecoin(c language).
 
