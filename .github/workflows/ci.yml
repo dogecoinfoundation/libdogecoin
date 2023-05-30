@@ -145,7 +145,7 @@ jobs:
               source ~/.bashrc
           else
             sudo apt-get update
-            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
+            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev libunistring-dev build-essential curl python3 valgrind ${{ matrix.packages }}
           fi
 
       - name: post install
