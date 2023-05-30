@@ -639,9 +639,48 @@ int sign_transaction(int txindex, char* script_pubkey, char* privkey) {
     size_t i = 0, len = txtmp->vin->len;
     for (; i < len; i++) {
         if (!sign_raw_transaction(i, raw_hexadecimal_transaction, script_pubkey, 1, privkey)) {
-            printf("error signing raw transaction\n");
+            printf("error signing raw transaction: %s\n", __func__);
             return false;
         }
+    }
+    save_raw_transaction(txindex, raw_hexadecimal_transaction);
+    dogecoin_tx_free(txtmp);
+    return true;
+}
+
+/**
+ * @brief This function signs a specific vin index in the specified working
+ * transaction using the provided private key and vin index.
+ * 
+ * @param txindex The index of the working transaction to sign.
+ * @param vout_index The index of the unspent tx output we are spending.
+ * @param privkey The private key used to sign the transaction input.
+ * 
+ * @return 1 if the transaction was signed successfully, 0 otherwise.
+ */
+int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey) {
+    char* script_pubkey = dogecoin_private_key_wif_to_pubkey_hash(privkey);
+    char* raw_hexadecimal_transaction = get_raw_transaction(txindex);
+
+    // deserialize transaction
+    dogecoin_tx* txtmp = dogecoin_tx_new();
+    uint8_t* data_bin = dogecoin_malloc(strlen(raw_hexadecimal_transaction) / 2);
+    size_t outlength = 0;
+    // convert incomingrawtx to byte array to dogecoin_tx and if it fails free from memory
+    utils_hex_to_bin(raw_hexadecimal_transaction, data_bin, strlen(raw_hexadecimal_transaction), &outlength);
+    if (!dogecoin_tx_deserialize(data_bin, outlength, txtmp, NULL)) {
+        // free byte array
+        dogecoin_free(data_bin);
+        // free dogecoin_tx
+        dogecoin_tx_free(txtmp);
+        printf("invalid tx hex\n");
+        return false;
+    }
+    // free byte array
+    dogecoin_free(data_bin);
+    if (!sign_indexed_raw_transaction(txindex, vout_index, raw_hexadecimal_transaction, script_pubkey, 1, privkey)) {
+        printf("error signing raw transaction: %s\n", __func__);
+        return false;
     }
     save_raw_transaction(txindex, raw_hexadecimal_transaction);
     dogecoin_tx_free(txtmp);
