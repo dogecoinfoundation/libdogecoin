@@ -951,13 +951,13 @@ void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
 #endif
     key_pad[i] = data ^ 0x5c5c5c5c;
   }
-  sha256_transform(key_pad, opad_digest);
+  sha256_transform((sha256_context*)key_pad, opad_digest);
 
   /* convert o_key_pad to i_key_pad and compute its digest */
   for (i = 0; i < SHA256_BLOCK_LENGTH / (int)sizeof(uint32_t); i++) {
     key_pad[i] = key_pad[i] ^ 0x5c5c5c5c ^ 0x36363636;
   }
-  sha256_transform(key_pad, ipad_digest);
+  sha256_transform((sha256_context*)key_pad, ipad_digest);
   dogecoin_mem_zero(key_pad, sizeof(key_pad));
 }
 
@@ -1116,7 +1116,7 @@ void pbkdf2_hmac_sha256_write(pbkdf2_hmac_sha256_context *pctx, uint32_t iterati
 	for (i = pctx->first; i < iterations; i++) {
 		hmac_sha256(pctx->pass, pctx->passlen, (const uint8_t*)pctx->g, SHA256_DIGEST_LENGTH, (uint8_t*)pctx->g);
         uint32_t j = 0;
-		for (; j < SHA256_DIGEST_LENGTH; j++) {
+		for (; j < 8; j++) {
 			pctx->f[j] ^= pctx->g[j];
 		}
 	}
