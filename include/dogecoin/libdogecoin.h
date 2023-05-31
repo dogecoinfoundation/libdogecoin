@@ -129,6 +129,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, char* subtract
 /* sign a raw transaction in memory at (txindex), sign (inputindex) with (scripthex) of (sighashtype), with (privkey) */
 int sign_transaction(int txindex, char* script_pubkey, char* privkey);
 
+/* Sign a formed transaction with working transaction index (txindex), prevout.n index (vout_index) and private key (privkey) */
+int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey);
+
 /* clear all internal working transactions */
 void remove_all();
 
