@@ -238,3 +238,45 @@ char* sign_message(char* privkey, char* msg);
 
 /* verify a message with a address */
 int verify_message(char* sig, char* msg, char* address);
+
+
+/* Vector API
+--------------------------------------------------------------------------
+*/
+
+typedef struct vector {
+    void** data;  /* array of pointers */
+    size_t len;   /* array element count */
+    size_t alloc; /* allocated array elements */
+
+    void (*elem_free_f)(void*);
+} vector;
+
+#define vector_idx(vec, idx) vec->data[idx]
+
+vector* vector_new(size_t res, void (*free_f)(void*));
+void vector_free(vector* vec, dogecoin_bool free_array);
+
+dogecoin_bool vector_add(vector* vec, void* data);
+dogecoin_bool vector_remove(vector* vec, void* data);
+void vector_remove_idx(vector* vec, size_t idx);
+void vector_remove_range(vector* vec, size_t idx, size_t len);
+dogecoin_bool vector_resize(vector* vec, size_t newsz);
+
+ssize_t vector_find(vector* vec, void* data);
+
+
+/* Wallet API
+--------------------------------------------------------------------------
+*/
+
+int dogecoin_unregister_watch_address_with_node(char* address);
+int dogecoin_get_utxo_vector(char* address, vector* utxos);
+uint8_t* dogecoin_get_utxos(char* address);
+unsigned int dogecoin_get_utxos_length(char* address);
+char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);
+uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index);
+uint64_t dogecoin_get_balance(char* address);
+char* dogecoin_get_balance_str(char* address);
+uint64_t dogecoin_get_balance(char* address);
+char* dogecoin_get_balance_str(char* address);

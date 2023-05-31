@@ -1172,7 +1172,7 @@ int dogecoin_get_utxo_vout(char* address, unsigned int index) {
     dogecoin_wallet* wallet = dogecoin_wallet_read(address);
     vector* utxos = vector_new(1, free);
     if (!dogecoin_get_utxo_vector(address, utxos)) return false;
-    int vout;
+    int vout = 0;
     unsigned int i;
     for (i = 0; i < utxos->len; i++) {
         dogecoin_utxo* utxo = vector_idx(utxos, i);
@@ -1184,7 +1184,6 @@ int dogecoin_get_utxo_vout(char* address, unsigned int index) {
     dogecoin_wallet_free(wallet);
     return vout;
 }
-
 
 char* dogecoin_get_utxo_amount(char* address, unsigned int index) {
     if (!address || !index) return false;
