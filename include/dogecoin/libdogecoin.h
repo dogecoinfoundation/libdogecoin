@@ -37,6 +37,46 @@
 #include "constants.h"
 #include "uthash.h"
 
+
+/* Chainparams
+--------------------------------------------------------------------------
+*/
+typedef struct dogecoin_dns_seed_ {
+    char domain[256];
+} dogecoin_dns_seed;
+
+typedef struct dogecoin_chainparams_ {
+    char chainname[32];
+    uint8_t b58prefix_pubkey_address;
+    uint8_t b58prefix_script_address;
+    const char bech32_hrp[5];
+    uint8_t b58prefix_secret_address; //!private key
+    uint32_t b58prefix_bip32_privkey;
+    uint32_t b58prefix_bip32_pubkey;
+    const unsigned char netmagic[4];
+    uint256 genesisblockhash;
+    int default_port;
+    dogecoin_dns_seed dnsseeds[8];
+} dogecoin_chainparams;
+
+typedef struct dogecoin_checkpoint_ {
+    uint32_t height;
+    const char* hash;
+    uint32_t timestamp;
+    uint32_t target;
+} dogecoin_checkpoint;
+
+extern const dogecoin_chainparams dogecoin_chainparams_main;
+extern const dogecoin_chainparams dogecoin_chainparams_test;
+extern const dogecoin_chainparams dogecoin_chainparams_regtest;
+
+// the mainnet checkpoints, needs a fix size
+extern const dogecoin_checkpoint dogecoin_mainnet_checkpoint_array[22];
+extern const dogecoin_checkpoint dogecoin_testnet_checkpoint_array[18];
+
+const dogecoin_chainparams* chain_from_b58_prefix(const char* address);
+int chain_from_b58_prefix_bool(char* address);
+
 /* basic address functions: return 1 if succesful
    ----------------------------------------------
 *///!init static ecc context
@@ -174,6 +214,8 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
 /*Store a raw transaction that's already formed, and give it a txindex in memory. (txindex) is returned as int. */
 int store_raw_transaction(char* incomingrawtx);
+
+dogecoin_bool broadcast_raw_tx(const dogecoin_chainparams* chain, const char* raw_hex_tx);
 
 
 /* Koinu functions
