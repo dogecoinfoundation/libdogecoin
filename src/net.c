@@ -1065,3 +1065,32 @@ dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx*
         }
     return 1;
     }
+
+/**
+ * Connect to a set of nodes and then wait for the transaction to be broadcasted.
+ *
+ * @param chain the chain parameters
+ * @param raw_hex_tx The transaction to broadcast
+ *
+ * @return dogecoin_bool (uint8_t)
+ */
+dogecoin_bool broadcast_raw_tx(const dogecoin_chainparams* chain, const char* raw_hex_tx) {
+    /* The above code is checking if the data is NULL, empty or larger than the maximum size of a p2p message. */
+    if (raw_hex_tx == NULL || strlen(raw_hex_tx) == 0 || strlen(raw_hex_tx) > DOGECOIN_MAX_P2P_MSG_SIZE) {
+        printf("Transaction in invalid or to large.\n");
+        }
+    uint8_t* data_bin = dogecoin_malloc(strlen(raw_hex_tx) / 2 + 1);
+    size_t outlen = 0;
+    utils_hex_to_bin(raw_hex_tx, data_bin, strlen(raw_hex_tx), &outlen);
+
+    dogecoin_tx* tx = dogecoin_tx_new();
+    /* Deserializing the transaction and broadcasting it to the network. */
+    if (dogecoin_tx_deserialize(data_bin, outlen, tx, NULL)) {
+        broadcast_tx(chain, tx, 0, 10, 15, 0);
+    } else {
+        printf("Transaction is invalid\n");
+    }
+    dogecoin_tx_free(tx);
+    dogecoin_free(data_bin);
+    return true;
+}
