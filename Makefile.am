@@ -40,6 +40,7 @@ noinst_HEADERS = \
     include/dogecoin/hash.h \
     include/dogecoin/key.h \
     include/dogecoin/koinu.h \
+    include/dogecoin/map.h \
     include/dogecoin/mem.h \
     include/dogecoin/moon.h \
     include/dogecoin/portable_endian.h \
@@ -78,6 +79,7 @@ libdogecoin_la_SOURCES = \
     src/eckey.c \
     src/key.c \
     src/koinu.c \
+    src/map.c \
     src/mem.c \
     src/moon.c \
     src/png.c \

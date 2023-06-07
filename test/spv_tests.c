@@ -79,4 +79,6 @@ void test_spv()
     printf("Start interacting with the p2p network...\n");
     dogecoin_spv_client_runloop(client);
     dogecoin_spv_client_free(client);
+    remove_all_hashes();
+    remove_all_maps();
 }

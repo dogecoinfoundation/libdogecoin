@@ -38,6 +38,7 @@ LIBDOGECOIN_BEGIN_DECL
 #include <dogecoin/buffer.h>
 #include <dogecoin/cstr.h>
 #include <dogecoin/hash.h>
+#include <dogecoin/map.h>
 #include <dogecoin/tx.h>
 
 typedef struct dogecoin_block_header_ {
@@ -54,10 +55,8 @@ typedef struct dogecoin_auxpow_block_ {
     dogecoin_tx* parent_coinbase;
     uint256 parent_hash;
     uint8_t parent_merkle_count;
-    uint256* parent_coinbase_merkle;
     uint32_t parent_merkle_index;
     uint8_t aux_merkle_count;
-    uint256* aux_merkle_branch;
     uint32_t aux_merkle_index;
     dogecoin_block_header* parent_header;
 } dogecoin_auxpow_block;

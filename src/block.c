@@ -87,15 +87,9 @@ void dogecoin_auxpow_block_free(dogecoin_auxpow_block* block) {
     if (!block) return;
     dogecoin_block_header_free(block->header);
     dogecoin_tx_free(block->parent_coinbase);
-    size_t i;
-    for (i = 0; i < block->parent_merkle_count; ++i) {
-        dogecoin_mem_zero(block->parent_coinbase_merkle[i], DOGECOIN_HASH_LENGTH);
-    }
     block->parent_merkle_count = 0;
-    for (i = 0; i < block->aux_merkle_count; ++i) {
-        dogecoin_mem_zero(block->aux_merkle_branch[i], DOGECOIN_HASH_LENGTH);
-    }
     block->aux_merkle_count = 0;
+    remove_all_hashes();
     dogecoin_block_header_free(block->parent_header);
     dogecoin_free(block);
     }
@@ -150,18 +144,24 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
     if (!deser_varlen((uint32_t*)&block->parent_merkle_count, buffer)) return false;
 
     uint8_t i = 0;
-    block->parent_coinbase_merkle = dogecoin_uint256_vla(block->parent_merkle_count);
     for (; i < block->parent_merkle_count; i++) {
-        if (!deser_u256(block->parent_coinbase_merkle[i], buffer)) return false;
+        hash* parent_cb_merkle_branch = new_hash();
+        if (!deser_u256((uint8_t*)parent_cb_merkle_branch->data.u8, buffer)) {
+            return false;
+        }
+        dogecoin_free(parent_cb_merkle_branch);
         }
 
     if (!deser_u32(&block->parent_merkle_index, buffer)) return false;
 
     if (!deser_varlen((uint32_t*)&block->aux_merkle_count, buffer)) return false;
 
-    block->aux_merkle_branch = dogecoin_uint256_vla(block->aux_merkle_count);
     for (i = 0; i < block->aux_merkle_count; i++) {
-        if (!deser_u256(block->aux_merkle_branch[i], buffer)) return false;
+        hash* aux_merkle_branch = new_hash();
+        if (!deser_u256((uint8_t*)aux_merkle_branch->data.u8, buffer)) {
+            return false;
+        }
+        dogecoin_free(aux_merkle_branch);
         }
 
     if (!deser_u32(&block->aux_merkle_index, buffer)) return false;
