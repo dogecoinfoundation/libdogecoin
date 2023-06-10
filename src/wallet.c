@@ -517,7 +517,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
 
                 dogecoin_wallet_addr_deserialize(waddr, wallet->chain, &cbuf);
                 // add the node to the binary tree
-                dogecoin_btree_tfind(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+                dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
                 vector_add(wallet->waddr_vector, waddr);
                 wallet->next_childindex = waddr->childindex+1;
             } else if (rectype == WALLET_DB_REC_TYPE_TX) {
@@ -531,6 +531,27 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                 dogecoin_wallet_wtx_deserialize(wtx, &cbuf);
                 dogecoin_wallet_scrape_utxos(wallet, wtx);
                 dogecoin_wallet_add_wtx_intern_move(wallet, wtx); // hands memory management over to the binary tree
+                unsigned int z = 0;
+                for (; z < wallet->vec_wtxes->len; z++) {
+                    dogecoin_wtx* wtx = vector_idx(wallet->vec_wtxes, z);
+                    unsigned int y = 0;
+                    for (; y < wallet->unspent->len; y++) {
+                        dogecoin_utxo* utxo = vector_idx(wallet->unspent, y);
+                        unsigned int x = 0;
+                        for (; x < wtx->tx->vin->len; x++) {
+                            dogecoin_tx_in* tx_in = vector_idx(wtx->tx->vin, x);
+                            char* prevout_hash = utils_uint8_to_hex(tx_in->prevout.hash, 32);
+                            utils_reverse_hex(prevout_hash, 64);
+                            uint8_t* prevout_hash_bytes = utils_hex_to_uint8(prevout_hash);
+                            if (memcmp(prevout_hash_bytes, utxo->txid, 32)==0) {
+                                utxo->spendable = 0;
+                                utxo->solvable = 0;
+                                vector_add(wallet->spends, utxo);
+                                vector_remove_idx(wallet->unspent, y);
+                            }
+                        }
+                    }
+                }
             } else {
                 fseek(wallet->dbfile , reclen, SEEK_CUR);
             }
