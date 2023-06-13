@@ -329,6 +329,26 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
         }
     vector_free(addrs, true);
 
+    if (wallet->spends->len) {
+        char wallet_total[21];
+        uint64_t wallet_total_u64 = 0;
+        unsigned int g = 0;
+        for (; g < wallet->spends->len; g++) {
+            dogecoin_utxo* utxo = vector_idx(wallet->spends, g);
+            printf("%s\n", "----------------------");
+            printf("txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof utxo->txid));
+            printf("vout:           %d\n", utxo->vout);
+            printf("address:        %s\n", utxo->address);
+            printf("script_pubkey:  %s\n", utxo->script_pubkey);
+            printf("amount:         %s\n", utxo->amount);
+            debug_print("confirmations:  %d\n", utxo->confirmations);
+            printf("spendable:      %d\n", utxo->spendable);
+            printf("solvable:       %d\n", utxo->solvable);
+            wallet_total_u64 += coins_to_koinu_str(utxo->amount);
+        }
+        koinu_to_coins_str(wallet_total_u64, wallet_total);
+        printf("Spent Balance: %s\n", wallet_total);
+    }
     vector* unspent = vector_new(1, free);
     dogecoin_wallet_get_unspent(wallet, unspent);
     if (unspent->len) {
@@ -348,7 +368,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, char* a
             wallet_total_u64 += coins_to_koinu_str(utxo->amount);
         }
         koinu_to_coins_str(wallet_total_u64, wallet_total);
-        printf("Balance: %s\n", wallet_total);
+        printf("Unspent Balance: %s\n", wallet_total);
     }
     vector_free(unspent, true);
     return wallet;
