@@ -204,13 +204,23 @@ jobs:
 
       - name: build libdogecoin
         run: |
+          build_dir=./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
           make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
-          mkdir -p ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
+          mkdir -p $build_dir/bin $build_dir/docs $build_dir/examples $build_dir/include $build_dir/lib
           if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
-              cp .libs/* such.exe sendtx.exe ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
+              cp such.exe sendtx.exe $build_dir/bin/
           else
-              cp .libs/* such sendtx ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/
+              cp such sendtx $build_dir/bin/
           fi
+          cp doc/*.md $build_dir/docs/
+          cp contrib/examples/example.c $build_dir/examples/
+          cp include/dogecoin/dogecoin.h \
+              include/dogecoin/libdogecoin.h \
+              include/dogecoin/constants.h \
+              config/libdogecoin-config.h \
+              include/dogecoin/uthash.h $build_dir/include/
+          cp .libs/* $build_dir/lib/
+          cp LICENSE $build_dir/
           chmod +x ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/*
 
       - name: test libdogecoin

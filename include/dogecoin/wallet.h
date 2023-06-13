@@ -179,6 +179,8 @@ LIBDOGECOIN_API uint8_t* dogecoin_get_utxos(char* address);
 LIBDOGECOIN_API unsigned int dogecoin_get_utxos_length(char* address);
 LIBDOGECOIN_API char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);
 LIBDOGECOIN_API uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index);
+LIBDOGECOIN_API int dogecoin_get_utxo_vout(char* address, unsigned int index);
+LIBDOGECOIN_API char* dogecoin_get_utxo_amount(char* address, unsigned int index);
 LIBDOGECOIN_API uint64_t dogecoin_get_balance(char* address);
 LIBDOGECOIN_API char* dogecoin_get_balance_str(char* address);
 

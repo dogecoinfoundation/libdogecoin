@@ -93,6 +93,8 @@ LIBDOGECOIN_API int sign_indexed_raw_transaction(int txindex, int inputindex, ch
 
 LIBDOGECOIN_API int sign_transaction(int txindex, char* script_pubkey, char* privkey);
 
+LIBDOGECOIN_API int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey);
+
 LIBDOGECOIN_API int store_raw_transaction(char* incomingrawtx);
 
 LIBDOGECOIN_END_DECL

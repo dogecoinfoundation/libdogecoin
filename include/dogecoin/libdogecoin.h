@@ -37,6 +37,46 @@
 #include "constants.h"
 #include "uthash.h"
 
+
+/* Chainparams
+--------------------------------------------------------------------------
+*/
+typedef struct dogecoin_dns_seed_ {
+    char domain[256];
+} dogecoin_dns_seed;
+
+typedef struct dogecoin_chainparams_ {
+    char chainname[32];
+    uint8_t b58prefix_pubkey_address;
+    uint8_t b58prefix_script_address;
+    const char bech32_hrp[5];
+    uint8_t b58prefix_secret_address; //!private key
+    uint32_t b58prefix_bip32_privkey;
+    uint32_t b58prefix_bip32_pubkey;
+    const unsigned char netmagic[4];
+    uint256 genesisblockhash;
+    int default_port;
+    dogecoin_dns_seed dnsseeds[8];
+} dogecoin_chainparams;
+
+typedef struct dogecoin_checkpoint_ {
+    uint32_t height;
+    const char* hash;
+    uint32_t timestamp;
+    uint32_t target;
+} dogecoin_checkpoint;
+
+extern const dogecoin_chainparams dogecoin_chainparams_main;
+extern const dogecoin_chainparams dogecoin_chainparams_test;
+extern const dogecoin_chainparams dogecoin_chainparams_regtest;
+
+// the mainnet checkpoints, needs a fix size
+extern const dogecoin_checkpoint dogecoin_mainnet_checkpoint_array[22];
+extern const dogecoin_checkpoint dogecoin_testnet_checkpoint_array[18];
+
+const dogecoin_chainparams* chain_from_b58_prefix(const char* address);
+int chain_from_b58_prefix_bool(char* address);
+
 /* basic address functions: return 1 if succesful
    ----------------------------------------------
 *///!init static ecc context
@@ -129,6 +169,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, char* subtract
 /* sign a raw transaction in memory at (txindex), sign (inputindex) with (scripthex) of (sighashtype), with (privkey) */
 int sign_transaction(int txindex, char* script_pubkey, char* privkey);
 
+/* Sign a formed transaction with working transaction index (txindex), prevout.n index (vout_index) and private key (privkey) */
+int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey);
+
 /* clear all internal working transactions */
 void remove_all();
 
@@ -171,6 +214,15 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 
 /*Store a raw transaction that's already formed, and give it a txindex in memory. (txindex) is returned as int. */
 int store_raw_transaction(char* incomingrawtx);
+
+dogecoin_bool broadcast_raw_tx(const dogecoin_chainparams* chain, const char* raw_hex_tx);
+
+
+/* Koinu functions
+--------------------------------------------------------------------------
+*/
+int koinu_to_coins_str(uint64_t koinu, char* str);
+uint64_t coins_to_koinu_str(char* coins);
 
 
 /* Memory functions
@@ -228,3 +280,45 @@ char* sign_message(char* privkey, char* msg);
 
 /* verify a message with a address */
 int verify_message(char* sig, char* msg, char* address);
+
+
+/* Vector API
+--------------------------------------------------------------------------
+*/
+
+typedef struct vector {
+    void** data;  /* array of pointers */
+    size_t len;   /* array element count */
+    size_t alloc; /* allocated array elements */
+
+    void (*elem_free_f)(void*);
+} vector;
+
+#define vector_idx(vec, idx) vec->data[idx]
+
+vector* vector_new(size_t res, void (*free_f)(void*));
+void vector_free(vector* vec, dogecoin_bool free_array);
+
+dogecoin_bool vector_add(vector* vec, void* data);
+dogecoin_bool vector_remove(vector* vec, void* data);
+void vector_remove_idx(vector* vec, size_t idx);
+void vector_remove_range(vector* vec, size_t idx, size_t len);
+dogecoin_bool vector_resize(vector* vec, size_t newsz);
+
+ssize_t vector_find(vector* vec, void* data);
+
+
+/* Wallet API
+--------------------------------------------------------------------------
+*/
+
+int dogecoin_unregister_watch_address_with_node(char* address);
+int dogecoin_get_utxo_vector(char* address, vector* utxos);
+uint8_t* dogecoin_get_utxos(char* address);
+unsigned int dogecoin_get_utxos_length(char* address);
+char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);
+uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index);
+uint64_t dogecoin_get_balance(char* address);
+char* dogecoin_get_balance_str(char* address);
+uint64_t dogecoin_get_balance(char* address);
+char* dogecoin_get_balance_str(char* address);

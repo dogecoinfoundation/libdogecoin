@@ -498,6 +498,8 @@ int main(int argc, char* argv[]) {
                     unsigned int i = 1;
                     for (; i <= utxo_count; i++) {
                         printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, i));
+                        printf("vout:           %d\n", dogecoin_get_utxo_vout(address, i));
+                        printf("amount:         %s\n", dogecoin_get_utxo_amount(address, i));
                     }
                 }
             }
