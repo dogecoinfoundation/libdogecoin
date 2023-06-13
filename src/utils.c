@@ -324,6 +324,50 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
         }
     }
 
+uint256* uint256S(const char *str)
+{
+    return (uint256*)utils_hex_to_uint8(str);
+}
+
+unsigned char* parse_hex(const char* psz)
+{
+    // convert hex dump to vector
+    vector* vch = vector_new(1, NULL);
+    while (true)
+    {
+        while (isspace(*psz))
+            psz++;
+        signed char c = utils_hex_digit(*psz++);
+        if (c == (signed char)-1)
+            break;
+        unsigned char n = (c << 4);
+        c = utils_hex_digit(*psz++);
+        if (c == (signed char)-1)
+            break;
+        n |= c;
+        vector_add(vch, n);
+    }
+    unsigned int h = 0;
+	unsigned char* input = dogecoin_uchar_vla(vch->len);
+	for (; h < vch->len; h++) {
+		input[h] = (unsigned char)vector_idx(vch, h);
+	}
+    vector_free(vch, true);
+    return input;
+}
+
+/**
+ * Swaps bytes of a given buffer, effectively performing a big-endian to/from little-endian conversion
+ */
+void swap_bytes(uint8_t *buf, int buf_size) {
+    int i = 0;
+    for (; i < buf_size/2; i++)
+    {
+        uint8_t temp = buf[i];
+        buf[i] = buf[buf_size-i-1];
+        buf[buf_size-i-1] = temp;
+    }
+}
 
 /**
  * @brief This function executes malloc() but exits the

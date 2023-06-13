@@ -56,7 +56,7 @@ dogecoin_bool test_spv_header_message_processed(struct dogecoin_spv_client_ *cli
 void test_spv()
 {
     // set chain:
-    const dogecoin_chainparams* chain = &dogecoin_chainparams_test;
+    const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     // concatenate chain to prefix of headers database:
     char* header_suffix = "_headers.db";

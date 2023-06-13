@@ -34,6 +34,7 @@
 #ifndef __LIBDOGECOIN_SHA2_H__
 #define __LIBDOGECOIN_SHA2_H__
 
+#include <sys/types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -79,6 +80,8 @@ typedef struct _hmac_sha512_context {
 	sha512_context ctx;
 } hmac_sha512_context;
 
+void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
+                         uint32_t *opad_digest, uint32_t *ipad_digest);
 LIBDOGECOIN_API void hmac_sha256_init(hmac_sha256_context* hctx, const uint8_t* key, const uint32_t keylen);
 LIBDOGECOIN_API void hmac_sha256_write(hmac_sha256_context* hctx, const uint8_t* msg, const uint32_t msglen);
 LIBDOGECOIN_API void hmac_sha256_finalize(hmac_sha256_context* hctx, uint8_t* hmac);
@@ -90,11 +93,13 @@ LIBDOGECOIN_API void hmac_sha512_finalize(hmac_sha512_context* hctx, uint8_t* hm
 LIBDOGECOIN_API void hmac_sha512(const uint8_t* key, const size_t keylen, const uint8_t* msg, const size_t msglen, uint8_t* hmac);
 
 typedef struct _pbkdf2_hmac_sha256_context {
-	uint8_t f[SHA256_DIGEST_LENGTH];
-	uint8_t g[SHA256_DIGEST_LENGTH];
+	uint32_t f[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
+	uint32_t g[SHA256_BLOCK_LENGTH / sizeof(uint32_t)];
 	const uint8_t *pass;
 	int passlen;
 	char first;
+	uint32_t odig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
+	uint32_t idig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
 } pbkdf2_hmac_sha256_context;
 
 typedef struct _pbkdf2_hmac_sha512_context {
@@ -105,10 +110,10 @@ typedef struct _pbkdf2_hmac_sha512_context {
 	char first;
 } pbkdf2_hmac_sha512_context;
 
-LIBDOGECOIN_API void pbkdf2_hmac_sha256_init(pbkdf2_hmac_sha256_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen);
+LIBDOGECOIN_API void pbkdf2_hmac_sha256_init(pbkdf2_hmac_sha256_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t blocknr);
 LIBDOGECOIN_API void pbkdf2_hmac_sha256_write(pbkdf2_hmac_sha256_context *pctx, uint32_t iterations);
 LIBDOGECOIN_API void pbkdf2_hmac_sha256_finalize(pbkdf2_hmac_sha256_context *pctx, uint8_t *key);
-LIBDOGECOIN_API void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key);
+LIBDOGECOIN_API void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen);
 
 LIBDOGECOIN_API void pbkdf2_hmac_sha512_init(pbkdf2_hmac_sha512_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen);
 LIBDOGECOIN_API void pbkdf2_hmac_sha512_write(pbkdf2_hmac_sha512_context *pctx, uint32_t iterations);

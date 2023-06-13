@@ -55,6 +55,7 @@ extern void test_moon();
 extern void test_op_return();
 extern void test_random();
 extern void test_rmd160();
+extern void test_scrypt();
 extern void test_serialize();
 extern void test_sha_256();
 extern void test_sha_512();
@@ -131,6 +132,7 @@ int main()
     u_run_test(test_op_return);
     u_run_test(test_random);
     u_run_test(test_rmd160);
+    u_run_test(test_scrypt);
     u_run_test(test_serialize);
     u_run_test(test_sha_256);
     u_run_test(test_sha_512);
