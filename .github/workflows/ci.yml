@@ -233,20 +233,11 @@ jobs:
               "aarch64-linux") 
               qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./tests
               ;;
-              "x86_64-win")
-              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-              ;;
-              "i686-win") 
-              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-              ;;
-              "x86_64-macos") 
-              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-              ;;
               "x86_64-linux-dbg") 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               python3 tooltests.py
               ;;
-              "i686-linux") 
+              *) 
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               ;;
             esac
