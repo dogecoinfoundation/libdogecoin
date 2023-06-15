@@ -378,49 +378,119 @@ dogecoin_bool dogecoin_wallet_create(dogecoin_wallet* wallet, const char* file_p
 }
 
 void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
+    // needed in case someone spends excess utxo's:
+    size_t k = 0, count = 0;
+    // iterate through vin's:
+    for (; k < wtx->tx->vin->len; k++) {
+        size_t l = 0;
+        // iterate through unspent vector filled with utxo's:
+        for (; l < wallet->unspent->len; l++) {
+            // assign from wallet->unspent->data to dogecoin_utxo:
+            dogecoin_utxo* utxo = vector_idx(wallet->unspent, l);
+            // assign from vin's to dogecoin_tx_in:
+            dogecoin_tx_in* tx_in = vector_idx(wtx->tx->vin, k);
+            // uint8_t to char*:
+            char* prevout_hash = utils_uint8_to_hex(tx_in->prevout.hash, 32);
+            // reverse the characters:
+            utils_reverse_hex(prevout_hash, 64);
+            // copy back to uint8_t:
+            uint8_t* prevout_hash_bytes = utils_hex_to_uint8(prevout_hash);
+            // compare wtx->tx->vin->prevout.hash and prevout.n with utxo->txid and utxo->vout:
+            if (memcmp(prevout_hash_bytes, utxo->txid, 32)==0 && (int)tx_in->prevout.n == utxo->vout) {
+                // prevent spending/solving:
+                utxo->spendable = 0;
+                utxo->solvable = 0;
+                // add to spends vector:
+                vector_add(wallet->spends, utxo);
+                // remove index from unspent vector:
+                vector_remove_idx(wallet->unspent, l);
+                // iterate count in case user adds excess utxo's:
+                count++;
+            }
+        }
+    }
+
     size_t j = 0;
+    // iterate through vout's:
     for (; j < wtx->tx->vout->len; j++) {
         dogecoin_tx_out* tx_out = vector_idx(wtx->tx->vout, j);
         // populate address vector if script_pubkey exists:
         if (wallet->waddr_vector->len && tx_out->script_pubkey->len) {
             char p2pkh_from_script_pubkey[P2PKH_ADDR_STRINGLEN];
+            // convert script pubkey hash to p2pkh address:
             if (!dogecoin_pubkey_hash_to_p2pkh_address(tx_out->script_pubkey->str, tx_out->script_pubkey->len, p2pkh_from_script_pubkey, wallet->chain)) {
                 printf("failed to convert pubkey hash to p2pkh address!\n");
             }
             vector* addrs = vector_new(1, free);
+            // grab all addresses in vector:
             dogecoin_wallet_get_addresses(wallet, addrs);
             unsigned int i;
+            // loop through addresses:
             for (i = 0; i < addrs->len; i++) {
                 char* addr = vector_idx(addrs, i);
+                // compare wtx->tx->vout with address from wallet->waddr_vector:
                 if (strncmp(p2pkh_from_script_pubkey, addr, P2PKH_ADDR_STRINGLEN - 1)==0) {
+                    // match so we populate utxo struct:
                     dogecoin_utxo* utxo = dogecoin_wallet_utxo_new();
+                    
+                    // make the txid:
                     dogecoin_tx_hash(wtx->tx, (uint8_t*)utxo->txid);
+                    // convert from uint8_t to char*
                     char* hexbuf = utils_uint8_to_hex((const uint8_t*)utxo->txid, DOGECOIN_HASH_LENGTH);
+                    // reverse txid with double length:
                     utils_reverse_hex(hexbuf, DOGECOIN_HASH_LENGTH*2);
-                    memcpy_safe(utxo->txid, utils_hex_to_uint8(hexbuf), 64);
+                    // copy back to utxo->txid as uint256 (uint8_t* or uint8_t[32]):
+                    memcpy_safe(utxo->txid, utils_hex_to_uint8(hexbuf), 32);
+
+                    // copy matching script_pubkey:
                     memcpy_safe(utxo->script_pubkey, utils_uint8_to_hex((const uint8_t*)tx_out->script_pubkey->str, tx_out->script_pubkey->len), SCRIPT_PUBKEY_STRINGLEN);
+                    // set tx->tx_in->prevout.n (utxo->vout):
                     utxo->vout = j;
+
+                    // set utxo p2pkh address:
                     memcpy_safe(utxo->address, p2pkh_from_script_pubkey, P2PKH_ADDR_STRINGLEN);
+
+                    // set amount of utxo:
                     koinu_to_coins_str(tx_out->value, utxo->amount);
+
+                    // finally add utxo to rbtree:
                     dogecoin_btree_tfind(utxo, &wallet->unspent_rbtree, dogecoin_utxo_compare);
+                    // and vector:
                     vector_add(wallet->unspent, utxo);
+
                     unsigned int z = 0;
+                    // iterate through base transaction vector:
                     for (; z < wallet->vec_wtxes->len; z++) {
+                        // add to dogecoin_wtx struct:
                         dogecoin_wtx* existing_wtx = vector_idx(wallet->vec_wtxes, z);
                         unsigned int y = 0;
+                        // iterate through unspent vector:
                         for (; y < wallet->unspent->len; y++) {
+                            // assign to dogecoin_utxo struct:
                             dogecoin_utxo* utxo = vector_idx(wallet->unspent, y);
                             unsigned int x = 0;
+                            // iterate through assigned dogecoin_wtx:
                             for (; x < existing_wtx->tx->vin->len; x++) {
+                                // assign to dogecoin_tx_in:
                                 dogecoin_tx_in* tx_in = vector_idx(existing_wtx->tx->vin, x);
+                                // uint8_t to char*:
                                 char* prevout_hash = utils_uint8_to_hex(tx_in->prevout.hash, 32);
+                                // reverse characters:
                                 utils_reverse_hex(prevout_hash, 64);
+                                // char* back to uint8_t*:
                                 uint8_t* prevout_hash_bytes = utils_hex_to_uint8(prevout_hash);
-                                if (memcmp(prevout_hash_bytes, utxo->txid, 32)==0) {
-                                    utxo->spendable = 0;
-                                    utxo->solvable = 0;
-                                    vector_add(wallet->spends, utxo);
-                                    vector_remove_idx(wallet->unspent, y);
+                                // if count was greater than 1, they've already been moved:
+                                if (count == 1) {
+                                    // else evaluate utxo->txid with existing tx_in->prevout.hash:
+                                    if (memcmp(prevout_hash_bytes, utxo->txid, 32)==0) {
+                                        // remove spendable/solvable:
+                                        utxo->spendable = 0;
+                                        utxo->solvable = 0;
+                                        // move to spends vector:
+                                        vector_add(wallet->spends, utxo);
+                                        // remove from unspent vector:
+                                        vector_remove_idx(wallet->unspent, y);
+                                    }
                                 }
                             }
                         }
