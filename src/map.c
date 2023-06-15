@@ -31,19 +31,6 @@
 
 
 /**
- * Swaps bytes of a given buffer, effectively performing a big-endian to/from little-endian conversion
- */
-void swap_bytes(uint8_t *buf, int buf_size) {
-    int i = 0;
-    for (; i < buf_size/2; i++)
-    {
-        uint8_t temp = buf[i];
-        buf[i] = buf[buf_size-i-1];
-        buf[buf_size-i-1] = temp;
-    }
-}
-
-/**
  * @brief This function instantiates a new working hash,
  * but does not add it to the hash table.
  * 
