@@ -379,7 +379,7 @@ dogecoin_bool dogecoin_wallet_create(dogecoin_wallet* wallet, const char* file_p
 
 void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
     // needed in case someone spends excess utxo's:
-    size_t k = 0, count = 0;
+    size_t k = 0;
     // iterate through vin's:
     for (; k < wtx->tx->vin->len; k++) {
         size_t l = 0;
@@ -404,8 +404,6 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
                 vector_add(wallet->spends, utxo);
                 // remove index from unspent vector:
                 vector_remove_idx(wallet->unspent, l);
-                // iterate count in case user adds excess utxo's:
-                count++;
             }
         }
     }
@@ -457,44 +455,6 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
                     dogecoin_btree_tfind(utxo, &wallet->unspent_rbtree, dogecoin_utxo_compare);
                     // and vector:
                     vector_add(wallet->unspent, utxo);
-
-                    unsigned int z = 0;
-                    // iterate through base transaction vector:
-                    for (; z < wallet->vec_wtxes->len; z++) {
-                        // add to dogecoin_wtx struct:
-                        dogecoin_wtx* existing_wtx = vector_idx(wallet->vec_wtxes, z);
-                        unsigned int y = 0;
-                        // iterate through unspent vector:
-                        for (; y < wallet->unspent->len; y++) {
-                            // assign to dogecoin_utxo struct:
-                            dogecoin_utxo* utxo = vector_idx(wallet->unspent, y);
-                            unsigned int x = 0;
-                            // iterate through assigned dogecoin_wtx:
-                            for (; x < existing_wtx->tx->vin->len; x++) {
-                                // assign to dogecoin_tx_in:
-                                dogecoin_tx_in* tx_in = vector_idx(existing_wtx->tx->vin, x);
-                                // uint8_t to char*:
-                                char* prevout_hash = utils_uint8_to_hex(tx_in->prevout.hash, 32);
-                                // reverse characters:
-                                utils_reverse_hex(prevout_hash, 64);
-                                // char* back to uint8_t*:
-                                uint8_t* prevout_hash_bytes = utils_hex_to_uint8(prevout_hash);
-                                // if count was greater than 1, they've already been moved:
-                                if (count == 1) {
-                                    // else evaluate utxo->txid with existing tx_in->prevout.hash:
-                                    if (memcmp(prevout_hash_bytes, utxo->txid, 32)==0) {
-                                        // remove spendable/solvable:
-                                        utxo->spendable = 0;
-                                        utxo->solvable = 0;
-                                        // move to spends vector:
-                                        vector_add(wallet->spends, utxo);
-                                        // remove from unspent vector:
-                                        vector_remove_idx(wallet->unspent, y);
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
             vector_free(addrs, true);
