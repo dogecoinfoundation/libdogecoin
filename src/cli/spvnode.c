@@ -176,6 +176,7 @@ static struct option long_options[] = {
         {"full_sync", no_argument, NULL, 'b'},
         {"checkpoint", no_argument, NULL, 'p'},
         {"wallet_file", required_argument, NULL, 'w'},
+        {"headers_file", required_argument, NULL, 'h'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -192,7 +193,7 @@ static void print_version() {
 static void print_usage() {
     print_version();
     printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-t[--testnet]) (-f <headersfile|0 for in mem only>) \
-(-w|-wallet_file <filename>) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");    printf("Supported commands:\n");
+(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");    printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
     printf("Sync up to the chain tip and stores all headers in headers.db (quit once synced):\n");
@@ -203,6 +204,8 @@ static void print_usage() {
     printf("> spvnode -d -f 0 -c scan\n\n");
     printf("Sync up, with a wallet file (ex. ./wallets/main_wallet.db), show debug info, don't store headers in file, wait for new blocks:\n");
     printf("> spvnode -d -f 0 -c -w \"./wallets/main_wallet.db\" scan\n\n");
+    printf("Sync up, with a wallet file (ex. ./wallets/main_wallet.db), show debug info, with a headers file (ex. ./headers/main_headers.db), wait for new blocks:\n");
+    printf("> spvnode -d -c -w \"./wallets/main_wallet.db\" -h \"./headers/main_headers.db\" scan\n\n");
     }
 
 /**
@@ -256,42 +259,35 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
     int error;
     dogecoin_bool created;
     char* wallet_suffix = "_wallet.db";
-    dogecoin_bool res;
+    char* wallet_prefix = (char*)chain->chainname;
+    char* walletfile = NULL;
+    dogecoin_bool res = false;
     if (mnemonic_in) {
         char* wallet_type = "_mnemonic";
-        char* wallet_prefix = (char*)chain->chainname;
         char* wallet_type_prefix = concat(wallet_prefix, wallet_type);
-        char* walletfile = concat(wallet_type_prefix, wallet_suffix);
+        walletfile = concat(wallet_type_prefix, wallet_suffix);
+        dogecoin_free(wallet_type_prefix);
         if (name) {
             // Override wallet file name with name:
-            strcpy(walletfile, name);
+            res = dogecoin_wallet_load(wallet, name, &error, &created);
         }
-        res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
-        dogecoin_free(walletfile);
-        dogecoin_free(wallet_type_prefix);
-        if (!res) {
-            showError("Loading wallet failed\n");
-            exit(EXIT_FAILURE);
+        else {
+            res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
         }
     }
     // else if name is set, use name for wallet file name:
     else if (name) {
         res = dogecoin_wallet_load(wallet, name, &error, &created);
-        if (!res) {
-            showError("Loading wallet failed\n");
-            exit(EXIT_FAILURE);
-        }
     }
     else {
         // prefix chain to wallet file name:
-        char* wallet_prefix = (char*)chain->chainname;
-        char* walletfile = concat(wallet_prefix, wallet_suffix);
+        walletfile = concat(wallet_prefix, wallet_suffix);
         res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
-        dogecoin_free(walletfile);
-        if (!res) {
-            showError("Loading wallet failed\n");
-            exit(EXIT_FAILURE);
-        }
+    }
+    dogecoin_free(walletfile);
+    if (!res) {
+        showError("Loading wallet failed\n");
+        exit(EXIT_FAILURE);
     }
     if (created) {
         // create a new key
@@ -422,6 +418,7 @@ int main(int argc, char* argv[]) {
     dogecoin_bool use_checkpoint = false;
     char* mnemonic_in = 0;
     char* name = 0;
+    char* headers_name = 0;
     dogecoin_bool full_sync = false;
     dogecoin_bool have_decl_daemon = false;
 
@@ -433,7 +430,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:bpz:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:a:w:h:bpz:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -468,6 +465,9 @@ int main(int argc, char* argv[]) {
                 case 'w':
                     name = optarg;
                     break;
+                case 'h':
+                    headers_name = optarg;
+                    break;
                 case 'z':
                     have_decl_daemon = true;
                     break;
@@ -494,9 +494,31 @@ int main(int argc, char* argv[]) {
 #endif
         char* header_suffix = "_headers.db";
         char* header_prefix = (char*)chain->chainname;
-        char* headersfile = concat(header_prefix, header_suffix);
+        char* headersfile = NULL;
+        dogecoin_bool response = false;
+        if (mnemonic_in) {
+            // mnemonic was provided, so store headers in separate file
+            char* wallet_type = "_mnemonic";
+            char* header_type_prefix = concat(header_prefix, wallet_type);
+            headersfile = concat(header_type_prefix, header_suffix);
+            dogecoin_free(header_type_prefix);
+            if (headers_name) {
+                // Load headers file name with headers name:
+                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name));
+            } else {
+                // Otherwise, use default headers file name:
+                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+            }
+        }
+        else if (headers_name) {
+            // Load headers file name with headers name:
+            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name));
+        } else {
+            // Otherwise, use default headers file name:
+            headersfile = concat(header_prefix, header_suffix);
+            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+        }
 
-        dogecoin_bool response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
         dogecoin_free(headersfile);
         if (!response) {
             printf("Could not load or create headers database...aborting\n");
