@@ -3,6 +3,7 @@
 [![CI](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ci.yml/badge.svg)](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ci.yml)[![CodeQL](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ql.yml/badge.svg)](https://github.com/dogecoinfoundation/libdogecoin/actions/workflows/ql.yml)
 
 ## Table of Contents
+
 - [Libdogecoin, a clean C library of Dogecoin building blocks.](#libdogecoin-a-clean-c-library-of-dogecoin-building-blocks)
   - [Table of Contents](#table-of-contents)
   - [What is Libdogecoin?](#what-is-libdogecoin)
@@ -20,7 +21,7 @@
 
 ## What is Libdogecoin?
 
-Libdogecoin will be a complete implementation of the Dogecoin Protocols, as a C library (and series of bindings to popular languages) which will allow anyone to build a Dogecoin compliant product, without needing to worry about the deeper, complicated specifics of the crypto functions. 
+Libdogecoin will be a complete implementation of the Dogecoin Protocols, as a C library (and series of bindings to popular languages) which will allow anyone to build a Dogecoin compliant product, without needing to worry about the deeper, complicated specifics of the crypto functions.
 
 Libdogecoin is here to make crypto development **simple**, **clean**, and **fun**!
 
@@ -35,23 +36,24 @@ It is intended that connecting the bits together into an engine be done at the l
 
 ### Advantages of Libdogecoin
 
-* No dependencies in case no p2p network client is required (only dependency is [libsecp256k1](https://github.com/bitcoin-core/secp256k1) added as git subtree)
-* The only dependency for the p2p network client is [libevent](https://github.com/libevent/libevent) (very portable)
-* optimized for MCU and low mem environments
-* ~full test coverage
-* mem leak free (valgrind check during CI)
+- No dependencies in case no p2p network client is required (only dependency is [libsecp256k1](https://github.com/bitcoin-core/secp256k1) added as git subtree)
+- The only dependency for the p2p network client is [libevent](https://github.com/libevent/libevent) (very portable)
+- optimized for MCU and low mem environments
+- ~full test coverage
+- mem leak free (valgrind check during CI)
 
 ### Current features
-* Generating and storing private and public keys
-* ECDSA secp256k1 signing and verification (through [libsecp256k1](https://github.com/bitcoin-core/secp256k1) included as git subtree)
-* Generate recoverable signatures (and recover pubkey from signatures)
-* BIP32 hierarchical deterministic key derivation
-* Transaction generation, manipulation, signing and ser-/deserialization including P2PKH, P2SH, multisig
-* Address generation
-* Base58check encoding
-* Native implementation of SHA256, SHA512, SHA512_HMAC, RIPEMD-160 including NIST testvectors
-* Native constant time AES (+256CBC) cipher implementation including NIST testvectors
-* Event based dogecoin P2P client capable of connecting to multiple nodes in a single thread (requires [libevent](https://github.com/libevent/libevent))
+
+- Generating and storing private and public keys
+- ECDSA secp256k1 signing and verification (through [libsecp256k1](https://github.com/bitcoin-core/secp256k1) included as git subtree)
+- Generate recoverable signatures (and recover pubkey from signatures)
+- BIP32 hierarchical deterministic key derivation
+- Transaction generation, manipulation, signing and ser-/deserialization including P2PKH, P2SH, multisig
+- Address generation
+- Base58check encoding
+- Native implementation of SHA256, SHA512, SHA512_HMAC, RIPEMD-160 including NIST testvectors
+- Native constant time AES (+256CBC) cipher implementation including NIST testvectors
+- Event based dogecoin P2P client capable of connecting to multiple nodes in a single thread (requires [libevent](https://github.com/libevent/libevent))
 
 ## Why C?
 
@@ -77,16 +79,16 @@ By contributing to this repository you agree to be a basic human being, please s
 
 ***TL;DR***: Initially during the early phase of development we'll keep this simple, after the library starts to become a dependency for real projects this will likely change.
 
-* Express interest and get added to the libdogecoin team on GitHub
+- Express interest and get added to the libdogecoin team on GitHub
   and join the conversation in the Foundation discord server.
-* Branch/PRs in this repository (see above point for access)
-* Rebasing not merging
-* Ensure tests
-* Document how Dogecoin works as each feature is developed in [`/doc/spec`](doc/spec)
-* 1 approval from another contributor required to merge to main
-* Don't introduce dependencies without discussion (MIT)
-* Collaborate before you innovate!
-* Have fun <3
+- Branch/PRs in this repository (see above point for access)
+- Rebasing not merging
+- Ensure tests
+- Document how Dogecoin works as each feature is developed in [`/doc/spec`](doc/spec)
+- 1 approval from another contributor required to merge to main
+- Don't introduce dependencies without discussion (MIT)
+- Collaborate before you innovate!
+- Have fun <3
 
 ## Repository Navigation
 
