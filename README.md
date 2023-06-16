@@ -59,7 +59,7 @@ The Dogecoin Core project is written in C++, why move to C? This is a good quest
 
 The Dogecoin Core project was inherited when Dogecoin was originally forked and makes use of some reasonable heavy C++ libraries that add complexity to the build process, as well as cognitive complexity for new developers.
 
-The desire is to provide a simple to learn library with few external dependencies that can be built with relatively little setup by new developers.  Furthermore the aim of providing wrappers for a number of higher-level languages leans strongly toward either C or RUST from a binding/support perspective, and we believe C still has significantly more support when writing bindings for a wide variety of other languages. Two such wrappers that previously lived here in this repository have been moved to their own respective projects (python and go wrappers) found at [@dogeorg](https://github.com/dogeorg).
+The desire is to provide a simple to learn library with few external dependencies that can be built with relatively little setup by new developers.  Furthermore the aim of providing wrappers for a number of higher-level languages leans strongly toward either C or RUST from a binding/support perspective, and we believe C still has significantly more support when writing bindings for a wide variety of other languages. Wrappers that previously lived here in this repository have been moved to their own respective projects (python and go bindings) found at [@dogeorg](https://github.com/dogeorg).
 
 ## Dogecoin Standard/Spec
 

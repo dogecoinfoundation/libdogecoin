@@ -123,19 +123,24 @@ int main() {
     dogecoin_ecc_stop();
 }
 ```
+
 The last step is to specify the libraries you will need to link into your project, done by using the `-l` flag. The libraries that are required to use Libdogecoin in your project are:
+
 - libdogecoin (of course!)
 - libevent
 
 On the command line, your final compilation will look something like the command below, factoring in all of the steps previously mentioned. _Note: the prefix "lib" is excluded when specifying libraries to link._
+
 ```
 gcc main.c -L./path/to/library/file -I./path/to/header/file -ldogecoin -levent -o myprojectname
 ```
+
 Congratulations, you have just built an executable program that implements Libdogecoin!
 
 ## Cross Compilation with Depends
 
 There may be times when you would like to build the library for a different operating system than you are currently running. You can do this relatively easily with `depends`, included in the Libdogecoin repo! The available operating systems you can choose from are the following:
+
 - arm-linux-gnueabihf
 - aarch64-linux-gnu
 - x86_64-pc-linux-gnu
@@ -145,24 +150,12 @@ There may be times when you would like to build the library for a different oper
 - i686-pc-linux-gnu
 
 The build steps for cross compilation are very similar to the native build steps listed above. Specify the desired architecture from the list above under by using the `host` flag, and include any necessary configuration flags on the `./configure` command:
+
 ```
 make -C depends host=<target_architecture>
 ./autogen.sh
 ./configure
 make check
 ```
+
 It is important to run `make check` after cross compiling to make sure that everything is running properly for your architecture. For some guidance on which configuration flags to run, you can refer to our [CI test file](../.github/workflows/ci.yml).
-
-## Calling from Python or Go
-
-The other option for integrating the Libdogecoin Essential API is by using the set of wrappers built from the library itself. To begin using them right out of the box, you can download the Python wrappers through `pip` with the following command:
-```
-pip3 install libdogecoin
-```
-Or download the Golang wrappers through `go get`:
-```
-go get -u github.com/jaxlotl/go-libdogecoin
-go mod tidy
-```
-
-For more information on integrating these into your project or building the wrappers manually, please refer to [bindings.md](bindings.md).
