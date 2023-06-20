@@ -169,7 +169,7 @@ Using Libdogecoin in your own project is very simple! Once the library is built,
 
 The following instructions show how to build and integrate libdogecoin under Linux, This will vary somewhat for other operating systems; but the process itself should be roughly analogous.
 
-In addition to the following instructions we've created an example file that contains functions stopping at version `0.1.2` which is found in `/contrib/examples/example.c`.
+In addition to the following instructions we've created an [example file](/contrib/examples/example.c) that contains functions stopping at version `0.1.2` which is found in `/contrib/examples/example.c`.
 
 To compile that example with `gcc`, first build libdogecoin so the resulting `.a` file will be found in `/.libs` and execute:
 
