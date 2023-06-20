@@ -55,16 +55,6 @@ To run the python valgrind tooltests run:
 ./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --valgrind
 ```
 
-To run the python wrappers test suite run (only available for `x86_64-pc-linux-gnu`):
-```
-./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --cython
-```
-
-To run the golang wrappers test suite run (only available for `x86_64-pc-linux-gnu`):
-```
-./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --go
-```
-
 Note that this was an example for setting up, building and testing the target-host-triplet `x86_64-pc-linux-gnu`.
 
 -----------

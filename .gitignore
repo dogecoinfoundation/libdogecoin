@@ -114,10 +114,7 @@ test-suite.log
 *.pc
 **/__pycache__/
 *.py[cod]
-libdogecoin.egg-info/
-**/libdogecoin.c
 dist/
-!wrappers/golang/libdogecoin/go.mod
 contrib/gitian/
 contrib/gitian/*
 example

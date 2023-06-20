@@ -8,7 +8,7 @@ is an important step toward a broader and more sustainable community of devs.
 
 With that in mind we're suggesting a staged approach to this project. Starting
 with the basics and delivering working vertical slices of functionality 
-as a useful C library with a handfull of higher level language wrappers early,
+as a useful C library with a handful of higher level language wrappers early,
 should force us to solve fundamental concerns such as language wrappers, testing
 and other issues before getting too far down a rabbit hole.
 

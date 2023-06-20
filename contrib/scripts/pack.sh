@@ -184,7 +184,7 @@ fi
 
 cp -r $DOCUMENTATION "$BUILD_PREFIX/$BUILD_SUFFIX/docs"
 pushd "$BUILD_PREFIX/$BUILD_SUFFIX/docs"
-    rm bindings.md project_roadmap.md release-process.md
+    rm project_roadmap.md release-process.md
 popd
 
 if [ ! -d "$BUILD_PREFIX/$BUILD_SUFFIX/docs" ]; then
