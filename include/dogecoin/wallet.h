@@ -33,17 +33,27 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
+#include <dogecoin/base58.h>
 #include <dogecoin/blockchain.h>
 #include <dogecoin/bip32.h>
+#include <dogecoin/bip39.h>
+#include <dogecoin/bip44.h>
 #include <dogecoin/buffer.h>
+#include <dogecoin/chainparams.h>
+#include <dogecoin/common.h>
 #include <dogecoin/constants.h>
+#include <dogecoin/koinu.h>
+#include <dogecoin/random.h>
+#include <dogecoin/serialize.h>
 #include <dogecoin/tx.h>
+#include <dogecoin/utils.h>
 
 #include <stdint.h>
 #include <stddef.h>
 
 /** single key/value record */
 typedef struct dogecoin_wallet_ {
+    const char* filename;
     FILE *dbfile;
     dogecoin_hdnode* masterkey;
     uint32_t next_childindex; //cached next child index
@@ -118,6 +128,7 @@ LIBDOGECOIN_API void dogecoin_wallet_output_free(dogecoin_output* output);
 /** ------------------------------------ */
 
 LIBDOGECOIN_API dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params);
+LIBDOGECOIN_API dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* mnemonic_in, const char* name);
 LIBDOGECOIN_API void dogecoin_wallet_free(dogecoin_wallet* wallet);
 
 /** load the wallet, sets masterkey, sets next_childindex */
