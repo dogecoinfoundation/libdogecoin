@@ -407,21 +407,15 @@ int main(int argc, char* argv[]) {
         dogecoin_ecc_stop();
     } else if (strcmp(data, "wallet") == 0) {
 #if WITH_WALLET
-#endif
     dogecoin_ecc_start();
     dogecoin_wallet_addr* waddr;
-
     if (address != NULL) {
         char delim[] = " ";
         // copy address into a new string, strtok modifies the string
         char* address_copy = strdup(address);
-
         char *ptr = strtok(address_copy, delim);
-
         while(ptr != NULL)
         {
-
-            
             dogecoin_wallet* wallet = dogecoin_wallet_read(ptr);
             waddr = dogecoin_wallet_addr_new();
             
@@ -444,29 +438,14 @@ int main(int argc, char* argv[]) {
                     }
                 }
             }
-            res = dogecoin_unregister_watch_address_with_node(ptr);
-            printf("unregistered:   %s\n", res ? "true" : "false");
-            // shouldn't run:
-            amount = dogecoin_get_balance(ptr);
-            if (amount > 0) {
-                printf("amount:         %s\n", dogecoin_get_balance_str(ptr));
-                unsigned int utxo_count = dogecoin_get_utxos_length(ptr);
-                if (utxo_count) {
-                    printf("utxo count:     %d\n", utxo_count);
-                    unsigned int i = 1;
-                    for (; i <= utxo_count; i++) {
-                        printf("txid:           %s\n", dogecoin_get_utxo_txid_str(ptr, i));
-                        printf("vout:           %d\n", dogecoin_get_utxo_vout(ptr, i));
-                        printf("amount:         %s\n\n", dogecoin_get_utxo_amount(ptr, i));
-                    }
-                }
-            }
-
             ptr = strtok(NULL, delim);
         }
+
+        int res = dogecoin_unregister_watch_address_with_node(address);
+        printf("unregistered:   %s\n", res ? "true" : "false");
     }
-    
     dogecoin_ecc_stop();
+#endif
     } else {
         printf("Invalid command (use -?)\n");
         ret = EXIT_FAILURE;
