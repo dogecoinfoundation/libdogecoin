@@ -416,12 +416,6 @@ int main(int argc, char* argv[]) {
         char *ptr = strtok(address_copy, delim);
         while(ptr != NULL)
         {
-            dogecoin_wallet* wallet = dogecoin_wallet_read(ptr);
-            waddr = dogecoin_wallet_addr_new();
-            
-            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr, wallet)) {
-                exit(EXIT_FAILURE);
-            }
             int res = dogecoin_register_watch_address_with_node(ptr);
             printf("registered:     %d %s\n", res, ptr);
             uint64_t amount = dogecoin_get_balance(ptr);

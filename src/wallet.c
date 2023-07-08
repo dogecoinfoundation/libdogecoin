@@ -1300,7 +1300,6 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
             dogecoin_mem_zero(addresses, strlen(address));
             for (; i < wallet->waddr_vector->len; i++) {
                 char* address_inner = vector_idx(wallet->waddr_vector, i);
-                size_t address_length = strlen(address_inner);
                 char p2pkh_tmp[35];
                 dogecoin_p2pkh_addr_from_hash160((const uint8_t*)address_inner, wallet->chain, p2pkh_tmp, 35);
                 if (strcmp(ptr, p2pkh_tmp)==0) {
@@ -1431,7 +1430,9 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
             if (found) {
                 rename("temp.bin", wallet->filename);
             } else remove("temp.bin");
+            dogecoin_wallet_flush(wallet);
             dogecoin_wallet_free(wallet);
+            dogecoin_wallet_free(wallet_new);
             ptr = strtok(NULL, delim);
         }
     } else return false;
