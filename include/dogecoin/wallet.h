@@ -96,6 +96,7 @@ typedef struct dogecoin_wallet_addr_{
     uint160 pubkeyhash;
     uint8_t type;
     uint32_t childindex;
+    dogecoin_bool ignore;
 } dogecoin_wallet_addr;
 
 typedef struct dogecoin_output_ {
