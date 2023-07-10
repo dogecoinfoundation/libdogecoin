@@ -1380,7 +1380,7 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                         dogecoin_wallet_addr_deserialize(waddr, wallet_new->chain, &cbuf);
                         char p2pkh[35];
                         dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, p2pkh, 35);
-                        const char* addr_match = find_needle(address, strlen(address), p2pkh, 35);
+                        const char* addr_match = find_needle(ptr, strlen(ptr), p2pkh, 35);
                         if (!addr_match) {
                             if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(p2pkh, waddr, wallet_new)) return false;
                             // add the node to the binary tree
@@ -1399,20 +1399,14 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                     dogecoin_wtx *wtx = dogecoin_wallet_wtx_new();
                     dogecoin_wallet_wtx_deserialize(wtx, &cbuf);
                     // loop through existing wallet and omit wtx's with matching address:
-                    dogecoin_bool match = false;
-                    unsigned j = 0;
-                    for (; j < wtx->tx->vout->len; j++) {
-                        dogecoin_tx_out* tx_out = vector_idx(wtx->tx->vout, j);
-                        char p2pkh[35];
-                        dogecoin_tx_out_pubkey_hash_to_p2pkh_address(tx_out, p2pkh, strcmp(wallet->chain->chainname, "main") == 0 ? true : false);
-                        if (strcmp(p2pkh, ptr) == 0) {
-                            match = true;
-                            break;
+                    unsigned int i = 0;
+                    for (; i < wallet_new->waddr_vector->len; i++) {
+                        const char* addr = vector_idx(wallet_new->waddr_vector, i);
+                        const char* match = find_needle(address, strlen(address), addr, strlen(addr));
+                        if (!match) {
+                            dogecoin_wallet_scrape_utxos(wallet_new, wtx);
+                            dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
                         }
-                    }
-                    if (!match) {
-                        dogecoin_wallet_scrape_utxos(wallet_new, wtx);
-                        dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
                     }
                 } else {
                     fseek(wallet->dbfile, reclen, SEEK_CUR);
@@ -1422,8 +1416,7 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
             if (found) {
                 rename("temp.bin", wallet->filename);
             } else remove("temp.bin");
-            dogecoin_wallet_flush(wallet);
-            dogecoin_free(wallet);
+            dogecoin_wallet_free(wallet);
             dogecoin_free(wallet_new);
         }
     } else return false;
