@@ -40,6 +40,7 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+#include <win/winunistd.h>
 #else
 #include <unistd.h>
 #endif
@@ -380,18 +381,15 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
         char delim[] = " ";
         // copy address into a new string, strtok modifies the string
         char* address_copy = strdup(address);
-
-        char *ptr = strtok(address_copy, delim);
-
-        while(ptr != NULL)
+        char *ptr;
+        while((ptr = strtok_r(address_copy, delim, &address_copy)))
         {
             waddr = dogecoin_wallet_addr_new();
-
-            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr, wallet)) {
-                exit(EXIT_FAILURE);
+            if (!waddr->ignore) {
+                if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr, wallet)) {
+                    exit(EXIT_FAILURE);
+                }
             }
-
-            ptr = strtok(NULL, delim);
         }
     }
 #ifdef USE_UNISTRING
@@ -696,6 +694,9 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
             fprintf(stderr, "Wallet file: different network\n");
             return false;
         }
+
+        dogecoin_wallet_addr *waddr;
+
         // read
         while (!feof(wallet->dbfile))
         {
@@ -734,7 +735,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                 wallet->masterkey = dogecoin_hdnode_new();
                 dogecoin_hdnode_deserialize(strbuf, wallet->chain, wallet->masterkey);
             } else if (rectype == WALLET_DB_REC_TYPE_ADDR) {
-                dogecoin_wallet_addr *waddr= dogecoin_wallet_addr_new();
+                waddr = dogecoin_wallet_addr_new();
                 size_t addr_len = 20+1+4+1;
                 unsigned char* buf = dogecoin_uchar_vla(addr_len);
                 struct const_buffer cbuf = {buf, addr_len};
@@ -744,17 +745,18 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
                 }
 
                 dogecoin_wallet_addr_deserialize(waddr, wallet->chain, &cbuf);
-                // add the node to the binary tree
-                dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
-                vector_add(wallet->waddr_vector, waddr);
-                wallet->next_childindex = waddr->childindex+1;
+                if (!waddr->ignore) {
+                    // add the node to the binary tree
+                    dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+                    vector_add(wallet->waddr_vector, waddr);
+                    wallet->next_childindex = waddr->childindex+1;
+                }
             } else if (rectype == WALLET_DB_REC_TYPE_TX) {
                 unsigned char* buf = dogecoin_uchar_vla(reclen);
                 struct const_buffer cbuf = {buf, reclen};
                 if (fread(buf, reclen, 1, wallet->dbfile) != 1) {
                     return false;
                 }
-
                 dogecoin_wtx *wtx = dogecoin_wallet_wtx_new();
                 dogecoin_wallet_wtx_deserialize(wtx, &cbuf);
                 dogecoin_wallet_scrape_utxos(wallet, wtx);
@@ -935,10 +937,12 @@ void dogecoin_wallet_get_addresses(dogecoin_wallet* wallet, vector* addr_out)
     unsigned int i;
     for (i = 0; i < wallet->waddr_vector->len; i++) {
         dogecoin_wallet_addr *waddr = vector_idx(wallet->waddr_vector, i);
-        size_t addrsize = 35;
-        char* addr = dogecoin_calloc(1, addrsize);
-        dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, addr, addrsize);
-        vector_add(addr_out, addr);
+        if (!waddr->ignore) {
+            size_t addrsize = 35;
+            char* addr = dogecoin_calloc(1, addrsize);
+            dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, addr, addrsize);
+            vector_add(addr_out, addr);
+        }
     }
 }
 
@@ -1297,12 +1301,23 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
         while((ptr = strtok_r(address_copy, delim, &address_copy)))
         {
             dogecoin_wallet* wallet = dogecoin_wallet_read(ptr);
-            int found = 0, error = 0;
+            int found = 0, error = 0, j = 0;
             dogecoin_bool created;
             // set up new wallet to store everything except our soon to be unregistered watch address:
             dogecoin_wallet* wallet_new = dogecoin_wallet_new(wallet->chain);
-            dogecoin_wallet_load(wallet_new, "temp.bin", &error, &created);
-            wallet_new->filename = "temp.bin";
+            char path[256];
+            getcwd(path, 256);
+            char win_delim[] = "\\";
+            char unix_delim[] = "/";
+#ifdef WIN32
+            char* oldname = concat(path, concat(win_delim, "temp.bin"));
+            char* newname = concat(path, concat(win_delim, wallet->filename));
+#else
+            char* oldname = concat(path, concat(unix_delim, "temp.bin"));
+            char* newname = concat(path, concat(unix_delim, wallet->filename));
+#endif
+            dogecoin_wallet_load(wallet_new, oldname, &error, &created);
+            wallet_new->filename = oldname;
             dogecoin_wallet_addr* waddr_check = dogecoin_wallet_addr_new();
             // convert address to 20 byte script hash:
             dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr_check, wallet);
@@ -1409,15 +1424,38 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                         }
                     }
                 } else {
+                    printf("reclen: %d\n", reclen);
                     fseek(wallet->dbfile, reclen, SEEK_CUR);
                 }
             }
 
-            if (found) {
-                rename("temp.bin", wallet->filename);
-            } else remove("temp.bin");
+            dogecoin_wallet_flush(wallet);
             dogecoin_wallet_free(wallet);
+            dogecoin_wallet_flush(wallet_new);
             dogecoin_free(wallet_new);
+            if (found) {
+                /* Attempt to rename file: */
+#ifdef WIN32
+#include <winbase.h>
+                int result = DeleteFile(oldname);
+                if (result != 0) printf("DeleteFile failed: %d\n", result);
+                result = MoveFile(oldname, newname);
+#else
+                int result = rename( oldname, newname );
+#endif
+                if( result != 0 )
+                    printf( "Could not rename '%s' %d\n", oldname, result );
+                else
+                    printf( "File '%s' renamed to '%s' for %s\n", oldname, newname, ptr );
+            } else {
+#ifndef WIN32
+                int res = remove(oldname);
+                if (!res) {
+                    printf("remove failed!\n");
+                    return false;
+                }
+#endif
+            }
         }
     } else return false;
     return true;
