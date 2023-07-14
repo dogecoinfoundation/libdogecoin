@@ -136,6 +136,9 @@ LIBDOGECOIN_API void dogecoin_wallet_free(dogecoin_wallet* wallet);
 /** load the wallet, sets masterkey, sets next_childindex */
 LIBDOGECOIN_API dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_path, int *error, dogecoin_bool *created);
 
+/** load the wallet and replace a record */
+LIBDOGECOIN_API dogecoin_bool dogecoin_wallet_replace(dogecoin_wallet* wallet, const char* file_path, cstring* record, uint8_t record_type, int *error);
+
 /** writes the wallet state to disk */
 LIBDOGECOIN_API dogecoin_bool dogecoin_wallet_flush(dogecoin_wallet* wallet);
 
