@@ -39,7 +39,6 @@
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
-#include <stdio.h>
 #include <win/winunistd.h>
 #else
 #include <unistd.h>
@@ -1489,7 +1488,6 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
             }
 
             dogecoin_wallet_flush(wallet);
-            _fcloseall();
             dogecoin_wallet_free(wallet);
             dogecoin_wallet_flush(wallet_new);
             dogecoin_free(wallet_new);
@@ -1497,6 +1495,7 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                 /* Attempt to rename file: */
 #ifdef WIN32
 #include <winbase.h>
+                _fcloseall();
                 LPVOID message;
                 int result = DeleteFile(newname);
                 if (!result) {
