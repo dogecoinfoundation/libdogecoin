@@ -1447,15 +1447,16 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                         dogecoin_wallet_addr_free(waddr);
                         return false;
                     }
+                    char p2pkh_check[35];
+                    dogecoin_wallet_addr_deserialize(waddr, wallet_new->chain, &cbuf);
+                    dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, p2pkh_check, 35);
                     if (memcmp(record->str, buf, record->len)==0) {
                         found = 1;
+                        dogecoin_btree_tdelete(waddr, &wallet_new->waddr_rbtree, dogecoin_wallet_addr_compare);
                     } else {
-                        dogecoin_wallet_addr_deserialize(waddr, wallet_new->chain, &cbuf);
-                        char p2pkh[35];
-                        dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, p2pkh, 35);
-                        const char* addr_match = find_needle(ptr, strlen(ptr), p2pkh, 35);
+                        const char* addr_match = find_needle(ptr, strlen(ptr), p2pkh_check, 35);
                         if (!addr_match) {
-                            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(p2pkh, waddr, wallet_new)) return false;
+                            if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(p2pkh_check, waddr, wallet_new)) return false;
                             // add the node to the binary tree
                             dogecoin_btree_tsearch(waddr, &wallet_new->waddr_rbtree, dogecoin_wallet_addr_compare);
                             vector_add(wallet_new->waddr_vector, waddr);
@@ -1474,15 +1475,16 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                     // loop through existing wallet and omit wtx's with matching address:
                     unsigned int i = 0;
                     for (; i < wallet_new->waddr_vector->len; i++) {
-                        const char* addr = vector_idx(wallet_new->waddr_vector, i);
-                        const char* match = find_needle(address, strlen(address), addr, strlen(addr));
+                        char p2pkh_check[35];
+                        dogecoin_wallet_addr* addr_check = vector_idx(wallet_new->waddr_vector, i);
+                        dogecoin_p2pkh_addr_from_hash160(addr_check->pubkeyhash, wallet->chain, p2pkh_check, 35);
+                        const char* match = find_needle(address, strlen(address), p2pkh_check, strlen(p2pkh_check));
                         if (!match) {
                             dogecoin_wallet_scrape_utxos(wallet_new, wtx);
                             dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
                         }
                     }
                 } else {
-                    printf("reclen: %d\n", reclen);
                     fseek(wallet->dbfile, reclen, SEEK_CUR);
                 }
             }
