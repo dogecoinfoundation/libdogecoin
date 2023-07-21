@@ -644,7 +644,7 @@ dogecoin_bool dogecoin_wallet_create(dogecoin_wallet* wallet, const char* file_p
     }
 
     wallet->filename = file_path;
-    wallet->dbfile = fopen(file_path, "w+b");
+    wallet->dbfile = fopen(file_path, "a+b");
 
     // write file-header-magic
     if (fwrite(file_hdr_magic, 4, 1, wallet->dbfile) != 1) return false;
@@ -769,7 +769,7 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
     *created = true;
     if (stat(file_path, &buffer) == 0) *created = false;
 
-    wallet->dbfile = fopen(file_path, *created ? "w+b" : "r+b");
+    wallet->dbfile = fopen(file_path, *created ? "a+b" : "r+b");
 
     if (*created) {
         if (!dogecoin_wallet_create(wallet, file_path, error)) {
@@ -1452,13 +1452,10 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                     dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, wallet->chain, p2pkh_check, 35);
                     if (memcmp(record->str, buf, record->len)==0) {
                         found = 1;
-                        dogecoin_btree_tdelete(waddr, &wallet_new->waddr_rbtree, dogecoin_wallet_addr_compare);
                     } else {
                         const char* addr_match = find_needle(ptr, strlen(ptr), p2pkh_check, 35);
                         if (!addr_match) {
                             if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(p2pkh_check, waddr, wallet_new)) return false;
-                            // add the node to the binary tree
-                            dogecoin_btree_tsearch(waddr, &wallet_new->waddr_rbtree, dogecoin_wallet_addr_compare);
                         }
                     }
                 } else if (rectype == WALLET_DB_REC_TYPE_TX) {
