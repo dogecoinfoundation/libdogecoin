@@ -208,9 +208,9 @@ jobs:
           make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
           mkdir -p $build_dir/bin $build_dir/docs $build_dir/examples $build_dir/include $build_dir/lib
           if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
-              cp such.exe sendtx.exe $build_dir/bin/
+              cp spvnode.exe such.exe sendtx.exe $build_dir/bin/
           else
-              cp such sendtx $build_dir/bin/
+              cp spvnode such sendtx $build_dir/bin/
           fi
           cp doc/*.md $build_dir/docs/
           cp contrib/examples/example.c $build_dir/examples/
