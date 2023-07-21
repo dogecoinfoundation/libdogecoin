@@ -1459,8 +1459,6 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                             if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(p2pkh_check, waddr, wallet_new)) return false;
                             // add the node to the binary tree
                             dogecoin_btree_tsearch(waddr, &wallet_new->waddr_rbtree, dogecoin_wallet_addr_compare);
-                            vector_add(wallet_new->waddr_vector, waddr);
-                            wallet_new->next_childindex = waddr->childindex+1;
                         }
                     }
                 } else if (rectype == WALLET_DB_REC_TYPE_TX) {
