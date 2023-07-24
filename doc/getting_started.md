@@ -158,10 +158,13 @@ Congratulations, you have just built an executable program that implements Libdo
 There may be times when you would like to build the library for a different operating system than you are currently running. You can do this relatively easily with `depends`, included in the Libdogecoin repo! The available operating systems you can choose from are the following:
 
 - arm-linux-gnueabihf
+- armv7a-linux-android
 - aarch64-linux-gnu
+- aarch64-linux-android
 - x86_64-pc-linux-gnu
 - x86_64-apple-darwin
 - x86_64-w64-mingw32
+- x86_64-linux-android
 - i686-w64-mingw32
 - i686-pc-linux-gnu
 
