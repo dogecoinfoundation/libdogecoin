@@ -1469,9 +1469,9 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                     dogecoin_wallet_wtx_deserialize(wtx, &cbuf);
                     // loop through existing wallet and omit wtx's with matching address:
                     unsigned int i = 0;
-                    for (; i < wallet_new->waddr_vector->len; i++) {
+                    for (; i < wallet->waddr_vector->len; i++) {
                         char p2pkh_check[35];
-                        dogecoin_wallet_addr* addr_check = vector_idx(wallet_new->waddr_vector, i);
+                        dogecoin_wallet_addr* addr_check = vector_idx(wallet->waddr_vector, i);
                         dogecoin_p2pkh_addr_from_hash160(addr_check->pubkeyhash, wallet->chain, p2pkh_check, 35);
                         const char* match = find_needle(address, strlen(address), p2pkh_check, strlen(p2pkh_check));
                         if (!match) {
