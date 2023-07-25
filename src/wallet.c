@@ -1475,10 +1475,12 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                         dogecoin_p2pkh_addr_from_hash160(addr_check->pubkeyhash, wallet->chain, p2pkh_check, 35);
                         const char* match = find_needle(address, strlen(address), p2pkh_check, strlen(p2pkh_check));
                         if (!match) {
-                            dogecoin_wallet_scrape_utxos(wallet_new, wtx);
-                            dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
+                            goto copy;
                         }
                     }
+copy:                    
+                    dogecoin_wallet_scrape_utxos(wallet_new, wtx);
+                    dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
                 } else {
                     fseek(wallet->dbfile, reclen, SEEK_CUR);
                 }
