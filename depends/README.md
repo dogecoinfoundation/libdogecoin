@@ -26,6 +26,9 @@ Common `host-platform-triplets` for cross compilation are:
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `x86_64-linux-gnu` for Linux 64 bit
+- `armv7a-linux-android` for Android ARM 32 bit
+- `aarch64-linux-android` for Android ARM 64 bit
+- `x86_64-linux-android` for Android x86 64 bit
 
 No other options are needed, the paths are automatically configured.
 
@@ -34,7 +37,9 @@ The following can be set when running make: make FOO=bar
 
     SOURCES_PATH: downloaded sources will be placed here
     BASE_CACHE: built packages will be placed here
-    SDK_PATH: Path where sdk's can be found (used by OSX)
+    SDK_PATH: Path where sdk's can be found (used by OSX and Android)
+    ANDROID_TOOLCHAIN_BIN: Path to Android toolchain if installed via Android SDK Manager
+    ANDROID_API_LEVEL: API level corresponding to the Android version targeted
     FALLBACK_DOWNLOAD_PATH: If a source file can't be fetched, try here before giving up
     DEBUG: disable some optimizations and enable more runtime checking
     HOST_ID_SALT: Optional salt to use when generating host package ids
