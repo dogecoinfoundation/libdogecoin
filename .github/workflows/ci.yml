@@ -18,7 +18,8 @@ jobs:
       CCACHE_TEMPDIR: /tmp/.ccache-temp
       CCACHE_COMPRESS: "1"
       PYTHON_DEBUG: "1"
-      SDK_URL: https://bitcoincore.org/depends-sources/sdks
+      MAC_SDK_URL: https://bitcoincore.org/depends-sources/sdks
+      ANDROID_NDK_URL: https://dl.google.com/android/repository/
 
     strategy:
       fail-fast: false
@@ -26,6 +27,7 @@ jobs:
         name:
           - armhf-linux
           - aarch64-linux
+          - aarch64-android
           - x86_64-linux-dbg
           - x86_64-linux-openenclave
           - x86_64-macos
@@ -51,6 +53,16 @@ jobs:
             config-opts: "LIBS='-levent_pthreads' --enable-static --disable-shared --enable-test-passwd"
             run-tests: true
             goal: install
+          - name: aarch64-android
+            host: aarch64-linux-android
+            os: ubuntu-20.04
+            packages: unzip
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
+            config-opts: "--enable-static --disable-shared"
+            run-tests: false
+            goal: install
+            android-ndk: android-ndk-r25c-linux
+            android-ndk-shasum: "769ee342ea75f80619d985c2da990c48b3d8eaf45f48783a2d48870d04b46108"
           - name: x86_64-linux-dbg
             host: x86_64-pc-linux-gnu
             os: ubuntu-20.04
@@ -75,9 +87,9 @@ jobs:
             config-opts: "--enable-static --disable-shared --enable-test-passwd"
             packages: cmake zlib xorriso
             goal: install
-            sdk: 12.2
-            sdk-build: 12B45b
-            sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
+            mac-sdk: 12.1
+            mac-sdk-build: 12A7403
+            mac-sdk-shasum: "be17f48fd0b08fb4dcd229f55a6ae48d9f781d210839b4ea313ef17dd12d6ea5"
           # - name: arm64-macos
           #   host: arm64-apple-darwin
           #   os: macos-latest
@@ -86,9 +98,9 @@ jobs:
           #   config-opts: ""
           #   packages: cmake zlib xorriso
           #   goal: install
-          #   sdk: 12.2
-          #   sdk-build: 12B45b
-          #   sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
+          #   mac-sdk: 12.2
+          #   mac-sdk-build: 12B45b
+          #   mac-sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
@@ -177,8 +189,8 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
-      - name: sdk cache
-        if: ${{ matrix.sdk }}
+      - name: mac sdk cache
+        if: ${{ matrix.mac-sdk }}
         uses: actions/cache@v4
         env:
           cache-name: sdk
@@ -186,17 +198,38 @@ jobs:
           path: ./depends/sdk-sources
           key: ${{ matrix.name }}-${{ env.cache-name }}-${{ hashFiles('.github/workflows/ci.yml') }}
 
-      - name: install sdk
-        if: ${{ matrix.sdk }}
+      - name: install mac sdk
+        if: ${{ matrix.mac-sdk }}
         env:
-          sdk-filename: Xcode-${{ matrix.sdk }}-${{ matrix.sdk-build }}-extracted-SDK-with-libcxx-headers.tar.gz
+          sdk-filename: Xcode-${{ matrix.mac-sdk }}-${{ matrix.mac-sdk-build }}-extracted-SDK-with-libcxx-headers.tar.gz
         run: |
           mkdir -p ./depends/sdk-sources
           mkdir -p ./depends/SDKs
-          echo "${{ matrix.sdk-shasum }}  depends/sdk-sources/${{ env.sdk-filename }}" | sha256sum -c || \
-          curl --location --fail $SDK_URL/${{ env.sdk-filename }} -o depends/sdk-sources/${{ env.sdk-filename }} &&\
-          echo "${{ matrix.sdk-shasum }}  depends/sdk-sources/${{ env.sdk-filename }}" | sha256sum -c
+          echo "${{ matrix.mac-sdk-shasum }}  depends/sdk-sources/${{ env.sdk-filename }}" | sha256sum -c || \
+          curl --location --fail $MAC_SDK_URL/${{ env.sdk-filename }} -o depends/sdk-sources/${{ env.sdk-filename }} &&\
+          echo "${{ matrix.mac-sdk-shasum }}  depends/sdk-sources/${{ env.sdk-filename }}" | sha256sum -c
           tar -C depends/SDKs -xf depends/sdk-sources/${{ env.sdk-filename }}
+
+      - name: android ndk cache
+        if: ${{ matrix.android-ndk }}
+        uses: actions/cache@v3
+        env:
+          cache-name: android-ndk
+        with:
+          path: ./depends/sdk-sources
+          key: ${{ matrix.name }}-${{ env.cache-name }}-${{ hashFiles('.github/workflows/ci.yml') }}
+
+      - name: install android ndk
+        if: ${{ matrix.android-ndk }}
+        env:
+          ndk-filename: ${{ matrix.android-ndk }}.zip
+        run: |
+          mkdir -p ./depends/sdk-sources
+          mkdir -p ./depends/SDKs
+          echo "${{ matrix.android-ndk-shasum }}  depends/sdk-sources/${{ env.ndk-filename }}" | sha256sum -c || \
+          curl --location --fail $ANDROID_NDK_URL/${{ env.ndk-filename }} -o depends/sdk-sources/${{ env.ndk-filename }} &&\
+          echo "${{ matrix.android-ndk-shasum }}  depends/sdk-sources/${{ env.ndk-filename }}" | sha256sum -c
+          unzip depends/sdk-sources/${{ env.ndk-filename }} -d depends/SDKs
 
       - name: dependency cache
         uses: actions/cache@v4
