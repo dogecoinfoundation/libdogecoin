@@ -369,6 +369,31 @@ void swap_bytes(uint8_t *buf, int buf_size) {
     }
 }
 
+const char *find_needle(const char *haystack, size_t haystack_length, const char *needle, size_t needle_length) {
+    size_t haystack_index = 0;
+    for (; haystack_index < haystack_length; haystack_index++) {
+
+        bool needle_found = true;
+        size_t needle_index = 0;
+        for (; needle_index < needle_length; needle_index++) {
+            const auto haystack_character = haystack[haystack_index + needle_index];
+            const auto needle_character = needle[needle_index];
+            if (haystack_character == needle_character) {
+                continue;
+            } else {
+                needle_found = false;
+                break;
+            }
+        }
+
+        if (needle_found) {
+            return &haystack[haystack_index];
+        }
+    }
+
+    return NULL;
+}
+
 /**
  * @brief This function executes malloc() but exits the
  * program if unsuccessful.
