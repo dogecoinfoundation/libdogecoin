@@ -136,6 +136,28 @@ int main() {
 	dogecoin_free(extout);
 	// END ===========================================
 
+	// TOOLS EXAMPLE
+        printf("\n\nTOOLS EXAMPLE:\n\n");
+        char addr[100];
+        if (addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr)) {
+	        printf ("addr: %s\n", addr);
+        }
+
+        size_t pubkeylen = 100;
+        char* pubkey=dogecoin_char_vla(pubkeylen);
+        if (pubkey_from_privatekey(&dogecoin_chainparams_main, "QUaohmokNWroj71dRtmPSses5eRw5SGLKsYSRSVisJHyZdxhdDCZ", pubkey, &pubkeylen)) {
+	        printf ("pubkey: %s\n", pubkey);
+	}
+
+        size_t privkeywiflen = 100;
+        char* privkeywif=dogecoin_char_vla(privkeywiflen);
+        char privkeyhex[100];
+        if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, NULL)) {
+                if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, privkeyhex)) {
+		        printf ("privkeywif: %s\n", privkeywif);
+	        }
+        }
+	// END ===========================================
 
 	// BASIC TRANSACTION FORMATION EXAMPLE
 	printf("\n\nBEGIN TRANSACTION FORMATION AND SIGNING:\n\n");
