@@ -118,6 +118,13 @@ dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const ch
 /* generate a new private key (hex) */
 dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wif, size_t strsize_wif, char* privkey_hex);
 
+/* p2pkh utilities */
+int dogecoin_tx_out_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p2pkh, int is_mainnet);
+dogecoin_bool dogecoin_pubkey_hash_to_p2pkh_address(char* script_pubkey_hex, size_t script_pubkey_hex_length, char* p2pkh, const dogecoin_chainparams* chain);
+dogecoin_bool dogecoin_p2pkh_address_to_pubkey_hash(char* p2pkh, char* scripthash);
+char* dogecoin_address_to_pubkey_hash(char* p2pkh);
+char* dogecoin_private_key_wif_to_pubkey_hash(char* private_key_wif);
+
 /* Advanced API functions for mnemonic seedphrase generation
 --------------------------------------------------------------------------
 */
