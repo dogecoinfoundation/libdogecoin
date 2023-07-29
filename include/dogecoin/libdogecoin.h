@@ -109,6 +109,15 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
 /* get derived hd address by custom path */
 int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
 
+/* generate the p2pkh address from a given hex pubkey */
+dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address);
+
+/* generate the hex publickey from a given hex private key */
+dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_hex, char* pubkey_hex, size_t* sizeout);
+
+/* generate a new private key (hex) */
+dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wif, size_t strsize_wif, char* privkey_hex);
+
 /* Advanced API functions for mnemonic seedphrase generation
 --------------------------------------------------------------------------
 */
