@@ -159,15 +159,77 @@ int main() {
         }
 	// END ===========================================
 
+	// BIP44 EXAMPLE
+        printf("\n\nBIP44 EXAMPLE:\n\n");
+
+        int result;
+        dogecoin_hdnode node;
+        dogecoin_hdnode bip44_key;
+        char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+        size_t size;
+
+        dogecoin_hdnode_from_seed(utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f"), 16, &node);
+        printf ("seed: 000102030405060708090a0b0c0d0e0f\n");
+
+        char master_key_str[112];
+
+        // Print the master key (MAINNET)
+        dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_main, master_key_str, sizeof(master_key_str));
+        printf("BIP32 master pub key: %s\n", master_key_str);
+        dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_main, master_key_str, sizeof(master_key_str));
+        printf("BIP32 master prv key: %s\n", master_key_str);
+
+        char* change_level = BIP44_CHANGE_EXTERNAL;
+
+        // Derive the BIP 44 extended key
+        result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, NULL, change_level, NULL, false, keypath, &bip44_key);
+
+        // Print the BIP 44 extended private key
+        char bip44_private_key[112];
+        dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
+        printf("BIP44 extended private key: %s\n", bip44_private_key);
+
+        char str[112];
+
+        // Print the BIP 44 extended public key
+        char bip44_public_key[112];
+        dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
+        printf("BIP44 extended public key: %s\n", bip44_public_key);
+
+        printf("%s", "Derived Addresses\n");
+
+            char wifstr[100];
+            size_t wiflen = 100;
+
+        for (uint32_t index = BIP44_FIRST_ACCOUNT_NODE; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
+            // Derive the addresses
+            result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, &index, change_level, NULL, false, keypath, &bip44_key);
+
+            // Print the private key
+            dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
+            printf("private key (serialized): %s\n", bip44_private_key);
+
+            // Print the public key
+            dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
+            printf("public key (serialized): %s\n", bip44_public_key);
+
+            // Print the wif private key
+            dogecoin_privkey_encode_wif((dogecoin_key*) bip44_key.private_key, &dogecoin_chainparams_main, wifstr, &wiflen);
+            printf("private key (wif): %s\n", wifstr);
+
+            // Print the p2pkh address
+            dogecoin_hdnode_get_p2pkh_address(&bip44_key, &dogecoin_chainparams_main, str, sizeof(str));
+            printf("Address: %s\n", str);
+        }
+
 	// BASIC TRANSACTION FORMATION EXAMPLE
 	printf("\n\nBEGIN TRANSACTION FORMATION AND SIGNING:\n\n");
 	// declare keys and previous hashes
 	char *external_p2pkh_addr = 	"nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
-	char *myprivkey = 				"ci5prbqz7jXyFPVWKkHhPq4a9N8Dag3TpeRfuqqC2Nfr7gSqx1fy";
-	char *mypubkey = 				"noxKJyGPugPRN4wqvrwsrtYXuQCk7yQEsy";
-	char *myscriptpubkey = 			"76a914d8c43e6f68ca4ea1e9b93da2d1e3a95118fa4a7c88ac";
 	char *hash_2_doge = 			"b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
 	char *hash_10_doge = 			"42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2";
+        char myscriptpubkey [100];
+        dogecoin_p2pkh_address_to_pubkey_hash (str, myscriptpubkey);
 
 	// build transaction
 	int idx = start_transaction();
@@ -199,9 +261,9 @@ int main() {
 
 	// save the finalized unsigned transaction to a new index in the hash table
 	// save the finalized unsigned transaction to a new index in the hash table
-	int idx2 = store_raw_transaction(finalize_transaction(idx, external_p2pkh_addr, "0.00226", "12", mypubkey));
+	int idx2 = store_raw_transaction(finalize_transaction(idx, external_p2pkh_addr, "0.00226", "12", str));
 	if (idx2 > 0) {
-		printf("Change returned to address %s and finalized unsigned transaction saved at index %d.\n", mypubkey, idx2);
+		printf("Change returned to address %s and finalized unsigned transaction saved at index %d.\n", str, idx2);
 	}
 	else {
 		printf("Error occurred.\n");
@@ -209,7 +271,7 @@ int main() {
 	}
 
 	// sign transaction
-	if (sign_transaction(idx, myscriptpubkey, myprivkey)) {
+	if (sign_transaction(idx, myscriptpubkey, wifstr)) {
 		printf("\nAll transaction inputs signed successfully. \nFinal transaction hex: %s\n.", get_raw_transaction(idx));
 	}
 	else {
