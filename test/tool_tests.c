@@ -9,7 +9,6 @@
 #include <test/utest.h>
 
 #include <dogecoin/chainparams.h>
-#include <dogecoin/constants.h>
 #include <dogecoin/base58.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/utils.h>

@@ -38,7 +38,6 @@
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/base58.h>
-#include <dogecoin/chainparams.h>
 #include <dogecoin/ecc.h>
 #include <dogecoin/key.h>
 #include <dogecoin/random.h>
