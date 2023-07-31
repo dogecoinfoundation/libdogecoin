@@ -206,6 +206,32 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
 }
 
 /**
+ * @brief This function converts an HD extended private address
+ *        (e.g. dgpv, tprv) to a WIF-encoded private key.
+ * 
+ * @param extended_private The extended HD private key (e.g. dgpv, tprv)
+ * @param out_privkey_wif output buffer for the WIF-encoded private key,
+ *                        at least WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN chars
+ * 
+ * @return dogecoin_bool (uint8_t)
+ */
+int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif)
+{
+    const dogecoin_chainparams* chain = chain_from_bip32_prefix(extended_private);
+    if (!chain) {
+        return false;
+    }
+    dogecoin_hdnode node;
+    if (!dogecoin_hdnode_deserialize(extended_private, chain, &node)) {
+        return false;
+    }
+    size_t out_size = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
+    dogecoin_bool result = dogecoin_hdnode_serialize_privkey_wif(&node, chain, out_privkey_wif, &out_size);
+    dogecoin_hdnode_clear(&node);
+    return result;
+}
+
+/**
  * @brief This function verifies that a given private key
  * matches a given public key and that both are valid on
  * the specified network.

@@ -42,6 +42,9 @@ LIBDOGECOIN_API int generateHDMasterPubKeypair(char* wif_privkey_master, char* p
 /* generate an extended public key */
 LIBDOGECOIN_API int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
 
+/* converts an extended HD private address (dgpv, tprv) to a WIF-encoded private key */
+LIBDOGECOIN_API int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif);
+
 /* verify private and public keys are valid and associated with each other*/
 LIBDOGECOIN_API int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
 

@@ -94,6 +94,9 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
 /* generates a new dogecoin address from a HD master key */
 int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
 
+/* converts an extended HD private address (dgpv, tprv) to a WIF-encoded private key */
+int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif);
+
 /* verify that a private key and dogecoin address match */
 int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
 

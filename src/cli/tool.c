@@ -220,28 +220,3 @@ dogecoin_bool hd_derive(const dogecoin_chainparams* chain, const char* masterkey
         dogecoin_hdnode_serialize_private(&nodenew, chain, extkeyout, extkeyout_size);
     return true;
 }
-
-/**
- * @brief Convert a BIP32 extended private key to WIF format
- * 
- * @param hd_privkey The serialized extended private key (e.g. dgpv, tprv)
- * @param out_privkey_wif output buffer for the private key in WIF format
- * @param inout_size the size of the buffer (at least WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN)
- *                   on return, contains the length written (including '\0')
- * 
- * @return dogecoin_bool (uint8_t)
- */
-dogecoin_bool hd_privkey_wif(const char* hd_privkey, char* out_privkey_wif, size_t *inout_size)
-{
-    const dogecoin_chainparams* chain = chain_from_bip32_prefix(hd_privkey);
-    if (!chain) {
-        return false;
-    }
-    dogecoin_hdnode node;
-    if (!dogecoin_hdnode_deserialize(hd_privkey, chain, &node)) {
-        return false;
-    }
-    dogecoin_bool result = dogecoin_hdnode_serialize_privkey_wif(&node, chain, out_privkey_wif, inout_size);
-    dogecoin_hdnode_clear(&node);
-    return result;
-}

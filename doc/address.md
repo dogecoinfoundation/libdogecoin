@@ -118,6 +118,8 @@ int main() {
 
 This function will populate provided string variables (privkey, pubkey) with freshly generated respective private and public keys for a hierarchical deterministic wallet, specifically for either mainnet or testnet as specified through the network flag (is_testnet). The function returns 1 on success and 0 on failure.
 
+The resulting wif_privkey_master is also known as the "extended master key" or "masterkey".
+
 _C usage:_
 
 ```C
@@ -148,6 +150,9 @@ int main() {
 
 This function takes a given HD master private key (wif_privkey_master) and loads it into the provided pointer for the resulting derived public key (p2pkh_pubkey). This private key input should come from the result of generateHDMasterPubKeypair(). The function returns 1 on success and 0 on failure.
 
+This function also works with any extended HD public address (e.g. dgub, tpub) from getDerivedHDAddress
+or getDerivedHDAddressByPath, to get the corresponding public P2PKH Address (Dogecoin Address)
+
 _C usage:_
 
 ```C
@@ -170,6 +175,44 @@ int main() {
   printf("master private key: %s\n", masterPrivKey);
   printf("master public key: %s\n", masterPubKey);
   printf("derived child key: %s\n", childPubKey);
+}
+```
+
+---
+
+### **generateDerivedHDPrivKeyWIF**
+
+`int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif)`
+
+This function converts an extended HD private address (e.g. dgpv, tprv) to a WIF-encoded private key.
+
+It works with any extended HD private address from getDerivedHDAddress or getDerivedHDAddressByPath,
+to get the corresponding WIF-encoded private key for the child address.
+
+You will need a WIF-encoded private key to sign transactions.
+
+_C usage:_
+
+```C
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+  char masterPrivKey[HD_MASTERKEY_STRINGLEN]; 
+  char masterPubKey[P2PKH_ADDR_STRINGLEN];
+  char childHDPrivate[HD_MASTERKEY_STRINGLEN];
+  char privkeyWIF[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN];
+
+  dogecoin_ecc_start();
+  generateHDMasterPubKeypair(masterPrivKey, masterPubKey, false);
+  getDerivedHDAddress(masterPrivKey, 0, false, 1, childHDPrivate, true);
+  generateDerivedHDPrivKeyWIF(childHDPrivate, privkeyWIF);
+  dogecoin_ecc_stop();
+
+  printf("master private key: %s\n", masterPrivKey);
+  printf("master public key: %s\n", masterPubKey);
+  printf("derived child key: %s\n", childHDPrivate);
+  printf("derived privkey WIF: %s\n", privkeyWIF);
 }
 ```
 
@@ -281,7 +324,7 @@ int main() {
 
 `int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey)`
 
-This function derives a hierarchical deterministic address by way of providing the extended master key, account, ischange and addressindex.
+This function derives a hierarchical deterministic address (extended HD address) by way of providing the extended master key, account, ischange and addressindex.
 It will return 1 if the function is successful and 0 if not.
 
 _C usage:_

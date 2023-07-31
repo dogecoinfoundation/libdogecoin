@@ -46,9 +46,6 @@ LIBDOGECOIN_API dogecoin_bool hd_gen_master(const dogecoin_chainparams* chain, c
 LIBDOGECOIN_API dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodeser);
 LIBDOGECOIN_API dogecoin_bool hd_derive(const dogecoin_chainparams* chain, const char* masterkey, const char* keypath, char* extkeyout, size_t extkeyout_size);
 
-/* convert a BIP32 extended private key (e.g. dgpv, tprv) to a WIF private key */
-LIBDOGECOIN_API dogecoin_bool hd_privkey_wif(const char* hd_privkey, char* out_privkey_wif, size_t *inout_size);
-
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_TOOL_H__
