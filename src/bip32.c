@@ -32,6 +32,7 @@
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/base58.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/ecc.h>
 #include <dogecoin/hash.h>
 #include <dogecoin/key.h>
@@ -124,6 +125,21 @@ void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
     dogecoin_mem_zero(hdnode->private_key, sizeof(hdnode->private_key));
     dogecoin_mem_zero(hdnode->public_key, sizeof(hdnode->public_key));
     dogecoin_free(hdnode);
+}
+
+
+/**
+ * @brief This function clears an HD node object in memory.
+ * 
+ * @param hdnode The HD node to be cleared.
+ * 
+ * @return Nothing.
+ */
+void dogecoin_hdnode_clear(dogecoin_hdnode* hdnode)
+{
+    dogecoin_mem_zero(hdnode->chain_code, sizeof(hdnode->chain_code));
+    dogecoin_mem_zero(hdnode->private_key, sizeof(hdnode->private_key));
+    dogecoin_mem_zero(hdnode->public_key, sizeof(hdnode->public_key));
 }
 
 
@@ -353,6 +369,38 @@ void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogeco
 
 
 /**
+ * @brief This function serializes the private key from
+ * the HD node as a WIF private key string.
+ * 
+ * @param node The HD node containing the private key.
+ * @param outstr The output buffer to contain the encoded private key.
+ * @param strsize The size of the output buffer; returns the size written (including '\0')
+ * 
+ * @return true on success, false on error.
+ */
+dogecoin_bool dogecoin_hdnode_serialize_privkey_wif(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* outstr, size_t* strsize)
+{
+    if (!node || !chain || !outstr || !strsize) {
+        return false;
+    }
+    if (*strsize < WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN) {
+        return false;
+    }
+    if (!dogecoin_hdnode_has_privkey(node)) {
+        return false;
+    }
+
+    uint8_t pkeybase58c[34];
+    pkeybase58c[0] = chain->b58prefix_secret_address;
+    pkeybase58c[33] = 1; /* always use compressed keys */
+    memcpy_safe(&pkeybase58c[1], node->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
+    *strsize = dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), outstr, *strsize);
+
+    return (*strsize != 0);
+}
+
+
+/**
  * @brief This function applies the sha256 and rmd160 hash
  * functions to public key and loads variable hash160_out
  * with result.
@@ -551,7 +599,7 @@ err:
  * 
  * @return A boolean value, true if node has a private key.
  */
-dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node)
+dogecoin_bool dogecoin_hdnode_has_privkey(const dogecoin_hdnode* node)
 {
     int i;
     for (i = 0; i < DOGECOIN_ECKEY_PKEY_LENGTH; ++i) {

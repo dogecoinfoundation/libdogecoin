@@ -9,6 +9,7 @@
 #include <test/utest.h>
 
 #include <dogecoin/chainparams.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/base58.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/utils.h>
@@ -60,4 +61,12 @@ void test_tool()
     u_assert_int_eq(hd_derive(&dogecoin_chainparams_main, "dgpv51eADS3spNJh9gCpE1AyQ9NpMGkGh6MJKxM84Tf87KVLNeodEW76V2nJJRPorYLGnvZGJKTgEgvqGCtf9VS9RqhfJaTxV7iqm86VpMUNi5G", "m/3", extout, extoutsize), true);
 
     free(extout);
+
+    /* hd_privkey_wif */
+    const char* tprv_wif_test = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK";
+    char privkey_wif_out[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN];
+    size_t wif_size = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
+    u_assert_int_eq(hd_privkey_wif(tprv_wif_test, privkey_wif_out, &wif_size), true);
+    u_assert_int_eq(wif_size, 53); // includes terminator!
+    u_assert_str_eq(privkey_wif_out, "chq4gQqR1C5erpniafsiu581zFCrctDiUMPTHiMWD3h6H9WWrMzu");
 }

@@ -154,3 +154,24 @@ int chain_from_b58_prefix_bool(char* address) {
     }
     return false;
 }
+
+#define DOGE_FOURCC(A,B,C,D) (((A)<<24)|((B)<<16)|((C)<<8)|(D))
+
+const dogecoin_chainparams* chain_from_bip32_prefix(const char* bip32extkey) {
+    /* determine chainparams from BIP32 extended private or public key */
+    size_t min_len = strnlen(bip32extkey, 5);
+    if (min_len < 4) {
+        return NULL;
+    }
+    uint32_t prefix = DOGE_FOURCC(bip32extkey[0],bip32extkey[1],bip32extkey[2],bip32extkey[3]);
+    switch (prefix) {
+        case DOGE_FOURCC('d','g','p','v'):
+        case DOGE_FOURCC('d','g','u','b'):
+            return &dogecoin_chainparams_main;
+        case DOGE_FOURCC('t','p','r','v'):
+        case DOGE_FOURCC('t','p','u','b'):
+            return &dogecoin_chainparams_test;
+        default:
+            return NULL;
+    }
+}
