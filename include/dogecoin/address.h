@@ -39,11 +39,14 @@ LIBDOGECOIN_API int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey
 /* generate HD master key and WIF public key */
 LIBDOGECOIN_API int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
-/* generate an extended public key */
-LIBDOGECOIN_API int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
+/* converts an HD masterkey or HD child address (public or private) to P2PKH Dogecoin Address */
+LIBDOGECOIN_API int convertHDKeyToP2PKH(const char* extended_key, char* out_p2pkh_pubkey);
 
-/* converts an extended HD private address (dgpv, tprv) to a WIF-encoded private key */
-LIBDOGECOIN_API int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif);
+/* converts an HD private key (e.g. dgpv, tprv) to a WIF-encoded EC private key. */
+LIBDOGECOIN_API int convertHDKeyToECPrivKey(const char* extended_private, char* out_ec_privkey);
+
+/* deprecated: renamed to convertHDKeyToP2PKH */
+LIBDOGECOIN_API int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
 
 /* verify private and public keys are valid and associated with each other*/
 LIBDOGECOIN_API int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);

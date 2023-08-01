@@ -175,11 +175,16 @@ void test_address()
     u_assert_str_eq(p2pkh_pubkey_main, "DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT");
 #endif
 
-    /* generateDerivedHDPrivKeyWIF */
-    const char* ext_hd_private = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK";
-    char privkey_wif_out[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN];
-    u_assert_int_eq(generateDerivedHDPrivKeyWIF(ext_hd_private, privkey_wif_out), true);
-    u_assert_str_eq(privkey_wif_out, "chq4gQqR1C5erpniafsiu581zFCrctDiUMPTHiMWD3h6H9WWrMzu");
+    /* convertHDKeyToP2PKH */
+    u_assert_int_eq(convertHDKeyToP2PKH("dgpv51eADS3spNJhA6LG5QycrFmQQtxg7ztFJQuamYiytZ4x4FUC7pG5B7fUTHBDB7g6oGaCVwuGF2i75r1DQKyFSauAHUGBAi89NaggpdUP3yK", str), true)
+    u_assert_str_eq("DEByFfUQ3AxcFFet9afr8wxxedQysRduWN", str);
+    u_assert_int_eq(convertHDKeyToP2PKH("dgub8uxGyZKCxRo2buadqKBPGR5MMDrbk8RABK8EcnBv5GrdS8u1Lw2ifRSifsT3wuVRsK45b9kugWkd2cREzkJLiGvwbY5txG2dKfsY3bndC93", str), true)
+    u_assert_str_eq("D91jVi3CVGhRmyt83fhMdL4UJWtDuiTZET", str);
+
+    /* convertHDKeyToECPrivKey */
+    char privkey[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN];
+    u_assert_int_eq(convertHDKeyToECPrivKey("tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK", privkey), true);
+    u_assert_str_eq("chq4gQqR1C5erpniafsiu581zFCrctDiUMPTHiMWD3h6H9WWrMzu", privkey);
 
     /*free up VLAs*/
     free(masterkey_main);

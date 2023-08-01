@@ -12,7 +12,8 @@
   - [Essential Address API](#essential-address-api)
     - [**generatePrivPubKeypair:**](#generateprivpubkeypair)
     - [**generateHDMasterPubKeypair:**](#generatehdmasterpubkeypair)
-    - [**generateDerivedHDPubKey:**](#generatederivedhdpubkey)
+    - [**convertHDKeyToP2PKH:**](#convertHDKeyToP2PKH)
+    - [**convertHDKeyToECPrivKey:**](#convertHDKeyToECPrivKey)
     - [**verifyPrivPubKeypair**](#verifyprivpubkeypair)
     - [**verifyHDMasterPubKeypair**](#verifyhdmasterpubkeypair)
     - [**verifyP2pkhAddress**](#verifyp2pkhaddress)
@@ -144,14 +145,16 @@ int main() {
 
 ---
 
-### **generateDerivedHDPubKey:**
+### **convertHDKeyToP2PKH:**
 
-`int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)`
+`int convertHDKeyToP2PKH(const char* extended_key, char* out_p2pkh_pubkey)`
 
-This function takes a given HD master private key (wif_privkey_master) and loads it into the provided pointer for the resulting derived public key (p2pkh_pubkey). This private key input should come from the result of generateHDMasterPubKeypair(). The function returns 1 on success and 0 on failure.
-
-This function also works with any extended HD public address (e.g. dgub, tpub) from getDerivedHDAddress
-or getDerivedHDAddressByPath, to get the corresponding public P2PKH Address (Dogecoin Address)
+* **extended_key** The HD masterkey or HD child address (public or private)
+* **out_p2pkh_pubkey** char[] for the corresponding P2PKH public key, at least P2PKH_ADDR_STRINGLEN chars.
+ 
+This function takes an HD masterkey or HD child address (public or private) and converts its public key
+to a P2PKH Address (Dogecoin Address.) The extended_key can come from generateHDMasterPubKeypair,
+getDerivedHDAddress or getDerivedHDAddressByPath. The function returns 1 on success and 0 on failure.
 
 _C usage:_
 
@@ -160,36 +163,39 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int masterPrivkeyLen = 200; // enough cushion
-  int pubkeyLen = 35;
-
-  char masterPrivKey[masterPrivkeyLen]; 
-  char masterPubKey[pubkeyLen];
-  char childPubKey[pubkeyLen];
+  char masterPrivKey[HD_MASTERKEY_STRINGLEN]; 
+  char masterPubKey[P2PKH_ADDR_STRINGLEN];
+  char childHDPublic[HD_MASTERKEY_STRINGLEN];
+  char childP2PKHAddress[P2PKH_ADDR_STRINGLEN];
 
   dogecoin_ecc_start();
   generateHDMasterPubKeypair(masterPrivKey, masterPubKey, false);
-  generateDerivedHDPubkey(masterPrivKey, childPubKey);
+  getDerivedHDAddress(masterPrivKey, 0, false, 1, childHDPublic, false);
+  convertHDKeyToP2PKH(childHDPublic, childP2PKHAddress);
   dogecoin_ecc_stop();
 
   printf("master private key: %s\n", masterPrivKey);
   printf("master public key: %s\n", masterPubKey);
-  printf("derived child key: %s\n", childPubKey);
+  printf("derived child key: %s\n", childHDPublic);
+  printf("derived child address: %s\n", childP2PKHAddress);
 }
 ```
 
 ---
 
-### **generateDerivedHDPrivKeyWIF**
+### **convertHDKeyToECPrivKey**
 
-`int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif)`
+`int convertHDKeyToECPrivKey(const char* extended_private, char* out_ec_privkey)`
 
-This function converts an extended HD private address (e.g. dgpv, tprv) to a WIF-encoded private key.
+* **extended_private** The extended HD private key (e.g. dgpv, tprv)
+* **out_ec_privkey** char[] for the WIF-encoded private EC key, at least WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN chars.
+
+This function converts an extended private key (e.g. dgpv, tprv) to an EC private key in WIF format.
 
 It works with any extended HD private address from getDerivedHDAddress or getDerivedHDAddressByPath,
-to get the corresponding WIF-encoded private key for the child address.
+to get the corresponding WIF-encoded EC private key for the child address.
 
-You will need a WIF-encoded private key to sign transactions.
+You will need a WIF-encoded EC private key to sign transactions.
 
 _C usage:_
 
@@ -201,18 +207,18 @@ int main() {
   char masterPrivKey[HD_MASTERKEY_STRINGLEN]; 
   char masterPubKey[P2PKH_ADDR_STRINGLEN];
   char childHDPrivate[HD_MASTERKEY_STRINGLEN];
-  char privkeyWIF[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN];
+  char ECprivkey[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN];
 
   dogecoin_ecc_start();
   generateHDMasterPubKeypair(masterPrivKey, masterPubKey, false);
   getDerivedHDAddress(masterPrivKey, 0, false, 1, childHDPrivate, true);
-  generateDerivedHDPrivKeyWIF(childHDPrivate, privkeyWIF);
+  convertHDKeyToECPrivKey(childHDPrivate, ECprivkey);
   dogecoin_ecc_stop();
 
   printf("master private key: %s\n", masterPrivKey);
   printf("master public key: %s\n", masterPubKey);
   printf("derived child key: %s\n", childHDPrivate);
-  printf("derived privkey WIF: %s\n", privkeyWIF);
+  printf("derived privkey WIF: %s\n", ECprivkey);
 }
 ```
 

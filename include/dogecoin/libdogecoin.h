@@ -85,17 +85,20 @@ void dogecoin_ecc_start(void);
 //!destroys the static ecc context
 void dogecoin_ecc_stop(void);
 
-/* generates a private and public keypair (a wallet import format private key and a p2pkh ready-to-use corresponding dogecoin address)*/
+/* generates a private and public keypair (a wallet import format EC private key and a p2pkh ready-to-use corresponding dogecoin address)*/
 int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
 
-/* generates a hybrid deterministic WIF master key and p2pkh ready-to-use corresponding dogecoin address. */
+/* generates a hybrid deterministic (HD) WIF master key and p2pkh ready-to-use corresponding dogecoin address. */
 int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
-/* generates a new dogecoin address from a HD master key */
-int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
+/* converts an HD masterkey or HD child address (public or private) to P2PKH Dogecoin Address */
+int convertHDKeyToP2PKH(const char* extended_key, char* out_p2pkh_pubkey);
 
-/* converts an extended HD private address (dgpv, tprv) to a WIF-encoded private key */
-int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif);
+/* converts an HD private key (e.g. dgpv, tprv) to a WIF-encoded EC private key. */
+int convertHDKeyToECPrivKey(const char* extended_private, char* out_ec_privkey);
+
+/* deprecated: renamed to convertHDKeyToP2PKH */
+int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
 
 /* verify that a private key and dogecoin address match */
 int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);

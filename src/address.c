@@ -146,7 +146,7 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
         return false;
     }
 
-    if (!generateDerivedHDPubkey(hd_privkey_master, hd_pubkey_master)) {
+    if (!convertHDKeyToP2PKH(hd_privkey_master, hd_pubkey_master)) {
         return false;
     }
 
@@ -161,61 +161,61 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
 }
 
 /**
- * @brief This function takes a wif-encoded HD master
- * private key and derive a new HD public key from it 
- * on the specified network. This input should come from
- * the result of generateHDMasterPubKeypair().
+ * @brief This function takes an extended HD key and converts its
+ * public key to P2PKH format. The extended_key can come from
+ * generateHDMasterPubKeypair, getDerivedHDAddress or getDerivedHDAddressByPath.
  * 
- * @param wif_privkey_master The master private key to derive the child key from.
- * @param p2pkh_pubkey The resulting child public key.
+ * @param extended_key The HD masterkey or HD child address (public or private)
+ * @param out_p2pkh_pubkey char[] for the corresponding P2PKH public key,
+ *                         at least P2PKH_ADDR_STRINGLEN chars
  * 
- * @return 1 if the child key was generated successfully, 0 otherwise.
+ * @return 1 if the P2PKH pubkey was generated successfully, 0 otherwise.
  */
-int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
+int convertHDKeyToP2PKH(const char* extended_key, char* out_p2pkh_pubkey)
 {
-    /* require master key */
-    if (!wif_privkey_master) {
+    if (!extended_key) {
         return false;
     }
 
     /* determine address prefix for network chainparams */
-    const dogecoin_chainparams* chain = chain_from_b58_prefix(wif_privkey_master);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(extended_key);
 
     char str[P2PKH_ADDR_STRINGLEN];
 
-    /* if nothing is passed in use internal variables */
-    if (p2pkh_pubkey) {
-        memcpy_safe(str, p2pkh_pubkey, sizeof(str));
+    dogecoin_hdnode node;
+    if (!dogecoin_hdnode_deserialize(extended_key, chain, &node)) {
+        return false;
     }
 
-    dogecoin_hdnode* node = dogecoin_hdnode_new();
-    dogecoin_hdnode_deserialize(wif_privkey_master, chain, node);
-
-    dogecoin_hdnode_get_p2pkh_address(node, chain, str, sizeof(str));
+    dogecoin_hdnode_get_p2pkh_address(&node, chain, str, sizeof(str));
 
     /* pass back to external variable if exists */
-    if (p2pkh_pubkey) {
-        memcpy_safe(p2pkh_pubkey, str, sizeof(str));
+    if (out_p2pkh_pubkey) {
+        memcpy_safe(out_p2pkh_pubkey, str, sizeof(str));
     }
 
     /* reset internal variables */
-    dogecoin_hdnode_free(node);
-    dogecoin_mem_zero(str, strlen(str));
+    dogecoin_hdnode_clear(&node);
 
     return true;
 }
 
+/* for backwards compatiblity with existing library users */
+int generateDerivedHDPubkey(const char* extended_key, char* p2pkh_pubkey) {
+    return convertHDKeyToP2PKH(extended_key, p2pkh_pubkey);
+}
+
 /**
  * @brief This function converts an HD extended private address
- *        (e.g. dgpv, tprv) to a WIF-encoded private key.
+ *        (e.g. dgpv, tprv) to a WIF-encoded private EC key.
  * 
  * @param extended_private The extended HD private key (e.g. dgpv, tprv)
- * @param out_privkey_wif output buffer for the WIF-encoded private key,
- *                        at least WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN chars
+ * @param out_ec_privkey char[] for the WIF-encoded private EC key,
+ *                       at least WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN chars
  * 
  * @return dogecoin_bool (uint8_t)
  */
-int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif)
+int convertHDKeyToECPrivKey(const char* extended_private, char* out_ec_privkey)
 {
     const dogecoin_chainparams* chain = chain_from_bip32_prefix(extended_private);
     if (!chain) {
@@ -228,7 +228,7 @@ int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_
     size_t out_size = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
     dogecoin_key key;
     memcpy_safe(key.privkey, node.private_key, sizeof(key.privkey));
-    dogecoin_privkey_encode_wif(&key, chain, out_privkey_wif, &out_size);
+    dogecoin_privkey_encode_wif(&key, chain, out_ec_privkey, &out_size);
     dogecoin_privkey_cleanse(&key);
     dogecoin_hdnode_clear(&node);
     return true;
