@@ -42,7 +42,7 @@ void test_key()
     dogecoin_pubkey pubkey;
     dogecoin_pubkey_init(&pubkey);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 0);
-    dogecoin_pubkey_from_key(&key, &pubkey);
+    assert(dogecoin_pubkey_from_key(&key, &pubkey) == 1);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 1);
     assert(dogecoin_privkey_verify_pubkey(&key, &pubkey) == 1);
     unsigned int i;

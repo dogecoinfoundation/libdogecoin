@@ -61,7 +61,7 @@ LIBDOGECOIN_API unsigned int dogecoin_pubkey_get_length(unsigned char ch_header)
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_is_valid(const dogecoin_pubkey* pubkey);
 LIBDOGECOIN_API void dogecoin_pubkey_cleanse(dogecoin_pubkey* pubkey);
-LIBDOGECOIN_API void dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout);
+LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout);
 
 // get the hash160 (single SHA256 + RIPEMD160)
 LIBDOGECOIN_API void dogecoin_pubkey_get_hash160(const dogecoin_pubkey* pubkey, uint160 hash160);

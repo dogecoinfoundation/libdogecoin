@@ -972,7 +972,7 @@ void test_script_parse()
 
         dogecoin_pubkey* pubkey = dogecoin_malloc(sizeof(dogecoin_pubkey));
         dogecoin_pubkey_init(pubkey);
-        dogecoin_pubkey_from_key(&key, pubkey);
+        assert(dogecoin_pubkey_from_key(&key, pubkey) == 1);
         assert(dogecoin_pubkey_is_valid(pubkey) == 1);
 
         vector_add(pubkeys, pubkey);
@@ -1095,7 +1095,7 @@ void test_script_parse()
 
     dogecoin_pubkey pubkeytx_rev;
     dogecoin_pubkey_init(&pubkeytx_rev);
-    dogecoin_pubkey_from_key(&key, &pubkeytx_rev);
+    assert(dogecoin_pubkey_from_key(&key, &pubkeytx_rev) == 1);
 
     tx = dogecoin_tx_new();
     dogecoin_tx_add_data_out(tx, 100000, sigcmp, outlencmp); //0.001 DOGECOIN

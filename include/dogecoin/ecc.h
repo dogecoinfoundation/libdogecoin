@@ -42,7 +42,7 @@ LIBDOGECOIN_API void dogecoin_ecc_start(void);
 LIBDOGECOIN_API void dogecoin_ecc_stop(void);
 
 //!get public key from given private key
-LIBDOGECOIN_API void dogecoin_ecc_get_pubkey(const uint8_t* private_key, uint8_t* public_key, size_t* public_key_len, dogecoin_bool compressed);
+LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_get_pubkey(const uint8_t* private_key, uint8_t* public_key, size_t* public_key_len, dogecoin_bool compressed);
 
 //!ec mul tweak on given private key
 LIBDOGECOIN_API dogecoin_bool dogecoin_ecc_private_key_tweak_add(uint8_t* private_key, const uint8_t* tweak);

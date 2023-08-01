@@ -261,6 +261,7 @@ int main() {
         // key 1:
         int key_id = start_key(false);
         eckey* key = find_eckey(key_id);
+		assert(key != NULL);
         char* msg = "This is a test message";
         char* sig = sign_message(key->private_key_wif, msg);
         if (verify_message(sig, msg, key->address)) {
@@ -275,6 +276,7 @@ int main() {
         // key 2:
         int key_id2 = start_key(true);
         eckey* key2 = find_eckey(key_id2);
+		assert(key2 != NULL);
         char* msg2 = "This is a test message";
         char* sig2 = sign_message(key2->private_key_wif, msg2);
         if (verify_message(sig2, msg2, key2->address)) {

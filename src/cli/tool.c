@@ -89,8 +89,8 @@ dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const ch
     dogecoin_pubkey pubkey;
     dogecoin_pubkey_init(&pubkey);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 0);
-    dogecoin_pubkey_from_key(&key, &pubkey);
-    assert(dogecoin_pubkey_is_valid(&pubkey) == 1);
+    if (!dogecoin_pubkey_from_key(&key, &pubkey)) return false;
+    if (!dogecoin_pubkey_is_valid(&pubkey)) return false;
     dogecoin_privkey_cleanse(&key);
     dogecoin_pubkey_get_hex(&pubkey, pubkey_hex, sizeout);
     dogecoin_pubkey_cleanse(&pubkey);

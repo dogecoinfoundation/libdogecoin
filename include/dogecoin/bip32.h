@@ -56,7 +56,7 @@ LIBDOGECOIN_API void dogecoin_hdnode_clear(dogecoin_hdnode* node);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout, uint32_t i);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogecoin_hdnode* out);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i);
-LIBDOGECOIN_API void dogecoin_hdnode_fill_public_key(dogecoin_hdnode* node);
+LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_fill_public_key(dogecoin_hdnode* node);
 LIBDOGECOIN_API void dogecoin_hdnode_serialize_public(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 LIBDOGECOIN_API void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 

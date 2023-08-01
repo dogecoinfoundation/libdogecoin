@@ -36,17 +36,17 @@ void dogecoin_ecc_stop(void)
         secp256k1_context_destroy(ctx);
 }
 
-void dogecoin_ecc_get_pubkey(const uint8_t* private_key, uint8_t* public_key, size_t* in_outlen, dogecoin_bool compressed)
+dogecoin_bool dogecoin_ecc_get_pubkey(const uint8_t* private_key, uint8_t* public_key, size_t* in_outlen, dogecoin_bool compressed)
 {
     secp256k1_pubkey pubkey;
     assert(secp256k1_ctx);
     assert((int)*in_outlen == (compressed ? 33 : 65));
     dogecoin_mem_zero(public_key, *in_outlen);
     if (!secp256k1_ec_pubkey_create(secp256k1_ctx, &pubkey, (const unsigned char*)private_key))
-        return;
+        return false;
     if (!secp256k1_ec_pubkey_serialize(secp256k1_ctx, public_key, in_outlen, &pubkey, compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED))
-        return;
-    return;
+        return false;
+    return true;
 }
 
 dogecoin_bool dogecoin_ecc_private_key_tweak_add(uint8_t* private_key, const uint8_t* tweak)

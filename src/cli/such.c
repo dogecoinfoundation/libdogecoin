@@ -1070,6 +1070,7 @@ int main(int argc, char* argv[])
             }
 
         eckey* key = new_eckey_from_privkey(pkey);
+        if (!key) return showError("invalid pkey\n");
         char* sig = sign_message(key->private_key_wif, txhex);
         printf("message: %s\n", txhex);
         printf("content: %s\n", sig);

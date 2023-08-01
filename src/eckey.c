@@ -37,25 +37,43 @@
  * @brief This function instantiates a new working eckey,
  * but does not add it to the hash table.
  * 
- * @return A pointer to the new working eckey. 
+ * @return A pointer to the new working eckey, or NULL on error.
  */
 eckey* new_eckey(dogecoin_bool is_testnet) {
     eckey* key = (struct eckey*)dogecoin_calloc(1, sizeof *key);
     dogecoin_privkey_init(&key->private_key);
     assert(dogecoin_privkey_is_valid(&key->private_key) == 0);
-    dogecoin_privkey_gen(&key->private_key);
-    assert(dogecoin_privkey_is_valid(&key->private_key)==1);
+    if (!dogecoin_privkey_gen(&key->private_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
+    if (!dogecoin_privkey_is_valid(&key->private_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
     dogecoin_pubkey_init(&key->public_key);
-    dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
-    assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
+    if (!dogecoin_pubkey_from_key(&key->private_key, &key->public_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
+    if (!dogecoin_pubkey_is_valid(&key->public_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     uint8_t pkeybase58c[34];
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
-    assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
-    if (!dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, (char*)&key->address)) return false;
+    if (dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) == 0) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
+    if (!dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, (char*)&key->address)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
     key->idx = HASH_COUNT(keys) + 1;
     return key;
 }
@@ -64,24 +82,42 @@ eckey* new_eckey(dogecoin_bool is_testnet) {
  * @brief This function instantiates a new working eckey,
  * but does not add it to the hash table.
  * 
- * @return A pointer to the new working eckey. 
+ * @return A pointer to the new working eckey, or NULL on error.
  */
 eckey* new_eckey_from_privkey(char* private_key) {
     eckey* key = (struct eckey*)dogecoin_calloc(1, sizeof *key);
     dogecoin_privkey_init(&key->private_key);
     const dogecoin_chainparams* chain = chain_from_b58_prefix(private_key);
-    if (!dogecoin_privkey_decode_wif(private_key, chain, &key->private_key)) return false;
-    assert(dogecoin_privkey_is_valid(&key->private_key)==1);
+    if (!dogecoin_privkey_decode_wif(private_key, chain, &key->private_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
+    if (!dogecoin_privkey_is_valid(&key->private_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
     dogecoin_pubkey_init(&key->public_key);
-    dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
-    assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
+    if (!dogecoin_pubkey_from_key(&key->private_key, &key->public_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
+    if (!dogecoin_pubkey_is_valid(&key->public_key)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     uint8_t pkeybase58c[34];
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], &key->private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
-    assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) != 0);
-    if (!dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, (char*)&key->address)) return false;
+    if (dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), key->private_key_wif, sizeof(key->private_key_wif)) == 0) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
+    if (!dogecoin_pubkey_getaddr_p2pkh(&key->public_key, chain, (char*)&key->address)) {
+        dogecoin_key_free(key);
+        return NULL;
+    }
     key->idx = HASH_COUNT(keys) + 1;
     return key;
 }
@@ -102,7 +138,7 @@ void add_eckey(eckey *key) {
     } else {
         HASH_REPLACE_INT(keys, idx, key, key_old);
     }
-    dogecoin_free(key_old);
+    dogecoin_key_free(key_old);
 }
 
 /**
@@ -112,7 +148,7 @@ void add_eckey(eckey *key) {
  * @param idx The index of the target working eckey.
  * 
  * @return The pointer to the working eckey associated with
- * the provided index.
+ * the provided index, or NULL.
  */
 eckey* find_eckey(int idx) {
     eckey* key;
@@ -130,8 +166,6 @@ eckey* find_eckey(int idx) {
  */
 void remove_eckey(eckey* key) {
     HASH_DEL(keys, key); /* delete it (keys advances to next) */
-    dogecoin_privkey_cleanse(&key->private_key);
-    dogecoin_pubkey_cleanse(&key->public_key);
     dogecoin_key_free(key);
 }
 
@@ -143,8 +177,8 @@ void remove_eckey(eckey* key) {
  * 
  * @return Nothing.
  */
-void dogecoin_key_free(eckey* eckey)
-{
+void dogecoin_key_free(eckey* eckey) {
+    if (eckey) dogecoin_mem_zero(eckey, sizeof(eckey));
     dogecoin_free(eckey);
 }
 
@@ -159,6 +193,7 @@ void dogecoin_key_free(eckey* eckey)
  */
 int start_key(dogecoin_bool is_testnet) {
     eckey* key = new_eckey(is_testnet);
+    assert(key != NULL); // no way to return error.
     int index = key->idx;
     add_eckey(key);
     return index;

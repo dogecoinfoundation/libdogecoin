@@ -165,13 +165,14 @@ dogecoin_bool dogecoin_pubkey_get_hex(const dogecoin_pubkey* pubkey, char* str, 
     return true;
 }
 
-void dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout)
+dogecoin_bool dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout)
 {
     if (pubkey_inout == NULL || privkey == NULL)
-        return;
+        return false;
     size_t in_out_len = DOGECOIN_ECKEY_COMPRESSED_LENGTH;
-    dogecoin_ecc_get_pubkey(privkey->privkey, pubkey_inout->pubkey, &in_out_len, true);
+    dogecoin_bool ret = dogecoin_ecc_get_pubkey(privkey->privkey, pubkey_inout->pubkey, &in_out_len, true);
     pubkey_inout->compressed = true;
+    return ret;
 }
 
 dogecoin_bool dogecoin_key_sign_hash(const dogecoin_key* privkey, const uint256 hash, unsigned char* sigout, size_t* outlen)
@@ -237,20 +238,21 @@ dogecoin_bool init_keypair(char* privkeywif, dogecoin_key* key, dogecoin_pubkey*
     if (!dogecoin_privkey_decode_wif(privkeywif, chain, key)) {
         return false;
     }
-    assert(dogecoin_privkey_is_valid(key) == 1);
+    if (!dogecoin_privkey_is_valid(key)) return false;
 
     dogecoin_pubkey_init(pubkey);
     pubkey->compressed = false;
     assert(dogecoin_pubkey_is_valid(pubkey) == 0);
-    dogecoin_pubkey_from_key(key, pubkey);
-    if (!dogecoin_pubkey_is_valid(pubkey)) return 0;
-    if (!dogecoin_privkey_verify_pubkey(key, pubkey)) return 0;
+    if (!dogecoin_pubkey_from_key(key, pubkey)) return false;
+    if (!dogecoin_pubkey_is_valid(pubkey)) return false;
+    if (!dogecoin_privkey_verify_pubkey(key, pubkey)) return false;
     return true;
 }
 
 dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout)
 {
     uint8_t hash160[sizeof(uint160) + 1];
+    if (!dogecoin_pubkey_is_valid(pubkey)) return false;
     hash160[0] = chain->b58prefix_pubkey_address;
     dogecoin_pubkey_get_hash160(pubkey, hash160 + 1);
     dogecoin_base58_encode_check(hash160, sizeof(hash160), addrout, 100);

@@ -91,7 +91,7 @@ eckey* new_eckey(dogecoin_bool is_testnet) {
     dogecoin_privkey_gen(&key->private_key);
     assert(dogecoin_privkey_is_valid(&key->private_key)==1);
     dogecoin_pubkey_init(&key->public_key);
-    dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
+    assert(dogecoin_pubkey_from_key(&key->private_key, &key->public_key) == 1);
     assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     uint8_t pkeybase58c[34];
@@ -107,6 +107,9 @@ eckey* new_eckey(dogecoin_bool is_testnet) {
 ```
 
 This function instantiates a new working key, but does not add it to the hash table.
+
+Note: the actual implementation returns NULL if not able to generate a new key,
+rather than failing an assert.
 
 _C usage:_
 ```c
@@ -125,7 +128,7 @@ eckey* new_eckey_from_privkey(char* private_key) {
     if (!dogecoin_privkey_decode_wif(private_key, chain, &key->private_key)) return false;
     assert(dogecoin_privkey_is_valid(&key->private_key)==1);
     dogecoin_pubkey_init(&key->public_key);
-    dogecoin_pubkey_from_key(&key->private_key, &key->public_key);
+    assert(dogecoin_pubkey_from_key(&key->private_key, &key->public_key) == 1);
     assert(dogecoin_pubkey_is_valid(&key->public_key) == 1);
     strcpy(key->public_key_hex, utils_uint8_to_hex((const uint8_t *)&key->public_key, 33));
     uint8_t pkeybase58c[34];
@@ -140,6 +143,9 @@ eckey* new_eckey_from_privkey(char* private_key) {
 ```
 
 This function instantiates a new working key from a `private_key` in WIF format, but does not add it to the hash table.
+
+Note: the actual implementation returns NULL if the provided private_key was not valid,
+rather than failing an assert.
 
 _C usage:_
 ```c
@@ -208,6 +214,8 @@ eckey* find_eckey(int idx) {
 ```
 
 This function takes an index and returns the working eckey associated with that index in the hash table.
+
+Note: can return NULL if there's no key at idx.
 
 _C usage:_
 ```c
