@@ -28,7 +28,7 @@ bool check_simulate_opt(int* argc, const char* argv[])
 // print a message.
 void host_libdogecoin()
 {
-    fprintf(stdout, "Enclave called into host to print: Hello World!\n");
+    fprintf(stdout, "Enclave called into host to print: Libdogecoin!\n");
 }
 
 int main(int argc, const char* argv[])
@@ -65,6 +65,22 @@ int main(int argc, const char* argv[])
 
     // Call into the enclave
     result = enclave_libdogecoin(enclave);
+    if (result != OE_OK)
+    {
+        fprintf(
+            stderr,
+            "calling into enclave_libdogecoin failed: result=%u (%s)\n",
+            result,
+            oe_result_str(result));
+        goto exit;
+    }
+
+    // This is where we can call the cli code
+    // above may be added to any cli app
+    // app can make any calls into the enclave
+
+    // lets try to generate a bip39 mnemonic
+    result = enclave_libdogecoin_generate_mnemonic(enclave);
     if (result != OE_OK)
     {
         fprintf(

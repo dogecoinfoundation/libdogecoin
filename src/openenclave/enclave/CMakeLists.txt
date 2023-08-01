@@ -10,7 +10,7 @@ add_custom_command(
     --search-path ${OE_INCLUDEDIR} --search-path
     ${OE_INCLUDEDIR}/openenclave/edl/sgx)
 
-add_executable(enclave enc.c ${CMAKE_CURRENT_BINARY_DIR}/libdogecoin_t.c /usr/local/include/libdogecoin.h)
+add_executable(enclave enc.c ${CMAKE_CURRENT_BINARY_DIR}/libdogecoin_t.c /usr/local/include/dogecoin/libdogecoin.h)
 
 if (WIN32)
   maybe_build_using_clangw(enclave)
@@ -19,7 +19,7 @@ endif ()
 target_compile_definitions(enclave PUBLIC OE_API_VERSION=2)
 
 # Need for the generated file libdogecoin_t.h
-target_include_directories(enclave PRIVATE ${CMAKE_CURRENT_BINARY_DIR} /usr/local/include/)
+target_include_directories(enclave PRIVATE ${CMAKE_CURRENT_BINARY_DIR} /usr/local/include/dogecoin)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ldogecoin -lunistring")
 

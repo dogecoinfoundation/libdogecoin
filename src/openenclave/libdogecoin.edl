@@ -7,6 +7,7 @@ enclave {
 
     trusted {
         public void enclave_libdogecoin();
+        public void enclave_libdogecoin_generate_mnemonic();
     };
 
     untrusted {

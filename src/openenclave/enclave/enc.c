@@ -21,7 +21,7 @@ void enclave_libdogecoin()
     // host and calls fprintf from there. This is because
     // the fprintf function is not part of the enclave
     // as it requires support from the kernel.
-    fprintf(stdout, "Hello world from the enclave\n");
+    fprintf(stdout, "Libdogecoin from the enclave\n");
 
     // Call back into the host
     oe_result_t result = host_libdogecoin();
@@ -61,4 +61,22 @@ void enclave_libdogecoin()
    printf("\nFinal signed transaction hex: %s\n\n", get_raw_transaction(idx));
 
    dogecoin_ecc_stop();
+
+}
+
+// Lets try running a function for cli
+// start with some calls the cli apps make
+// then we'll try and integrate host and cli
+void enclave_libdogecoin_generate_mnemonic()
+{
+    ENTROPY_SIZE size = "256";
+    MNEMONIC mnemonic = { 0 };
+
+    dogecoin_ecc_start();
+
+    /* generate mnemonic with entropy out */
+    if (generateRandomEnglishMnemonic(size, mnemonic) == -1) {
+        dogecoin_ecc_stop();
+        return -1;
+        }
 }

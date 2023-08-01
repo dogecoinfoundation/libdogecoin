@@ -23,7 +23,7 @@ else ()
   endif ()
 endif ()
 
-project("Hello World Sample" LANGUAGES C CXX)
+project("Libdogecoin Sample" LANGUAGES C CXX)
 
 # Currently the `OpenEnclave` package depends on `project()`.
 find_package(OpenEnclave CONFIG REQUIRED)

@@ -131,7 +131,7 @@ void enclave_libdogecoin()
     // host and calls fprintf from there. This is because
     // the fprintf function is not part of the enclave
     // as it requires support from the kernel.
-    fprintf(stdout, "Hello world from the enclave\n");
+    fprintf(stdout, "Libdogecoin from the enclave\n");
 
     // Call back into the host
     oe_result_t result = host_libdogecoin();
@@ -160,7 +160,7 @@ void enclave_libdogecoin()
 An enclave exposes its functionality via a set of methods defined in the `libdogecoin.edl` file and implemented here. The only implemented function in the enclave in this sample is `enclave_libdogecoin`.
 
 ```c
-fprintf(stdout, "Hello world from the enclave\n");
+fprintf(stdout, "Libdogecoin from the enclave\n");
 ```
 
 As described above, this call to print a message on the screen marshals the call out of the enclave and back to the untrusted host to print the message.
@@ -273,7 +273,7 @@ The full source for the host implementation is here: [libdogecoin/host/host.c](h
 // print a message.
 void host_libdogecoin()
 {
-    fprintf(stdout, "Enclave called into host to print: Hello World!\n");
+    fprintf(stdout, "Enclave called into host to print: Libdogecoin!\n");
 }
 
 int main(int argc, const char* argv[])
@@ -333,7 +333,7 @@ Includes the standard CRT libraries. Unlike the enclave implementation, which in
 ```c
 void host_libdogecoin()
 {
-    fprintf(stdout, "Enclave called into host to print: Hello World!\n");
+    fprintf(stdout, "Enclave called into host to print: Libdogecoin!\n");
 }
 ```
 
