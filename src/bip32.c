@@ -32,7 +32,6 @@
 
 #include <dogecoin/bip32.h>
 #include <dogecoin/base58.h>
-#include <dogecoin/constants.h>
 #include <dogecoin/ecc.h>
 #include <dogecoin/hash.h>
 #include <dogecoin/key.h>
@@ -552,7 +551,7 @@ err:
  * 
  * @return A boolean value, true if node has a private key.
  */
-dogecoin_bool dogecoin_hdnode_has_privkey(const dogecoin_hdnode* node)
+dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node)
 {
     int i;
     for (i = 0; i < DOGECOIN_ECKEY_PKEY_LENGTH; ++i) {

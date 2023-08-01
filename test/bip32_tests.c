@@ -9,7 +9,6 @@
 #include <test/utest.h>
 
 #include <dogecoin/bip32.h>
-#include <dogecoin/constants.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
 

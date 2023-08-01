@@ -52,7 +52,6 @@ typedef struct
 LIBDOGECOIN_API dogecoin_hdnode* dogecoin_hdnode_new();
 LIBDOGECOIN_API dogecoin_hdnode* dogecoin_hdnode_copy(const dogecoin_hdnode* hdnode);
 LIBDOGECOIN_API void dogecoin_hdnode_free(dogecoin_hdnode* node);
-LIBDOGECOIN_API void dogecoin_hdnode_clear(dogecoin_hdnode* node);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout, uint32_t i);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogecoin_hdnode* out);
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i);
@@ -71,7 +70,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const
 LIBDOGECOIN_API dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypath, const uint8_t* keymaster, const uint8_t* chaincode, dogecoin_bool usepubckd);
 
 //!checks if a node has the according private key (or if its a pubkey only node)
-LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_has_privkey(const dogecoin_hdnode* node);
+LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node);
 
 LIBDOGECOIN_END_DECL
 
