@@ -248,12 +248,4 @@ void test_bip32()
 
         dogecoin_hdnode_free(nodeheap);
     dogecoin_hdnode_free(nodeheap_copy);
-
-    /* dogecoin_hdnode_serialize_privkey_wif */
-    const char* str_tgpv_wif_test = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK";
-    size_t wif_size = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
-    u_assert_int_eq(dogecoin_hdnode_deserialize(str_tgpv_wif_test, &dogecoin_chainparams_test, &node), true);
-    u_assert_int_eq(dogecoin_hdnode_serialize_privkey_wif(&node, &dogecoin_chainparams_test, str, &wif_size), true);
-    u_assert_int_eq(wif_size, 53); // includes terminator!
-    u_assert_str_eq(str, "chq4gQqR1C5erpniafsiu581zFCrctDiUMPTHiMWD3h6H9WWrMzu");
 }

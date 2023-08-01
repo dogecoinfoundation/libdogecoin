@@ -226,9 +226,12 @@ int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_
         return false;
     }
     size_t out_size = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
-    dogecoin_bool result = dogecoin_hdnode_serialize_privkey_wif(&node, chain, out_privkey_wif, &out_size);
+    dogecoin_key key;
+    memcpy_safe(key.privkey, node.private_key, sizeof(key.privkey));
+    dogecoin_privkey_encode_wif(&key, chain, out_privkey_wif, &out_size);
+    dogecoin_privkey_cleanse(&key);
     dogecoin_hdnode_clear(&node);
-    return result;
+    return true;
 }
 
 /**
