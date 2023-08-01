@@ -68,7 +68,6 @@ extern const dogecoin_checkpoint dogecoin_testnet_checkpoint_array[18];
 
 LIBDOGECOIN_API const dogecoin_chainparams* chain_from_b58_prefix(const char* address);
 LIBDOGECOIN_API int chain_from_b58_prefix_bool(char* address);
-LIBDOGECOIN_API const dogecoin_chainparams* chain_from_bip32_prefix(const char* bip32extkey);
 
 LIBDOGECOIN_END_DECL
 

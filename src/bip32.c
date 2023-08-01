@@ -129,21 +129,6 @@ void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
 
 
 /**
- * @brief This function clears an HD node object in memory.
- * 
- * @param hdnode The HD node to be cleared.
- * 
- * @return Nothing.
- */
-void dogecoin_hdnode_clear(dogecoin_hdnode* hdnode)
-{
-    dogecoin_mem_zero(hdnode->chain_code, sizeof(hdnode->chain_code));
-    dogecoin_mem_zero(hdnode->private_key, sizeof(hdnode->private_key));
-    dogecoin_mem_zero(hdnode->public_key, sizeof(hdnode->public_key));
-}
-
-
-/**
  * @brief This function generates a private and public
  * keypair along with chain_code for a hierarchical 
  * deterministic wallet. This is derived from a seed 

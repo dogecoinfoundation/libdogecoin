@@ -217,20 +217,21 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
  */
 int generateDerivedHDPrivKeyWIF(const char* extended_private, char* out_privkey_wif)
 {
-    const dogecoin_chainparams* chain = chain_from_bip32_prefix(extended_private);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(extended_private);
     if (!chain) {
         return false;
     }
-    dogecoin_hdnode node;
-    if (!dogecoin_hdnode_deserialize(extended_private, chain, &node)) {
+    dogecoin_hdnode *node = dogecoin_hdnode_new();
+    if (!dogecoin_hdnode_deserialize(extended_private, chain, node)) {
+        dogecoin_hdnode_free(node);
         return false;
     }
     size_t out_size = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
     dogecoin_key key;
-    memcpy_safe(key.privkey, node.private_key, sizeof(key.privkey));
+    memcpy_safe(key.privkey, node->private_key, sizeof(key.privkey));
     dogecoin_privkey_encode_wif(&key, chain, out_privkey_wif, &out_size);
     dogecoin_privkey_cleanse(&key);
-    dogecoin_hdnode_clear(&node);
+    dogecoin_hdnode_free(node);
     return true;
 }
 
