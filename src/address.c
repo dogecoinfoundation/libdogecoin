@@ -328,6 +328,39 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
  * @param outprivkey The boolean value used to derive either a public or 
  * private address. 'true' for private, 'false' for public
  * 
+ * @return dogecoin_hdnode that derived address belongs to
+ */
+dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
+    if (!masterkey || !derived_path || !outaddress) {
+        debug_print("%s", "missing input\n");
+        exit(EXIT_FAILURE);
+    }
+    /* determine if mainnet or testnet/regtest */
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
+    dogecoin_hdnode *node = dogecoin_hdnode_new(),
+    *nodenew = dogecoin_hdnode_new();
+    dogecoin_hdnode_deserialize(masterkey, chain, node);
+    // dogecoin_hdnode_has_privkey
+    bool pubckd = !dogecoin_hdnode_has_privkey(node);
+    /* derive child key, use pubckd or privckd */
+    dogecoin_hd_generate_key(nodenew, derived_path, pubckd ? node->public_key : node->private_key, node->chain_code, pubckd);
+    if (outprivkey) dogecoin_hdnode_serialize_private(nodenew, chain, outaddress, HD_MASTERKEY_STRINGLEN);
+    else dogecoin_hdnode_serialize_public(nodenew, chain, outaddress, HD_MASTERKEY_STRINGLEN);
+    dogecoin_hdnode_free(node);
+    return nodenew;
+}
+
+/**
+ * @brief This function generates a derived child key from a masterkey using
+ * a custom derived path in string format.
+ * 
+ * @param masterkey The master key from which children are derived from.
+ * @param derived_path The path to derive an address from according to BIP-44.
+ * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
+ * @param outaddress The derived address.
+ * @param outprivkey The boolean value used to derive either a public or 
+ * private address. 'true' for private, 'false' for public
+ * 
  * @return 1 if a derived address was successfully generated, 0 otherwise
  */
 int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {

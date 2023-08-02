@@ -16,6 +16,7 @@
     - [**verifyPrivPubKeypair**](#verifyprivpubkeypair)
     - [**verifyHDMasterPubKeypair**](#verifyhdmasterpubkeypair)
     - [**verifyP2pkhAddress**](#verifyp2pkhaddress)
+    - [**getHDNodeAndExtKeyByPath**](#getHDNodeAndExtKeyByPath)
     - [**getDerivedHDAddress**](#getderivedhdaddress)
     - [**getDerivedHDAddressByPath**](#getderivedhdaddressbypath)
   - [Advanced Address API](#advanced-address-api)
@@ -272,6 +273,38 @@ int main() {
     printf("Address is invalid.\n");
   }
   dogecoin_ecc_stop();
+}
+```
+
+---
+
+### **getHDNodeAndExtKeyByPath**
+
+`dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey)`
+
+This function derives a hierarchical deterministic address by way of providing the extended master key, account, ischange and addressindex.
+It will return the dogecoin_hdnode if successful and exits if the proper arguments are not provided.
+
+_C usage:_
+
+```C
+#include "libdogecoin.h"
+#include <assert.h>
+#include <stdio.h>
+
+int main() {
+  size_t extoutsize = 112;
+  char* extout = dogecoin_char_vla(extoutsize);
+  char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
+  dogecoin_ecc_start();
+  dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
+  u_assert_str_eq(utils_uint8_to_hex(hdnode->private_key, sizeof hdnode->private_key), "09648faa2fa89d84c7eb3c622e06ed2c1c67df223bc85ee206b30178deea7927");
+  dogecoin_privkey_encode_wif((const dogecoin_key*)hdnode->private_key, &dogecoin_chainparams_main, privkeywif_main, &wiflen);
+  u_assert_str_eq(privkeywif_main, "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG");
+  u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+  dogecoin_ecc_stop();
+  dogecoin_hdnode_free(hdnode);
+  free(extout);
 }
 ```
 

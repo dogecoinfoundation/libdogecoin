@@ -133,6 +133,22 @@ int main() {
 		printf("getDerivedHDAddressByPath failed!\n");
 		return -1;
 	}
+
+	// test getHDNodeAndExtKeyByPath
+	size_t wiflen = 53;
+	char privkeywif_main[wiflen];
+	dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
+	if (strcmp(utils_uint8_to_hex(hdnode->private_key, sizeof hdnode->private_key), "09648faa2fa89d84c7eb3c622e06ed2c1c67df223bc85ee206b30178deea7927") != 0) {
+		printf("getHDNodeAndExtKeyByPath!\n");
+	}
+	dogecoin_privkey_encode_wif((const dogecoin_key*)hdnode->private_key, &dogecoin_chainparams_main, privkeywif_main, &wiflen);
+	if (strcmp(privkeywif_main, "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG") != 0) {
+		printf("privkeywif_main does not match!\n");
+	}
+	if (strcmp(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7") != 0) {
+		printf("extout does not match!\n");
+	}
+	dogecoin_hdnode_free(hdnode);
 	dogecoin_free(extout);
 	// END ===========================================
 
