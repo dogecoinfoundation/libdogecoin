@@ -160,8 +160,10 @@ void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogeco
 dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str, size_t* strsize);
 dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node);
 
+/* get derived hd extended child key and corresponding private key in WIF format */
+char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
 /* get derived hd extended address and compendium hdnode */
-LIBDOGECOIN_API dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
 
 /* bip44 utilities */
 #define BIP44_PURPOSE "44"       /* Purpose for key derivation according to BIP 44 */

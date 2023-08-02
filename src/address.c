@@ -328,6 +328,33 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
  * @param outprivkey The boolean value used to derive either a public or 
  * private address. 'true' for private, 'false' for public
  * 
+ * @return dogecoin_hdnode private key that is converted to WIF that derived child key belongs to
+ */
+char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
+    if (!masterkey || !derived_path || !outaddress) {
+        debug_print("%s", "missing input\n");
+        exit(EXIT_FAILURE);
+    }
+    size_t wiflen = WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN;
+    char* privkeywif_main = dogecoin_malloc(wiflen);
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
+    dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey, derived_path, outaddress, outprivkey);
+    dogecoin_privkey_encode_wif((const dogecoin_key*)hdnode->private_key, chain, privkeywif_main, &wiflen);
+    dogecoin_hdnode_free(hdnode);
+    return privkeywif_main;
+}
+
+/**
+ * @brief This function generates a derived child key from a masterkey using
+ * a custom derived path in string format.
+ * 
+ * @param masterkey The master key from which children are derived from.
+ * @param derived_path The path to derive an address from according to BIP-44.
+ * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
+ * @param outaddress The derived address.
+ * @param outprivkey The boolean value used to derive either a public or 
+ * private address. 'true' for private, 'false' for public
+ * 
  * @return dogecoin_hdnode that derived address belongs to
  */
 dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {

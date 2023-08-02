@@ -16,6 +16,7 @@
     - [**verifyPrivPubKeypair**](#verifyprivpubkeypair)
     - [**verifyHDMasterPubKeypair**](#verifyhdmasterpubkeypair)
     - [**verifyP2pkhAddress**](#verifyp2pkhaddress)
+    - [**getHDNodePrivateKeyWIFByPath**](#getHDNodePrivateKeyWIFByPath)
     - [**getHDNodeAndExtKeyByPath**](#getHDNodeAndExtKeyByPath)
     - [**getDerivedHDAddress**](#getderivedhdaddress)
     - [**getDerivedHDAddressByPath**](#getderivedhdaddressbypath)
@@ -278,11 +279,39 @@ int main() {
 
 ---
 
+### **getHDNodePrivateKeyWIFByPath**
+
+`char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey)`
+
+This function derives a hierarchical deterministic child key by way of providing the extended master key, derived_path, outaddress and outprivkey.
+It will return the dogecoin_hdnode's private key serialized in WIF format if successful and exits if the proper arguments are not provided.
+
+_C usage:_
+
+```C
+#include "libdogecoin.h"
+#include <assert.h>
+#include <stdio.h>
+
+int main() {
+  size_t extoutsize = 112;
+  char* extout = dogecoin_char_vla(extoutsize);
+  char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
+  dogecoin_ecc_start();
+  u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true), "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG");
+  u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+  dogecoin_ecc_stop();
+  free(extout);
+}
+```
+
+---
+
 ### **getHDNodeAndExtKeyByPath**
 
 `dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey)`
 
-This function derives a hierarchical deterministic address by way of providing the extended master key, account, ischange and addressindex.
+This function derives a hierarchical deterministic child key by way of providing the extended master key, derived_path, outaddress and outprivkey.
 It will return the dogecoin_hdnode if successful and exits if the proper arguments are not provided.
 
 _C usage:_
