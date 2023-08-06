@@ -160,6 +160,11 @@ void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogeco
 dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str, size_t* strsize);
 dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node);
 
+/* get derived hd extended child key and corresponding private key in WIF format */
+char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+/* get derived hd extended address and compendium hdnode */
+dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+
 /* bip44 utilities */
 #define BIP44_PURPOSE "44"       /* Purpose for key derivation according to BIP 44 */
 #define BIP44_COIN_TYPE "3"      /* Coin type for Dogecoin (3, SLIP 44) */
@@ -396,13 +401,11 @@ typedef struct vector {
 
 vector* vector_new(size_t res, void (*free_f)(void*));
 void vector_free(vector* vec, dogecoin_bool free_array);
-
 dogecoin_bool vector_add(vector* vec, void* data);
 dogecoin_bool vector_remove(vector* vec, void* data);
 void vector_remove_idx(vector* vec, size_t idx);
 void vector_remove_range(vector* vec, size_t idx, size_t len);
 dogecoin_bool vector_resize(vector* vec, size_t newsz);
-
 ssize_t vector_find(vector* vec, void* data);
 
 

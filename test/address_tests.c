@@ -10,7 +10,9 @@
 
 #include <dogecoin/address.h>
 #include <dogecoin/chainparams.h>
+#include <dogecoin/constants.h>
 #include <dogecoin/dogecoin.h>
+#include <dogecoin/key.h>
 #include <dogecoin/utils.h>
 
 void test_address()
@@ -48,7 +50,6 @@ void test_address()
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_main, strlen(p2pkh_pubkey_main)), true);
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_test, strlen(p2pkh_pubkey_test)), true);
 
-
     /* initialize testing variables for hd keypair gen */
     size_t masterkeylen = 200;
     size_t pubkeylen = 35;
@@ -84,12 +85,10 @@ void test_address()
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_master_pubkey_main, strlen(p2pkh_master_pubkey_main)), true);
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_master_pubkey_test, strlen(p2pkh_master_pubkey_test)), true);
 
-
     /* initialize testing variables for derived pubkeys */
-
-    char* child_key_main=dogecoin_char_vla(masterkeylen);
-    char* child_key_test=dogecoin_char_vla(masterkeylen);
-    char* str=dogecoin_char_vla(pubkeylen);
+    char* child_key_main = dogecoin_char_vla(masterkeylen);
+    char* child_key_test = dogecoin_char_vla(masterkeylen);
+    char* str = dogecoin_char_vla(pubkeylen);
     /* test child key derivation ability */
     u_assert_int_eq(generateDerivedHDPubkey(masterkey_main, NULL), true)
     u_assert_int_eq(generateDerivedHDPubkey(NULL, NULL), false)
@@ -160,6 +159,77 @@ void test_address()
     res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, false);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
+    
+    /* test getHDNodeAndExtKeyByPath */
+    dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
+    u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true), "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG");
+    u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
+    
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, false);
+    u_assert_str_eq(extout, "dgub8vXjuDpn2sTkerBdjSfq9kmjhaQsXHxyBkYrikw84GCYz9ozcdwvYPo5SSDWqZUVT5d4jrG8CHiGsC1M7pdETPhoKiQa92znT2vG9YaytBH");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, false), "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG");
+    u_assert_str_eq(extout, "dgub8vXjuDpn2sTkerBdjSfq9kmjhaQsXHxyBkYrikw84GCYz9ozcdwvYPo5SSDWqZUVT5d4jrG8CHiGsC1M7pdETPhoKiQa92znT2vG9YaytBH");
+    
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/1", extout, true);
+    u_assert_str_eq(extout, "dgpv5BeiZXttUioRRXS57Kd9ypkyWcV3vey1MgrSYmhaeBE54J8zerFV5mJSdZWQxpg55L13GWn4BWGMm1mPgzCp5btqBudQtoyepBECGS3pUT5");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/1", extout, true), "QX2zKvdkWv1CbqhwTT1pmMFsxm2trhcs1C45uR8htsKTXM3Fjakd");
+    u_assert_str_eq(extout, "dgpv5BeiZXttUioRRXS57Kd9ypkyWcV3vey1MgrSYmhaeBE54J8zerFV5mJSdZWQxpg55L13GWn4BWGMm1mPgzCp5btqBudQtoyepBECGS3pUT5");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/1", extout, false);
+    u_assert_str_eq(extout, "dgub8vXjuDpn2sTkiP6E9ZF86gJZyArgkmzieHdeht6ZSJH5cMFh4coFj4i6CncZQKrXobLWphRcR5fwupY9rKkR3s5L5xLAeS6WK6KyKM7pGYN");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/1", extout, false), "QX2zKvdkWv1CbqhwTT1pmMFsxm2trhcs1C45uR8htsKTXM3Fjakd");
+    u_assert_str_eq(extout, "dgub8vXjuDpn2sTkiP6E9ZF86gJZyArgkmzieHdeht6ZSJH5cMFh4coFj4i6CncZQKrXobLWphRcR5fwupY9rKkR3s5L5xLAeS6WK6KyKM7pGYN");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, true);
+    u_assert_str_eq(extout, "dgpv5B5FdsPKQH8hK3vUo5ZR9ZXktfUxv1PStiM2TfnwH9oct5nJwAUx28356eNXoUwcNwzvfVRSDVh85aV3CQdKpQo2Vm8MKyz7KsNAXTEMbeS");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, true), "QUcBMYx22178giKAWQxJV6qyRT5PMiRuTCW4JkKA7FNeWpj3PwZF");
+    u_assert_str_eq(extout, "dgpv5B5FdsPKQH8hK3vUo5ZR9ZXktfUxv1PStiM2TfnwH9oct5nJwAUx28356eNXoUwcNwzvfVRSDVh85aV3CQdKpQo2Vm8MKyz7KsNAXTEMbeS");
+    
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, false);
+    u_assert_str_eq(extout, "dgub8uxGyZKCxRo2buadqKBPGR5MMDrbk8RABK8EcnBv5GrdS8u1Lw2ifRSifsT3wuVRsK45b9kugWkd2cREzkJLiGvwbY5txG2dKfsY3bndC93");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, false), "QUcBMYx22178giKAWQxJV6qyRT5PMiRuTCW4JkKA7FNeWpj3PwZF");
+    u_assert_str_eq(extout, "dgub8uxGyZKCxRo2buadqKBPGR5MMDrbk8RABK8EcnBv5GrdS8u1Lw2ifRSifsT3wuVRsK45b9kugWkd2cREzkJLiGvwbY5txG2dKfsY3bndC93");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/0/0", extout, true);
+    u_assert_str_eq(extout, "dgpv5Ckgu5gakCr2e4PpY8K64iGqoREfmRJAACxiX4ia6AToANXgttniNLr727cgx3ceih7xdMcejLb7bkL7AE8dWKRHCCW6Bgr4ZivSjoxTF3A");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/0/0", extout, true), "QQ44Mhbq9itBVntwhraNf3E9BEUYsh2paDtE5XsHjwsWnHYWQ3Yf");
+    u_assert_str_eq(extout, "dgpv5Ckgu5gakCr2e4PpY8K64iGqoREfmRJAACxiX4ia6AToANXgttniNLr727cgx3ceih7xdMcejLb7bkL7AE8dWKRHCCW6Bgr4ZivSjoxTF3A");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/0/0", extout, false);
+    u_assert_str_eq(extout, "dgub8wdiEmcUJMWMvv3yaMw4BZpSFycJbYKsSojvgB7YtHWoiRePJfLV1eFkbM2up2rkvEeukK9ffXypdLscJKJH8MwTe8hvJcWhcMdwwjpLKmQ");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/0/0", extout, false), "QQ44Mhbq9itBVntwhraNf3E9BEUYsh2paDtE5XsHjwsWnHYWQ3Yf");
+    u_assert_str_eq(extout, "dgub8wdiEmcUJMWMvv3yaMw4BZpSFycJbYKsSojvgB7YtHWoiRePJfLV1eFkbM2up2rkvEeukK9ffXypdLscJKJH8MwTe8hvJcWhcMdwwjpLKmQ");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/1/0", extout, true);
+    u_assert_str_eq(extout, "dgpv5CnqDfc6af4vFmQ1afrYYH3SSM5wT1fXVNJuVzWBEPBB5X3oy8AFz88DawAtCcZDq6tDbJmdBTSgYPCHc3GB7sFdbbBAuyxn2vLAsKar9BT");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/1/0", extout, true), "QPa6TYKTk5qggHa8V2PaWWJUAB6TZnwgqzEqF91oKKEuExVyrykD");
+    u_assert_str_eq(extout, "dgpv5CnqDfc6af4vFmQ1afrYYH3SSM5wT1fXVNJuVzWBEPBB5X3oy8AFz88DawAtCcZDq6tDbJmdBTSgYPCHc3GB7sFdbbBAuyxn2vLAsKar9BT");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/1/0", extout, false);
+    u_assert_str_eq(extout, "dgub8wfrZMXz8ojFYd4AcuUWf8b2tuTaH8hEmy67f6uA2WEBdaAWNti2dRXsADFSsM26nsiaPR81pZNE3Y2ws89HK46qtGifYJTb7RGzbhr8CiC");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/1/0", extout, false), "QPa6TYKTk5qggHa8V2PaWWJUAB6TZnwgqzEqF91oKKEuExVyrykD");
+    u_assert_str_eq(extout, "dgub8wfrZMXz8ojFYd4AcuUWf8b2tuTaH8hEmy67f6uA2WEBdaAWNti2dRXsADFSsM26nsiaPR81pZNE3Y2ws89HK46qtGifYJTb7RGzbhr8CiC");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, true);
+    u_assert_str_eq(extout, "dgpv5Ckgu5gakCr2g8NwFsi9aXXgBTXvzoFxwi8ybQHRmutQzYDoa8y4QD6w94EEYFtinVGD3ZzZG89t8pedriw9L8VgPYKeQsUHoZQaKcSEqwr");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, true), "QPhPcYBCZPPc73Ldrdj6Ubc8SiiRqwRns6nuEqgzshiqJA6WEp62");
+    u_assert_str_eq(extout, "dgpv5Ckgu5gakCr2g8NwFsi9aXXgBTXvzoFxwi8ybQHRmutQzYDoa8y4QD6w94EEYFtinVGD3ZzZG89t8pedriw9L8VgPYKeQsUHoZQaKcSEqwr");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, false);
+    u_assert_str_eq(extout, "dgub8wdiEmcUJMWMxz36J7L7hP5Ge1uZpvHgEJvBkWgQa2wRYbLVyuWq3WWaiK3ZgYs893RqrgZN3QgRghPXkpRr7kdT44XVSaJuwMF1PTHi2mQ");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, false), "QPhPcYBCZPPc73Ldrdj6Ubc8SiiRqwRns6nuEqgzshiqJA6WEp62");
+    u_assert_str_eq(extout, "dgub8wdiEmcUJMWMxz36J7L7hP5Ge1uZpvHgEJvBkWgQa2wRYbLVyuWq3WWaiK3ZgYs893RqrgZN3QgRghPXkpRr7kdT44XVSaJuwMF1PTHi2mQ");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, true);
+    u_assert_str_eq(extout, "dgpv5CnqDfc6af4vKYLZQfyGgYYVQcgkiGwqAm1qEirxruSwXwSQJoTLjSckPkbZDXRQs7X83esTtoBEmy4zr4UgJBHb8T1EMc6HYCsWgKk4JRh");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, true), "QQiHajxrYwkCK1zkbmt2ZTKSQyy64jUPVbw4CDYJBchg975TRBJu");
+    u_assert_str_eq(extout, "dgpv5CnqDfc6af4vKYLZQfyGgYYVQcgkiGwqAm1qEirxruSwXwSQJoTLjSckPkbZDXRQs7X83esTtoBEmy4zr4UgJBHb8T1EMc6HYCsWgKk4JRh");
+
+    hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, false);
+    u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
+    u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, false), "QQiHajxrYwkCK1zkbmt2ZTKSQyy64jUPVbw4CDYJBchg975TRBJu");
+    u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
 
 #if WIN32 || USE_UNISTRING
     // mnemonic to HD keys and addresses
@@ -175,6 +245,7 @@ void test_address()
 #endif
 
     /*free up VLAs*/
+    dogecoin_hdnode_free(hdnode);
     free(masterkey_main);
     free(masterkey_test);
     free(p2pkh_master_pubkey_main);
