@@ -56,18 +56,18 @@
 /**
  * @brief This function generates a new basic public-private
  * key pair for the specified network.
- * 
+ *
  * @param wif_privkey The generated private key.
  * @param p2pkh_pubkey The generated public key.
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
- * 
- * @return 1 if the key pair was generated successfully. 
+ *
+ * @return 1 if the key pair was generated successfully.
  */
 int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
 {
     /* internal variables */
 
-    char wif_privkey_internal[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN]; //MLUMIN: Keylength (51 or 52 chars, depending on uncompressed or compressed) +1 for string termination 'internally'? 
+    char wif_privkey_internal[WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN]; //MLUMIN: Keylength (51 or 52 chars, depending on uncompressed or compressed) +1 for string termination 'internally'?
     char p2pkh_pubkey_internal[P2PKH_ADDR_STRINGLEN]; //MLUMIN: no magic numbers. p2pkh address should be 34 characters, +1 though for string termination 'internally'?
     size_t privkey_len = sizeof(wif_privkey_internal);
 
@@ -119,11 +119,11 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
  * @brief This function generates a new master public-private
  * key pair for a hierarchical deterministic wallet on the
  * specified network.
- * 
+ *
  * @param wif_privkey_master The generated master private key.
  * @param p2pkh_pubkey_master The generated master public key.
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
- * 
+ *
  * @return 1 if the key pair was generated successfully.
  */
 int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
@@ -163,13 +163,13 @@ int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_mast
 
 /**
  * @brief This function takes a wif-encoded HD master
- * private key and derive a new HD public key from it 
+ * private key and derive a new HD public key from it
  * on the specified network. This input should come from
  * the result of generateHDMasterPubKeypair().
- * 
+ *
  * @param wif_privkey_master The master private key to derive the child key from.
  * @param p2pkh_pubkey The resulting child public key.
- * 
+ *
  * @return 1 if the child key was generated successfully, 0 otherwise.
  */
 int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
@@ -210,11 +210,11 @@ int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)
  * @brief This function verifies that a given private key
  * matches a given public key and that both are valid on
  * the specified network.
- * 
+ *
  * @param wif_privkey The private key to check.
  * @param p2pkh_pubkey The public key to check.
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
- * 
+ *
  * @return 1 if the keys match and are valid on the specified network, 0 otherwise.
  */
 int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet) {
@@ -244,7 +244,7 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
     char* new_p2pkh_pubkey = dogecoin_char_vla(sizeout);
     dogecoin_pubkey_getaddr_p2pkh(&pubkey, chain, new_p2pkh_pubkey);
     if (strcmp(p2pkh_pubkey, new_p2pkh_pubkey))
-    { 
+    {
         free(new_p2pkh_pubkey);
         return false;
     }
@@ -259,11 +259,11 @@ int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet)
  * @brief This function verifies that a given HD master
  * private key matches a given HD master public key and
  * that both are valid on the specified network.
- * 
+ *
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
  * @param wif_privkey_master The master private key to check.
  * @param p2pkh_pubkey_master The master public key to check.
- * 
+ *
  * @return 1 if the keys match and are valid on the specified network, 0 otherwise.
  */
 int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet) {
@@ -288,10 +288,10 @@ int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master
 /**
  * @brief This function takes a public key and does some basic
  * validation to determine if it is a valid Dogecoin address.
- * 
+ *
  * @param p2pkh_pubkey The address to check.
  * @param len The length of the address in characters.
- * 
+ *
  * @return 1 if it is a valid Dogecoin address, 0 otherwise.
  */
 int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
@@ -301,7 +301,7 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
     unsigned char* dec = dogecoin_uchar_vla(len);
     unsigned char d1[SHA256_DIGEST_LENGTH];
     unsigned char d2[SHA256_DIGEST_LENGTH];
-    if (!dogecoin_base58_decode_check(p2pkh_pubkey, dec, len)) 
+    if (!dogecoin_base58_decode_check(p2pkh_pubkey, dec, len))
     {
         free(dec);
         return false;
@@ -309,7 +309,7 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
     /* check validity */
     sha256_raw(dec, 21, d1);
     sha256_raw(d1, SHA256_DIGEST_LENGTH, d2);
-    if (memcmp(dec + 21, d2, 4) != 0) 
+    if (memcmp(dec + 21, d2, 4) != 0)
     {
         free(dec);
         return false;
@@ -321,14 +321,14 @@ int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len)
 /**
  * @brief This function generates a derived child key from a masterkey using
  * a custom derived path in string format.
- * 
+ *
  * @param masterkey The master key from which children are derived from.
  * @param derived_path The path to derive an address from according to BIP-44.
  * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
  * @param outaddress The derived address.
- * @param outprivkey The boolean value used to derive either a public or 
+ * @param outprivkey The boolean value used to derive either a public or
  * private address. 'true' for private, 'false' for public
- * 
+ *
  * @return dogecoin_hdnode private key that is converted to WIF that derived child key belongs to
  */
 char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
@@ -348,14 +348,14 @@ char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_pa
 /**
  * @brief This function generates a derived child key from a masterkey using
  * a custom derived path in string format.
- * 
+ *
  * @param masterkey The master key from which children are derived from.
  * @param derived_path The path to derive an address from according to BIP-44.
  * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
  * @param outaddress The derived address.
- * @param outprivkey The boolean value used to derive either a public or 
+ * @param outprivkey The boolean value used to derive either a public or
  * private address. 'true' for private, 'false' for public
- * 
+ *
  * @return dogecoin_hdnode that derived address belongs to
  */
 dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
@@ -381,14 +381,14 @@ dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* der
 /**
  * @brief This function generates a derived child key from a masterkey using
  * a custom derived path in string format.
- * 
+ *
  * @param masterkey The master key from which children are derived from.
  * @param derived_path The path to derive an address from according to BIP-44.
  * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
  * @param outaddress The derived address.
- * @param outprivkey The boolean value used to derive either a public or 
+ * @param outprivkey The boolean value used to derive either a public or
  * private address. 'true' for private, 'false' for public
- * 
+ *
  * @return 1 if a derived address was successfully generated, 0 otherwise
  */
 int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
@@ -401,11 +401,11 @@ int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, c
     const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
     bool ret = true;
     dogecoin_hdnode node, nodenew;
-    
+
     if (!dogecoin_hdnode_deserialize(masterkey, chain, &node)) {
         ret = false;
     }
-    
+
     // dogecoin_hdnode_has_privkey
     bool pubckd = !dogecoin_hdnode_has_privkey(&node);
     /* derive child key, use pubckd or privckd */
@@ -422,15 +422,15 @@ int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, c
  * @brief This function generates a derived child address from a masterkey using
  * a BIP44 standardized static, non hardened path comprised of an account, a change or
  * receiving address and an address index.
- * 
+ *
  * @param masterkey The master key from which children are derived from.
  * @param account The account that the derived address would belong to.
  * @param ischange Boolean value representing either a change or receiving address.
  * @param addressindex The index of the receiving/change address per account.
  * @param outaddress The derived address.
- * @param outprivkey The boolean value used to derive either a public or 
+ * @param outprivkey The boolean value used to derive either a public or
  * private address. 'true' for private, 'false' for public
- * 
+ *
  * @return 1 if a derived address was successfully generated, 0 otherwise.
  */
 int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey) {
@@ -481,7 +481,7 @@ int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index
     SEED seed = {0};
 
     /* Convert mnemonic to seed */
-    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed)) {
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
         return -1;
     }
 
@@ -526,7 +526,7 @@ int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_master, char* p2pkh
     SEED seed = {0};
 
     /* Convert mnemonic to seed */
-    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed)) {
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
         return -1;
     }
 
@@ -568,7 +568,7 @@ int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const c
     SEED seed = {0};
 
     /* Convert mnemonic to seed */
-    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed)) {
+    if (dogecoin_seed_from_mnemonic (mnemonic, pass, seed) == -1) {
         return -1;
     }
 
@@ -597,17 +597,18 @@ int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const c
 }
 
 /**
- * @brief This function generates a new dogecoin address from a sealed seed by the slip44 key path.
+ * @brief This function generates a new dogecoin address from a encrypted seed by the slip44 key path.
  *
  * @param account The BIP44 account to generate the derived address.
  * @param index The BIP44 index to generate the derived address.
  * @param change_level The BIP44 change level flag to generate derived address.
  * @param p2pkh_pubkey_master The generated master public key.
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
+ * @param file_num The file number to store the encrypted seed.
  *
  * return: 0 (success), -1 (fail)
  */
-int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet) {
+int getDerivedHDAddressFromEncryptedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet, const int file_num) {
 
     /* Initialize variables */
     dogecoin_hdnode node;
@@ -617,8 +618,8 @@ int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t ind
     /* Define seed and initialize */
     SEED seed = {0};
 
-    /* Unseal the seed with the TPM */
-    if (dogecoin_unseal_seed (seed)) {
+    /* Decrypt the seed with the TPM */
+    if (dogecoin_decrypt_seed_with_tpm (seed, file_num) == false) {
         return -1;
     }
 
@@ -638,7 +639,7 @@ int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t ind
 }
 
 /**
- * @brief This function generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a sealed seed.
+ * @brief This function generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a encrypted seed.
  *
  * @param wif_privkey_master The generated master private key.
  * @param p2pkh_pubkey_master The generated master public key.
@@ -646,7 +647,7 @@ int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t ind
  *
  * return: 0 (success), -1 (fail)
  */
-int generateHDMasterPubKeypairFromSealedSeed(char* wif_privkey_master, char* p2pkh_pubkey_master, const dogecoin_bool is_testnet) {
+int generateHDMasterPubKeypairFromEncryptedSeed(char* wif_privkey_master, char* p2pkh_pubkey_master, const dogecoin_bool is_testnet, const int file_num) {
 
     /* Initialize variables */
     dogecoin_hdnode node;
@@ -654,8 +655,8 @@ int generateHDMasterPubKeypairFromSealedSeed(char* wif_privkey_master, char* p2p
     /* Define seed and initialize */
     SEED seed = {0};
 
-    /* Unseal the seed with the TPM */
-    if (dogecoin_unseal_seed (seed)) {
+    /* Decrypt the seed with the TPM */
+    if (dogecoin_decrypt_seed_with_tpm (seed, file_num) == false) {
         return -1;
     }
 
@@ -672,7 +673,7 @@ int generateHDMasterPubKeypairFromSealedSeed(char* wif_privkey_master, char* p2p
 }
 
 /**
- * @brief This function verifies that a HD master key and a dogecoin address matches a sealed seed.
+ * @brief This function verifies that a HD master key and a dogecoin address matches a encrypted seed.
  *
  * @param wif_privkey_master The master private key to check.
  * @param p2pkh_pubkey_master The master public key to check.
@@ -680,7 +681,7 @@ int generateHDMasterPubKeypairFromSealedSeed(char* wif_privkey_master, char* p2p
  *
  * return: 0 (success), -1 (fail)
  */
-int verifyHDMasterPubKeypairFromSealedSeed(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const dogecoin_bool is_testnet) {
+int verifyHDMasterPubKeypairFromEncryptedSeed(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const dogecoin_bool is_testnet, const int file_num) {
 
     /* Initialize variables */
     dogecoin_hdnode node;
@@ -688,8 +689,8 @@ int verifyHDMasterPubKeypairFromSealedSeed(const char* wif_privkey_master, const
     /* Define seed and initialize */
     SEED seed = {0};
 
-    /* Unseal the seed with the TPM */
-    if (dogecoin_unseal_seed (seed)) {
+    /* Decrypt the seed with the TPM */
+    if (dogecoin_decrypt_seed_with_tpm (seed, file_num) == false) {
         return -1;
     }
 
@@ -715,4 +716,88 @@ int verifyHDMasterPubKeypairFromSealedSeed(const char* wif_privkey_master, const
     }
 
     return 0;
+}
+
+/**
+ * @brief This function generates a new dogecoin address from a encrypted mnemonic by the slip44 key path.
+ *
+ * @param account The BIP44 account to generate the derived address.
+ * @param index The BIP44 index to generate the derived address.
+ * @param change_level The BIP44 change level flag to generate derived address.
+ * @param p2pkh_pubkey_master The generated master public key.
+ * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
+ * @param file_num The file number to store the encrypted seed.
+ *
+ * return: 0 (success), -1 (fail)
+ */
+int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const PASSPHRASE pass, char* p2pkh_pubkey, const bool is_testnet, const int file_num) {
+
+    /* Initialize variables */
+    dogecoin_hdnode node;
+    dogecoin_hdnode bip44_key;
+    char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+
+    /* Define seed and initialize */
+    SEED seed = {0};
+
+    /* Define mnemonic and initialize */
+    MNEMONIC mnemonic = {0};
+
+    /* Decrypt the mnemonic with the TPM */
+    if (dogecoin_decrypt_mnemonic_with_tpm (mnemonic, file_num) == false) {
+        return -1;
+    }
+
+    /* Generate the root key from the mnemonic */
+    dogecoin_seed_from_mnemonic(mnemonic, pass, seed);
+
+    /* Generate the root key from the seed */
+    dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
+
+    /* Derive the child private key at the index */
+    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+        return -1;
+    }
+
+    /* Generate the address */
+    dogecoin_hdnode_get_p2pkh_address(&bip44_key, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, p2pkh_pubkey, P2PKH_ADDR_STRINGLEN);
+
+   return 0;
+
+}
+
+/**
+ * @brief This function generates a new dogecoin address from a encrypted master (HD) key by the slip44 key path.
+ *
+ * @param account The BIP44 account to generate the derived address.
+ * @param index The BIP44 index to generate the derived address.
+ * @param change_level The BIP44 change level flag to generate derived address.
+ * @param p2pkh_pubkey_master The generated master public key.
+ * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
+ * @param file_num The file number to store the encrypted seed.
+ *
+ * return: 0 (success), -1 (fail)
+ */
+int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet, const int file_num) {
+
+    /* Initialize variables */
+    dogecoin_hdnode node;
+    dogecoin_hdnode bip44_key;
+    char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+
+    /* Decrypt the hdnode with the TPM */
+    if (dogecoin_decrypt_hdnode_with_tpm (&node, file_num) == false) {
+        return -1;
+    }
+
+    /* Derive the child private key at the index */
+    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+        return -1;
+    }
+
+    /* Generate the address */
+    dogecoin_hdnode_get_p2pkh_address(&bip44_key, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, p2pkh_pubkey, P2PKH_ADDR_STRINGLEN);
+
+   return 0;
+
 }

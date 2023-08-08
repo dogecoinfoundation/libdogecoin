@@ -171,17 +171,15 @@ static struct option long_options[] = {
         {"debug", no_argument, NULL, 'd'},
         {"maxnodes", no_argument, NULL, 'm'},
         {"mnemonic", no_argument, NULL, 'n'},
-        {"pass_phrase", required_argument, NULL, 'a'},
+        {"pass_phrase", required_argument, NULL, 's'},
         {"dbfile", no_argument, NULL, 'f'},
         {"continuous", no_argument, NULL, 'c'},
-        {"address", no_argument, NULL, 's'},
+        {"address", no_argument, NULL, 'a'},
         {"full_sync", no_argument, NULL, 'b'},
         {"checkpoint", no_argument, NULL, 'p'},
         {"wallet_file", required_argument, NULL, 'w'},
         {"headers_file", required_argument, NULL, 'h'},
-        {"object_slot", required_argument, NULL, 'y'},
-        {"tpm", no_argument, NULL, 'y'},
-        {"wallet_file", required_argument, NULL, 'w'},
+        {"tpm_file", required_argument, NULL, 'y'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -198,7 +196,7 @@ static void print_version() {
 static void print_usage() {
     print_version();
     printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-t[--testnet]) (-f <headersfile|0 for in mem only>) \
-(-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-y|-tpm <slot>) (-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
+(-n|-mnemonic <seed_phrase>) (-s|-pass_phrase <pass_phrase>) (-y|-tpm_file <file_num 0-999>) (-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -212,14 +210,12 @@ static void print_usage() {
     printf("> spvnode -d -f 0 -c -w \"./wallets/main_wallet.db\" scan\n\n");
     printf("Sync up, with a wallet file (ex. ./wallets/main_wallet.db), show debug info, with a headers file (ex. ./headers/main_headers.db), wait for new blocks:\n");
     printf("> spvnode -d -c -w \"./wallets/main_wallet.db\" -h \"./headers/main_headers.db\" scan\n\n");
-    printf("Sync up, with tpm slot 0, show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("Sync up, with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:\n");
     printf("> spvnode -d -f 0 -c -y 0 scan\n\n");
-    printf("Sync up, with tpm slot 0, pass phrase 'test', show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("Sync up, with encrypted mnemonic 0, pass phrase 'test', show debug info, don't store headers in file, wait for new blocks:\n");
     printf("> spvnode -d -f 0 -c -y 0 -a \"test\" scan\n\n");
     printf("Sync up, with mnemonic 'test', pass phrase 'test', show debug info, don't store headers in file, wait for new blocks:\n");
     printf("> spvnode -d -f 0 -c -n \"test\" -a \"test\" scan\n\n");
-    printf("Sync up, with a wallet file (ex. mnemonic_wallet.db), show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> spvnode -d -f 0 -c -w \"mnemonic_wallet.db\" scan\n\n");
     }
 
 
@@ -275,7 +271,7 @@ int main(int argc, char* argv[]) {
     dogecoin_bool full_sync = false;
     dogecoin_bool have_decl_daemon = false;
     dogecoin_bool tpm = false;
-    int slot = NO_SLOT;
+    int file_num = NO_FILE;
     char* wallet_name = NULL;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
@@ -303,7 +299,7 @@ int main(int argc, char* argv[]) {
                 case 'i':
                     ips = optarg;
                     break;
-                case 'a':
+                case 's':
                     pass = optarg;
                     break;
                 case 'n':
@@ -312,7 +308,7 @@ int main(int argc, char* argv[]) {
                 case 'f':
                     dbfile = optarg;
                     break;
-                case 's':
+                case 'a':
                     address = optarg;
                     break;
                 case 'b':
@@ -321,14 +317,14 @@ int main(int argc, char* argv[]) {
                 case 'p':
                     use_checkpoint = true;
                     break;
-                case 'w':
-                    name = optarg;
-                    break;
                 case 'h':
                     headers_name = optarg;
                 case 'y':
                     tpm = true;
-                    slot = (int)strtol(optarg, (char**)NULL, 10);
+                    file_num = (int)strtol(optarg, (char**)NULL, 10);
+                    break;
+                case 'w':
+                    name = optarg;
                     break;
                 case 'z':
                     have_decl_daemon = true;
@@ -350,7 +346,7 @@ int main(int argc, char* argv[]) {
         client->sync_completed = spv_sync_completed;
 
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, mnemonic_in, pass, name, tpm, slot);
+        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, tpm, file_num);
         print_utxos(wallet);
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;

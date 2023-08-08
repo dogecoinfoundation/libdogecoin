@@ -17,6 +17,9 @@ The `such` tool can be used by simply running the command `./such` in the top le
 - bip32_extended_master_key
 - derive_child_keys
 - generate_mnemonic
+- list_encryption_keys_in_tpm
+- decrypt_master_key_with_tpm
+- decrypt_mnemonic_with_tpm
 - mnemonic_to_addresses
 - print_keys
 - sign
@@ -30,7 +33,7 @@ So an example run of `such` could be something like this:
 ```
 ./such -c generate_private_key
 ```
-Most of these commands require a flag following them to denote things like existing keys, transaction hex strings, and more: 
+Most of these commands require a flag following them to denote things like existing keys, transaction hex strings, and more:
 
 | Flag | Name | Required Arg? | Usage |
 | -    | -    | -             |-      |
@@ -43,6 +46,9 @@ Most of these commands require a flag following them to denote things like exist
 | -o, --account_int  | account_int | yes | mnemonic_to_addresses -n <seed_phrase> -o <account_int> |
 | -g, --change_level  | change_level | yes | mnemonic_to_addresses -n <seed_phrase> -g <change_level> |
 | -i, --address_index  | address_index | yes | mnemonic_to_addresses -n <seed_phrase> -i <address_index> |
+| -y, --tpm_file | file_num | yes | generate_mnemonic, bip32_extended_master_key, decrypt_master_key_with_tpm, decrypt_mnemonic_with_tpm or mnemonic_to_addresses -y <file_num>
+| -w, --overwrite | overwrite | no | generate_mnemonic or bip32_extended_master_key -w |
+| -b, --silent | silent | no | generate_mnemonic or bip32_extended_master_key -b |
 | -t, --testnet  | designate_testnet   | no  | generate_private_key -t |
 | -s  | script_hex          | yes | comp2der -s <compact_signature> |
 | -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> |
@@ -58,9 +64,12 @@ Below is a list of all the commands and the flags that they require. As a remind
 | p2pkh                     | -k                     | -t   | Generates a p2pkh address derived from the public key specified. Include the testnet flag if it was generated from testnet. |
 | bip32_extended_master_key | None                   | -t   | Generate an extended master private key from a secp256k1 context for either mainnet or testnet. |
 | bip32maintotest           | -p                     | None | Convert a mainnet private key into an equivalent testnet key. |
-| derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified private key using the specified derivation path. 
-| generate_mnemonic         | None                   | -e   | Generates a seed phrase randomly or from optional hex entropy. |
-| mnemonic_to_addresses     | -n      | -a, -o, g, -i, -t   | Generates an address from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
+| derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified private key using the specified derivation path.
+| generate_mnemonic         | None                   | -e, -y, -w, -b | Generates a 24-word english seed phrase randomly or from optional hex entropy. |
+| list_encryption_keys_in_tpm | None                 | None | List the encryption keys in the TPM. |
+| decrypt_master_key_with_tpm | -y                   | None | Decrypt the master key with the TPM. |
+| decrypt_mnemonic_with_tpm | -y                     | None | Decrypt the mnemonic with the TPM. |
+| mnemonic_to_addresses     | -n      | -a, -y, -o, g, -i, -t   | Generates an address from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
 | sign                      | -x, -s, -i, -h, -p     | -t   | See the definition of sign_raw_transaction in the Transaction API.
 | comp2der                  | -s                     | None | Convert a compact signature to a DER signature.
@@ -156,7 +165,7 @@ Below are some examples on how to use the `such` tool in practice.
 
 ### Interactive Transaction Building with `such`
 
-When you start the interactive `such` transaction tool with `./such -c transaction`, you will be faced with a menu of options. To choose one of these options to execute, simply type the number of that command and hit enter. 
+When you start the interactive `such` transaction tool with `./such -c transaction`, you will be faced with a menu of options. To choose one of these options to execute, simply type the number of that command and hit enter.
 
 | Command | Description |
 | -       | -           |
@@ -172,7 +181,7 @@ When you start the interactive `such` transaction tool with `./such -c transacti
 | change network            | Specify the network for building transactions. |
 | quit                      | Exit the tool. |
 
-Once you choose a command, there will be on-screen prompts to guide your next actions. All of these commands internally call the functions that make up Libdogecoin, so for more information on what happens when these commands are run, please refer to the [Libdogecoin Essential Transaction API](doc/../transaction.md). 
+Once you choose a command, there will be on-screen prompts to guide your next actions. All of these commands internally call the functions that make up Libdogecoin, so for more information on what happens when these commands are run, please refer to the [Libdogecoin Essential Transaction API](doc/../transaction.md).
 
 
 

@@ -81,8 +81,9 @@ By contributing to this repository you agree to be a basic human being, please s
 - Express interest and get added to the libdogecoin team on GitHub
   and join the conversation in the Foundation discord server.
 - **Branch/PRs in this repository (see above point for access)**
-- **Ensure tests**
-- **Document how Dogecoin works as each feature is developed in [`/doc/spec`](doc/spec)**
+- **Ensure tests pass and coverage is maintained**
+- **Update libdogecoin.h in [`/include/`](include) and example.c in [`/contrib/examples/`](contrib/examples)**
+- **Document how Dogecoin works as each feature is developed in [`/doc/`](doc/)**
 - 1 approval from another contributor required to merge to main
 - Don't introduce dependencies without discussion (MIT); our aim is to have as few dependencies as possible, with the ideal (possibly unachievable) goal of having none beyond standard c libs and a compiler.
 - Collaborate before you innovate! (this means, discuss what you're working on where everyone can see, before submitting a change.)

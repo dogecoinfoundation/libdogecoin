@@ -120,11 +120,13 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
             return -1;
         }
         memcpy_safe(local_entropy, entropy_bytes, entBytes);
+        utils_clear_buffers();
     }
 
     /* Convert local entropy and copy to entropy parameter if allocated */
     if (entropy_out != NULL) {
         strcpy(entropy_out, utils_uint8_to_hex(local_entropy, entBytes));
+        utils_clear_buffers();
     }
 
     /* Concatenate string of bits from entropy bytes */
@@ -611,11 +613,16 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             sprintf(csBits, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(bytes[0]));
             break;
         default:
-            return -1;
+            /* Invalid byte, return from the function */
+            fprintf(stderr, "ERROR: Failed to convert first byte\n");
             dogecoin_free (segment);
             dogecoin_free (csBits);
-            break;
+            utils_clear_buffers();
+            return -1;
     }
+    /* Clear the bytes buffer */
+    utils_clear_buffers();
+
     csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
 
     /* Concatenate the entropy and checksum bits onto the segment array,

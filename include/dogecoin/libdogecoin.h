@@ -256,37 +256,43 @@ int dogecoin_seed_from_mnemonic(const MNEMONIC mnemonic, const PASS pass, SEED s
 /* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
 int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
 
-/* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
-int getDerivedHDAddressFromMnemonicByPath(const char* derived_path, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
+/* TPM2 utilities */
 
-/* Seal a seed with the TPM */
-int dogecoin_seal_seed (const SEED seed);
+/* Encrypted file numbers */
+#define NO_FILE -1
+#define DEFAULT_FILE 0
+#define MAX_FILES 1000
+#define TEST_FILE 999
 
-/* Unseal a seed with the TPM */
-int dogecoin_unseal_seed (SEED seed);
+/* Encrypt a BIP32 seed with the TPM */
+dogecoin_bool dogecoin_encrypt_seed_with_tpm (const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite);
 
-/* generates a new dogecoin address from a sealed seed and a slip44 key path */
-int getDerivedHDAddressFromSealedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet);
+/* Decrypt a BIP32 seed with the TPM */
+dogecoin_bool dogecoin_decrypt_seed_with_tpm (SEED seed, const int file_num);
 
-/* generates a new dogecoin address from a sealed seed and with a more flexible derived path */
-int getDerivedHDAddressFromSealedSeedByPath(const char* derived_path, char* p2pkh_pubkey, const bool is_testnet);
+/* Generate a BIP39 mnemonic and encrypt it with the TPM */
+dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words);
 
-/* generates a new dogecoin address from a TPM seed and a slip44 key path */
-int getDerivedHDAddressFromTpmSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet);
+/* Decrypt a BIP39 mnemonic with the TPM */
+dogecoin_bool dogecoin_decrypt_mnemonic_with_tpm(MNEMONIC mnemonic, const int file_num);
 
-/* generates a new dogecoin address from a TPM seed and with a more flexible derived path */
-int getDerivedHDAddressFromTpmSeedByPath(const char* derived_path, char* p2pkh_pubkey, const bool is_testnet);
+/* Generate a BIP32 HD node and encrypt it with the TPM */
+dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite);
 
-/* generates a new dogecoin address from a TPM mnemonic and a slip44 key path */
-int getDerivedHDAddressFromTpmMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
+/* Decrypt a BIP32 HD node object with the TPM */
+dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* out, const int file_num);
 
-/* generates a new dogecoin address from a TPM mnemonic and with a more flexible derived path */
-int getDerivedHDAddressFromTpmMnemonicByPath(const char* derived_path, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
+/* Generate a 256-bit random english mnemonic with the TPM */
+dogecoin_bool generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);
 
+/* generates a new dogecoin address from an encrypted seed and a slip44 key path */
+int getDerivedHDAddressFromEncryptedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet, const int file_num);
 
-/* generates a new dogecoin address from a TPM HDNode and with a more flexible derived path */
-int getDerivedHDAddressFromTpmHDNodeByPath(const char* derived_path, char* p2pkh_pubkey, const bool is_testnet);
+/* generates a new dogecoin address from an encrypted mnemonic and a slip44 key path */
+int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const PASS pass, char* p2pkh_pubkey, const bool is_testnet, const int file_num);
 
+/* generates a new dogecoin address from an encrypted HD node and a slip44 key path */
+int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet, const int file_num);
 
 /* Transaction creation functions - builds a dogecoin transaction
 ----------------------------------------------------------------

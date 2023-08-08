@@ -18,7 +18,12 @@
 // (or in the case of this project's directory structure, and if you want to build statically):
 // (after build, from the /libdogecoin project root directory)
 // gcc ./contrib/examples/example.c ./.libs/libdogecoin.a -I./include/dogecoin -L./.libs -ldogecoin -lunistring -o example
-// then run 'example'. 
+// then run 'example'.
+
+//  for windows, from the command line: (after build, from the /libdogecoin project root directory) run:
+//  "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" first to set up the environment.
+//  then run: cl.exe contrib/examples/example.c /I"include\dogecoin" /link "build\Debug\dogecoin.lib" ncrypt.lib tbs.lib msvcrt.lib advapi32.lib /out:example.exe
+//  then run: example.exe
 
 int main() {
 	dogecoin_ecc_start();
@@ -26,13 +31,13 @@ int main() {
 	// BASIC ADDRESS EXAMPLES
 	printf("\n\nBEGIN BASIC ADDRESSING:\n\n");
 	// create variables
-	
+
 	char wif_privkey[PRIVKEYWIFLEN];
 	char p2pkh_pubkey[PUBKEYLEN];
 	char wif_master_privkey[MASTERKEYLEN];
 	char p2pkh_master_pubkey[PUBKEYLEN];
 	char p2pkh_child_pubkey[PUBKEYLEN];
-	
+
 	// keypair generation
 	if (generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
 		printf("Mainnet keypair 1:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_privkey, p2pkh_pubkey);
@@ -119,7 +124,7 @@ int main() {
 	size_t extoutsize = 112;
 	char* extout = dogecoin_char_vla(extoutsize);
 	char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
-	
+
 	if (getDerivedHDAddress(masterkey_main_ext, 0, false, 0, extout, true)) {
 		printf("Derived HD Addresses:\n%s\n%s\n\n", extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
 	} else {
@@ -135,8 +140,8 @@ int main() {
 	}
 
 	// test getHDNodeAndExtKeyByPath
-	size_t wiflen = 53;
-	char privkeywif_main[wiflen];
+	size_t wiflen = PRIVKEYWIFLEN;
+	char privkeywif_main[PRIVKEYWIFLEN];
 	dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
 	if (strcmp(utils_uint8_to_hex(hdnode->private_key, sizeof hdnode->private_key), "09648faa2fa89d84c7eb3c622e06ed2c1c67df223bc85ee206b30178deea7927") != 0) {
 		printf("getHDNodeAndExtKeyByPath!\n");
@@ -221,7 +226,7 @@ int main() {
         printf("%s", "Derived Addresses\n");
 
             char wifstr[100];
-            size_t wiflen = 100;
+            wiflen = 100;
 
         for (uint32_t index = BIP44_FIRST_ACCOUNT_NODE; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
             // Derive the addresses
@@ -379,6 +384,70 @@ int main() {
         remove_eckey(key2);
         dogecoin_free(sig2);
     }
+
+	// TPM2 TESTS
+	printf("\n\nBEGIN TPM2 TESTS:\n\n");
+
+	// test dogecoin_encrypt_seed_with_tpm
+	SEED seed = {0};
+	if (dogecoin_encrypt_seed_with_tpm(seed, sizeof(seed), TEST_FILE, true)) {
+		printf("Seed encrypted with TPM2.\n");
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
+	// test dogecoin_generate_mnemonic_encrypt_with_tpm
+	MNEMONIC mnemonic = {0};
+	if (dogecoin_generate_mnemonic_encrypt_with_tpm(mnemonic, TEST_FILE, true, "eng", " ", NULL)) {
+		printf("Mnemonic generated and encrypted with TPM2.\n");
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
+	// test dogecoin_generate_hdnode_encrypt_with_tpm
+	dogecoin_hdnode out;
+	if (dogecoin_generate_hdnode_encrypt_with_tpm(&out, TEST_FILE, true)) {
+		printf("HD node generated and encrypted with TPM2.\n");
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
+	// test generateRandomEnglishMnemonicTPM
+	if (generateRandomEnglishMnemonicTPM(mnemonic, TEST_FILE, true)) {
+		printf("Mnemonic: %s\n", mnemonic);
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
+	// test getDerivedHDAddressFromEncryptedSeed
+	char derived_address[35];
+	if (getDerivedHDAddressFromEncryptedSeed(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
+		printf("Derived address: %s\n", derived_address);
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
+	// test getDerivedHDAddressFromEncryptedMnemonic
+	if (getDerivedHDAddressFromEncryptedMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, NULL, derived_address, false, TEST_FILE) == 0) {
+		printf("Derived address: %s\n", derived_address);
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
+	// test getDerivedHDAddressFromEncryptedHDNode
+	if (getDerivedHDAddressFromEncryptedHDNode(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
+		printf("Derived address: %s\n", derived_address);
+	} else {
+		printf("Error occurred.\n");
+		return -1;
+	}
+
 
 	printf("\nTESTS COMPLETE!\n");
 	dogecoin_ecc_stop();
