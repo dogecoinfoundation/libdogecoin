@@ -135,42 +135,56 @@ void test_address()
     u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
 
     // hardened paths (unabstracted as this is called by getDerivedHDAddress)
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, false);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, false);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8vXjuDpn2sTkerBdjSfq9kmjhaQsXHxyBkYrikw84GCYz9ozcdwvYPo5SSDWqZUVT5d4jrG8CHiGsC1M7pdETPhoKiQa92znT2vG9YaytBH");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, true);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, true);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgpv5B5FdsPKQH8hK3vUo5ZR9ZXktfUxv1PStiM2TfnwH9oct5nJwAUx28356eNXoUwcNwzvfVRSDVh85aV3CQdKpQo2Vm8MKyz7KsNAXTEMbeS");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, false);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, false);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8uxGyZKCxRo2buadqKBPGR5MMDrbk8RABK8EcnBv5GrdS8u1Lw2ifRSifsT3wuVRsK45b9kugWkd2cREzkJLiGvwbY5txG2dKfsY3bndC93");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, true);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, true);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgpv5Ckgu5gakCr2g8NwFsi9aXXgBTXvzoFxwi8ybQHRmutQzYDoa8y4QD6w94EEYFtinVGD3ZzZG89t8pedriw9L8VgPYKeQsUHoZQaKcSEqwr");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, false);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout, false);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8wdiEmcUJMWMxz36J7L7hP5Ge1uZpvHgEJvBkWgQa2wRYbLVyuWq3WWaiK3ZgYs893RqrgZN3QgRghPXkpRr7kdT44XVSaJuwMF1PTHi2mQ");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, true);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, true);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgpv5CnqDfc6af4vKYLZQfyGgYYVQcgkiGwqAm1qEirxruSwXwSQJoTLjSckPkbZDXRQs7X83esTtoBEmy4zr4UgJBHb8T1EMc6HYCsWgKk4JRh");
-    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, false);
+    res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout, false);
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
-    
+
+    // hardened paths (unabstracted as this is called by getDerivedHDAddress)
+    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "DCm7oSg95sxwn3sWxYUDHgKKbB2mDmuR3B");
+    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "D91jVi3CVGhRmyt83fhMdL4UJWtDuiTZET");
+    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/0/1", extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "D5Se361tds246n9Bm6diMQwkg7PfQrME65");
+    res = getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/1'/1/1", extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "DD5ztaSL3pscXYL6XXcRFTvbdghKppsKDn");
+
     /* test getHDNodeAndExtKeyByPath */
     dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
     u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
     u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true), "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG");
     u_assert_str_eq(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
-    
+
     hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, false);
     u_assert_str_eq(extout, "dgub8vXjuDpn2sTkerBdjSfq9kmjhaQsXHxyBkYrikw84GCYz9ozcdwvYPo5SSDWqZUVT5d4jrG8CHiGsC1M7pdETPhoKiQa92znT2vG9YaytBH");
     u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, false), "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG");
     u_assert_str_eq(extout, "dgub8vXjuDpn2sTkerBdjSfq9kmjhaQsXHxyBkYrikw84GCYz9ozcdwvYPo5SSDWqZUVT5d4jrG8CHiGsC1M7pdETPhoKiQa92znT2vG9YaytBH");
-    
+
     hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/1", extout, true);
     u_assert_str_eq(extout, "dgpv5BeiZXttUioRRXS57Kd9ypkyWcV3vey1MgrSYmhaeBE54J8zerFV5mJSdZWQxpg55L13GWn4BWGMm1mPgzCp5btqBudQtoyepBECGS3pUT5");
     u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/1", extout, true), "QX2zKvdkWv1CbqhwTT1pmMFsxm2trhcs1C45uR8htsKTXM3Fjakd");
@@ -185,7 +199,7 @@ void test_address()
     u_assert_str_eq(extout, "dgpv5B5FdsPKQH8hK3vUo5ZR9ZXktfUxv1PStiM2TfnwH9oct5nJwAUx28356eNXoUwcNwzvfVRSDVh85aV3CQdKpQo2Vm8MKyz7KsNAXTEMbeS");
     u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, true), "QUcBMYx22178giKAWQxJV6qyRT5PMiRuTCW4JkKA7FNeWpj3PwZF");
     u_assert_str_eq(extout, "dgpv5B5FdsPKQH8hK3vUo5ZR9ZXktfUxv1PStiM2TfnwH9oct5nJwAUx28356eNXoUwcNwzvfVRSDVh85aV3CQdKpQo2Vm8MKyz7KsNAXTEMbeS");
-    
+
     hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, false);
     u_assert_str_eq(extout, "dgub8uxGyZKCxRo2buadqKBPGR5MMDrbk8RABK8EcnBv5GrdS8u1Lw2ifRSifsT3wuVRsK45b9kugWkd2cREzkJLiGvwbY5txG2dKfsY3bndC93");
     u_assert_str_eq(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/1/0", extout, false), "QUcBMYx22178giKAWQxJV6qyRT5PMiRuTCW4JkKA7FNeWpj3PwZF");

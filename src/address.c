@@ -379,28 +379,69 @@ dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* der
 }
 
 /**
- * @brief This function generates a derived child key from a masterkey using
+ * @brief This function generates a derived child address from a masterkey using
  * a custom derived path in string format.
  *
  * @param masterkey The master key from which children are derived from.
  * @param derived_path The path to derive an address from according to BIP-44.
  * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
  * @param outaddress The derived address.
- * @param outprivkey The boolean value used to derive either a public or
- * private address. 'true' for private, 'false' for public
  *
  * @return 1 if a derived address was successfully generated, 0 otherwise
  */
-int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
+int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress) {
     if (!masterkey || !derived_path || !outaddress) {
         debug_print("%s", "missing input\n");
         return false;
     }
 
+    dogecoin_hdnode node;
+    bool ret = getDerivedHDNodeByPath(masterkey, derived_path, &node);
+
+    if (ret) {
+        const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
+        dogecoin_hdnode_get_p2pkh_address(&node, chain, outaddress, P2PKH_ADDR_STRINGLEN);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief This function generates a derived child key from a masterkey using
+ * a custom derived path in string format.
+ *
+ * @param masterkey The master key from which children are derived from.
+ * @param derived_path The path to derive an address from according to BIP-44.
+ * e.g. m/44'/3'/1'/1/1 representing m/44'/3'/account'/ischange/index
+ * @param outaddress The derived key.
+ * @param outprivkey The boolean value used to derive either a public or
+ * private key. 'true' for private, 'false' for public
+ *
+ * @return 1 if a derived key was successfully generated, 0 otherwise
+ */
+int getDerivedHDKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey) {
+    if (!masterkey || !derived_path || !outaddress) {
+        debug_print("%s", "missing input\n");
+        return false;
+    }
+
+    dogecoin_hdnode node;
+    bool ret = getDerivedHDNodeByPath(masterkey, derived_path, &node);
+
+    if (ret) {
+        const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
+        if (outprivkey) dogecoin_hdnode_serialize_private(&node, chain, outaddress, HD_MASTERKEY_STRINGLEN);
+        else dogecoin_hdnode_serialize_public(&node, chain, outaddress, HD_MASTERKEY_STRINGLEN);
+    }
+
+    return ret;
+}
+
+bool getDerivedHDNodeByPath(const char* masterkey, const char* derived_path, dogecoin_hdnode *nodenew) {
     /* determine if mainnet or testnet/regtest */
     const dogecoin_chainparams* chain = chain_from_b58_prefix(masterkey);
     bool ret = true;
-    dogecoin_hdnode node, nodenew;
+    dogecoin_hdnode node;
 
     if (!dogecoin_hdnode_deserialize(masterkey, chain, &node)) {
         ret = false;
@@ -409,12 +450,10 @@ int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, c
     // dogecoin_hdnode_has_privkey
     bool pubckd = !dogecoin_hdnode_has_privkey(&node);
     /* derive child key, use pubckd or privckd */
-    if (!dogecoin_hd_generate_key(&nodenew, derived_path, pubckd ? node.public_key : node.private_key, node.chain_code, pubckd)) {
+    if (!dogecoin_hd_generate_key(nodenew, derived_path, pubckd ? node.public_key : node.private_key, node.chain_code, pubckd)) {
         ret = false;
     }
 
-    if (outprivkey) dogecoin_hdnode_serialize_private(&nodenew, chain, outaddress, HD_MASTERKEY_STRINGLEN);
-    else dogecoin_hdnode_serialize_public(&nodenew, chain, outaddress, HD_MASTERKEY_STRINGLEN);
     return ret;
 }
 
@@ -447,7 +486,7 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
             return false;
         }
 
-        int ret = getDerivedHDAddressByPath(masterkey, derived_path, outaddress, outprivkey);
+        int ret = getDerivedHDKeyByPath(masterkey, derived_path, outaddress, outprivkey);
         return ret;
 }
 

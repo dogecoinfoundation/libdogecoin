@@ -61,7 +61,12 @@ LIBDOGECOIN_API dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey,
 LIBDOGECOIN_API int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey);
 
 /* generate an extended hd public/private child address with a more flexible derived path */
-LIBDOGECOIN_API int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+LIBDOGECOIN_API int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress);
+
+/* generate an extended hd public/private child key with a more flexible derived path */
+LIBDOGECOIN_API int getDerivedHDKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+
+bool getDerivedHDNodeByPath(const char* masterkey, const char* derived_path, dogecoin_hdnode *nodenew);
 
 /* generates a new dogecoin address from a mnemonic and a slip44 key path */
 LIBDOGECOIN_API int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASSPHRASE pass, char* p2pkh_pubkey, const dogecoin_bool is_testnet);
