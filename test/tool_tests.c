@@ -58,18 +58,19 @@ void test_tool()
     u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, masterkeysize), true);
     u_assert_int_eq(hd_print_node(&dogecoin_chainparams_main, masterkey), true);
 
+    genHDMaster(false, masterkey, masterkeysize);
+
     size_t extoutsize = 200;
     char* extout=dogecoin_char_vla(extoutsize);
     const char* privkey = "dgpv557t1z21sLCnAz3cJPW5DiVErXdAi7iWpSJwBBaeN87umwje8LuTKREPTYPTNGXGnB3oNd2z6RmFFDU99WKbiRDJKKXfHxf48puZibauJYB";
+    debug_print("\nMaster private key:  %s\n", privkey);
 
     u_assert_int_eq(hd_derive(&dogecoin_chainparams_main, privkey, "m/0", extout, extoutsize), true);
     u_assert_str_eq(extout, "dgpv55wVA8mg2HkLPXa4bSyi83hbXrwVWsiTE2Z3kSTUtC6QUyg3ed3FprcvAFKWUSvyRtaPuVwfbcQMQqVXM12yrxQtSCB2iPF4A6RdDp53jjy");
+    printNode(false, extout);
 
     u_assert_int_eq(hd_derive(&dogecoin_chainparams_main, "dgpv51eADS3spNJh9gCpE1AyQ9NpMGkGh6MJKxM84Tf87KVLNeodEW76V2nJJRPorYLGnvZGJKTgEgvqGCtf9VS9RqhfJaTxV7iqm86VpMUNi5G", "m/3", extout, extoutsize), true);
     u_assert_str_eq(extout, "dgpv54nSmPCbDB5TwYzkNzEo696Qih6DoKHX95sXgSj6zMrLCAAHcaixxjjuaNbxj4mrPouJS6TVpSG8F6xTVCXyDCe3RuJiSJSKjFr1yk8hDYn");
-
-    genHDMaster(false, masterkey, masterkeysize);
-    printNode(false, masterkey);
 
     char keypath[KEYPATHMAXLEN] = "m/0";
 

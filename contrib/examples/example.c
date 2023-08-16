@@ -245,6 +245,28 @@ int main() {
 		printf("Address: %s\n", str);
 	}
 
+	// EXTENDED PUBLIC KEY DERIVATION EXAMPLE
+	printf("\n\nBEGIN EXTENDED PUBLIC KEY DERIVATION:\n\n");
+
+	// Generate the Master key from a seed
+	char masterkey[HDKEYLEN];
+	getHDRootKeyFromSeed(utils_hex_to_uint8("5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4"), MAX_SEED_SIZE, false, masterkey);
+	printf("Master key: %s\n", masterkey);
+
+	// Serialize and print the Master public key
+	char master_public_key[HDKEYLEN] = {0};
+	getHDPubKey(masterkey, false, master_public_key);
+	printf("Master public key: %s\n", master_public_key);
+
+	// Derive an extended normal (non-hardened) public key
+	char extkeypath[KEYPATHMAXLEN] = "m/0/0/0/0/0";
+	char extpubkey[HDKEYLEN] = {0};
+	getHDNodeAndExtKeyByPath(master_public_key, extkeypath, extpubkey, false);
+	printf("Keypath: %s\nExtended public key: %s\n", extkeypath, extpubkey);
+	if (strcmp(extpubkey, "dgub8wcWPRxhthgZYftisbirNJ5Ae3navJCCEfd6SzyL5SK44GC4tok3BGkNWbhrM4KeJ8o9ZAkXiVdLTnUyzz89ah1izJjWTo5pv7eboGtzktJ") != 0) {
+			printf("extpubkey does not match!\n");
+	}
+
 	// BASIC TRANSACTION FORMATION EXAMPLE
 	printf("\n\nBEGIN TRANSACTION FORMATION AND SIGNING:\n\n");
 	// declare keys and previous hashes
