@@ -249,6 +249,26 @@ int main() {
             printf("Address: %s\n", str);
         }
 
+	// EXTENDED PUBLIC KEY DERIVATION EXAMPLE
+	printf("\n\nBEGIN EXTENDED PUBLIC KEY DERIVATION:\n\n");
+
+	// Generate the Master key from a seed
+	dogecoin_hdnode_from_seed(utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f"), 16, &node);
+
+	// Serialize and print the Master public key
+	char master_public_key[112] = {0};
+	dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_main, master_public_key, sizeof(master_public_key));
+	printf("Master public key: %s\n", master_public_key);
+
+	// Derive an extended normal (non-hardened) public key
+	char extkeypath[32] = "m/0/0/0/0/0";
+	char extpubkey[112] = {0};
+	getHDNodeAndExtKeyByPath(master_public_key, extkeypath, extpubkey, false);
+	printf("Keypath: %s\nExtended public key: %s\n", extkeypath, extpubkey);
+	if (strcmp(extpubkey, "dgub8vbGfX6bPTJ8JYDpjnqKMoN7u8g83pbUrGmZbZvFg858tk2faAYoY6LqKdPqKhVk6EUaNrnDCifN8VbQn9gUoLLewnKKXrBHMffBoMdkNMr") != 0) {
+			printf("extpubkey does not match!\n");
+	}
+
 	// BASIC TRANSACTION FORMATION EXAMPLE
 	printf("\n\nBEGIN TRANSACTION FORMATION AND SIGNING:\n\n");
 	// declare keys and previous hashes

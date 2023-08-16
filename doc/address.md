@@ -315,7 +315,7 @@ int main() {
 
 `dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey)`
 
-This function derives a hierarchical deterministic child key by way of providing the extended master key, derived_path, outaddress and outprivkey.
+This function derives a hierarchical deterministic child key by way of providing the extended master key, derived_path, outaddress and outprivkey.  The masterkey can be either a private or public key, but if it is a public key, the outprivkey flag must be set to false and the derived_path must be a public derivation path.
 It will return the dogecoin_hdnode if successful and exits if the proper arguments are not provided.
 
 _C usage:_
@@ -338,6 +338,25 @@ int main() {
   dogecoin_ecc_stop();
   dogecoin_hdnode_free(hdnode);
   free(extout);
+}
+```
+
+```C
+#include "libdogecoin.h"
+#include <assert.h>
+#include <stdio.h>
+
+int main() {
+  char master_public_key[112] = {0};
+  char extkeypath[32] = "m/0/0/0/0/0";
+  char extpubkey[112] = {0};
+  dogecoin_hdnode node;
+  dogecoin_ecc_start();
+  dogecoin_hdnode_from_seed(utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f"), 16, &node);
+  dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_main, master_public_key, sizeof (master_public_key));
+  getHDNodeAndExtKeyByPath(master_public_key, extkeypath, extpubkey, false);
+  dogecoin_ecc_stop();
+  printf("%s\n", extpubkey);
 }
 ```
 
