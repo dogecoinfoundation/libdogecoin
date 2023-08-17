@@ -206,11 +206,10 @@ int derive_bip44_extended_private_key(const dogecoin_hdnode *master_key, const u
 /* Derived address index, set to NULL to get an extended key */
 /* Change level ("0" for external or "1" for internal addresses */
 /* Custom path string (optional, account and change_level ignored) */
-/* Test net flag */
 /* Key path string generated */
 /* BIP 44 extended public key generated */
 /* return 0 (success), -1 (fail) */
-int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH path, const dogecoin_bool is_testnet, KEY_PATH keypath, dogecoin_hdnode *bip44_key);
+int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH path, KEY_PATH keypath, dogecoin_hdnode *bip44_key);
 
 /* utilities */
 uint8_t* utils_hex_to_uint8(const char* str);

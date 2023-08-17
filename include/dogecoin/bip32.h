@@ -69,6 +69,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const
 //if you use pub child key derivation, pass usepubckd=true
 LIBDOGECOIN_API dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypath, const uint8_t* keymaster, const uint8_t* chaincode, dogecoin_bool usepubckd);
 
+LIBDOGECOIN_API dogecoin_bool dogecoin_hd_generate_key_from_parent(dogecoin_hdnode* node, const char* keypath, const dogecoin_hdnode* parent, dogecoin_bool usepubckd);
+
 //!checks if a node has the according private key (or if its a pubkey only node)
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node);
 

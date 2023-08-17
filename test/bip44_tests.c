@@ -22,6 +22,8 @@ void test_bip44()
     int result;
     dogecoin_hdnode node;
     dogecoin_hdnode bip44_key;
+    dogecoin_hdnode bip44_change_key;
+    dogecoin_hdnode bip44_address_key;
     size_t size;
     char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
 
@@ -65,6 +67,8 @@ void test_bip44()
     result = dogecoin_hdnode_from_seed(seed, 64, &node);
     u_assert_int_eq(result, true);
 
+    debug_print("%s", "\n\nTESTNET\n\n");
+
     // Print the root key (TESTNET)
     char root_key_str[112];
     dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_test, root_key_str, sizeof(root_key_str));
@@ -72,48 +76,55 @@ void test_bip44()
     dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_test, root_key_str, sizeof(root_key_str));
     debug_print("BIP32 root prv key: %s\n", root_key_str);
 
+    // Derive the BIP 44 extended key at the account level
+    result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, NULL, NULL, NULL, true, keypath, &bip44_key);
+    u_assert_int_eq(result, 0);
+
+    // Print the BIP 44 extended private key at the account level
+    char bip44_account_private_key[112];
+    dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_test, bip44_account_private_key, sizeof(bip44_account_private_key));
+    debug_print("Account extended private key: %s\n", bip44_account_private_key);
+
+    // Print the BIP 44 extended public key at the account level
+    char bip44_account_public_key[112];
+    dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_test, bip44_account_public_key, sizeof(bip44_account_public_key));
+    debug_print("Account extended public key: %s\n", bip44_account_public_key);
+
     char* change_level = BIP44_CHANGE_EXTERNAL;
     for (int i = 0; i <= 1; i++) {
         if (i==1)
             change_level = BIP44_CHANGE_INTERNAL;
 
-        // Derive the BIP 44 extended key
-        result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, NULL, change_level, NULL, true, keypath, &bip44_key);
+        // Derive the BIP 44 extended key at the change level
+        result = derive_bip44_extended_public_key(&bip44_key, BIP44_FIRST_ACCOUNT_NODE, NULL, change_level, NULL, keypath, &bip44_change_key);
         u_assert_int_eq(result, 0);
 
-        // Print the BIP 44 extended private key
-        char bip44_private_key[112];
-        dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_test, bip44_private_key, sizeof(bip44_private_key));
-        debug_print("BIP44 extended private key: %s\n", bip44_private_key);
-
-        char str[112];
-
-        // Print the BIP 44 extended public key
-        char bip44_public_key[112];
-        dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_test, bip44_public_key, sizeof(bip44_public_key));
-        debug_print("BIP44 extended public key: %s\n", bip44_public_key);
+        // Print the BIP 44 extended public key at the change level
+        char bip44_change_public_key[112];
+        dogecoin_hdnode_serialize_public(&bip44_change_key, &dogecoin_chainparams_test, bip44_change_public_key, sizeof(bip44_change_public_key));
+        debug_print("Change level extended public key %s\n", bip44_change_public_key);
 
         debug_print("%s", "Derived Addresses\n");
 
+        char str[112];
+
         for (uint32_t index = BIP44_FIRST_ACCOUNT_NODE; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
             // Derive the addresses
-            result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, &index, change_level, NULL, true, keypath, &bip44_key);
+            result = derive_bip44_extended_public_key(&bip44_key, BIP44_FIRST_ACCOUNT_NODE, &index, change_level, NULL, keypath, &bip44_address_key);
             u_assert_int_eq(result, 0);
 
-            // Print the private key
-            dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_test, bip44_private_key, sizeof(bip44_private_key));
-            debug_print("private key: %s\n", utils_uint8_to_hex(bip44_key.private_key, sizeof(bip44_key.private_key)));
-            debug_print("private key (serialized): %s\n", bip44_private_key);
-
             // Print the public key
-            dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_test, bip44_public_key, sizeof(bip44_public_key));
-            debug_print("public key: %s\n", utils_uint8_to_hex(bip44_key.public_key, sizeof(bip44_key.public_key)));
-            debug_print("public key (serialized): %s\n", bip44_public_key);
+            char bip44_change_public_key[112];
+            dogecoin_hdnode_serialize_public(&bip44_address_key, &dogecoin_chainparams_test, bip44_change_public_key, sizeof(bip44_change_public_key));
+            debug_print("public key: %s\n", utils_uint8_to_hex(bip44_address_key.public_key, sizeof(bip44_address_key.public_key)));
+            debug_print("public key (serialized): %s\n", bip44_change_public_key);
 
-            dogecoin_hdnode_get_p2pkh_address(&bip44_key, &dogecoin_chainparams_test, str, sizeof(str));
+            dogecoin_hdnode_get_p2pkh_address(&bip44_address_key, &dogecoin_chainparams_test, str, sizeof(str));
             debug_print("Address: %s\n", str);
         }
     }
+
+    debug_print("%s", "\n\nMAINNET\n\n");
 
     // Print the root key (MAINNET)
     dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_main, root_key_str, sizeof(root_key_str));
@@ -121,45 +132,48 @@ void test_bip44()
     dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_main, root_key_str, sizeof(root_key_str));
     debug_print("BIP32 root prv key: %s\n", root_key_str);
 
+    // Derive the BIP 44 extended key at the account level
+    result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, NULL, NULL, NULL, false, keypath, &bip44_key);
+    u_assert_int_eq(result, 0);
+
+    // Print the BIP 44 extended private key at the account level
+    dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_account_private_key, sizeof(bip44_account_private_key));
+    debug_print("Account extended private key: %s\n", bip44_account_private_key);
+
+    // Print the BIP 44 extended public key at the account level
+    dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_account_public_key, sizeof(bip44_account_public_key));
+    debug_print("Account extended public key: %s\n", bip44_account_public_key);
+
     change_level = BIP44_CHANGE_EXTERNAL;
     for (int i = 0; i <= 1; i++) {
         if (i==1)
             change_level = BIP44_CHANGE_INTERNAL;
 
-        // Derive the BIP 44 extended key
-        result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, NULL, change_level, NULL, false, keypath, &bip44_key);
+        // Derive the BIP 44 extended key at the change level
+        result = derive_bip44_extended_public_key(&bip44_key, BIP44_FIRST_ACCOUNT_NODE, NULL, change_level, NULL, keypath, &bip44_change_key);
         u_assert_int_eq(result, 0);
 
-        // Print the BIP 44 extended private key
-        char bip44_private_key[112];
-        dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
-        debug_print("BIP44 extended private key: %s\n", bip44_private_key);
-
-        char str[112];
-
-        // Print the BIP 44 extended public key
-        char bip44_public_key[112];
-        dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
-        debug_print("BIP44 extended public key: %s\n", bip44_public_key);
+        // Print the BIP 44 extended public key at the change level
+        char bip44_change_public_key[112];
+        dogecoin_hdnode_serialize_public(&bip44_change_key, &dogecoin_chainparams_main, bip44_change_public_key, sizeof(bip44_change_public_key));
+        debug_print("Change level extended public key %s\n", bip44_change_public_key);
 
         debug_print("%s", "Derived Addresses\n");
 
+        char str[112];
+
         for (uint32_t index = BIP44_FIRST_ACCOUNT_NODE; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
             // Derive the addresses
-            result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, &index, change_level, NULL, false, keypath, &bip44_key);
+            result = derive_bip44_extended_public_key(&bip44_key, BIP44_FIRST_ACCOUNT_NODE, &index, change_level, NULL, keypath, &bip44_address_key);
             u_assert_int_eq(result, 0);
 
-            // Print the private key
-            dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
-            debug_print("private key: %s\n", utils_uint8_to_hex(bip44_key.private_key, sizeof(bip44_key.private_key)));
-            debug_print("private key (serialized): %s\n", bip44_private_key);
-
             // Print the public key
-            dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
-            debug_print("public key: %s\n", utils_uint8_to_hex(bip44_key.public_key, sizeof(bip44_key.public_key)));
-            debug_print("public key (serialized): %s\n", bip44_public_key);
+            char bip44_address_public_key[112];
+            dogecoin_hdnode_serialize_public(&bip44_address_key, &dogecoin_chainparams_main, bip44_address_public_key, sizeof(bip44_address_public_key));
+            debug_print("public key: %s\n", utils_uint8_to_hex(bip44_address_key.public_key, sizeof(bip44_address_key.public_key)));
+            debug_print("public key (serialized): %s\n", bip44_address_public_key);
 
-            dogecoin_hdnode_get_p2pkh_address(&bip44_key, &dogecoin_chainparams_main, str, sizeof(str));
+            dogecoin_hdnode_get_p2pkh_address(&bip44_address_key, &dogecoin_chainparams_main, str, sizeof(str));
             debug_print("Address: %s\n", str);
         }
     }
