@@ -22,7 +22,11 @@
     - [**getDerivedHDAddressByPath**](#getderivedhdaddressbypath)
   - [Advanced Address API](#advanced-address-api)
     - [**generateRandomEnglishMnemonic:**](#generaterandomenglishmnemonic)
+    - [**generateRandomEnglishMnemonicTPM:**](#generaterandomenglishmnemonictpm)
     - [**getDerivedHDAddressFromMnemonic:**](#getderivedhdaddressfrommnemonic)
+    - [**getDerivedHDAddressFromEncryptedSeed:**](#getderivedhdaddressfromencryptedseed)
+    - [**getDerivedHDAddressFromEncryptedMnemonic:**](#getderivedhdaddressfromencryptedmnemonic)
+    - [**getDerivedHDAddressFromEncryptedHDNode:**](#getderivedhdaddressfromencryptedhdnode)
 
 ## Introduction
 
@@ -97,10 +101,10 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int privkeyLen = 53; 
+  int privkeyLen = 53;
   int pubkeyLen = 35;
 
-  char privKey[privkeyLen]; 
+  char privKey[privkeyLen];
   char pubKey[pubkeyLen];
 
   dogecoin_ecc_start();
@@ -130,7 +134,7 @@ int main() {
   int masterPrivkeyLen = 200; // enough cushion
   int pubkeyLen = 35;
 
-  char masterPrivKey[masterPrivkeyLen]; 
+  char masterPrivKey[masterPrivkeyLen];
   char masterPubKey[pubkeyLen];
 
   dogecoin_ecc_start();
@@ -160,7 +164,7 @@ int main() {
   int masterPrivkeyLen = 200; // enough cushion
   int pubkeyLen = 35;
 
-  char masterPrivKey[masterPrivkeyLen]; 
+  char masterPrivKey[masterPrivkeyLen];
   char masterPubKey[pubkeyLen];
   char childPubKey[pubkeyLen];
 
@@ -190,10 +194,10 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int privkeyLen = 53; 
+  int privkeyLen = 53;
   int pubkeyLen = 35;
 
-  char privKey[privkeyLen]; 
+  char privKey[privkeyLen];
   char pubKey[pubkeyLen];
 
   dogecoin_ecc_start();
@@ -224,10 +228,10 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int masterPrivkeyLen = 200; // enough cushion 
+  int masterPrivkeyLen = 200; // enough cushion
   int pubkeyLen = 35;
 
-  char masterPrivKey[masterPrivkeyLen]; 
+  char masterPrivKey[masterPrivkeyLen];
   char masterPubKey[pubkeyLen];
 
   dogecoin_ecc_start();
@@ -261,7 +265,7 @@ int main() {
   int privkeyLen = 200; // enough cushion
   int pubkeyLen = 35;
 
-  char privKey[privkeyLen]; 
+  char privKey[privkeyLen];
   char pubKey[pubkeyLen];
 
   dogecoin_ecc_start();
@@ -443,7 +447,33 @@ int main () {
   cout << seed_phrase << endl;
 }
 ```
+---
 
+### **generateRandomEnglishMnemonicTPM**
+
+`dogecoin_bool generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);`
+
+This function generates a random English mnemonic using a TPM (Trusted Platform Module). It stores the generated mnemonic in the provided `mnemonic` buffer. The `file_num` parameter specifies the encrypted storage file number, and the `overwrite` parameter indicates whether to overwrite an existing mnemonic in the encrypted storage. The function returns `TRUE` on success and `FALSE` on failure.
+
+_C usage:_
+
+```C
+
+#include "libdogecoin.h"
+
+int main() {
+    MNEMONIC mnemonic;
+    int file_num = 0;  // Specify the TPM storage file number
+    dogecoin_bool overwrite = TRUE;  // Set to TRUE to overwrite existing mnemonic
+
+    if (generateRandomEnglishMnemonicTPM(mnemonic, file_num, overwrite)) {
+        printf("Generated mnemonic: %s\n", mnemonic);
+    } else {
+        printf("Error generating mnemonic.\n");
+        return -1;
+    }
+}
+```
 ---
 
 ### **getDerivedHDAddressFromMnemonic**
@@ -496,5 +526,86 @@ int main () {
 
   cout << seed_phrase << endl;
   cout << address << endl;
+}
+```
+---
+
+### **getDerivedHDAddressFromEncryptedSeed**
+
+`int getDerivedHDAddressFromEncryptedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet, const int file_num);`
+
+This function generates a new Dogecoin address from an encrypted seed and a slip44 key path. The function returns 0 on success and -1 on failure.
+
+_C usage:_
+
+```C
+
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+    int addressLen = 35;
+    char derived_address[addressLen];
+
+    if (getDerivedHDAddressFromEncryptedSeed(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
+        printf("Derived address: %s\n", derived_address);
+    } else {
+        printf("Error occurred.\n");
+        return -1;
+    }
+}
+```
+---
+
+### **getDerivedHDAddressFromEncryptedMnemonic**
+
+`int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const PASS pass, char* p2pkh_pubkey, const bool is_testnet, const int file_num);`
+
+This function generates a new Dogecoin address from an encrypted mnemonic and a slip44 key path. The function returns 0 on success and -1 on failure.
+
+_C usage:_
+
+```C
+
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+    int addressLen = 35;
+    char derived_address[addressLen];
+
+    if (getDerivedHDAddressFromEncryptedMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, NULL, derived_address, false, TEST_FILE) == 0) {
+        printf("Derived address: %s\n", derived_address);
+    } else {
+        printf("Error occurred.\n");
+        return -1;
+    }
+}
+```
+---
+
+### **getDerivedHDAddressFromEncryptedHDNode**
+
+`int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet, const int file_num);`
+
+This function generates a new Dogecoin address from an encrypted HD node and a slip44 key path. The function returns 0 on success and -1 on failure.
+
+_C usage:_
+
+```C
+
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+    int addressLen = 35;
+    char derived_address[addressLen];
+
+    if (getDerivedHDAddressFromEncryptedHDNode(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
+        printf("Derived address: %s\n", derived_address);
+    } else {
+        printf("Error occurred.\n");
+        return -1;
+    }
 }
 ```

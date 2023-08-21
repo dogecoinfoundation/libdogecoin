@@ -120,11 +120,13 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
             return -1;
         }
         memcpy_safe(local_entropy, entropy_bytes, entBytes);
+        utils_clear_buffers();
     }
 
     /* Convert local entropy and copy to entropy parameter if allocated */
     if (entropy_out != NULL) {
         strcpy(entropy_out, utils_uint8_to_hex(local_entropy, entBytes));
+        utils_clear_buffers();
     }
 
     /* Concatenate string of bits from entropy bytes */
@@ -611,11 +613,16 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             sprintf(csBits, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(bytes[0]));
             break;
         default:
-            return -1;
+            /* Invalid byte, return from the function */
+            fprintf(stderr, "ERROR: Failed to convert first byte\n");
             dogecoin_free (segment);
             dogecoin_free (csBits);
-            break;
+            utils_clear_buffers();
+            return -1;
     }
+    /* Clear the bytes buffer */
+    utils_clear_buffers();
+
     csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
 
     /* Concatenate the entropy and checksum bits onto the segment array,
@@ -745,7 +752,7 @@ int dogecoin_generate_mnemonic (const ENTROPY_SIZE entropy_size, const char* lan
 
             /* Verify size of the string equals the entropy_size specified */
             if (strlen(entropy) != expected_entropy_size) {
-                fprintf(stderr, "ERROR: invalid entropy string, expected %ld bytes\n", expected_entropy_size);
+                fprintf(stderr, "ERROR: invalid entropy string, expected %ld characters\n", expected_entropy_size);
 
                 /* Free memory for custom words */
                 if (filepath != NULL) {
@@ -807,7 +814,7 @@ int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, S
         passphrase = "";
     }
 
-    /* get random binary seed */
+    /* get binary seed */
     if (get_root_seed(mnemonic, passphrase, seed) == -1) {
         fprintf(stderr, "ERROR: Failed to get root seed\n");
         return -1;

@@ -45,6 +45,7 @@
 #endif
 
 #include <dogecoin/wallet.h>
+#include <dogecoin/seal.h>
 
 #define COINBASE_MATURITY 100
 
@@ -314,7 +315,7 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     return wallet;
 }
 
-dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* mnemonic_in, const char* name) {
+dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* name, const char* mnemonic_in, const char* pass, const dogecoin_bool tpm, const int file_num) {
     dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
     int error;
     dogecoin_bool created;
@@ -359,7 +360,24 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
 #endif
         if (mnemonic_in) {
             // generate seed from mnemonic
-            dogecoin_seed_from_mnemonic(mnemonic_in, NULL, seed);
+            if (dogecoin_seed_from_mnemonic(mnemonic_in, pass, seed) == -1) {
+                showError("Invalid mnemonic\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        else if (tpm) {
+            // decrypt encrypted mnemonic with TPM
+            MNEMONIC mnemonic = {0};
+            if (dogecoin_decrypt_mnemonic_with_tpm (mnemonic, file_num) == false) {
+                showError("Decrypting mnemonic from TPM failed\n");
+                exit(EXIT_FAILURE);
+            }
+
+            // generate seed from mnemonic
+            if (dogecoin_seed_from_mnemonic(mnemonic, pass, seed) == -1) {
+                showError("Invalid mnemonic\n");
+                exit(EXIT_FAILURE);
+            }
         } else {
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
             if (!res) {
@@ -1324,7 +1342,7 @@ dogecoin_wallet* dogecoin_wallet_read(char* address) {
     char* wallet_suffix = "_wallet.db";
     char* wallet_prefix = (char*)chain->chainname;
     char* walletfile = concat(wallet_prefix, wallet_suffix);
-    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, 0, walletfile);
+    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, walletfile, 0, 0, false, -1);
     wallet->filename = concat(wallet_prefix, wallet_suffix);
     dogecoin_free(walletfile);
     return wallet;
@@ -1478,7 +1496,7 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
                             goto copy;
                         }
                     }
-copy:                    
+copy:
                     dogecoin_wallet_scrape_utxos(wallet_new, wtx);
                     dogecoin_wallet_add_wtx_move(wallet_new, wtx); // hands memory management over to the binary tree
                 } else {

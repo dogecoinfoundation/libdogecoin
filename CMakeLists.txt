@@ -26,6 +26,7 @@ SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
 SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
 SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
+SET(USE_TPM2 FALSE CACHE BOOL "enable tpm_tests")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
@@ -48,15 +49,15 @@ IF(WITH_NET)
     IF(WIN32)
         # build libevent
         execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/src/libevent/build)
-        execute_process(COMMAND cmake .. 
-            -DEVENT__DISABLE_OPENSSL=ON 
-            -DEVENT__DISABLE_SAMPLES=ON 
-            -DEVENT__LIBRARY_TYPE=STATIC 
-            -DEVENT__DISABLE_TESTS=ON 
-            -DEVENT__DISABLE_THREAD_SUPPORT=OFF 
-            -DEVENT__DISABLE_MM_REPLACEMENT=ON 
-            -DEVENT__DISABLE_REGRESS=ON 
-            -DEVENT__DISABLE_BENCHMARK=ON 
+        execute_process(COMMAND cmake ..
+            -DEVENT__DISABLE_OPENSSL=ON
+            -DEVENT__DISABLE_SAMPLES=ON
+            -DEVENT__LIBRARY_TYPE=STATIC
+            -DEVENT__DISABLE_TESTS=ON
+            -DEVENT__DISABLE_THREAD_SUPPORT=OFF
+            -DEVENT__DISABLE_MM_REPLACEMENT=ON
+            -DEVENT__DISABLE_REGRESS=ON
+            -DEVENT__DISABLE_BENCHMARK=ON
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
         execute_process(COMMAND cmake --build .
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
@@ -102,6 +103,9 @@ ENDIF()
 IF(USE_SSE2)
     ADD_DEFINITIONS(-DUSE_SSE2=1)
 ENDIF()
+IF(USE_TPM2)
+    ADD_DEFINITIONS(-DUSE_TPM2=1)
+ENDIF()
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
@@ -113,6 +117,7 @@ MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
 MESSAGE(STATUS "")
 MESSAGE(STATUS "  USE_SSE2       = ${USE_SSE2}")
+MESSAGE(STATUS "  USE_TPM2       = ${USE_TPM2}")
 MESSAGE(STATUS "")
 message(STATUS "  library type   = ${library_type}")
 MESSAGE(STATUS "")
@@ -160,6 +165,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/rmd160.c
     src/script.c
     src/scrypt.c
+    src/seal.c
     src/serialize.c
     src/sha2.c
     src/sign.c
@@ -224,7 +230,7 @@ INCLUDE_DIRECTORIES(
 
 IF(USE_TESTS)
     ADD_EXECUTABLE(tests)
-    TARGET_SOURCES(tests ${visibility} 
+    TARGET_SOURCES(tests ${visibility}
         test/address_tests.c
         test/aes_tests.c
         test/base58_tests.c
@@ -248,6 +254,7 @@ IF(USE_TESTS)
         test/serialize_tests.c
         test/sha2_tests.c
         test/signmsg_tests.c
+        test/tpm_tests.c
         test/transaction_tests.c
         test/tx_tests.c
         include/test/utest.h
@@ -255,7 +262,11 @@ IF(USE_TESTS)
         test/utils_tests.c
         test/vector_tests.c
 )
+IF (USE_TPM2)
+    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt crypt32)
+ELSE()
     TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+ENDIF()
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
     # move test/wordlist to build
     FILE(GLOB_RECURSE WORDLISTS "${PROJECT_SOURCE_DIR}/test/wordlist/*.txt")
@@ -307,8 +318,11 @@ IF(WITH_NET)
         src/spv.c
     )
 
-    TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
-
+    IF(USE_TPM2)
+        TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING} ncrypt crypt32)
+    ELSE()
+        TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
+    ENDIF()
     IF(USE_TESTS)
         TARGET_SOURCES(tests ${visibility}
             test/net_tests.c
@@ -327,8 +341,11 @@ IF(WITH_TOOLS)
 
     ADD_EXECUTABLE(such src/cli/such.c)
     INSTALL(TARGETS such RUNTIME)
-    TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
-
+    IF (USE_TPM2)
+        TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt crypt32)
+    ELSE()
+        TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+    ENDIF()
     TARGET_INCLUDE_DIRECTORIES(such ${visibility} src)
 
     IF(WITH_NET)
@@ -338,7 +355,12 @@ IF(WITH_TOOLS)
         TARGET_INCLUDE_DIRECTORIES(sendtx ${visibility} src)
         ADD_EXECUTABLE(spvnode src/cli/spvnode.c)
         INSTALL(TARGETS spvnode RUNTIME)
-        TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME})
+
+        IF (USE_TPM2)
+            TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME} tbs ncrypt crypt32)
+        ELSE()
+            TARGET_LINK_LIBRARIES(spvnode ${LIBDOGECOIN_NAME})
+        ENDIF()
         TARGET_INCLUDE_DIRECTORIES(spvnode ${visibility} src)
     ENDIF()
 ENDIF()

@@ -25,6 +25,15 @@ sudo apt-get update
 sudo apt-get install autoconf automake libtool libevent-dev libunistring-dev build-essential
 ```
 
+For Windows, you will need to install the following dependencies before building:
+
+- [Visual Studio Code](https://code.visualstudio.com/download)
+- [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019)
+- [C++ and CMake Extensions](https://code.visualstudio.com/docs/editor/extension-gallery)
+- [CMake](https://cmake.org/download/)
+- [Git](https://git-scm.com/downloads)
+- [Python](https://www.python.org/downloads/)
+
 ### Step 2: Build Libraries
 
 If all the necessary dependencies have been installed, you can now proceed in building the library. Using autoconf tools, run the `./autogen.sh` command in terminal:
@@ -82,6 +91,16 @@ make[2]: Leaving directory '/home/username/libdogecoin'
 make[1]: Leaving directory '/home/username/libdogecoin'
 ```
 
+On Windows, you will need to run the following commands in the Visual Studio Developer Command Prompt:
+
+```c
+mkdir build
+cd build
+cmake ..
+cmake --build .
+Debug\tests.exe
+```
+
 ### Step 3: Integrate in Your Project
 
 At this point, the library file `libdogecoin.a` located in the `/.libs` folder is now fully built and can be moved to any location on your file system. To integrate into your project, you will want to move this file by whatever means (copy-paste, drag-and-drop, `mv` command, etc.) to a location inside of your project where the linker can find it. If it is not directly in your project folder, you will need to specify the path by using the `-L` flag during compilation.
@@ -121,7 +140,7 @@ int main() {
     char* amt_total = "2.0";
 
     // generate new key pair to send to
-    char newPrivKey[53]; 
+    char newPrivKey[53];
     char newPubKey[35];
     generatePrivPubKeypair(newPrivKey, newPubKey, false);
 
