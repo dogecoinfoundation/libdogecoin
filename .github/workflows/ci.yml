@@ -58,8 +58,8 @@ jobs:
             os: ubuntu-20.04
             packages: unzip
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-            config-opts: "--enable-static --disable-shared"
-            run-tests: false
+            config-opts: "--enable-static --disable-shared --enable-test-passwd"
+            run-tests: true
             goal: install
             android-ndk: android-ndk-r25c-linux
             android-ndk-shasum: "769ee342ea75f80619d985c2da990c48b3d8eaf45f48783a2d48870d04b46108"
@@ -87,9 +87,9 @@ jobs:
             config-opts: "--enable-static --disable-shared --enable-test-passwd"
             packages: cmake zlib xorriso
             goal: install
-            mac-sdk: 12.1
-            mac-sdk-build: 12A7403
-            mac-sdk-shasum: "be17f48fd0b08fb4dcd229f55a6ae48d9f781d210839b4ea313ef17dd12d6ea5"
+            mac-sdk: 12.2
+            mac-sdk-build: 12B45b
+            mac-sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
           # - name: arm64-macos
           #   host: arm64-apple-darwin
           #   os: macos-latest
@@ -328,6 +328,38 @@ jobs:
               cmake ..
               make
               make simulate
+              ;;
+              "aarch64-android"):
+              wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip
+              unzip commandlinetools-linux-6858069_latest.zip
+              mkdir -p ~/.android-sdk/cmdline-tools/latest
+              mv cmdline-tools/* ~/.android-sdk/cmdline-tools/latest
+              export ANDROID_SDK_ROOT=~/.android-sdk
+              export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+              yes | sdkmanager --licenses --sdk_root=$ANDROID_SDK_ROOT
+              sdkmanager --update --sdk_root=$ANDROID_SDK_ROOT
+              sdkmanager "platform-tools" --sdk_root=$ANDROID_SDK_ROOT
+              DOCKER_IMAGE=us-docker.pkg.dev/android-emulator-268719/images/r-google-x64:30.0.23
+              PORT=15555
+              container_id=$(docker run -d \
+                --device /dev/kvm \
+                --publish 8554:8554/tcp \
+                --publish $PORT:5555/tcp \
+                -e TOKEN="$(cat ~/.emulator_console_auth_token)" \
+                -e ADBKEY="$(cat ~/.android/adbkey)" \
+                $DOCKER_IMAGE)
+              echo "The container is running with id: $container_id"
+              adb connect localhost:$PORT
+              adb wait-for-device
+              while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+                sleep 1
+              done
+              echo "The device is ready"
+              adb push ./tests /data/local/tmp/
+              adb shell "mkdir -p /data/local/tmp/test"
+              adb push ./test/wordlist /data/local/tmp/test
+              adb shell "cd /data/local/tmp/; chmod 755 tests; ./tests"
+              echo "docker stop ${container_id}"
               ;;
               *)
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
