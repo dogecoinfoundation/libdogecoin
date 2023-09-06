@@ -46,7 +46,7 @@ LIBDOGECOIN_API uint32_t get_chainid(uint32_t version);
 LIBDOGECOIN_API dogecoin_bool is_auxpow(uint32_t version);
 LIBDOGECOIN_API dogecoin_bool is_legacy(uint32_t version);
 LIBDOGECOIN_API dogecoin_bool check_auxpow(dogecoin_auxpow_block block, dogecoin_chainparams* params);
-LIBDOGECOIN_API dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256 hash);
+LIBDOGECOIN_API dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256* hash);
 
 LIBDOGECOIN_END_DECL
 

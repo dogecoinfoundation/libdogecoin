@@ -39,10 +39,10 @@
  *
  * @return True.
  */
-dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256 hash) {
+dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256* hash) {
     char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
     unsigned char* inputbytes = (unsigned char*)utils_uint8_to_hex((uint8_t*)s->str, s->len);
-    scrypt_1024_1_1_256_sp_generic((const char*)&inputbytes[0], BEGIN(hash), scratchpad);
+    scrypt_1024_1_1_256_sp_generic((const char*)&inputbytes[0], hash, scratchpad);
     return true;
     }
 
@@ -108,7 +108,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block block, dogecoin_chainparams* pa
     uint256 parent_hash;
     cstring* s = cstr_new_sz(80);
     dogecoin_block_header_serialize(s, block.parent_header);
-    dogecoin_block_header_scrypt_hash(s, parent_hash);
+    dogecoin_block_header_scrypt_hash(s, &parent_hash);
     cstr_free(s, true);
     swap_bytes((uint8_t*)&parent_hash, DOGECOIN_HASH_LENGTH);
     if (!check_pow(&parent_hash, block.header->bits, params)) {
