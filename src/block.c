@@ -175,9 +175,12 @@ void dogecoin_auxpow_block_free(dogecoin_auxpow_block* block) {
     if (!block) return;
     dogecoin_block_header_free(block->header);
     dogecoin_tx_free(block->parent_coinbase);
-    free(block->parent_coinbase_merkle);
+    dogecoin_free(block->parent_coinbase_merkle);
+    dogecoin_free(block->aux_merkle_branch);
     block->parent_merkle_count = 0;
     block->aux_merkle_count = 0;
+    block->aux_merkle_index = 0;
+    block->parent_merkle_index = 0;
     remove_all_hashes();
     dogecoin_block_header_free(block->parent_header);
     dogecoin_free(block);
@@ -187,7 +190,7 @@ void print_transaction(dogecoin_tx* x) {
     // serialize tx & print raw hex:
     cstring* tx = cstr_new_sz(1024);
     dogecoin_tx_serialize(tx, x);
-    char tx_hex[tx->len*2];
+    char tx_hex[2048];
     utils_bin_to_hex((unsigned char *)tx->str, tx->len, tx_hex);
     printf("block->parent_coinbase (hex):                   %s\n", tx_hex); // uncomment to see raw hexadecimal transactions
 
@@ -222,30 +225,35 @@ void print_transaction(dogecoin_tx* x) {
 
 void print_block_header(dogecoin_block_header* header) {
     printf("block->header->version:                         %i\n", header->version);
-    printf("block->header->prev_block:                      %s\n", to_string(header->prev_block));
-    printf("block->header->merkle_root:                     %s\n", to_string(header->merkle_root));
+    printf("block->header->prev_block:                      %s\n", hash_to_string(header->prev_block));
+    printf("block->header->merkle_root:                     %s\n", hash_to_string(header->merkle_root));
     printf("block->header->timestamp:                       %u\n", header->timestamp);
     printf("block->header->bits:                            %x\n", header->bits);
     printf("block->header->nonce:                           %x\n", header->nonce);
 }
 
 void print_parent_header(dogecoin_auxpow_block* block) {
-    printf("block->parent_hash:                             %s\n", to_string(block->parent_hash));
+    printf("block->parent_hash:                             %s\n", hash_to_string(block->parent_hash));
     printf("block->parent_merkle_count:                     %d\n", block->parent_merkle_count);
     size_t j = 0;
     for (; j < block->parent_merkle_count; j++) {
         printf("block->parent_coinbase_merkle[%zu]:               "
-                "%s\n", j, to_string((uint8_t*)block->parent_coinbase_merkle[j]));
+                "%s\n", j, hash_to_string((uint8_t*)block->parent_coinbase_merkle[j]));
     }
     printf("block->parent_merkle_index:                     %d\n", block->parent_merkle_index);
     printf("block->aux_merkle_count:                        %d\n", block->aux_merkle_count);
+    j = 0;
+    for (; j < block->aux_merkle_count; j++) {
+        printf("block->aux_merkle_branch[%zu]:                            "
+                "%s\n", j, hash_to_string((uint8_t*)block->aux_merkle_branch[j]));
+    }
     printf("block->aux_merkle_index:                        %d\n", block->aux_merkle_index);
-    printf("block->parent_header.version:                   %i\n", block->parent_header->version);
-    printf("block->parent_header.prev_block:                %s\n", to_string(block->parent_header->prev_block));
-    printf("block->parent_header.merkle_root:               %s\n", to_string(block->parent_header->merkle_root));
-    printf("block->parent_header.timestamp:                 %u\n", block->parent_header->timestamp);
-    printf("block->parent_header.bits:                      %x\n", block->parent_header->bits);
-    printf("block->parent_header.nonce:                     %u\n\n", block->parent_header->nonce);
+    printf("block->parent_header->version:                  %i\n", block->parent_header->version);
+    printf("block->parent_header->prev_block:               %s\n", hash_to_string(block->parent_header->prev_block));
+    printf("block->parent_header->merkle_root:              %s\n", hash_to_string(block->parent_header->merkle_root));
+    printf("block->parent_header->timestamp:                %u\n", block->parent_header->timestamp);
+    printf("block->parent_header->bits:                     %x\n", block->parent_header->bits);
+    printf("block->parent_header->nonce:                    %u\n\n", block->parent_header->nonce);
 }
 
 void print_block(dogecoin_auxpow_block* block) {
@@ -336,13 +344,12 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
         printf("%s:%d:%s:%s\n", __FILE__, __LINE__, __func__, strerror(errno));
         return false;
     }
+    block->aux_merkle_branch = dogecoin_calloc(block->aux_merkle_count, sizeof(uint256));
     for (i = 0; i < block->aux_merkle_count; i++) {
-        hash* aux_merkle_branch = new_hash();
-        if (!deser_u256((uint8_t*)aux_merkle_branch->data.u8, buffer)) {
+        if (!deser_u256(block->aux_merkle_branch[i], buffer)) {
             printf("%d:%s:%d\n", __LINE__, __func__, i);
             return false;
         }
-        dogecoin_free(aux_merkle_branch);
         }
 
     if (!deser_u32(&block->aux_merkle_index, buffer)) {

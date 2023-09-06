@@ -29,20 +29,38 @@
 
 #include <dogecoin/pow.h>
 
+dogecoin_bool uint256_cmp(const uint256 a, const uint256 b) {
+    for (int i = 0; i <= 31; i++) {
+        if (a[i] > b[i]) {
+            return true;
+        } else if (a[i] < b[i]) {
+            return false;
+        }
+    }
+    return false; // Return false if all bytes are equal
+}
+
 dogecoin_bool check_pow(uint256* hash, unsigned int nbits, const dogecoin_chainparams *params) {
     dogecoin_bool f_negative, f_overflow;
-    arith_uint256 target = init_arith_uint256();
+    arith_uint256* target = init_arith_uint256();
     target = set_compact(target, nbits, &f_negative, &f_overflow);
-    arith_uint256 h = init_arith_uint256();
-    h = uint_to_arith((const uint256*)hash);
-    char* hash_str = utils_uint8_to_hex((const uint8_t*)&h.pn[0], 32);
-    char* target_str = utils_uint8_to_hex((const uint8_t*)&target.pn[0], 32);
-    if (f_negative || (const uint8_t*)&target.pn[0] == 0 || f_overflow || memcmp(&target.pn[0], &params->pow_limit, 32) > 0) {
-        printf("%d:%s: f_negative: %d target == 0: %d f_overflow: %d memcmp target powlimit: %d\n", 
-        __LINE__, __func__, f_negative, (const uint8_t*)&target.pn == 0, f_overflow, memcmp(&target.pn[0], &params->pow_limit, 32) > 0);
+    swap_bytes((uint8_t*)target, sizeof (arith_uint256));
+    if (f_negative || (const uint8_t*)target == 0 || f_overflow || uint256_cmp((const uint8_t*) arith_to_uint256(target), params->pow_limit)) {
+        printf("%d:%s: f_negative: %d target == 0: %d f_overflow: %d\n",
+        __LINE__, __func__, f_negative, (const uint8_t*)target == 0, f_overflow);
+        dogecoin_free(target);
         return false;
     }
-    if (strcmp(hash_str, target_str) > 0)
+    if (uint256_cmp((const uint8_t*)hash, arith_to_uint256(target))) {
+        char* rtn_str = utils_uint8_to_hex((const uint8_t*)hash, 32);
+        char hash_str[65] = "";
+        strncpy(hash_str, rtn_str, 64);
+        char* target_str = utils_uint8_to_hex((const uint8_t*)target, 32);
+        printf("%d:%s: hash: %s target: %s\n",
+        __LINE__, __func__, hash_str, target_str);
+        dogecoin_free(target);
         return false;
+    }
+    dogecoin_free(target);
     return true;
 }
