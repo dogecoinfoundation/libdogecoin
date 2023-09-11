@@ -129,6 +129,9 @@ enum dogecoin_tx_sign_result {
 const char* dogecoin_tx_sign_result_to_str(const enum dogecoin_tx_sign_result result);
 enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, const cstring* script, const dogecoin_key* privkey, size_t inputindex, int sighashtype, uint8_t* sigcompact_out, uint8_t* sigder_out, size_t* sigder_len);
 
+//!wrapper to get the address from a pubkey hash
+LIBDOGECOIN_API int getAddrFromPubkeyHash(const char pubkey_hash[PUBKEYHASHLEN], const dogecoin_bool is_testnet, char p2pkh_address[PUBKEYLEN]);
+
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_TX_H__

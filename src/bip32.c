@@ -43,10 +43,10 @@
 
 /**
  * @brief This function writes 4 big endian bytes.
- * 
+ *
  * @param data The buffer being written to.
  * @param x The 4 bytes to be written, bundled as int.
- * 
+ *
  * @return Nothing.
  */
 static void write_be(uint8_t* data, uint32_t x)
@@ -60,9 +60,9 @@ static void write_be(uint8_t* data, uint32_t x)
 
 /**
  * @brief This function reads 4 big endian bytes.
- * 
+ *
  * @param data The bytes to be read.
- * 
+ *
  * @return The data buffer in int format.
  */
 static uint32_t read_be(const uint8_t* data)
@@ -75,9 +75,9 @@ static uint32_t read_be(const uint8_t* data)
 
 
 /**
- * @brief This function allocates memory for a new 
+ * @brief This function allocates memory for a new
  * HD node object and returns a pointer to it.
- * 
+ *
  * @return The pointer to the new HD node object.
  */
 dogecoin_hdnode* dogecoin_hdnode_new()
@@ -89,11 +89,11 @@ dogecoin_hdnode* dogecoin_hdnode_new()
 
 
 /**
- * @brief The function creates a new HD node object 
+ * @brief The function creates a new HD node object
  * and copies all information from the old to the new.
- * 
+ *
  * @param hdnode The HD node to be copied.
- * 
+ *
  * @return The pointer to the new node.
  */
 dogecoin_hdnode* dogecoin_hdnode_copy(const dogecoin_hdnode* hdnode)
@@ -113,9 +113,9 @@ dogecoin_hdnode* dogecoin_hdnode_copy(const dogecoin_hdnode* hdnode)
 
 /**
  * @brief This function frees an HD node object in memory.
- * 
+ *
  * @param hdnode The HD node to be freed.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
@@ -129,14 +129,14 @@ void dogecoin_hdnode_free(dogecoin_hdnode* hdnode)
 
 /**
  * @brief This function generates a private and public
- * keypair along with chain_code for a hierarchical 
- * deterministic wallet. This is derived from a seed 
+ * keypair along with chain_code for a hierarchical
+ * deterministic wallet. This is derived from a seed
  * which usually consists of 12 random mnemonic words.
- * 
+ *
  * @param seed The byte string containing the seed phrase.
  * @param seed_len The length of the phrase in characters.
  * @param out The master node which stores the generated data.
- * 
+ *
  * @return Nothing.
  */
 dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogecoin_hdnode* out)
@@ -164,11 +164,11 @@ dogecoin_bool dogecoin_hdnode_from_seed(const uint8_t* seed, int seed_len, dogec
 /**
  * @brief This function derives a child key from the
  * public key of the specified master HD node.
- * 
+ *
  * @param inout The node to derive the child key from.
  * @param i The index of the child key, specified in derivation path.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout, uint32_t i)
 {
@@ -214,11 +214,11 @@ dogecoin_bool dogecoin_hdnode_public_ckd(dogecoin_hdnode* inout, uint32_t i)
 /**
  * @brief This function derives a child key from the
  * private key of the specified master HD node.
- * 
+ *
  * @param inout The node to derive the child key from.
  * @param i The index of the child key, specified in derivation path.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i)
 {
@@ -273,11 +273,11 @@ dogecoin_bool dogecoin_hdnode_private_ckd(dogecoin_hdnode* inout, uint32_t i)
 
 
 /**
- * @brief This function derives a public key from a private 
+ * @brief This function derives a public key from a private
  * key taken from the HD node provided.
- * 
+ *
  * @param node The HD node which contains the private key.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_hdnode_fill_public_key(dogecoin_hdnode* node)
@@ -288,16 +288,16 @@ void dogecoin_hdnode_fill_public_key(dogecoin_hdnode* node)
 
 
 /**
- * @brief This function serializes the information inside an 
+ * @brief This function serializes the information inside an
  * HD node and loads it into string variable str using WIF-
  * encoding to represent the public or private key.
- * 
+ *
  * @param node The HD node containing the key.
  * @param version The version byte.
  * @param use_public Whether to use public or private key.
  * @param str The string to contain the encoded output.
  * @param strsize The size of the string that will be returned.
- * 
+ *
  * @return Nothing.
  */
 static void dogecoin_hdnode_serialize(const dogecoin_hdnode* node, uint32_t version, char use_public, char* str, size_t strsize)
@@ -319,14 +319,14 @@ static void dogecoin_hdnode_serialize(const dogecoin_hdnode* node, uint32_t vers
 
 
 /**
- * @brief This function serializes the HD node information 
+ * @brief This function serializes the HD node information
  * into a string using the public key.
- * 
+ *
  * @param node The HD node containing the key.
  * @param chain The preset chain parameters to use.
  * @param str The string to contain the encoded public key.
  * @param strsize The size of the string to be returned.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_hdnode_serialize_public(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize)
@@ -338,12 +338,12 @@ void dogecoin_hdnode_serialize_public(const dogecoin_hdnode* node, const dogecoi
 /**
  * @brief This function serializes the HD node information
  * into a string using the private key.
- * 
+ *
  * @param node The HD node containing the key.
  * @param chain The chain parameters to use.
  * @param str The string to contain the encoded private key.
  * @param strsize The size of the string to be returned.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize)
@@ -356,10 +356,10 @@ void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogeco
  * @brief This function applies the sha256 and rmd160 hash
  * functions to public key and loads variable hash160_out
  * with result.
- * 
+ *
  * @param node The node containing the public key and its chain code.
  * @param hash160_out The hash160 of the public key.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160 hash160_out)
@@ -372,14 +372,14 @@ void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160 hash160_ou
 
 /**
  * @brief This function produces a dogecoin pay-to-
- * public-key-hash (p2pkh) address from the public 
+ * public-key-hash (p2pkh) address from the public
  * key of the given node.
- * 
+ *
  * @param node The HD node containing the public key.
  * @param chain The chain parameters to use.
  * @param str The string containing the p2pkh address.
  * @param strsize The size of the string to be returned.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize)
@@ -394,11 +394,11 @@ void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogeco
 /**
  * @brief This function converts a public key from binary
  * to hexadecimal string format.
- * 
+ *
  * @param node The HD node containing the public key.
  * @param str The hexadecimal string to be returned.
  * @param strsize The size of the string to be returned.
- * 
+ *
  * @return Nothing.
  */
 dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str, size_t* strsize)
@@ -414,13 +414,13 @@ dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str
 /**
  * @brief This function takes a string buffer containing HD
  * node data and loads an HD node object with that data. The
- * function will copy either a private key or a public key, 
+ * function will copy either a private key or a public key,
  * depending on the prefix of the given buffer.
- * 
+ *
  * @param str The buffer containing the node information.
  * @param chain The chain parameters to use.
  * @param node The HD node to be filled.
- * 
+ *
  * @return Nothing.
  */
 dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node)
@@ -459,16 +459,17 @@ dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainp
 /**
  * @brief This function generates a child key from a given
  * master key and loads it into an HD node.
- * 
+ *
  * @param node The HD node to be filled with the derived key.
  * @param keypath The derivation path of the desired key (e.g. "m/0h/0/0")
  * @param keymaster The master key to derive the child from.
+ * @param depth The depth of the master key.
  * @param chaincode A 32-byte value that is used to generate the child key.
  * @param usepubckd Whether to use public or private key derivation function.
- * 
+ *
  * @return Nothing.
  */
-dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypath, const uint8_t* keymaster, const uint8_t* chaincode, dogecoin_bool usepubckd)
+dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypath, const uint8_t* keymaster, const uint32_t depth, const uint8_t* chaincode, dogecoin_bool usepubckd)
 {
     static char delim[] = "/";
     static char prime[] = "phH\'";
@@ -493,7 +494,7 @@ dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypat
         goto err;
     }
 
-    node->depth = 0;
+    node->depth = depth;
     node->child_num = 0;
     node->fingerprint = 0;
     memcpy_safe(node->chain_code, chaincode, DOGECOIN_BIP32_CHAINCODE_SIZE);
@@ -546,9 +547,9 @@ err:
 
 /**
  * @brief This function checks if the HD node has a private key.
- * 
+ *
  * @param node The HD node to check.
- * 
+ *
  * @return A boolean value, true if node has a private key.
  */
 dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node)
@@ -559,4 +560,77 @@ dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node)
             return true;
     }
     return false;
+}
+
+/**
+ * @brief This function generates a master key from a given seed.
+ *
+ * @param seed The seed to generate the master key from.
+ * @param seed_len The length of the seed.
+ * @param is_testnet Whether to use testnet or mainnet.
+ * @param masterkey The master key to be returned.
+ *
+ * @return A boolean value, true if the master key was generated.
+ */
+dogecoin_bool getHDRootKeyFromSeed(const SEED seed, const int seed_len, const dogecoin_bool is_testnet, char masterkey[HDKEYLEN]) {
+    dogecoin_hdnode node;
+    size_t masterkey_len = HDKEYLEN;
+    dogecoin_hdnode_from_seed(seed, seed_len, &node);
+    dogecoin_hdnode_serialize_private(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, masterkey, masterkey_len);
+    return true;
+}
+
+/**
+ * @brief This function gets the master public key from a given master key.
+ *
+ * @param hdkey The master key to get the master public key from.
+ * @param is_testnet Whether to use testnet or mainnet.
+ * @param hdpubkey The master public key to be returned.
+ *
+ * @return A boolean value, true if the master public key was generated.
+ */
+dogecoin_bool getHDPubKey(const char hdkey[HDKEYLEN], const dogecoin_bool is_testnet, char hdpubkey[HDKEYLEN]) {
+    dogecoin_hdnode node;
+    size_t masterkey_len = HDKEYLEN;
+    dogecoin_hdnode_deserialize(hdkey, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &node);
+    dogecoin_hdnode_serialize_public(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, hdpubkey, masterkey_len);
+    return true;
+}
+
+/**
+ * @brief This function derives an extended private key from a parent key and a derivation path.
+ *
+ * @param extkey The parent key to derive the extended private key from.
+ * @param keypath The derivation path to derive the extended private key from.
+ * @param is_testnet Whether to use testnet or mainnet.
+ * @param key The extended private key to be returned.
+ *
+ * @return A boolean value, true if the extended private key was generated.
+ */
+dogecoin_bool deriveExtKeyFromHDKey(const char extkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], const dogecoin_bool is_testnet, char key[HDKEYLEN]) {
+    dogecoin_hdnode node, parent;
+    size_t key_len = HDKEYLEN;
+    dogecoin_hdnode_deserialize(extkey, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &parent);
+    dogecoin_hd_generate_key(&node, keypath, parent.private_key, parent.depth, parent.chain_code, false);
+    dogecoin_hdnode_serialize_private(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, key, key_len);
+    return true;
+}
+
+/**
+ * @brief This function derives an extended public key from a parent key and a derivation path.
+ *
+ * @param extpubkey The parent key to derive the extended public key from.
+ * @param keypath The derivation path to derive the extended public key from.
+ * @param is_testnet Whether to use testnet or mainnet.
+ * @param pubkey The extended public key to be returned.
+ *
+ * @return A boolean value, true if the extended public key was generated.
+ */
+dogecoin_bool deriveExtPubKeyFromHDKey(const char extpubkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], const dogecoin_bool is_testnet, char pubkey[HDKEYLEN]) {
+    dogecoin_hdnode node, parent;
+    size_t key_len = HDKEYLEN;
+    dogecoin_hdnode_deserialize(extpubkey, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &parent);
+    dogecoin_hd_generate_key(&node, keypath, parent.public_key, parent.depth, parent.chain_code, true);
+    dogecoin_hdnode_serialize_public(&node, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, pubkey, key_len);
+    return true;
 }

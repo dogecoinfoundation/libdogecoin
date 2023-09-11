@@ -85,55 +85,93 @@ void dogecoin_ecc_start(void);
 //!destroys the static ecc context
 void dogecoin_ecc_stop(void);
 
+//#define PRIVKEYWIFLEN 51 //WIF length for uncompressed keys is 51 and should start with Q. This can be 52 also for compressed keys. 53 internally to lib (+stringterm)
+#define PRIVKEYWIFLEN 53 //Function takes 53 but needs to be fixed to take 51.
+
+//#define HDKEYLEN 111 //should be chaincode + privkey; starts with dgpv51eADS3spNJh8 or dgpv51eADS3spNJh9 (112 internally including stringterm? often 128. check this.)
+#define HDKEYLEN 112 // Function expects 128 but needs to be fixed to take 111.
+
+//#define PUBKEYLEN 34 //our mainnet addresses are 34 chars if p2pkh and start with D.  Internally this is cited as 35 for strings that represent it because +stringterm.
+#define PUBKEYLEN 35 // Function expects 35, but needs to be fixed to take 34.
+
+//#define PUBKEYHEXLEN 67 //should be 66 for hex pubkey.  Internally this is cited as 67 for strings that represent it because +stringterm.
+#define PUBKEYHEXLEN 67
+
+//#define PUBKEYHASHLEN 40 //should be 40 for pubkeyhash.  Internally this is cited as 41 for strings that represent it because +stringterm.
+#define PUBKEYHASHLEN 41
+
+//#define KEYPATHMAXLEN 255 // Maximum length of key path string.  Internally this is cited as 256 for strings that represent it because +stringterm.
+#define KEYPATHMAXLEN 256
+
+/* check if a given address is a testnet address */
+dogecoin_bool isTestnetFromB58Prefix(const char address[PUBKEYLEN]);
+
+/* check if a given address is a mainnet address */
+dogecoin_bool isMainnetFromB58Prefix(const char address[PUBKEYLEN]);
+
 /* generates a private and public keypair (a wallet import format private key and a p2pkh ready-to-use corresponding dogecoin address)*/
-int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
+int generatePrivPubKeypair(char wif_privkey[PRIVKEYWIFLEN], char p2pkh_pubkey[PUBKEYLEN], dogecoin_bool is_testnet);
 
 /* generates a hybrid deterministic WIF master key and p2pkh ready-to-use corresponding dogecoin address. */
-int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
+int generateHDMasterPubKeypair(char wif_privkey_master[HDKEYLEN], char p2pkh_pubkey_master[PUBKEYLEN], dogecoin_bool is_testnet);
 
 /* generates a new dogecoin address from a HD master key */
-int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
+int generateDerivedHDPubkey(const char wif_privkey_master[HDKEYLEN], char p2pkh_pubkey[PUBKEYLEN]);
 
 /* verify that a private key and dogecoin address match */
-int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
+int verifyPrivPubKeypair(char wif_privkey[PRIVKEYWIFLEN], char p2pkh_pubkey[PUBKEYLEN], dogecoin_bool is_testnet);
 
 /* verify that a HD Master key and a dogecoin address matches */
-int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
+int verifyHDMasterPubKeypair(char wif_privkey_master[HDKEYLEN], char p2pkh_pubkey_master[PUBKEYLEN], dogecoin_bool is_testnet);
 
 /* verify that a dogecoin address is valid. */
-int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
+int verifyP2pkhAddress(char p2pkh_pubkey[PUBKEYLEN], size_t len);
 
 /* get derived hd address */
-int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey);
+int getDerivedHDAddress(const char masterkey[HDKEYLEN], uint32_t account, dogecoin_bool ischange, uint32_t addressindex, char outaddress[PUBKEYLEN], dogecoin_bool outprivkey);
 
 /* get derived hd address by custom path */
-int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+int getDerivedHDAddressByPath(const char masterkey[HDKEYLEN], const char derived_path[KEYPATHMAXLEN], char outaddress[PUBKEYLEN], dogecoin_bool outprivkey);
 
 /* generate the p2pkh address from a given hex pubkey */
-dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address);
+dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char pubkey_hex[PUBKEYHEXLEN], char p2pkh_address[PUBKEYLEN]);
+int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[PUBKEYLEN]);
 
 /* generate the hex publickey from a given hex private key */
-dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_hex, char* pubkey_hex, size_t* sizeout);
+dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char privkey_hex[PRIVKEYWIFLEN], char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
+int getPubkeyFromPrivkey(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
 
 /* generate a new private key (hex) */
-dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wif, size_t strsize_wif, char* privkey_hex);
+dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char privkey_wif[PUBKEYHEXLEN], size_t strsize_wif, char privkey_hex[PRIVKEYWIFLEN]);
+int genPrivkey(const dogecoin_bool is_testnet, char privkey_wif[PUBKEYHEXLEN], size_t strsize_wif, char privkey_hex[PRIVKEYWIFLEN]);
 
 /* p2pkh utilities */
-dogecoin_bool dogecoin_pubkey_hash_to_p2pkh_address(char* script_pubkey_hex, size_t script_pubkey_hex_length, char* p2pkh, const dogecoin_chainparams* chain);
-dogecoin_bool dogecoin_p2pkh_address_to_pubkey_hash(char* p2pkh, char* scripthash);
-char* dogecoin_address_to_pubkey_hash(char* p2pkh);
-char* dogecoin_private_key_wif_to_pubkey_hash(char* private_key_wif);
+dogecoin_bool dogecoin_pubkey_hash_to_p2pkh_address(char script_pubkey_hex[PUBKEYHEXLEN], size_t script_pubkey_hex_length, char p2pkh[PUBKEYLEN], const dogecoin_chainparams* chain);
+dogecoin_bool dogecoin_p2pkh_address_to_pubkey_hash(char p2pkh[PUBKEYLEN], char scripthash[PUBKEYHASHLEN]);
+char* dogecoin_address_to_pubkey_hash(char p2pkh[PUBKEYHEXLEN]);
+char* dogecoin_private_key_wif_to_pubkey_hash(char private_key_wif[PRIVKEYWIFLEN]);
+
+/* generate the p2pkh address from a given pubkey hash */
+int getAddrFromPubkeyHash(const char pubkey_hash[PUBKEYHASHLEN], const dogecoin_bool is_testnet, char p2pkh_address[PUBKEYLEN]);
 
 /* privkey utilities */
 typedef struct dogecoin_key_ {
     uint8_t privkey[DOGECOIN_ECKEY_PKEY_LENGTH];
 } dogecoin_key;
 
-void dogecoin_privkey_encode_wif(const dogecoin_key* privkey, const dogecoin_chainparams* chain, char* privkey_wif, size_t* strsize_inout);
-dogecoin_bool dogecoin_privkey_decode_wif(const char* privkey_wif, const dogecoin_chainparams* chain, dogecoin_key* privkey);
+void dogecoin_privkey_encode_wif(const dogecoin_key* privkey, const dogecoin_chainparams* chain, char privkey_wif[PRIVKEYWIFLEN], size_t* strsize_inout);
+dogecoin_bool dogecoin_privkey_decode_wif(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_chainparams* chain, dogecoin_key* privkey);
+
+/* wrappers for wif encoding/decoding */
+void getWifEncodedPrivKey(const char privkey[DOGECOIN_ECKEY_PKEY_LENGTH], const dogecoin_bool is_testnet, char privkey_wif[PRIVKEYWIFLEN], size_t* strsize_wif);
+int getDecodedPrivKeyWif(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, char privkey_hex[DOGECOIN_ECKEY_PKEY_LENGTH]);
 
 /* bip32 utilities */
 #define DOGECOIN_BIP32_CHAINCODE_SIZE 32
+
+/* BIP 32 512-bit seed */
+#define MAX_SEED_SIZE 64
+typedef uint8_t SEED [MAX_SEED_SIZE];
 
 typedef struct
 {
@@ -160,20 +198,33 @@ void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogeco
 dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str, size_t* strsize);
 dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node);
 
-/* get derived hd extended child key and corresponding private key in WIF format */
-char* getHDNodePrivateKeyWIFByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
-/* get derived hd extended address and compendium hdnode */
-dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* derived_path, char* outaddress, bool outprivkey);
+/* bip32 wrappers for key derivation */
+dogecoin_bool getHDRootKeyFromSeed(const SEED seed, const int seed_len, const dogecoin_bool is_testnet, char masterkey[HDKEYLEN]);
+dogecoin_bool getHDPubKey(const char hdkey[HDKEYLEN], const dogecoin_bool is_testnet, char hdpubkey[HDKEYLEN]);
+dogecoin_bool deriveExtKeyFromHDKey(const char extkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], const dogecoin_bool is_testnet, char key[HDKEYLEN]);
+dogecoin_bool deriveExtPubKeyFromHDKey(const char extpubkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], const dogecoin_bool is_testnet, char pubkey[HDKEYLEN]);
 
-/* bip44 utilities */
+/* bip32 tools */
+int genHDMaster(const dogecoin_bool is_testnet, char masterkey[HDKEYLEN], size_t strsize);
+int printNode(const dogecoin_bool is_testnet, const char nodeser[HDKEYLEN]);
+int deriveHDExtFromMaster(const dogecoin_bool is_testnet, const char masterkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], char extkeyout[HDKEYLEN], size_t extkeyout_size);
+
+/* get derived hd extended child key and corresponding private key in WIF format */
+char* getHDNodePrivateKeyWIFByPath(const char masterkey[HDKEYLEN], const char derived_path[KEYPATHMAXLEN], char outaddress[PUBKEYLEN], bool outprivkey);
+/* get derived hd extended address and compendium hdnode */
+dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char masterkey[HDKEYLEN], const char derived_path[KEYPATHMAXLEN], char outaddress[PUBKEYLEN], bool outprivkey);
+
+/* BIP 44 string constants */
 #define BIP44_PURPOSE "44"       /* Purpose for key derivation according to BIP 44 */
 #define BIP44_COIN_TYPE "3"      /* Coin type for Dogecoin (3, SLIP 44) */
 #define BIP44_COIN_TYPE_TEST "1" /* Coin type for Testnet (1, SLIP44) */
 #define BIP44_CHANGE_EXTERNAL "0"     /* Change level for external addresses */
 #define BIP44_CHANGE_INTERNAL "1"     /* Change level for internal addresses */
 #define BIP44_CHANGE_LEVEL_SIZE 1 + 1 /* Change level size with a null terminator */
+#define SLIP44_KEY_PATH "m/" BIP44_PURPOSE "'/" /* Key path to derive keys */
 
 /* BIP 44 literal constants */
+#define BIP44_MAX_ADDRESS 2^31 - 1    /* Maximum address is 2^31 - 1 */
 #define BIP44_KEY_PATH_MAX_LENGTH 255 /* Maximum length of key path string */
 #define BIP44_KEY_PATH_MAX_SIZE BIP44_KEY_PATH_MAX_LENGTH + 1 /* Key path size with a null terminator */
 #define BIP44_ADDRESS_GAP_LIMIT 20    /* Maximum gap between unused addresses */
@@ -188,29 +239,51 @@ typedef char CHANGE_LEVEL [BIP44_CHANGE_LEVEL_SIZE];
 /* The key path should be a string with a maximum size of BIP44_KEY_PATH_MAX_SIZE */
 typedef char KEY_PATH [BIP44_KEY_PATH_MAX_SIZE];
 
-/* Derives a BIP 44 extended private key from a master private key. */
-/* Master private key to derive from */
-/* Account index (literal) */
+/* Derives a BIP 44 extended key from a master key. */
+/* Master key to derive from */
+/* Account index, set to NULL to get an extended key */
 /* Derived address index, set to NULL to get an extended key */
-/* Change level ("0" for external or "1" for internal addresses */
+/* Change level ("0" for external or "1" for internal addresses), set to NULL to get an extended key */
 /* Custom path string (optional, account and change_level ignored) */
 /* Test net flag */
 /* Key path string generated */
-/* BIP 44 extended private key generated */
+/* BIP 44 extended key generated */
 /* return 0 (success), -1 (fail) */
-int derive_bip44_extended_private_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH path, const dogecoin_bool is_testnet, KEY_PATH keypath, dogecoin_hdnode *bip44_key);
+int derive_bip44_extended_key(const dogecoin_hdnode *master_key, const uint32_t* account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH path, const dogecoin_bool is_testnet, KEY_PATH keypath, dogecoin_hdnode *bip44_key);
 
-/* Derives a BIP 44 extended public key from a master public key. */
-/* Master public key to derive from */
-/* Account index (literal) */
-/* Derived address index, set to NULL to get an extended key */
-/* Change level ("0" for external or "1" for internal addresses */
+/* Derives a BIP 44 extended private key from a master key. */
+/* Master key to derive from */
+/* Account index */
+/* Change level ("0" for external or "1" for internal addresses) */
+/* Derived address index */
 /* Custom path string (optional, account and change_level ignored) */
-/* Test net flag */
+/* Extended private key generated */
 /* Key path string generated */
-/* BIP 44 extended public key generated */
-/* return 0 (success), -1 (fail) */
-int derive_bip44_extended_public_key(const dogecoin_hdnode *master_key, const uint32_t account, const uint32_t* address_index, const CHANGE_LEVEL change_level, const KEY_PATH path, const dogecoin_bool is_testnet, KEY_PATH keypath, dogecoin_hdnode *bip44_key);
+dogecoin_bool deriveBIP44ExtendedKey(
+    const char wif_privkey_master[HDKEYLEN],
+    const uint32_t* account,
+    const CHANGE_LEVEL change_level,
+    const uint32_t* address_index,
+    const KEY_PATH path,
+    char extkeyout[HDKEYLEN],
+    KEY_PATH keypath);
+
+/* Derives a BIP 44 extended public key from a master key. */
+/* Master key to derive from */
+/* Account index */
+/* Change level ("0" for external or "1" for internal addresses) */
+/* Derived address index */
+/* Custom path string (optional, account and change_level ignored) */
+/* Extended public key generated */
+/* Key path string generated */
+dogecoin_bool deriveBIP44ExtendedPublicKey(
+    const char wif_privkey_master[HDKEYLEN],
+    const uint32_t* account,
+    const CHANGE_LEVEL change_level,
+    const uint32_t* address_index,
+    const KEY_PATH path,
+    char extkeyout[HDKEYLEN],
+    KEY_PATH keypath);
 
 /* utilities */
 uint8_t* utils_hex_to_uint8(const char* str);
@@ -235,14 +308,6 @@ typedef char MNEMONIC [MAX_MNEMONIC_SIZE];
 /* BIP 39 passphrase */
 #define MAX_PASS_SIZE 256
 typedef char PASS [MAX_PASS_SIZE];
-
-/* BIP 32 512-bit seed */
-#define MAX_SEED_SIZE 64
-typedef uint8_t SEED [MAX_SEED_SIZE];
-
-/* BIP 32 change level */
-#define CHG_LEVEL_STRING_SIZE 2
-typedef char CHANGE_LEVEL [CHG_LEVEL_STRING_SIZE];
 
 /* Generates an English mnemonic phrase from given hex entropy */
 int generateEnglishMnemonic(const HEX_ENTROPY entropy, const ENTROPY_SIZE size, MNEMONIC mnemonic);

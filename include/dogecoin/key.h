@@ -97,6 +97,12 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubke
 // initializes an eckey pair
 LIBDOGECOIN_API dogecoin_bool init_keypair(char* privkeywif, dogecoin_key* key, dogecoin_pubkey* pubkey);
 
+// wrapper for wif encoding
+LIBDOGECOIN_API void getWifEncodedPrivKey(const uint8_t privkey[DOGECOIN_ECKEY_PKEY_LENGTH], const dogecoin_bool is_testnet, char privkey_wif[PRIVKEYWIFLEN], size_t* strsize_wif);
+
+// wrapper for wif decoding
+LIBDOGECOIN_API int getDecodedPrivKeyWif(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, uint8_t privkey[DOGECOIN_ECKEY_PKEY_LENGTH]);
+
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_KEY_H__

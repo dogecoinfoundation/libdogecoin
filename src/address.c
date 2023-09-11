@@ -371,7 +371,7 @@ dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey, const char* der
     // dogecoin_hdnode_has_privkey
     bool pubckd = !dogecoin_hdnode_has_privkey(node);
     /* derive child key, use pubckd or privckd */
-    dogecoin_hd_generate_key(nodenew, derived_path, pubckd ? node->public_key : node->private_key, node->chain_code, pubckd);
+    dogecoin_hd_generate_key(nodenew, derived_path, pubckd ? node->public_key : node->private_key, node->depth, node->chain_code, pubckd);
     if (outprivkey) dogecoin_hdnode_serialize_private(nodenew, chain, outaddress, HD_MASTERKEY_STRINGLEN);
     else dogecoin_hdnode_serialize_public(nodenew, chain, outaddress, HD_MASTERKEY_STRINGLEN);
     dogecoin_hdnode_free(node);
@@ -450,7 +450,7 @@ bool getDerivedHDNodeByPath(const char* masterkey, const char* derived_path, dog
     // dogecoin_hdnode_has_privkey
     bool pubckd = !dogecoin_hdnode_has_privkey(&node);
     /* derive child key, use pubckd or privckd */
-    if (!dogecoin_hd_generate_key(nodenew, derived_path, pubckd ? node.public_key : node.private_key, node.chain_code, pubckd)) {
+    if (!dogecoin_hd_generate_key(nodenew, derived_path, pubckd ? node.public_key : node.private_key, node.depth, node.chain_code, pubckd)) {
         ret = false;
     }
 
@@ -528,7 +528,7 @@ int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index
     dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
 
     /* Derive the child private key at the index */
-    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+    if (derive_bip44_extended_key(&node, &account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
         return -1;
     }
 
@@ -666,7 +666,7 @@ int getDerivedHDAddressFromEncryptedSeed(const uint32_t account, const uint32_t 
     dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
 
     /* Derive the child private key at the index */
-    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+    if (derive_bip44_extended_key(&node, &account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
         return -1;
     }
 
@@ -794,7 +794,7 @@ int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint3
     dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);
 
     /* Derive the child private key at the index */
-    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+    if (derive_bip44_extended_key(&node, &account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
         return -1;
     }
 
@@ -830,7 +830,7 @@ int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_
     }
 
     /* Derive the child private key at the index */
-    if (derive_bip44_extended_private_key(&node, account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
+    if (derive_bip44_extended_key(&node, &account, &index, change_level, NULL, is_testnet, keypath, &bip44_key) == -1) {
         return -1;
     }
 

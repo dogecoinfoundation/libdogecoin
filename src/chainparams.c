@@ -154,3 +154,21 @@ int chain_from_b58_prefix_bool(char* address) {
     }
     return false;
 }
+
+/* check if a given address is a testnet address */
+dogecoin_bool isTestnetFromB58Prefix(const char address[PUBKEYLEN]) {
+    /* Determine address prefix for network chainparams */
+    const dogecoin_chainparams* chainparams = chain_from_b58_prefix(address);
+
+    /* Check if chainparams is testnet */
+    return (chainparams == &dogecoin_chainparams_test);
+}
+
+/* check if a given address is a mainnet address */
+dogecoin_bool isMainnetFromB58Prefix(const char address[PUBKEYLEN]) {
+    /* Determine address prefix for network chainparams */
+    const dogecoin_chainparams* chainparams = chain_from_b58_prefix(address);
+
+    /* Check if chainparams is mainnet */
+    return (chainparams == &dogecoin_chainparams_main);
+}

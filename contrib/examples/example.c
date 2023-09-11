@@ -2,16 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//#define PRIVKEYWIFLEN 51 //WIF length for uncompressed keys is 51 and should start with Q. This can be 52 also for compressed keys. 53 internally to lib (+stringterm)
-#define PRIVKEYWIFLEN 53 //Function takes 53 but needs to be fixed to take 51.
-
-//#define MASTERKEYLEN 111 //should be chaincode + privkey; starts with dgpv51eADS3spNJh8 or dgpv51eADS3spNJh9 (112 internally including stringterm? often 128. check this.)
-#define MASTERKEYLEN 128 // Function expects 128 but needs to be fixed to take 111.
-
-//#define PUBKEYLEN 34 //our mainnet addresses are 34 chars if p2pkh and start with D.  Internally this is cited as 35 for strings that represent it because +stringterm.
-#define PUBKEYLEN 35 // Function expects 35, but needs to be fixed to take 34.
-
-
 // Example of how to use libdogecoin API functions:
 // gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
 
@@ -34,7 +24,7 @@ int main() {
 
 	char wif_privkey[PRIVKEYWIFLEN];
 	char p2pkh_pubkey[PUBKEYLEN];
-	char wif_master_privkey[MASTERKEYLEN];
+	char wif_master_privkey[HDKEYLEN];
 	char p2pkh_master_pubkey[PUBKEYLEN];
 	char p2pkh_child_pubkey[PUBKEYLEN];
 
@@ -121,7 +111,7 @@ int main() {
 
 	// DERIVED HD ADDRESS EXAMPLE
 	printf("\n\nBEGIN HD ADDRESS DERIVATION EXAMPLE:\n\n");
-	size_t extoutsize = 112;
+	size_t extoutsize = HDKEYLEN;
 	char* extout = dogecoin_char_vla(extoutsize);
 	char* masterkey_main_ext = "dgpv51eADS3spNJh8h13wso3DdDAw3EJRqWvftZyjTNCFEG7gqV6zsZmucmJR6xZfvgfmzUthVC6LNicBeNNDQdLiqjQJjPeZnxG8uW3Q3gCA3e";
 
@@ -132,7 +122,8 @@ int main() {
 		return -1;
 	}
 
-	if (getDerivedHDAddressByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true)) {
+	char keypath[BIP44_KEY_PATH_MAX_SIZE] = "m/44'/3'/0'/0/0";
+	if (getDerivedHDAddressByPath(masterkey_main_ext, keypath, extout, true)) {
 		printf("Derived HD Addresses:\n%s\n%s\n", extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7");
 	} else {
 		printf("getDerivedHDAddressByPath failed!\n");
@@ -142,7 +133,7 @@ int main() {
 	// test getHDNodeAndExtKeyByPath
 	size_t wiflen = PRIVKEYWIFLEN;
 	char privkeywif_main[PRIVKEYWIFLEN];
-	dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
+	dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(masterkey_main_ext, keypath, extout, true);
 	if (strcmp(utils_uint8_to_hex(hdnode->private_key, sizeof hdnode->private_key), "09648faa2fa89d84c7eb3c622e06ed2c1c67df223bc85ee206b30178deea7927") != 0) {
 		printf("getHDNodeAndExtKeyByPath!\n");
 	}
@@ -153,7 +144,8 @@ int main() {
 	if (strcmp(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7") != 0) {
 		printf("extout does not match!\n");
 	}
-	if (strcmp(getHDNodePrivateKeyWIFByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true), "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG") != 0) {
+	char* privkeywifbypath = getHDNodePrivateKeyWIFByPath(masterkey_main_ext, keypath, extout, true);
+	if (strcmp(privkeywifbypath, "QNvtKnf9Qi7jCRiPNsHhvibNo6P5rSHR1zsg3MvaZVomB2J3VnAG") != 0) {
 		printf("private key WIF does not match!\n");
 	}
 	if (strcmp(extout, "dgpv5BeiZXttUioRMzXUhD3s2uE9F23EhAwFu9meZeY9G99YS6hJCsQ9u6PRsAG3qfVwB1T7aQTVGLsmpxMiczV1dRDgzpbUxR7utpTRmN41iV7") != 0) {
@@ -161,93 +153,97 @@ int main() {
 	}
 	dogecoin_hdnode_free(hdnode);
 	dogecoin_free(extout);
+	dogecoin_free(privkeywifbypath);
 	// END ===========================================
 
 	// TOOLS EXAMPLE
-        printf("\n\nTOOLS EXAMPLE:\n\n");
-        char addr[100];
-        if (addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr)) {
-	        printf ("addr: %s\n", addr);
-        }
-
-        size_t pubkeylen = 100;
-        char* pubkey=dogecoin_char_vla(pubkeylen);
-        if (pubkey_from_privatekey(&dogecoin_chainparams_main, "QUaohmokNWroj71dRtmPSses5eRw5SGLKsYSRSVisJHyZdxhdDCZ", pubkey, &pubkeylen)) {
-	        printf ("pubkey: %s\n", pubkey);
+	printf("\n\nTOOLS EXAMPLE:\n\n");
+	char addr[PUBKEYLEN];
+	if (addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr)) {
+		printf ("addr: %s\n", addr);
 	}
 
-        size_t privkeywiflen = 100;
-        char* privkeywif=dogecoin_char_vla(privkeywiflen);
-        char privkeyhex[100];
-        if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, NULL)) {
-                if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, privkeyhex)) {
-		        printf ("privkeywif: %s\n", privkeywif);
-	        }
-        }
+	size_t pubkeylen = PUBKEYHEXLEN;
+	char* pubkey=dogecoin_char_vla(pubkeylen);
+	if (pubkey_from_privatekey(&dogecoin_chainparams_main, "QUaohmokNWroj71dRtmPSses5eRw5SGLKsYSRSVisJHyZdxhdDCZ", pubkey, &pubkeylen)) {
+		printf ("pubkey: %s\n", pubkey);
+	}
+	dogecoin_free(pubkey);
+
+	size_t privkeywiflen = PRIVKEYWIFLEN;
+	char* privkeywif=dogecoin_char_vla(privkeywiflen);
+	char privkeyhex[100];
+	if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, NULL)) {
+			if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, privkeyhex)) {
+			printf ("privkeywif: %s\n", privkeywif);
+			printf ("privkeyhex: %s\n", privkeyhex);
+		}
+	}
+	dogecoin_free(privkeywif);
 	// END ===========================================
 
 	// BIP44 EXAMPLE
-        printf("\n\nBIP44 EXAMPLE:\n\n");
+	printf("\n\nBIP44 EXAMPLE:\n\n");
 
-        int result;
-        dogecoin_hdnode node;
-        dogecoin_hdnode bip44_key;
-        char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
-        size_t size;
+	int result;
+	dogecoin_hdnode node;
+	dogecoin_hdnode bip44_key;
+	size_t size;
 
-        dogecoin_hdnode_from_seed(utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f"), 16, &node);
-        printf ("seed: 000102030405060708090a0b0c0d0e0f\n");
+	dogecoin_hdnode_from_seed(utils_hex_to_uint8("000102030405060708090a0b0c0d0e0f"), 16, &node);
+	printf ("seed: 000102030405060708090a0b0c0d0e0f\n");
 
-        char master_key_str[112];
+	char master_key_str[HDKEYLEN];
 
-        // Print the master key (MAINNET)
-        dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_main, master_key_str, sizeof(master_key_str));
-        printf("BIP32 master pub key: %s\n", master_key_str);
-        dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_main, master_key_str, sizeof(master_key_str));
-        printf("BIP32 master prv key: %s\n", master_key_str);
+	// Print the master key (MAINNET)
+	dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_main, master_key_str, sizeof(master_key_str));
+	printf("BIP32 master pub key: %s\n", master_key_str);
+	dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_main, master_key_str, sizeof(master_key_str));
+	printf("BIP32 master prv key: %s\n", master_key_str);
 
-        char* change_level = BIP44_CHANGE_EXTERNAL;
+	char* change_level = BIP44_CHANGE_EXTERNAL;
+	uint32_t account = BIP44_FIRST_ACCOUNT_NODE;
 
-        // Derive the BIP 44 extended key
-        result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, NULL, change_level, NULL, false, keypath, &bip44_key);
+	// Derive the BIP 44 extended key
+	result = derive_bip44_extended_key(&node, &account, NULL, change_level, NULL, false, keypath, &bip44_key);
 
-        // Print the BIP 44 extended private key
-        char bip44_private_key[112];
-        dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
-        printf("BIP44 extended private key: %s\n", bip44_private_key);
+	// Print the BIP 44 extended key
+	char bip44_private_key[HDKEYLEN];
+	dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
+	printf("BIP44 extended key: %s\n", bip44_private_key);
 
-        char str[112];
+	char str[PUBKEYLEN];
 
-        // Print the BIP 44 extended public key
-        char bip44_public_key[112];
-        dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
-        printf("BIP44 extended public key: %s\n", bip44_public_key);
+	// Print the BIP 44 extended public key
+	char bip44_public_key[HDKEYLEN];
+	dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
+	printf("BIP44 extended public key: %s\n", bip44_public_key);
 
-        printf("%s", "Derived Addresses\n");
+	printf("%s", "Derived Addresses\n");
 
-            char wifstr[100];
-            wiflen = 100;
+		char wifstr[PRIVKEYWIFLEN];
+		wiflen = PRIVKEYWIFLEN;
 
-        for (uint32_t index = BIP44_FIRST_ACCOUNT_NODE; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
-            // Derive the addresses
-            result = derive_bip44_extended_private_key(&node, BIP44_FIRST_ACCOUNT_NODE, &index, change_level, NULL, false, keypath, &bip44_key);
+	for (uint32_t index = BIP44_FIRST_ADDRESS_INDEX; index < BIP44_ADDRESS_GAP_LIMIT; index++) {
+		// Derive the addresses
+		result = derive_bip44_extended_key(&node, &account, &index, change_level, NULL, false, keypath, &bip44_key);
 
-            // Print the private key
-            dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
-            printf("private key (serialized): %s\n", bip44_private_key);
+		// Print the private key
+		dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
+		printf("private key (serialized): %s\n", bip44_private_key);
 
-            // Print the public key
-            dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
-            printf("public key (serialized): %s\n", bip44_public_key);
+		// Print the public key
+		dogecoin_hdnode_serialize_public(&bip44_key, &dogecoin_chainparams_main, bip44_public_key, sizeof(bip44_public_key));
+		printf("public key (serialized): %s\n", bip44_public_key);
 
-            // Print the wif private key
-            dogecoin_privkey_encode_wif((dogecoin_key*) bip44_key.private_key, &dogecoin_chainparams_main, wifstr, &wiflen);
-            printf("private key (wif): %s\n", wifstr);
+		// Print the wif private key
+		dogecoin_privkey_encode_wif((dogecoin_key*) bip44_key.private_key, &dogecoin_chainparams_main, wifstr, &wiflen);
+		printf("private key (wif): %s\n", wifstr);
 
-            // Print the p2pkh address
-            dogecoin_hdnode_get_p2pkh_address(&bip44_key, &dogecoin_chainparams_main, str, sizeof(str));
-            printf("Address: %s\n", str);
-        }
+		// Print the p2pkh address
+		dogecoin_hdnode_get_p2pkh_address(&bip44_key, &dogecoin_chainparams_main, str, sizeof(str));
+		printf("Address: %s\n", str);
+	}
 
 	// BASIC TRANSACTION FORMATION EXAMPLE
 	printf("\n\nBEGIN TRANSACTION FORMATION AND SIGNING:\n\n");
@@ -255,7 +251,7 @@ int main() {
 	char *external_p2pkh_addr = 	"nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
 	char *hash_2_doge = 			"b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
 	char *hash_10_doge = 			"42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2";
-        char myscriptpubkey [100];
+        char myscriptpubkey [PUBKEYHASHLEN];
         dogecoin_p2pkh_address_to_pubkey_hash (str, myscriptpubkey);
 
 	// build transaction
@@ -286,7 +282,6 @@ int main() {
 		return -1;
 	}
 
-	// save the finalized unsigned transaction to a new index in the hash table
 	// save the finalized unsigned transaction to a new index in the hash table
 	int idx2 = store_raw_transaction(finalize_transaction(idx, external_p2pkh_addr, "0.00226", "12", str));
 	if (idx2 > 0) {
@@ -385,6 +380,7 @@ int main() {
         dogecoin_free(sig2);
     }
 
+#if defined(USE_TPM2)
 	// TPM2 TESTS
 	printf("\n\nBEGIN TPM2 TESTS:\n\n");
 
@@ -424,7 +420,7 @@ int main() {
 	}
 
 	// test getDerivedHDAddressFromEncryptedSeed
-	char derived_address[35];
+	char derived_address[PUBKEYLEN];
 	if (getDerivedHDAddressFromEncryptedSeed(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
 		printf("Derived address: %s\n", derived_address);
 	} else {
@@ -448,6 +444,7 @@ int main() {
 		return -1;
 	}
 
+#endif
 
 	printf("\nTESTS COMPLETE!\n");
 	dogecoin_ecc_stop();

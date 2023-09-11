@@ -58,7 +58,7 @@ void test_bip32()
 
     /* [Chain m/0'] */
     char path0[] = "m/0'";
-    dogecoin_hd_generate_key(&node, path0, private_key_master, chain_code_master, false);
+    dogecoin_hd_generate_key(&node, path0, private_key_master, 0, chain_code_master, false);
     u_assert_int_eq(node.fingerprint, 0x3442193E);
     u_assert_mem_eq(node.chain_code,
                     utils_hex_to_uint8("47fdacbd0f1097043b78c63c20c34ef4ed9a111d980047ad16282c7ae6236141"),
@@ -91,7 +91,7 @@ void test_bip32()
 
     /* [Chain m/0'/3] */
     char path1[] = "m/0'/3";
-    dogecoin_hd_generate_key(&node, path1, private_key_master, chain_code_master, false);
+    dogecoin_hd_generate_key(&node, path1, private_key_master, 0, chain_code_master, false);
     u_assert_int_eq(node.fingerprint, 0x5C1BD648);
     u_assert_mem_eq(node.chain_code,
                     utils_hex_to_uint8("c354182c136d7c9efc2f215b963b667d8729e6eb6e8f6605929b6771aace080e"),
@@ -121,7 +121,7 @@ void test_bip32()
 
     /* [Chain m/0'/3/2'] */
     char path2[] = "m/0'/3/2'";
-    dogecoin_hd_generate_key(&node, path2, private_key_master, chain_code_master, false);
+    dogecoin_hd_generate_key(&node, path2, private_key_master, 0, chain_code_master, false);
     u_assert_int_eq(node.fingerprint, 0x73457C28);
     u_assert_mem_eq(node.chain_code,
                     utils_hex_to_uint8("8f96add0124b936f0066645b8805a9ddc072155be93f2d5c12ab950e4f678611"),
@@ -151,7 +151,7 @@ void test_bip32()
 
     /* [Chain m/0'/3/2'/2] */
     char path3[] = "m/0'/3/2'/2";
-    dogecoin_hd_generate_key(&node, path3, private_key_master, chain_code_master, false);
+    dogecoin_hd_generate_key(&node, path3, private_key_master, 0, chain_code_master, false);
     u_assert_int_eq(node.fingerprint, 0x73EECC5F);
     u_assert_mem_eq(node.chain_code,
                     utils_hex_to_uint8("d7dff9258e4d978a05d10a9dfecf8d75c8a862f36bb88c97802a1a78c76cdbe9"),
@@ -181,7 +181,7 @@ void test_bip32()
 
     /* [Chain m/0'/3/2'/2/1000000000] */
     char path4[] = "m/0'/3/2'/2/1000000000";
-    dogecoin_hd_generate_key(&node, path4, private_key_master, chain_code_master, false);
+    dogecoin_hd_generate_key(&node, path4, private_key_master, 0, chain_code_master, false);
     u_assert_int_eq(node.fingerprint, 0x406AACFA);
     u_assert_mem_eq(node.chain_code,
                     utils_hex_to_uint8("4c77a7bf5d73e6b8904ac92aaee3c46b8be0669573d4c7836e90b3829fae997f"),
@@ -245,6 +245,78 @@ void test_bip32()
     u_assert_int_eq(memcmp(nodeheap->private_key, nodeheap_copy->private_key, 32), 0);
     u_assert_int_eq(memcmp(nodeheap->public_key, nodeheap_copy->public_key, 33), 0)
 
-        dogecoin_hdnode_free(nodeheap);
+    dogecoin_hdnode_free(nodeheap);
+
     dogecoin_hdnode_free(nodeheap_copy);
+
+    SEED seed = {0};
+    memcpy(seed, utils_hex_to_uint8("3779b041fab425e9c0fd55846b2a03e9a388fb12784067bd8ebdb464c2574a05bcc7a8eb54d7b2a2c8420ff60f630722ea5132d28605dbc996c8ca7d7a8311c0"), 64);
+    const int seed_len = 64;
+    char masterkey[HDKEYLEN];
+    char masterpubkey[HDKEYLEN];
+    char extkey[HDKEYLEN], extkey2[HDKEYLEN];
+    char extpubkey[HDKEYLEN], extpubkey2[HDKEYLEN];
+
+    u_assert_true(getHDRootKeyFromSeed(seed, seed_len, true, masterkey));
+    u_assert_str_eq(masterkey,
+                    "tprv8ZgxMBicQKsPdM3GJUGqaS67XFjHNqUC8upXBhNb7UXqyKdLCj6HnTfqrjoEo6x89neRY2DzmKXhjWbAkxYvnb1U7vf4cF4qDicyb7Y2mNa");
+
+    u_assert_true(getHDPubKey(masterkey, true, masterpubkey));
+    u_assert_str_eq(masterpubkey,
+                    "tpubD6NzVbkrYhZ4Wp54C7wRyqkE6HFDYAf6iDRJUDQtXkLEoot6q7usxxHi2tGW48TfY783vGoZ3ufE5XH9YP86c7X6G3CjMh8Dua1ZTTWyjSa");
+
+    char keypath[KEYPATHMAXLEN] = "m/44'/1'/0'";
+    u_assert_true(deriveExtKeyFromHDKey(masterkey, keypath, true, extkey));
+    u_assert_str_eq(extkey,
+                    "tprv8fRGXa8U2TD8awz5go6QPzPkP2wxabQip9Tmm7qNnuGhqJah42dmffvKCer9tZzS3U23n1jmaxDLFWPVGR2qLbS3Ec9Nskr7eKYBBZGy9N8");
+
+    u_assert_true(getHDPubKey(extkey, true, extpubkey));
+    u_assert_str_eq(extpubkey,
+                    "tpubDC7JfzAiAptoUR1saSkzoQ3rx4TtjvbdPT4Z3dsgDB56fnqTgRTMrAYBNooSmtJgpxUL7U5wvRtXDkKAx3qnPP33qNdcojAWVSK914c2Kd2");
+
+    char keypath1[KEYPATHMAXLEN] = "m/44'/1'/0'/0";
+    u_assert_true(deriveExtKeyFromHDKey(masterkey, keypath1, true, extkey2));
+    u_assert_str_eq(extkey2,
+                    "tprv8hJrzKEmbFfBx44tsRe1wHh25i5QGztsawJGmxeqryPwdXdKrgxMgJUWn35dY2nrYmomRWWL7Y9wJrA6EvKJ27BfQTX1tWzZVxAXrR2pLLn");
+
+    u_assert_true(getHDPubKey(extkey2, true, extpubkey2));
+    u_assert_str_eq(extpubkey2,
+                    "tpubDDzu8jH1jdLrqX6gm5JcLhM8ejbLSL5nAEu44Uh9HFCLU1t6V5mwro6NxAXCfR2jUJ9vkYkUazKXQSU7WAaA9cbEkxdWmbLxHQnWqLyQ6uR");
+
+    char keypath2[KEYPATHMAXLEN] = "m/0";
+    u_assert_true(deriveExtPubKeyFromHDKey(extpubkey, keypath2, true, extpubkey2));
+    u_assert_str_eq(extpubkey2,
+                    "tpubDDzu8jH1jdLrqX6gm5JcLhM8ejbLSL5nAEu44Uh9HFCLU1t6V5mwro6NxAXCfR2jUJ9vkYkUazKXQSU7WAaA9cbEkxdWmbLxHQnWqLyQ6uR");
+
+
+    u_assert_true(getHDRootKeyFromSeed(seed, seed_len, false, masterkey));
+    u_assert_str_eq(masterkey,
+                    "dgpv51eADS3spNJh8Q6Qzz9L6AABYtvRnEGqvSFKXrxzhwK54fWAHo3NrGHvagERrteHgWo6rifQ9GxswUAYR4Exh9zekTNz6FUhJFAjhae3ptn");
+
+    u_assert_true(getHDPubKey(masterkey, false, masterpubkey));
+    u_assert_str_eq(masterpubkey,
+                    "dgub8kXBZ7ymNWy2RFka3DmJD1hn1TJ4cMJZD32XgyMyW4N5cicrhZb9VZha9vghubutjw72kayz7p38Q56ZiFvbiVvME8rwCSF6gChmQt4RgLZ");
+
+    char keypath3[KEYPATHMAXLEN] = "m/0'";
+    u_assert_true(deriveExtKeyFromHDKey(masterkey, keypath3, false, extkey));
+    u_assert_str_eq(extkey,
+                    "dgpv53Zmoqj7kNTYigGq7A5cTsfDt1yXAuKdCzUCEdBdqPKoM29mg1zhk11b8iSzH2H6ot8eVY9Bdh3dVsqbEeiXU6Exfm3u3ZkwZ3bbYthRE3V");
+
+    u_assert_true(getHDPubKey(extkey, false, extpubkey));
+    u_assert_str_eq(extpubkey,
+                    "dgub8nSo9Xf1JX7t1Xvz9PhaajCpLaMA12MLVbFQPjacdWNou5GU5nYUPJREhzWzRqENdG4nrxckhMEv4sKFEiLbm4pkVvDjBP7SrQZeStHNMEQ");
+
+    char keypath4[KEYPATHMAXLEN] = "m/0'/0";
+    u_assert_true(deriveExtKeyFromHDKey(masterkey, keypath4, false, extkey2));
+    u_assert_str_eq(extkey2,
+                    "dgpv55f5vS3Ct4dEo6Z5oZSbdtdvCXPPttTuBCg4DjQfJWx6xoiSm2RMcRuJendsxU5XZRcBCUTPLwKnydME4rWxLXxECUGrnVaHW2wHP53CfBG");
+
+    u_assert_true(getHDPubKey(extkey2, false, extpubkey2));
+    u_assert_str_eq(extpubkey2,
+                    "dgub8pY7G7y6SDHa5xDEqo4ZkkBWf5m2j1VcToTGNqoe6e17Wrq9Any8FjJxE2hnwdBYM19gxkaA7VWqE2Vw6hGHTeac2neLCHzLR8VojVsdqnA");
+
+    char keypath5[KEYPATHMAXLEN] = "m/0";
+    u_assert_true(deriveExtPubKeyFromHDKey(extpubkey, keypath5, false, extpubkey2));
+    u_assert_str_eq(extpubkey2,
+                    "dgub8pY7G7y6SDHa5xDEqo4ZkkBWf5m2j1VcToTGNqoe6e17Wrq9Any8FjJxE2hnwdBYM19gxkaA7VWqE2Vw6hGHTeac2neLCHzLR8VojVsdqnA");
 }
