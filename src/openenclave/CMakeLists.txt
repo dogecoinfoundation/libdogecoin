@@ -54,11 +54,11 @@ add_custom_target(sign ALL DEPENDS enclave/enclave.signed)
 if ((NOT DEFINED ENV{OE_SIMULATION}) OR (NOT $ENV{OE_SIMULATION}))
   add_custom_target(
     run
-    DEPENDS libdogecoin_host sign
-    COMMAND libdogecoin_host ${CMAKE_BINARY_DIR}/enclave/enclave.signed)
+    DEPENDS host sign
+    COMMAND host ${CMAKE_BINARY_DIR}/enclave/enclave.signed)
 endif ()
 
 add_custom_target(
   simulate
-  DEPENDS libdogecoin_host sign
-  COMMAND libdogecoin_host ${CMAKE_BINARY_DIR}/enclave/enclave.signed --simulate)
+  DEPENDS host sign
+  COMMAND host ${CMAKE_BINARY_DIR}/enclave/enclave.signed --simulate)

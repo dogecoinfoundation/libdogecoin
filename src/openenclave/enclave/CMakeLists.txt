@@ -10,7 +10,7 @@ add_custom_command(
     --search-path ${OE_INCLUDEDIR} --search-path
     ${OE_INCLUDEDIR}/openenclave/edl/sgx)
 
-add_executable(enclave enc.c ${CMAKE_CURRENT_BINARY_DIR}/libdogecoin_t.c /usr/local/include/dogecoin/libdogecoin.h)
+add_executable(enclave enc.c ${CMAKE_CURRENT_BINARY_DIR}/libdogecoin_t.c)
 
 if (WIN32)
   maybe_build_using_clangw(enclave)
@@ -19,9 +19,10 @@ endif ()
 target_compile_definitions(enclave PUBLIC OE_API_VERSION=2)
 
 # Need for the generated file libdogecoin_t.h
-target_include_directories(enclave PRIVATE ${CMAKE_CURRENT_BINARY_DIR} /usr/local/include/dogecoin)
+target_include_directories(enclave PRIVATE ${CMAKE_CURRENT_BINARY_DIR} /usr/local/include/dogecoin ${CMAKE_SOURCE_DIR}/../../depends/x86_64-pc-linux-gnu/include/dogecoin)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ldogecoin -lunistring")
+# Add search paths to find the enclave libraries.
+target_link_directories(enclave PRIVATE /lib/x86_64-linux-gnu/ /lib64/ /usr/local/lib /usr/lib/x86_64-linux-gnu ${CMAKE_SOURCE_DIR}/../../depends/x86_64-pc-linux-gnu/lib)
 
 if (LVI_MITIGATION MATCHES ControlFlow)
   # Helper to enable compiler options for LVI mitigation.
@@ -29,11 +30,12 @@ if (LVI_MITIGATION MATCHES ControlFlow)
   # Link against LVI-mitigated libraries.
   target_link_libraries(
     enclave openenclave::oeenclave-lvi-cfg
-    openenclave::oecrypto${OE_CRYPTO_LIB}-lvi-cfg openenclave::oelibc-lvi-cfg)
+    openenclave::oecrypto${OE_CRYPTO_LIB}-lvi-cfg openenclave::oelibc-lvi-cfg
+    "libdogecoin.a" "libevent_core.a" "libunistring.a")
 else ()
   target_link_libraries(
     enclave openenclave::oeenclave openenclave::oecrypto${OE_CRYPTO_LIB}
     openenclave::oelibc
-    "libdogecoin.a" unistring)
+    "libdogecoin.a" "libevent_core.a" "libunistring.a")
 
 endif ()

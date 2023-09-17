@@ -14,7 +14,7 @@ build:
 		--search-path $(INCDIR)/openenclave/edl/sgx
 	$(CC) -g -c $(CFLAGS) host.c
 	$(CC) -g -c $(CFLAGS) libdogecoin_u.c
-	$(CC) -o libdogecoinhost libdogecoin_u.o host.o $(LDFLAGS)
+	$(CC) -o host libdogecoin_u.o host.o $(LDFLAGS)
 
 clean:
-	rm -f libdogecoinhost host.o libdogecoin_u.o libdogecoin_u.c libdogecoin_u.h libdogecoin_args.h
+	rm -f host host.o libdogecoin_u.o libdogecoin_u.c libdogecoin_u.h libdogecoin_args.h

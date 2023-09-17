@@ -69,14 +69,11 @@ void enclave_libdogecoin()
 // then we'll try and integrate host and cli
 void enclave_libdogecoin_generate_mnemonic()
 {
-    ENTROPY_SIZE size = "256";
     MNEMONIC mnemonic = { 0 };
-
     dogecoin_ecc_start();
 
-    /* generate mnemonic with entropy out */
-    if (generateRandomEnglishMnemonic(size, mnemonic) == -1) {
-        dogecoin_ecc_stop();
-        return -1;
-        }
+    generateEnglishMnemonic("7ced8156e7b0585d13e68f2ccd638137dcdd890ffe8ca699f9da65d4371b1117", "256", mnemonic);
+    printf("mnemonic: %s\n", mnemonic);
+
+    dogecoin_ecc_stop();
 }

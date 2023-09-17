@@ -8,16 +8,16 @@ add_custom_command(
     --search-path ${OE_INCLUDEDIR} --search-path
     ${OE_INCLUDEDIR}/openenclave/edl/sgx)
 
-add_executable(libdogecoin_host host.c
+add_executable(host host.c
                                ${CMAKE_CURRENT_BINARY_DIR}/libdogecoin_u.c)
 
 if (WIN32)
-  copy_oedebugrt_target(libdogecoin_host_oedebugrt)
-  add_dependencies(libdogecoin_host libdogecoin_host_oedebugrt)
+  copy_oedebugrt_target(host_oedebugrt)
+  add_dependencies(host host_oedebugrt)
 endif ()
 
 target_include_directories(
-  libdogecoin_host PRIVATE # Needed for the generated file libdogecoin_u.h
+  host PRIVATE # Needed for the generated file libdogecoin_u.h
                           ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(libdogecoin_host openenclave::oehost)
+target_link_libraries(host openenclave::oehost)

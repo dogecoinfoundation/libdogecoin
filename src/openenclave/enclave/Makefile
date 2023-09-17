@@ -33,13 +33,13 @@ build:
 		--search-path $(INCDIR)/openenclave/edl/sgx
 	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 enc.c -o enc.o
 	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 libdogecoin_t.c -o libdogecoin_t.o
-	$(CC) -o libdogecoinenc libdogecoin_t.o enc.o $(LDFLAGS) $(CRYPTO_LDFLAGS)
+	$(CC) -o enc libdogecoin_t.o enc.o $(LDFLAGS) $(CRYPTO_LDFLAGS)
 
 sign:
-	oesign sign -e libdogecoinenc -c libdogecoin.conf -k private.pem
+	oesign sign -e enc -c libdogecoin.conf -k private.pem
 
 clean:
-	rm -f enc.o libdogecoinenc libdogecoinenc.signed private.pem public.pem libdogecoin_t.o libdogecoin_t.h libdogecoin_t.c libdogecoin_args.h
+	rm -f enc.o enc enclave.signed private.pem public.pem libdogecoin_t.o libdogecoin_t.h libdogecoin_t.c libdogecoin_args.h
 
 keys:
 	openssl genrsa -out private.pem -3 3072

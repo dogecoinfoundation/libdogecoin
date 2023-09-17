@@ -17,8 +17,8 @@ clean:
 	$(MAKE) -C host clean
 
 run:
-	host/libdogecoinhost ./enclave/libdogecoinenc.signed
+	host/host ./enclave/enclave.signed
 
 simulate:
-	host/libdogecoinhost ./enclave/libdogecoinenc.signed --simulate
+	host/host ./enclave/enclave.signed --simulate
 

@@ -193,8 +193,8 @@ The following files are generated during the build.
 | File | Description |
 | --- | --- |
 | enc.o | Compiled source file for enc.c |
-| libdogecoinenc | built and linked enclave executable |
-| libdogecoinenc.signed | signed version of the enclave executable |
+| enc | built and linked enclave executable |
+| enclave.signed | signed version of the enclave executable |
 | libdogecoin_args.h | Defines the parameters that are passed to all functions defined in the edl file |
 | libdogecoin_t.c | Contains the `host_libdogecoin()` function with the marshaling code to call into the host version of the `host_libdogecoin()` function |
 | libdogecoin_t.h | function prototype for `host_libdogecoin()` function |
@@ -202,7 +202,7 @@ The following files are generated during the build.
 | private.pem | generated signature used for signing the executable |
 | public.pem | generated signature used for signing the executable |
 
-Only the signed version of the enclave `libdogecoinenc.signed` is loadable on Linux as enclaves are required to be digitally signed.
+Only the signed version of the enclave `enclave.signed` is loadable on Linux as enclaves are required to be digitally signed.
 
 #### Linking the enclave application
 
@@ -226,7 +226,7 @@ When compiling with LVI mitigation, it links against the LVI-mitigated versions 
 
 ** Developer can link against `oecryptoopenssl-lvi-cfg` library by changing `OE_CRYPTO_LIB` variable in Makefile.
 
-`libdogecoinenc` is the resulting enclave executable (unsigned).
+`enc` is the resulting enclave executable (unsigned).
 
 ##### Sign
 
@@ -400,7 +400,7 @@ The following files are generated during the build.
 | File | Description |
 | --- | --- |
 | host.o | Compiled host.c source file |
-| libdogecoinhost | built and linked host executable |
+| host | built and linked host executable |
 | libdogecoin_args.h | Defines the parameters that are passed to all functions defined in the edl file |
 | libdogecoin_u.c | Contains the `enclave_libdogecoin()` function with the marshaling code to call into the enclave version of the `enclave_libdogecoin()` function |
 | libdogecoin_u.h | Function prototype for `enclave_libdogecoin()` function |
@@ -515,15 +515,11 @@ libdogecoin sample can run under OE simulation mode.
 On Linux, to run the libdogecoin sample in simulation mode from the command like, use the following:
 
 ```bash
-./host/libdogecoin_host ./enclave/enclave.signed --simulate
+./host/host ./enclave/enclave.signed --simulate
 ```
 
 On Windows, to run the libdogecoin sample in simulation mode from the command like, use the following:
 
 ```cmd
-.\host\libdogecoin_host .\enclave\enclave.signed --simulate
+.\host\host .\enclave\enclave.signed --simulate
 ```
-
-## Next steps
-
-In this tutorial, you built and ran the helloword sample. Next, try out more OE SDK samples on [Linux](../README.md#samples).
