@@ -1140,12 +1140,12 @@ int main(int argc, char* argv[])
 
 #if defined (_WIN64) && !defined(__MINGW64__)
         /* display encryption key names */
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             wprintf(L"%ls\n", names[i]);
             }
 #endif
         /* free memory */
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             dogecoin_free(names[i]);
             }
         }
@@ -1243,7 +1243,7 @@ int main(int argc, char* argv[])
             }
 
         /* else display usage */
-        else if (!mnemonic) {
+        else if (!mnemonic_in) {
             return showError("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase> (all optional))\n");
             }
 

@@ -272,7 +272,6 @@ int main(int argc, char* argv[]) {
     dogecoin_bool have_decl_daemon = false;
     dogecoin_bool tpm = false;
     int file_num = NO_FILE;
-    char* wallet_name = NULL;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
@@ -319,6 +318,7 @@ int main(int argc, char* argv[]) {
                     break;
                 case 'h':
                     headers_name = optarg;
+                    break;
                 case 'y':
                     tpm = true;
                     file_num = (int)strtol(optarg, (char**)NULL, 10);
