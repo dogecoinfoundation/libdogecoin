@@ -92,4 +92,24 @@ void test_vector()
     vec = vector_new(1, free_dummy);
     vector_add(vec, some_data);
     vector_free(vec, true);
+    /* test serialization */
+    char serialized[MAX_SERIALIZE_SIZE] = { 0 };
+    size_t len = 15;
+    size_t written = 0;
+    size_t read = 0;
+    vec = vector_new(1, NULL);
+    res = vector_add(vec, strdup("TEST0"));
+    assert(res == true);
+    res = vector_add(vec, strdup("TEST1"));
+    assert(res == true);
+    res = vector_add(vec, strdup("TEST2"));
+    assert(res == true);
+    assert(serializeVector(vec, serialized, len, &written) == true);
+    assert(strcmp(serialized, "TEST0TEST1TEST2") == 0);
+    /* test deserialization */
+    assert(deserializeVector(vec, serialized, len, &read) == true);
+    assert(strcmp(vector_idx(vec, 0), "TEST0") == 0);
+    assert(strcmp(vector_idx(vec, 1), "TEST1") == 0);
+    assert(strcmp(vector_idx(vec, 2), "TEST2") == 0);
+    vector_free(vec, true);
 }

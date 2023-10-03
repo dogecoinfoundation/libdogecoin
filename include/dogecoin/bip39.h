@@ -54,9 +54,6 @@ LIBDOGECOIN_API
 /* Maximum size of a passphrase string in bytes */
 #define MAX_PASSPHRASE_STRING_SIZE (MAX_CHARS_IN_PASSPHRASE * HEX_CHARS_PER_BYTE) + 1
 
-/* Maximum size of a seed in bytes */
-#define MAX_SEED_SIZE 64
-
 /* Specifies the number of decimal characters needed to represent entropy size */
 #define ENTROPY_SIZE_STRING_SIZE 3
 
@@ -135,10 +132,6 @@ typedef char PASSPHRASE[MAX_PASSPHRASE_STRING_SIZE];
 /* A string representation of a BIP39 mnemonic phrase, used as a seed to generate private and public keys */
 /* The mnemonic should be a space-separated string with a maximum size of MAX_MNEMONIC_STRING_SIZE */
 typedef char MNEMONIC[MAX_MNEMONIC_STRING_SIZE];
-
-/* A binary representation of the BIP39 seed, used to generate private and public keys */
-/* The seed should be an unsigned integer with a maximum size of MAX_SEED_SIZE */
-typedef uint8_t SEED[MAX_SEED_SIZE];
 
 /* A string representation of the entropy size to generate a BIP39 mnemonic */
 /* The entropy size should be a decimal string with a size of ENTROPY_SIZE_STRING_SIZE */

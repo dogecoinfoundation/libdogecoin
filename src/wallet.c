@@ -944,9 +944,11 @@ dogecoin_wallet_addr* dogecoin_wallet_next_bip44_addr(dogecoin_wallet* wallet)
     uint32_t index = wallet->next_childindex;
 
     char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+    uint32_t account = BIP44_FIRST_ACCOUNT_NODE;
+    char* change = BIP44_CHANGE_EXTERNAL;
 
     /* Derive the child private key at the index */
-    if (derive_bip44_extended_private_key(hdnode, 0, &index, "0", NULL, false, keypath, bip44_key) == -1) {
+    if (derive_bip44_extended_key(hdnode, &account, &index, change, NULL, false, keypath, bip44_key) == -1) {
         return NULL;
     }
 

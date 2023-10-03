@@ -1,6 +1,6 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2022 bluezr
  Copyright (c) 2022 The Dogecoin Foundation
@@ -85,5 +85,8 @@ void test_key()
     wiflen = 100;
     dogecoin_key key_wif_decode;
     dogecoin_privkey_decode_wif(wifstr, &dogecoin_chainparams_main, &key_wif_decode);
+    u_assert_mem_eq(key_wif_decode.privkey, key_wif.privkey, sizeof(key_wif_decode.privkey));
+    getWifEncodedPrivKey(key_wif.privkey, false, wifstr, &wiflen);
+    getDecodedPrivKeyWif(wifstr, false, key_wif_decode.privkey);
     u_assert_mem_eq(key_wif_decode.privkey, key_wif.privkey, sizeof(key_wif_decode.privkey));
 }

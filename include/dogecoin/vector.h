@@ -54,6 +54,10 @@ LIBDOGECOIN_API dogecoin_bool vector_resize(vector* vec, size_t newsz);
 
 LIBDOGECOIN_API ssize_t vector_find(vector* vec, void* data);
 
+/* serialization functions */
+LIBDOGECOIN_API dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* written);
+LIBDOGECOIN_API dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_t* read);
+
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_VECTOR_H__

@@ -175,7 +175,7 @@ void test_transaction()
         u_assert_int_eq(3669653, tx_worth_10->locktime);
     //   "vin": [
         dogecoin_tx_in* tx_in_10 = vector_idx(tx_worth_10->vin, 0);
-    //     {    
+    //     {
             reversed_txid = utils_uint8_to_hex(tx_in_10->prevout.hash, sizeof(tx_in_10->prevout.hash));
             utils_reverse_hex(reversed_txid, 64);
     //       "txid": "76c6c28a87a3b378c5b41dddd727f2ba7e586a1db9415608442223cae87b551b",
@@ -270,7 +270,7 @@ void test_transaction()
 
     // ----------------------------------------------------------------
     // test building transaction with multiple inputs and signing with sign_transaction:
-    
+
     // instantiate a new working_transaction object by calling start_transaction()
     // which passes back index and stores in index variable
     int working_transaction_index = start_transaction();
@@ -283,7 +283,7 @@ void test_transaction()
 
     // add output to transaction which is amount and address we are sending to:
     u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, "5"), 1);
-    
+
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
     char* raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00226", "12.0", internal_p2pkh_address);
@@ -293,7 +293,7 @@ void test_transaction()
 
     // ----------------------------------------------------------------
     // test building transaction with single input and signing with sign_transaction:
-    
+
     // instantiate a new working_transaction object by calling start_transaction()
     // which passes back index and stores in index variable
     working_transaction_index = start_transaction();
@@ -303,7 +303,7 @@ void test_transaction()
 
     // add output to transaction which is amount and address we are sending to:
     u_assert_int_eq(add_output(working_transaction_index, external_p2pkh_address, "9.99887"), 1);
-    
+
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
     raw_hexadecimal_transaction  = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00113", "10.0", internal_p2pkh_address);
@@ -317,7 +317,7 @@ void test_transaction()
     int working_transaction_index2 = store_raw_transaction(raw_hexadecimal_transaction);
     u_assert_int_eq(working_transaction_index, working_transaction_index2 - 1);
     u_assert_str_eq(get_raw_transaction(working_transaction_index), get_raw_transaction(working_transaction_index2));
-    
+
     // ----------------------------------------------------------------
     // test clear_transaction:
 
@@ -350,7 +350,7 @@ void test_transaction()
 
     raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
     u_assert_str_eq(raw_hexadecimal_transaction, unsigned_double_utxo_single_output_hexadecimal_transaction);
-    
+
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
     raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00226", "12.0", internal_p2pkh_address);
@@ -402,7 +402,7 @@ void test_transaction()
 
     raw_hexadecimal_transaction = get_raw_transaction(working_transaction_index);
     u_assert_str_eq(raw_hexadecimal_transaction, unsigned_double_utxo_single_output_hexadecimal_transaction);
-    
+
     // confirm total output value equals total utxo input value minus transaction fee
     // validate external p2pkh address by converting script hash to p2pkh and asserting equal:
     raw_hexadecimal_transaction = finalize_transaction(working_transaction_index, external_p2pkh_address, ".00226", "12.0", internal_p2pkh_address);
@@ -428,14 +428,21 @@ void test_transaction()
     u_assert_str_eq(raw_hexadecimal_transaction, expected_signed_raw_hexadecimal_transaction);
 
     // ----------------------------------------------------------------
-    // test conversion from p2pkh to script hash
+    // test conversion from p2pkh to script hash and back
 
     char* res = dogecoin_malloc(40 + 6 + 4 + 1);
+    char p2pkh_address[PUBKEYLEN];
     u_assert_int_eq(dogecoin_p2pkh_address_to_pubkey_hash(internal_p2pkh_address, res), 1);
     u_assert_str_eq(res, utxo_scriptpubkey);
 
+    u_assert_true(getAddrFromPubkeyHash(res, isTestnetFromB58Prefix(internal_p2pkh_address), p2pkh_address));
+    u_assert_str_eq(p2pkh_address, internal_p2pkh_address);
+
     u_assert_int_eq(dogecoin_p2pkh_address_to_pubkey_hash(external_p2pkh_address, res), 1);
     u_assert_str_not_eq(res, utxo_scriptpubkey);
+
+    u_assert_true(getAddrFromPubkeyHash(res, isTestnetFromB58Prefix(external_p2pkh_address), p2pkh_address));
+    u_assert_str_eq(p2pkh_address, external_p2pkh_address);
     dogecoin_free(res);
 
     // ----------------------------------------------------------------
@@ -449,4 +456,14 @@ void test_transaction()
     // test remove_all - *not noticeable unless running valgrind ./tests*
     // remove working transaction object from hashmap
     remove_all();
+
+    // ----------------------------------------------------------------
+    // test chainparams wrapper functions
+
+    // Call isTestnetFromB58Prefix
+    u_assert_true(isTestnetFromB58Prefix("nhUDhr7bUum2LE2JsuZqY4iy411CQoweuD"));
+
+    // Call isMainnetFromB58Prefix
+    u_assert_true(isMainnetFromB58Prefix("D6vSSr6ftnicfpSNARqezdehAL5Abe2LQw"));
+
 }
