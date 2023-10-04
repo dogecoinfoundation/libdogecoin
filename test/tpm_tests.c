@@ -110,7 +110,7 @@ void test_tpm()
     debug_print("Mnemonic: %s\n", mnemonic);
 
     // test getDerivedHDAddressFromEncryptedSeed
-    char derived_address[35];
+    char derived_address[P2PKHLEN];
     u_assert_true (getDerivedHDAddressFromEncryptedSeed(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0);
     debug_print("Derived address: %s\n", derived_address);
 

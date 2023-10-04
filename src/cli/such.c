@@ -780,7 +780,7 @@ int main(int argc, char* argv[])
     if (strcmp(cmd, "generate_public_key") == 0) {
         /* output compressed hex pubkey from hex privkey */
 
-        char pubkey_hex[128];
+        char pubkey_hex[PUBKEYHEXLEN];
         size_t sizeout = sizeof(pubkey_hex);
 
         if (!pkey)
@@ -806,7 +806,7 @@ int main(int argc, char* argv[])
         /* Creating a new address from a public key. */
         }
     else if (strcmp(cmd, "p2pkh") == 0) {
-        char address_p2pkh[128];
+        char address_p2pkh[P2PKHLEN];
         if (!pubkey)
             return showError("Missing public key (use -k)");
         if (!addresses_from_pubkey(chain, pubkey, address_p2pkh))
@@ -818,8 +818,8 @@ int main(int argc, char* argv[])
         /* Generating a new private key and printing it out. */
         }
     else if (strcmp(cmd, "generate_private_key") == 0) {
-        char newprivkey_wif[128];
-        char newprivkey_hex[128];
+        char newprivkey_wif[PRIVKEYWIFLEN];
+        char newprivkey_hex[PRIVKEYHEXLEN];
 
         /* generate a new private key */
         gen_privatekey(chain, newprivkey_wif, sizeof(newprivkey_wif), newprivkey_hex);
@@ -830,7 +830,7 @@ int main(int argc, char* argv[])
         /* Generating a new master key. */
         }
     else if (strcmp(cmd, "bip32_extended_master_key") == 0) {
-        char masterkey[128];
+        char masterkey[HDKEYLEN];
 
         /* if tpm is enabled, use it to generate a new master key */
         if (tpm) {
@@ -879,7 +879,7 @@ int main(int argc, char* argv[])
             return showError("no extended key (-p)");
         if (!derived_path)
             return showError("no derivation path (-m)");
-        char newextkey[128];
+        char newextkey[HDKEYLEN];
 
         //check if we derive a range of keys
         unsigned int maxlen = 1024;
@@ -1083,8 +1083,8 @@ int main(int argc, char* argv[])
         if (!dogecoin_hdnode_deserialize(pkey, chain, &node)) {
             return showError("dogecoin_hd_deserialize failed!\n");
             }
-        char masterkeyhex[200];
-        int strsize = 200;
+        char masterkeyhex[HDKEYLEN];
+        int strsize = HDKEYLEN;
         dogecoin_hdnode_serialize_private(&node, &dogecoin_chainparams_test, masterkeyhex, strsize);
         printf("xpriv: %s\n", masterkeyhex);
         dogecoin_hdnode_serialize_public(&node, &dogecoin_chainparams_test, masterkeyhex, strsize);
@@ -1173,7 +1173,7 @@ int main(int argc, char* argv[])
                 }
 
             /* serialize the master key */
-            char masterkey[128];
+            char masterkey[HDKEYLEN];
             dogecoin_hdnode_serialize_private (&node, chain, masterkey, sizeof(masterkey));
 
             /* display the master key */
@@ -1219,7 +1219,7 @@ int main(int argc, char* argv[])
         }
     else if (strcmp(cmd, "mnemonic_to_addresses") == 0) { /* Creating wif addresses from a mnemonic via slip44. */
 
-        char hd_pubkey_address[53];
+        char hd_pubkey_address[P2PKHLEN];
 
         /* if tpm is enabled, get mnemonic from tpm */
         if (tpm) {

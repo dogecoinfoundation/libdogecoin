@@ -79,10 +79,10 @@ void test_key()
     assert(dogecoin_privkey_is_valid(&key_wif) == 0);
     dogecoin_privkey_gen(&key_wif);
     assert(dogecoin_privkey_is_valid(&key_wif) == 1);
-    char wifstr[100];
-    size_t wiflen = 100;
+    char wifstr[PRIVKEYWIFLEN];
+    size_t wiflen = PRIVKEYWIFLEN;
     dogecoin_privkey_encode_wif(&key_wif, &dogecoin_chainparams_main, wifstr, &wiflen);
-    wiflen = 100;
+    wiflen = PRIVKEYWIFLEN;
     dogecoin_key key_wif_decode;
     dogecoin_privkey_decode_wif(wifstr, &dogecoin_chainparams_main, &key_wif_decode);
     u_assert_mem_eq(key_wif_decode.privkey, key_wif.privkey, sizeof(key_wif_decode.privkey));

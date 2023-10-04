@@ -23,10 +23,10 @@ int main() {
 	// create variables
 
 	char wif_privkey[PRIVKEYWIFLEN];
-	char p2pkh_pubkey[PUBKEYLEN];
-	char wif_master_privkey[HDKEYLEN];
-	char p2pkh_master_pubkey[PUBKEYLEN];
-	char p2pkh_child_pubkey[PUBKEYLEN];
+	char p2pkh_pubkey[P2PKHLEN];
+	char hd_master_privkey[HDKEYLEN];
+	char p2pkh_master_pubkey[P2PKHLEN];
+	char p2pkh_child_pubkey[P2PKHLEN];
 
 	// keypair generation
 	if (generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
@@ -37,8 +37,8 @@ int main() {
 		return -1;
 	}
 
-	if (generateHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-		printf("Mainnet master keypair 2:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_master_pubkey);
+	if (generateHDMasterPubKeypair(hd_master_privkey, p2pkh_master_pubkey, 0)) {
+		printf("Mainnet master keypair 2:\n===============================\nPrivate: %s\nPublic:  %s\n\n", hd_master_privkey, p2pkh_master_pubkey);
 	}
 	else {
 		printf("Error occurred 2.\n");
@@ -46,8 +46,8 @@ int main() {
 	}
 
 
-	if (generateDerivedHDPubkey((const char*)wif_master_privkey, (char*)p2pkh_child_pubkey)) {
-		printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_child_pubkey);
+	if (generateDerivedHDPubkey((const char*)hd_master_privkey, (char*)p2pkh_child_pubkey)) {
+		printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", hd_master_privkey, p2pkh_child_pubkey);
 	}
 	else {
 		printf("Error occurred 3.\n");
@@ -64,19 +64,19 @@ int main() {
 		return -1;
 	}
 
-	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet 5.\n\n", wif_master_privkey, p2pkh_master_pubkey);
+	if (verifyHDMasterPubKeypair(hd_master_privkey, p2pkh_master_pubkey, 0)) {
+		printf("Keypair (%s, %s) is valid for mainnet 5.\n\n", hd_master_privkey, p2pkh_master_pubkey);
 	}
 	else {
-		printf("Keypair (%s, %s) is not valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
+		printf("Keypair (%s, %s) is not valid for mainnet 5.\n", hd_master_privkey, p2pkh_master_pubkey);
 		return -1;
 	}
 
-	if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_child_pubkey, 0)) {
-		printf("Keypair (%s, %s) is valid for mainnet 6.\n\n", wif_master_privkey, p2pkh_child_pubkey);
+	if (verifyHDMasterPubKeypair(hd_master_privkey, p2pkh_child_pubkey, 0)) {
+		printf("Keypair (%s, %s) is valid for mainnet 6.\n\n", hd_master_privkey, p2pkh_child_pubkey);
 	}
 	else {
-		printf("Keypair (%s, %s) is not valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
+		printf("Keypair (%s, %s) is not valid for mainnet 6.\n", hd_master_privkey, p2pkh_child_pubkey);
 		return -1;
 	}
 	printf("\n");
@@ -158,7 +158,7 @@ int main() {
 
 	// TOOLS EXAMPLE
 	printf("\n\nTOOLS EXAMPLE:\n\n");
-	char addr[PUBKEYLEN];
+	char addr[P2PKHLEN];
 	if (addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr)) {
 		printf ("addr: %s\n", addr);
 	}
@@ -172,7 +172,7 @@ int main() {
 
 	size_t privkeywiflen = PRIVKEYWIFLEN;
 	char* privkeywif=dogecoin_char_vla(privkeywiflen);
-	char privkeyhex[100];
+	char privkeyhex[PRIVKEYHEXLEN];
 	if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, NULL)) {
 			if (gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, privkeyhex)) {
 			printf ("privkeywif: %s\n", privkeywif);
@@ -212,7 +212,7 @@ int main() {
 	dogecoin_hdnode_serialize_private(&bip44_key, &dogecoin_chainparams_main, bip44_private_key, sizeof(bip44_private_key));
 	printf("BIP44 extended key: %s\n", bip44_private_key);
 
-	char str[PUBKEYLEN];
+	char str[P2PKHLEN];
 
 	// Print the BIP 44 extended public key
 	char bip44_public_key[HDKEYLEN];
@@ -442,7 +442,7 @@ int main() {
 	}
 
 	// test getDerivedHDAddressFromEncryptedSeed
-	char derived_address[PUBKEYLEN];
+	char derived_address[P2PKHLEN];
 	if (getDerivedHDAddressFromEncryptedSeed(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
 		printf("Derived address: %s\n", derived_address);
 	} else {

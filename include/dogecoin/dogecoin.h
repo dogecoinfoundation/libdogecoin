@@ -130,7 +130,8 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 #define MAX_SEED_SIZE 64
 #define HDKEYLEN 112
 #define PRIVKEYWIFLEN 53
-#define PUBKEYLEN 35
+#define P2PKHLEN 35
+#define PRIVKEYHEXLEN DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1
 #define PUBKEYHEXLEN 67
 #define PUBKEYHASHLEN 41
 #define KEYPATHMAXLEN 256

@@ -70,8 +70,8 @@ LIBDOGECOIN_API const dogecoin_chainparams* chain_from_b58_prefix(const char* ad
 LIBDOGECOIN_API int chain_from_b58_prefix_bool(char* address);
 
 // check if the given prefix is a testnet or mainnet prefix
-LIBDOGECOIN_API dogecoin_bool isTestnetFromB58Prefix(const char address[PUBKEYLEN]);
-LIBDOGECOIN_API dogecoin_bool isMainnetFromB58Prefix(const char address[PUBKEYLEN]);
+LIBDOGECOIN_API dogecoin_bool isTestnetFromB58Prefix(const char address[P2PKHLEN]);
+LIBDOGECOIN_API dogecoin_bool isMainnetFromB58Prefix(const char address[P2PKHLEN]);
 
 LIBDOGECOIN_END_DECL
 
