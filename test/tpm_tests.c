@@ -8,6 +8,7 @@
 
 #include <test/utest.h>
 #include <dogecoin/address.h>
+#include <dogecoin/random.h>
 #include <dogecoin/sha2.h>
 #include <dogecoin/seal.h>
 #include <dogecoin/utils.h>
@@ -25,6 +26,56 @@
 
 void test_tpm()
 {
+
+    // Generate a random number
+    uint8_t random[32] = {0};
+    dogecoin_random_bytes(random, sizeof(random), 1);
+
+    // Define a random seed and a decrypted seed
+    SEED seed = {0};
+    SEED decrypted_seed = {0};
+    sha512_raw(&random[0], 32, seed);
+
+    // Encrypt a random seed with software
+    u_assert_true (dogecoin_encrypt_seed_with_sw (seed, sizeof(SEED), TEST_FILE, true));
+    debug_print ("Seed: %s\n", utils_uint8_to_hex (seed, sizeof (SEED)));
+
+    // Decrypt the seed with software
+    u_assert_true (dogecoin_decrypt_seed_with_sw (decrypted_seed, TEST_FILE));
+    debug_print ("Decrypted seed: %s\n", utils_uint8_to_hex (decrypted_seed, sizeof (SEED)));
+
+    // Compare the seed and the decrypted seed
+    u_assert_mem_eq (seed, decrypted_seed, sizeof (SEED));
+
+    // Define a random HD node and a decrypted HD node
+    dogecoin_hdnode node, decrypted_node;
+
+    // Generate a random HD node with software
+    u_assert_true (dogecoin_generate_hdnode_encrypt_with_sw (&node, TEST_FILE, true));
+    debug_print ("HD node: %s\n", utils_uint8_to_hex ((uint8_t *) &node, sizeof (dogecoin_hdnode)));
+
+    // Decrypt the HD node with software
+    u_assert_true (dogecoin_decrypt_hdnode_with_sw (&decrypted_node, TEST_FILE));
+    debug_print ("Decrypted HD node: %s\n", utils_uint8_to_hex ((uint8_t *) &decrypted_node, sizeof (dogecoin_hdnode)));
+
+    // Compare the HD node and the decrypted HD node
+    u_assert_mem_eq (&node, &decrypted_node, sizeof (dogecoin_hdnode));
+
+    // Generate a mnemonic with software
+    MNEMONIC mnemonic = {0};
+    MNEMONIC decrypted_mnemonic = {0};
+
+    // Generate a random mnemonic with software
+    u_assert_true (dogecoin_generate_mnemonic_encrypt_with_sw(mnemonic, TEST_FILE, true, "eng", " ", NULL));
+    debug_print("Mnemonic: %s\n", mnemonic);
+
+    // Decrypt the mnemonic with software
+    u_assert_true (dogecoin_decrypt_mnemonic_with_sw(decrypted_mnemonic, TEST_FILE));
+    debug_print("Decrypted mnemonic: %s\n", decrypted_mnemonic);
+
+    // Compare the mnemonic and the decrypted mnemonic
+    u_assert_mem_eq (mnemonic, decrypted_mnemonic, sizeof (MNEMONIC));
+
 #if defined (_WIN64) && !defined(__MINGW64__) && defined(USE_TPM2)
 
     // Create TBS context (TPM2)
@@ -57,9 +108,6 @@ void test_tpm()
     rand_hex = utils_uint8_to_hex(&resp_random[12], 0x20);
     debug_print ("TPM2_CC_GetRandom response: %s\n", rand_hex);
 
-    // Define a random HD node and a decrypted HD node
-    dogecoin_hdnode node, decrypted_node;
-
     // Generate a random HD node with the TPM2
     u_assert_true (dogecoin_generate_hdnode_encrypt_with_tpm (&node, TEST_FILE, true));
     debug_print ("HD node: %s\n", utils_uint8_to_hex ((uint8_t *) &node, sizeof (dogecoin_hdnode)));
@@ -73,8 +121,6 @@ void test_tpm()
     debug_print ("HD node and decrypted HD node are equal\n");
 
     // Define a random seed and a decrypted seed
-    SEED seed = {0};
-    SEED decrypted_seed = {0};
     sha512_raw(&resp_random[12], 32, seed);
 
     // Generate a random seed with the TPM2
@@ -88,10 +134,6 @@ void test_tpm()
     // Compare the seed and the decrypted seed
     u_assert_mem_eq (seed, decrypted_seed, sizeof (SEED));
     debug_print ("Seed and decrypted seed are equal\n");
-
-    // Generate a mnemonic with the TPM2
-    MNEMONIC mnemonic = {0};
-    MNEMONIC decrypted_mnemonic = {0};
 
     // Generate a random mnemonic with the TPM2
     u_assert_true (dogecoin_generate_mnemonic_encrypt_with_tpm(mnemonic, TEST_FILE, true, "eng", " ", NULL));
@@ -121,7 +163,6 @@ void test_tpm()
     // test getDerivedHDAddressFromEncryptedHDNode
     u_assert_true (getDerivedHDAddressFromEncryptedHDNode(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0);
     debug_print("Derived address: %s\n", derived_address);
-
 
 #endif
 

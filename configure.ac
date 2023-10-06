@@ -139,6 +139,12 @@ AC_ARG_ENABLE(tests,
   [use_tests=$enableval],
   [use_tests=yes])
 
+AC_ARG_ENABLE([test_passwd],
+  [AS_HELP_STRING([--enable-test-passwd],
+  [enable test password for encrypt/decrypt])],
+  [test_passwd=$enableval],
+  [test_passwd=yes])
+
 AC_MSG_CHECKING([for __builtin_expect])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
   [ AC_MSG_RESULT([yes]);AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]) ],
@@ -180,6 +186,10 @@ if test "x$enable_debug" = xyes; then
   CFLAGS="$CFLAGS -g3 -O0 -DDEBUG"
   CXXFLAGS="$CXXFLAGS -g3 -O0 -DDEBUG"
   AC_DEFINE_UNQUOTED([ENABLE_DEBUG],[1],[Define to 1 to enable debug output])
+fi
+
+if test "x$test_passwd" = xyes; then
+  AC_DEFINE_UNQUOTED([TEST_PASSWD],[1],[Define to 1 to enable test password])
 fi
 
 if test "x$with_net" = xyes; then
@@ -238,6 +248,7 @@ echo "  with wallet     = $with_wallet"
 echo "  with unistring  = $with_unistring"
 echo
 echo "  SSE2 Scrypt     = $use_scrypt_sse2"
+echo "  test password   = $test_passwd"
 echo
 echo "  openenclave     = $use_openenclave"
 echo

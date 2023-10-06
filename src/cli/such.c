@@ -1110,10 +1110,18 @@ int main(int argc, char* argv[])
                     }
             }
 
+#if defined (_WIN64) && !defined(__MINGW64__) && defined(USE_TPM2)
             /* generate mnemonic with tpm */
             if (generateRandomEnglishMnemonicTPM (mnemonic, file_num, overwrite) == false) {
                 printf("generate_mnemonic -y <file_num>, -w (overwrite), -b (silent),\n");
-                return showError("failed to generate mnemonic in TPM");
+                printf("failed to generate/encrypt mnemonic in tpm\n");
+                printf("trying to generate mnemonic with software\n");
+                }
+#endif
+            /* generate mnemonic with software */
+            if (generateRandomEnglishMnemonicSW (mnemonic, file_num, overwrite) == false) {
+                printf("generate_mnemonic -y <file_num>, -w (overwrite), -b (silent),\n");
+                return showError("failed to generate/encrypt mnemonic in software");
                 }
             }
 
