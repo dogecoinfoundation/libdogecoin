@@ -763,6 +763,7 @@ int verifyHDMasterPubKeypairFromEncryptedSeed(const char* wif_privkey_master, co
  * @param account The BIP44 account to generate the derived address.
  * @param index The BIP44 index to generate the derived address.
  * @param change_level The BIP44 change level flag to generate derived address.
+ * @param pass The passphrase (optional).
  * @param p2pkh_pubkey_master The generated master public key.
  * @param is_testnet The flag denoting which network, 0 for mainnet and 1 for testnet.
  * @param file_num The file number to store the encrypted seed.
@@ -788,7 +789,9 @@ int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint3
     }
 
     /* Generate the root key from the mnemonic */
-    dogecoin_seed_from_mnemonic(mnemonic, pass, seed);
+    if (dogecoin_seed_from_mnemonic(mnemonic, pass, seed) == -1) {
+        return -1;
+    }
 
     /* Generate the root key from the seed */
     dogecoin_hdnode_from_seed(seed, MAX_SEED_SIZE, &node);

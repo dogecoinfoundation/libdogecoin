@@ -179,7 +179,9 @@ static struct option long_options[] = {
         {"checkpoint", no_argument, NULL, 'p'},
         {"wallet_file", required_argument, NULL, 'w'},
         {"headers_file", required_argument, NULL, 'h'},
-        {"tpm_file", required_argument, NULL, 'y'},
+        {"encrypted_file", required_argument, NULL, 'y'},
+        {"use_tpm", no_argument, NULL, 'j'},
+        {"master_key", no_argument, NULL, 'k'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -196,7 +198,8 @@ static void print_version() {
 static void print_usage() {
     print_version();
     printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-t[--testnet]) (-f <headersfile|0 for in mem only>) \
-(-n|-mnemonic <seed_phrase>) (-s|-pass_phrase <pass_phrase>) (-y|-tpm_file <file_num 0-999>) (-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
+(-n|-mnemonic <seed_phrase>) (-s|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-999>) (-w|-wallet_file <filename>) (-h|-headers_file <filename>) \
+(-k[--master_key] (-j[--use_tpm]) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -270,6 +273,8 @@ int main(int argc, char* argv[]) {
     char* headers_name = 0;
     dogecoin_bool full_sync = false;
     dogecoin_bool have_decl_daemon = false;
+    dogecoin_bool encrypted = false;
+    dogecoin_bool master_key = false;
     dogecoin_bool tpm = false;
     int file_num = NO_FILE;
 
@@ -281,7 +286,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:y:a:w:h:bpz:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:y:a:w:h:bpzkj:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -320,8 +325,14 @@ int main(int argc, char* argv[]) {
                     headers_name = optarg;
                     break;
                 case 'y':
-                    tpm = true;
+                    encrypted = true;
                     file_num = (int)strtol(optarg, (char**)NULL, 10);
+                    break;
+                case 'k':
+                    master_key = true;
+                    break;
+                case 'j':
+                    tpm = true;
                     break;
                 case 'w':
                     name = optarg;
@@ -346,7 +357,7 @@ int main(int argc, char* argv[]) {
         client->sync_completed = spv_sync_completed;
 
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, tpm, file_num);
+        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, encrypted, tpm, file_num, master_key);
         print_utxos(wallet);
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;

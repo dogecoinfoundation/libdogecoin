@@ -18,8 +18,9 @@ The `such` tool can be used by simply running the command `./such` in the top le
 - derive_child_keys
 - generate_mnemonic
 - list_encryption_keys_in_tpm
-- decrypt_master_key_with_tpm
-- decrypt_mnemonic_with_tpm
+- decrypt_master_key
+- decrypt_mnemonic
+- mnemonic_to_key
 - mnemonic_to_addresses
 - print_keys
 - sign
@@ -41,14 +42,15 @@ Most of these commands require a flag following them to denote things like exist
 | -k, --pubkey  | public_key          | yes | p2pkh -k <public_key> |
 | -m, --derived_path | derived_path        | yes | derive_child_key -p <extended_private_key> -m <derived_path> |
 | -e, --entropy  | hex_entropy | yes | generate_mnemonic -e <hex_entropy> |
-| -n, --mnemonic  | seed_phrase | yes | mnemonic_to_addresses -n <seed_phrase> |
-| -a, --pass_phrase  | pass_phrase | yes | mnemonic_to_addresses -n <seed_phrase> -a <pass_phrase> |
-| -o, --account_int  | account_int | yes | mnemonic_to_addresses -n <seed_phrase> -o <account_int> |
-| -g, --change_level  | change_level | yes | mnemonic_to_addresses -n <seed_phrase> -g <change_level> |
-| -i, --address_index  | address_index | yes | mnemonic_to_addresses -n <seed_phrase> -i <address_index> |
-| -y, --tpm_file | file_num | yes | generate_mnemonic, bip32_extended_master_key, decrypt_master_key_with_tpm, decrypt_mnemonic_with_tpm or mnemonic_to_addresses -y <file_num>
+| -n, --mnemonic  | seed_phrase | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> |
+| -a, --pass_phrase  | pass_phrase | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -a <pass_phrase> |
+| -o, --account_int  | account_int | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -o <account_int> |
+| -g, --change_level  | change_level | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -g <change_level> |
+| -i, --address_index  | address_index | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -i <address_index> |
+| -y, --encrypted_file | file_num | yes | generate_mnemonic, bip32_extended_master_key, decrypt_master_key, decrypt_mnemonic, mnemonic_to_key or mnemonic_to_addresses -y <file_num>
 | -w, --overwrite | overwrite | no | generate_mnemonic or bip32_extended_master_key -w |
 | -b, --silent | silent | no | generate_mnemonic or bip32_extended_master_key -b |
+| -j, --use_tpm | use_tpm | no | generate_mnemonic, bip32_extended_master_key, decrypt_master_key, decrypt_mnemonic, mnemonic_to_key or mnemonic_to_addresses -j |
 | -t, --testnet  | designate_testnet   | no  | generate_private_key -t |
 | -s  | script_hex          | yes | comp2der -s <compact_signature> |
 | -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> |
@@ -67,8 +69,9 @@ Below is a list of all the commands and the flags that they require. As a remind
 | derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified private key using the specified derivation path.
 | generate_mnemonic         | None                   | -e, -y, -w, -b | Generates a 24-word english seed phrase randomly or from optional hex entropy. |
 | list_encryption_keys_in_tpm | None                 | None | List the encryption keys in the TPM. |
-| decrypt_master_key_with_tpm | -y                   | None | Decrypt the master key with the TPM. |
-| decrypt_mnemonic_with_tpm | -y                     | None | Decrypt the mnemonic with the TPM. |
+| decrypt_master_key | -y   | -j | Decrypt the master key with the TPM or SW. |
+| decrypt_mnemonic | -y     | -j | Decrypt the mnemonic with the TPM or SW. |
+| mnemonic_to_key | -n      | -a, -y, -o, g, -i, -t | Generates a private key from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
 | mnemonic_to_addresses     | -n      | -a, -y, -o, g, -i, -t   | Generates an address from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
 | sign                      | -x, -s, -i, -h, -p     | -t   | See the definition of sign_raw_transaction in the Transaction API.
@@ -136,7 +139,13 @@ Below are some examples on how to use the `such` tool in practice.
     ./such -c generate_mnemonic
     > they nuclear observe moral twenty gym hedgehog damage reveal syrup negative beach best silk alone feel vapor deposit belt host purity run clever deer
 
-#### Geneate an HD address from the seed phrase for a given account (2), change level (1, internal) and index (0) for testnet
+#### Generate a HD master key from the seed phrase for a given account (2), change level (1, internal) and index (0) for testnet
+
+    ./such -c mnemonic_to_key -n "they nuclear observe moral twenty gym hedgehog damage reveal syrup negative beach best silk alone feel vapor deposit belt host purity run clever deer" -o 2 -g 1 -i 0 -t
+    > keypath: m/44'/1'/2'/1/0
+    > private key (wif): cniAjMkD7HpzQKw67ByNsyzqMF8MEJo2y4viH2WEZRXoKHNih1sH
+
+#### Generate an HD address from the seed phrase for a given account (2), change level (1, internal) and index (0) for testnet
 
     ./such -c mnemonic_to_addresses -n "they nuclear observe moral twenty gym hedgehog damage reveal syrup negative beach best silk alone feel vapor deposit belt host purity run clever deer" -o 2 -g 1 -i 0 -t
     > Address: nW7ndt4HZh8XwLYN6v6N2S4mZCbpZPuFxh
