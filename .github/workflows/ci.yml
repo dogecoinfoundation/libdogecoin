@@ -27,6 +27,7 @@ jobs:
           - armhf-linux
           - aarch64-linux
           - x86_64-linux-dbg
+          - x86_64-linux-openenclave
           - x86_64-macos
           # - arm64-macos
           - x86_64-win
@@ -56,6 +57,14 @@ jobs:
             packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
             config-opts: "--enable-debug"
+            goal: install
+          - name: x86_64-linux-openenclave
+            host: x86_64-pc-linux-gnu
+            os: ubuntu-20.04
+            run-tests: true
+            packages: python3-dev python3-dbg python
+            dep-opts: "DEBUG=1 SPEED=slow V=1"
+            config-opts: "--enable-debug --enable-openenclave CFLAGS=-U_FORTIFY_SOURCE"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin15
@@ -227,17 +236,43 @@ jobs:
         if: ${{ matrix.run-tests }}
         run: |
             case "${{ matrix.name }}" in
-              "armhf-linux") 
+              "armhf-linux")
               qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./tests
               ;;
-              "aarch64-linux") 
+              "aarch64-linux")
               qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./tests
               ;;
-              "x86_64-linux-dbg") 
+              "x86_64-linux-dbg")
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               python3 tooltests.py
               ;;
-              *) 
+              "x86_64-linux-openenclave")
+              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
+              python3 tooltests.py
+              sudo make install
+
+              echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
+              wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
+
+              echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" | sudo tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list
+              wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+
+              echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main" | sudo tee /etc/apt/sources.list.d/msprod.list
+              wget -qO - https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+
+              sudo apt update
+
+              sudo apt -y install clang-11 libssl-dev gdb libsgx-enclave-common libsgx-quote-ex libprotobuf17 libsgx-dcap-ql libsgx-dcap-ql-dev az-dcap-client open-enclave
+              sudo apt -y install dkms
+              source /opt/openenclave/share/openenclave/openenclaverc
+              cd src/openenclave
+              mkdir build
+              cd build
+              cmake ..
+              make
+              make simulate
+              ;;
+              *)
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               ;;
             esac

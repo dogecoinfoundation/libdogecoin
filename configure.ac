@@ -52,7 +52,7 @@ build_windows=no
 CFLAGS="$CFLAGS -W"
 case $host in
   *mingw*)
-    build_windows=yes    
+    build_windows=yes
     TARGET_OS=windows
     AC_CHECK_LIB([pthread],      [main],, AC_MSG_ERROR(lib missing))
     AC_CHECK_LIB([winpthread],      [main],, AC_MSG_ERROR(lib missing))
@@ -128,6 +128,12 @@ AC_ARG_ENABLE([unistring],
   [with_unistring=$enableval],
   [with_unistring=yes])
 
+AC_ARG_ENABLE([openenclave],
+  [AS_HELP_STRING([--enable-openenclave],
+  [Build with openenclave (default is no)])],
+  [use_openenclave=$enableval],
+  [use_openenclave=no])
+
 AC_ARG_ENABLE(tests,
   AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
   [use_tests=$enableval],
@@ -195,6 +201,10 @@ if test "x$with_unistring" = xyes; then
   AC_DEFINE(USE_UNISTRING, 1, [Define this symbol if libunistring works])
 fi
 
+if test "x$use_openenclave" = xyes; then
+  AC_DEFINE(USE_OPENENCLAVE, 1, [Define this symbol if openenclave works])
+fi
+
 AC_CONFIG_HEADERS([config/libdogecoin-config.h])
 AC_CONFIG_FILES([Makefile libdogecoin.pc])
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
@@ -208,6 +218,7 @@ AM_CONDITIONAL([WITH_NET], [test "x$with_net" = "xyes"])
 AM_CONDITIONAL([WITH_LOGDB], [test "x$with_logdb" = "xyes"])
 AM_CONDITIONAL([WITH_WALLET], [test "x$with_wallet" = "xyes"])
 AM_CONDITIONAL([USE_SSE2], [test "x$use_scrypt_sse2" = "xyes"])
+AM_CONDITIONAL([USE_OPENENCLAVE], [test "x$use_openenclave" = "xyes"])
 AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
 AC_SUBST(LIB_VERSION_REVISION, _LIB_VERSION_REVISION)
 AC_SUBST(LIB_VERSION_AGE, _LIB_VERSION_AGE)
@@ -217,7 +228,7 @@ AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
 
-echo 
+echo
 echo "Options used to compile and link:"
 echo "  with tests      = $use_tests"
 echo "  with tools      = $with_tools"
@@ -228,6 +239,8 @@ echo "  with unistring  = $with_unistring"
 echo
 echo "  SSE2 Scrypt     = $use_scrypt_sse2"
 echo
+echo "  openenclave     = $use_openenclave"
+echo
 echo "  host            = $host"
 echo "  target os       = $TARGET_OS"
 echo
@@ -236,4 +249,4 @@ echo "  CFLAGS          = $CFLAGS"
 echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $CXXFLAGS"
 echo "  LDFLAGS         = $LDFLAGS"
-echo 
+echo
