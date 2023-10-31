@@ -541,7 +541,7 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
 
 void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
 {
-    unsigned int freespace, usedspace;
+    unsigned int freespace = 0, usedspace = 0;
     if (len == 0)
         return; /* Calling with no data is valid - we do nothing */
     usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
@@ -574,11 +574,14 @@ void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
         MEMCPY_BCOPY(context->buffer, data, len);
         context->bitcount += len << 3;
     }
+
+	/* Clean up: */
+	usedspace = freespace = 0;
 }
 
 void sha256_finalize(sha256_context* context, sha2_byte digest[SHA256_DIGEST_LENGTH]) {
     sha2_word32* d = (sha2_word32*)digest;
-    unsigned int usedspace;
+    unsigned int usedspace = 0;
     sha2_word64* t;
     /* If no digest buffer is passed, we don't bother doing this: */
     if (digest != (sha2_byte*)0) {
@@ -639,6 +642,14 @@ void sha256_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA256_DIGEST_
     sha256_init(&context);
     sha256_write(&context, data, len);
     sha256_finalize(&context, digest);
+}
+
+void sha256_reset(sha256_context* ctx) {
+    if (ctx == (sha256_context*)0)
+        return;
+    MEMCPY_BCOPY(ctx->state, sha256_initial_hash_value, SHA256_DIGEST_LENGTH);
+    MEMSET_BZERO(ctx->buffer, SHA256_BLOCK_LENGTH);
+    ctx->bitcount = 0;
 }
 
 /*** SHA-512: *********************************************************/

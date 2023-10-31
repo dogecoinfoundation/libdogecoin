@@ -31,6 +31,7 @@
 #include <dogecoin/headersdb_file.h>
 #include <dogecoin/block.h>
 #include <dogecoin/common.h>
+#include <dogecoin/pow.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
 
@@ -84,7 +85,7 @@ dogecoin_headers_db* dogecoin_headers_db_new(const dogecoin_chainparams* chainpa
     db->read_write_file = !inmem_only;
     db->use_binary_tree = true;
     db->max_hdr_in_mem = 1440;
-
+    db->params = chainparams;
     db->genesis.height = 0;
     db->genesis.prev = NULL;
     memcpy_safe(db->genesis.hash, chainparams->genesisblockhash, DOGECOIN_HASH_LENGTH);
@@ -196,7 +197,7 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
                 {
                     dogecoin_blockindex *chainheader = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
                     chainheader->height = height;
-                    if (!dogecoin_block_header_deserialize(&chainheader->header, &cbuf_all)) {
+                    if (!dogecoin_block_header_deserialize(&chainheader->header, &cbuf_all, db->params)) {
                         dogecoin_block_header_free(&chainheader->header);
                         dogecoin_free(chainheader);
                         fprintf(stderr, "Error: Invalid data found.\n");
@@ -259,7 +260,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
     *connected = false;
 
     dogecoin_blockindex *blockindex = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
-    if (!dogecoin_block_header_deserialize(&blockindex->header, buf)) return NULL;
+    if (!dogecoin_block_header_deserialize(&blockindex->header, buf, db->params)) return NULL;
 
     dogecoin_block_header_hash(&blockindex->header, (uint8_t *)&blockindex->hash);
 
@@ -281,6 +282,11 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
 
     if (connect_at != NULL) {
         /* TODO: check claimed PoW */
+        if (!check_pow(&blockindex->hash, blockindex->header.bits, db->params)) {
+            printf("%s: check_pow failed: %s\n", __func__, utils_uint8_to_hex((const uint8_t*)&blockindex->hash, 32));
+            return false;
+        }
+
         blockindex->prev = connect_at;
         blockindex->height = connect_at->height+1;
 
