@@ -161,7 +161,7 @@ dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodes
     if (!dogecoin_hdnode_deserialize(nodeser, chain, &node))
         return false;
 
-    char str[128];
+    char str[HDKEYLEN];
     size_t strsize = sizeof(str);
     printf("ext key:             %s\n", nodeser);
 
@@ -175,7 +175,7 @@ dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodes
 
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
-    char privkey_wif[128];
+    char privkey_wif[PRIVKEYWIFLEN];
     memcpy_safe(&pkeybase58c[1], node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
     assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), privkey_wif, sizeof(privkey_wif)) != 0);
     if (dogecoin_hdnode_has_privkey(&node)) {
@@ -220,7 +220,7 @@ dogecoin_bool hd_derive(const dogecoin_chainparams* chain, const char* masterkey
     return true;
 }
 
-int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[PUBKEYLEN]) {
+int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]) {
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
     return addresses_from_pubkey(chain, pubkey_hex, p2pkh_address);
 }
@@ -230,7 +230,7 @@ int getPubkeyFromPrivkey(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_b
     return (pubkey_from_privatekey(chain, privkey_wif, pubkey_hex, sizeout) == true) ? 1 : 0;
 }
 
-int genPrivkey(const dogecoin_bool is_testnet, char privkey_wif[PUBKEYHEXLEN], size_t strsize_wif, char privkey_hex[PRIVKEYWIFLEN]) {
+int genPrivkey(const dogecoin_bool is_testnet, char privkey_wif[PRIVKEYWIFLEN], size_t strsize_wif, char privkey_hex[PRIVKEYHEXLEN]) {
     const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
     return gen_privatekey(chain, privkey_wif, strsize_wif, privkey_hex);
 }

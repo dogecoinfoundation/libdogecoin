@@ -33,20 +33,20 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-/* generate a new private key (hex) */
+/* generate a new private key (wif) and p2pkh public key */
 LIBDOGECOIN_API int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
 
-/* generate HD master key and WIF public key */
-LIBDOGECOIN_API int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
+/* generate HD master key and p2pkh public key */
+LIBDOGECOIN_API int generateHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
 /* generate an extended public key */
-LIBDOGECOIN_API int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey);
+LIBDOGECOIN_API int generateDerivedHDPubkey(const char* hd_privkey_master, char* p2pkh_pubkey);
 
 /* verify private and public keys are valid and associated with each other*/
 LIBDOGECOIN_API int verifyPrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testnet);
 
 /* verify private and public masters keys are valid and associated with each other */
-LIBDOGECOIN_API int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
+LIBDOGECOIN_API int verifyHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
 /* verify address based on length and checksum */
 LIBDOGECOIN_API int verifyP2pkhAddress(char* p2pkh_pubkey, size_t len);
@@ -72,19 +72,19 @@ bool getDerivedHDNodeByPath(const char* masterkey, const char* derived_path, dog
 LIBDOGECOIN_API int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASSPHRASE pass, char* p2pkh_pubkey, const dogecoin_bool is_testnet);
 
 /* generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
-LIBDOGECOIN_API int generateHDMasterPubKeypairFromMnemonic(char* wif_privkey_master, char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
+LIBDOGECOIN_API int generateHDMasterPubKeypairFromMnemonic(char* hd_privkey_master, char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
 
 /* verify that a HD master key and a dogecoin address matches a mnemonic */
-LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
+LIBDOGECOIN_API int verifyHDMasterPubKeypairFromMnemonic(const char* hd_privkey_master, const char* p2pkh_pubkey_master, const MNEMONIC mnemonic, const PASSPHRASE pass, const dogecoin_bool is_testnet);
 
 /* generates a new dogecoin address from an encrypted seed and a slip44 key path */
 LIBDOGECOIN_API int getDerivedHDAddressFromEncryptedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet, const int file_num);
 
 /* generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from an encrypted seed */
-LIBDOGECOIN_API int generateHDMasterPubKeypairFromEncryptedSeed(char* wif_privkey_master, char* p2pkh_pubkey_master, const dogecoin_bool is_testnet, const int file_num);
+LIBDOGECOIN_API int generateHDMasterPubKeypairFromEncryptedSeed(char* hd_privkey_master, char* p2pkh_pubkey_master, const dogecoin_bool is_testnet, const int file_num);
 
 /* verify that a HD master key and a dogecoin address matches an encrypted seed */
-LIBDOGECOIN_API int verifyHDMasterPubKeypairFromEncryptedSeed(const char* wif_privkey_master, const char* p2pkh_pubkey_master, const dogecoin_bool is_testnet, const int file_num);
+LIBDOGECOIN_API int verifyHDMasterPubKeypairFromEncryptedSeed(const char* hd_privkey_master, const char* p2pkh_pubkey_master, const dogecoin_bool is_testnet, const int file_num);
 
 /* generates a new dogecoin address from an encrypted mnemonic and a slip44 key path */
 LIBDOGECOIN_API int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const PASSPHRASE pass, char* p2pkh_pubkey, const bool is_testnet, const int file_num);

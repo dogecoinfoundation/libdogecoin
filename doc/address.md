@@ -101,8 +101,8 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int privkeyLen = 53;
-  int pubkeyLen = 35;
+  int privkeyLen = PRIVKEYWIFLEN;
+  int pubkeyLen = P2PKHLEN;
 
   char privKey[privkeyLen];
   char pubKey[pubkeyLen];
@@ -120,7 +120,7 @@ int main() {
 
 ### **generateHDMasterPubKeypair:**
 
-`int generateHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)`
+`int generateHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)`
 
 This function will populate provided string variables (privkey, pubkey) with freshly generated respective private and public keys for a hierarchical deterministic wallet, specifically for either mainnet or testnet as specified through the network flag (is_testnet). The function returns 1 on success and 0 on failure.
 
@@ -131,8 +131,8 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int masterPrivkeyLen = 200; // enough cushion
-  int pubkeyLen = 35;
+  int masterPrivkeyLen = HDKEYLEN; // enough cushion
+  int pubkeyLen = P2PKHLEN;
 
   char masterPrivKey[masterPrivkeyLen];
   char masterPubKey[pubkeyLen];
@@ -150,9 +150,9 @@ int main() {
 
 ### **generateDerivedHDPubKey:**
 
-`int generateDerivedHDPubkey(const char* wif_privkey_master, char* p2pkh_pubkey)`
+`int generateDerivedHDPubkey(const char* hd_privkey_master, char* p2pkh_pubkey)`
 
-This function takes a given HD master private key (wif_privkey_master) and loads it into the provided pointer for the resulting derived public key (p2pkh_pubkey). This private key input should come from the result of generateHDMasterPubKeypair(). The function returns 1 on success and 0 on failure.
+This function takes a given HD master private key (hd_privkey_master) and loads it into the provided pointer for the resulting derived public key (p2pkh_pubkey). This private key input should come from the result of generateHDMasterPubKeypair(). The function returns 1 on success and 0 on failure.
 
 _C usage:_
 
@@ -161,8 +161,8 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int masterPrivkeyLen = 200; // enough cushion
-  int pubkeyLen = 35;
+  int masterPrivkeyLen = HDKEYLEN; // enough cushion
+  int pubkeyLen = P2PKHLEN;
 
   char masterPrivKey[masterPrivkeyLen];
   char masterPubKey[pubkeyLen];
@@ -194,8 +194,8 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int privkeyLen = 53;
-  int pubkeyLen = 35;
+  int privkeyLen = PRIVKEYWIFLEN;
+  int pubkeyLen = P2PKHLEN;
 
   char privKey[privkeyLen];
   char pubKey[pubkeyLen];
@@ -217,9 +217,9 @@ int main() {
 
 ### **verifyHDMasterPubKeypair**
 
-`int verifyHDMasterPubKeypair(char* wif_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)`
+`int verifyHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)`
 
-This function validates that a given master private key matches a given master public key. This could be useful prior to signing, or in some kind of wallet recovery tool to match keys. This function requires a previously generated HD master key pair (wif_privkey_master, p2pkh_pubkey_master) and the network they were generated for (is_testnet). It then validates that the given public key was indeed derived from the given master private key, returning 1 if the keys are associated and 0 if they are not. This could be useful prior to signing, or in some kind of wallet recovery tool to match keys.
+This function validates that a given master private key matches a given master public key. This could be useful prior to signing, or in some kind of wallet recovery tool to match keys. This function requires a previously generated HD master key pair (hd_privkey_master, p2pkh_pubkey_master) and the network they were generated for (is_testnet). It then validates that the given public key was indeed derived from the given master private key, returning 1 if the keys are associated and 0 if they are not. This could be useful prior to signing, or in some kind of wallet recovery tool to match keys.
 
 _C usage:_
 
@@ -228,8 +228,8 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int masterPrivkeyLen = 200; // enough cushion
-  int pubkeyLen = 35;
+  int masterPrivkeyLen = HDKEYLEN; // enough cushion
+  int pubkeyLen = P2PKHLEN;
 
   char masterPrivKey[masterPrivkeyLen];
   char masterPubKey[pubkeyLen];
@@ -262,8 +262,8 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-  int privkeyLen = 200; // enough cushion
-  int pubkeyLen = 35;
+  int privkeyLen = HDKEYLEN; // enough cushion
+  int pubkeyLen = P2PKHLEN;
 
   char privKey[privkeyLen];
   char pubKey[pubkeyLen];
@@ -512,7 +512,7 @@ _C usage:_
 #include <stdio.h>
 
 int main () {
-  int addressLen = 53;
+  int addressLen = P2PKHLEN;
 
   MNEMONIC seed_phrase;
   char address [addressLen];
@@ -537,7 +537,7 @@ extern "C" {
 using namespace std;
 
 int main () {
-  int addressLen = 53;
+  int addressLen = P2PKHLEN;
 
   MNEMONIC seed_phrase;
   char address [addressLen];
@@ -567,7 +567,7 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-    int addressLen = 35;
+    int addressLen = P2PKHLEN;
     char derived_address[addressLen];
 
     if (getDerivedHDAddressFromEncryptedSeed(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {
@@ -594,7 +594,7 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-    int addressLen = 35;
+    int addressLen = P2PKHLEN;
     char derived_address[addressLen];
 
     if (getDerivedHDAddressFromEncryptedMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, NULL, derived_address, false, TEST_FILE) == 0) {
@@ -621,7 +621,7 @@ _C usage:_
 #include <stdio.h>
 
 int main() {
-    int addressLen = 35;
+    int addressLen = P2PKHLEN;
     char derived_address[addressLen];
 
     if (getDerivedHDAddressFromEncryptedHDNode(0, 0, BIP44_CHANGE_EXTERNAL, derived_address, false, TEST_FILE) == 0) {

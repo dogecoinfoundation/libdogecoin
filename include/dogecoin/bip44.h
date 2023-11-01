@@ -66,7 +66,7 @@ int derive_bip44_extended_key(const dogecoin_hdnode *master_key, const uint32_t 
 /* Extended private key generated */
 /* Key path string generated */
 dogecoin_bool deriveBIP44ExtendedKey(
-    const char wif_privkey_master[HDKEYLEN],
+    const char hd_privkey_master[HDKEYLEN],
     const uint32_t* account,
     const CHANGE_LEVEL change_level,
     const uint32_t* address_index,
@@ -83,7 +83,7 @@ dogecoin_bool deriveBIP44ExtendedKey(
 /* Extended public key generated */
 /* Key path string generated */
 dogecoin_bool deriveBIP44ExtendedPublicKey(
-    const char wif_privkey_master[HDKEYLEN],
+    const char hd_privkey_master[HDKEYLEN],
     const uint32_t* account,
     const CHANGE_LEVEL change_level,
     const uint32_t* address_index,

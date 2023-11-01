@@ -33,9 +33,6 @@
 LIBDOGECOIN_BEGIN_DECL
 
 #define MAX_INT32_STRINGLEN 12
-#define HD_MASTERKEY_STRINGLEN 112
-#define P2PKH_ADDR_STRINGLEN 35
-#define WIF_UNCOMPRESSED_PRIVKEY_STRINGLEN 53
 #define DERIVED_PATH_STRINGLEN 33
 /* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
 #define KOINU_STRINGLEN 21

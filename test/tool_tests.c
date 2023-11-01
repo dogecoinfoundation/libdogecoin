@@ -15,14 +15,14 @@
 
 void test_tool()
 {
-    char addr[100];
+    char addr[P2PKHLEN];
     u_assert_int_eq(addresses_from_pubkey(&dogecoin_chainparams_main, "039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", addr), true);
     u_assert_str_eq(addr, "DTwqVfB7tbwca2PzwBvPV1g1xDB2YPrCYh");
 
     u_assert_true(getAddressFromPubkey("039ca1fdedbe160cb7b14df2a798c8fed41ad4ed30b06a85ad23e03abe43c413b2", false, addr));
     u_assert_str_eq(addr, "DTwqVfB7tbwca2PzwBvPV1g1xDB2YPrCYh");
 
-    size_t pubkeylen = 100;
+    size_t pubkeylen = PUBKEYHEXLEN;
     char* pubkey=dogecoin_char_vla(pubkeylen);
     u_assert_int_eq(pubkey_from_privatekey(&dogecoin_chainparams_main, "QUaohmokNWroj71dRtmPSses5eRw5SGLKsYSRSVisJHyZdxhdDCZ", pubkey, &pubkeylen), true);
     u_assert_str_eq(pubkey, "024c33fbb2f6accde1db907e88ebf5dd1693e31433c62aaeef42f7640974f602ba");
@@ -33,9 +33,9 @@ void test_tool()
 
     free(pubkey);
 
-    size_t privkeywiflen = 100;
+    size_t privkeywiflen = PRIVKEYWIFLEN;
     char* privkeywif=dogecoin_char_vla(privkeywiflen);
-    char privkeyhex[100];
+    char privkeyhex[PRIVKEYHEXLEN];
     u_assert_int_eq(gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, NULL), true);
     u_assert_int_eq(gen_privatekey(&dogecoin_chainparams_main, privkeywif, privkeywiflen, privkeyhex), true);
 
@@ -53,14 +53,14 @@ void test_tool()
     free(privkey_data);
     free(privkeywif);
 
-    size_t masterkeysize = 200;
+    size_t masterkeysize = HDKEYLEN;
     char* masterkey=dogecoin_char_vla(masterkeysize);
     u_assert_int_eq(hd_gen_master(&dogecoin_chainparams_main, masterkey, masterkeysize), true);
     u_assert_int_eq(hd_print_node(&dogecoin_chainparams_main, masterkey), true);
 
     genHDMaster(false, masterkey, masterkeysize);
 
-    size_t extoutsize = 200;
+    size_t extoutsize = HDKEYLEN;
     char* extout=dogecoin_char_vla(extoutsize);
     const char* privkey = "dgpv557t1z21sLCnAz3cJPW5DiVErXdAi7iWpSJwBBaeN87umwje8LuTKREPTYPTNGXGnB3oNd2z6RmFFDU99WKbiRDJKKXfHxf48puZibauJYB";
     debug_print("\nMaster private key:  %s\n", privkey);

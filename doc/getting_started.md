@@ -140,8 +140,8 @@ int main() {
     char* amt_total = "2.0";
 
     // generate new key pair to send to
-    char newPrivKey[53];
-    char newPubKey[35];
+    char newPrivKey[PRIVKEYWIFLEN];
+    char newPubKey[P2PKHLEN];
     generatePrivPubKeypair(newPrivKey, newPubKey, false);
 
     // build and sign the transaction

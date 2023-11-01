@@ -225,8 +225,8 @@ void test_wallet_basics()
     vector_free(addrs, true);
 
     dogecoin_wallet_addr *waddr_search = dogecoin_wallet_find_waddr_byaddr(wallet, "DMTbb3NbwAdimWDMVabwip7FjPAVx6Qeq4");
-    char tmp_p2pkh[35];
-    dogecoin_p2pkh_addr_from_hash160(waddr_search->pubkeyhash, &dogecoin_chainparams_main, tmp_p2pkh, 35);
+    char tmp_p2pkh[P2PKHLEN];
+    dogecoin_p2pkh_addr_from_hash160(waddr_search->pubkeyhash, &dogecoin_chainparams_main, tmp_p2pkh, P2PKHLEN);
     u_assert_str_eq(tmp_p2pkh, "DMTbb3NbwAdimWDMVabwip7FjPAVx6Qeq4");
     waddr_search = dogecoin_wallet_find_waddr_byaddr(wallet, "dcrt1qre2XXXXXXXXXXXXXXXXXXXXX"); // must return NULL
     u_assert_is_null(waddr_search);

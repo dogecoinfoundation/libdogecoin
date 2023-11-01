@@ -103,7 +103,7 @@ int derive_bip44_extended_key(const dogecoin_hdnode *master_key, const uint32_t 
 
 /** @brief This function derives the BIP 44 extended private key from a master private key.
  *
- * @param wif_privkey_master The master private key to derive from.
+ * @param hd_privkey_master The master private key to derive from.
  * @param account The account number to use in the BIP 44 key derivation.
  * @param change_level The change level to use in the BIP 44 key derivation, either "external" or "internal".
  * @param address_index The address index to use in the BIP 44 key derivation.
@@ -114,7 +114,7 @@ int derive_bip44_extended_key(const dogecoin_hdnode *master_key, const uint32_t 
  * @return true if the key is derived successfully, false otherwise.
  */
 dogecoin_bool deriveBIP44ExtendedKey(
-    const char wif_privkey_master[HDKEYLEN],
+    const char hd_privkey_master[HDKEYLEN],
     const uint32_t* account,
     const CHANGE_LEVEL change_level,
     const uint32_t* address_index,
@@ -123,12 +123,12 @@ dogecoin_bool deriveBIP44ExtendedKey(
     KEY_PATH keypath) {
     dogecoin_hdnode master_key;
     dogecoin_hdnode derived_key;
-    dogecoin_bool is_testnet = isTestnetFromB58Prefix(wif_privkey_master);
-    if (wif_privkey_master == NULL || extkeyout == NULL) {
+    dogecoin_bool is_testnet = isTestnetFromB58Prefix(hd_privkey_master);
+    if (hd_privkey_master == NULL || extkeyout == NULL) {
         fprintf(stderr, "ERROR: invalid input arguments\n");
         return false;
     }
-    if (!dogecoin_hdnode_deserialize(wif_privkey_master, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &master_key)) {
+    if (!dogecoin_hdnode_deserialize(hd_privkey_master, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &master_key)) {
         fprintf(stderr, "ERROR: invalid master key\n");
         return false;
     }
@@ -142,7 +142,7 @@ dogecoin_bool deriveBIP44ExtendedKey(
 
 /** @brief This function derives the BIP 44 extended public key from a master private key.
  *
- * @param wif_privkey_master The master private key to derive from.
+ * @param hd_privkey_master The master private key to derive from.
  * @param account The account number to use in the BIP 44 key derivation.
  * @param change_level The change level to use in the BIP 44 key derivation, either "external" or "internal".
  * @param address_index The address index to use in the BIP 44 key derivation.
@@ -153,7 +153,7 @@ dogecoin_bool deriveBIP44ExtendedKey(
  * @return true if the key is derived successfully, false otherwise.
  */
 dogecoin_bool deriveBIP44ExtendedPublicKey(
-    const char wif_privkey_master[HDKEYLEN],
+    const char hd_privkey_master[HDKEYLEN],
     const uint32_t* account,
     const CHANGE_LEVEL change_level,
     const uint32_t* address_index,
@@ -162,12 +162,12 @@ dogecoin_bool deriveBIP44ExtendedPublicKey(
     KEY_PATH keypath) {
     dogecoin_hdnode master_key;
     dogecoin_hdnode derived_key;
-    dogecoin_bool is_testnet = isTestnetFromB58Prefix(wif_privkey_master);
-    if (wif_privkey_master == NULL || extkeyout == NULL) {
+    dogecoin_bool is_testnet = isTestnetFromB58Prefix(hd_privkey_master);
+    if (hd_privkey_master == NULL || extkeyout == NULL) {
         fprintf(stderr, "ERROR: invalid input arguments\n");
         return false;
     }
-    if (!dogecoin_hdnode_deserialize(wif_privkey_master, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &master_key)) {
+    if (!dogecoin_hdnode_deserialize(hd_privkey_master, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, &master_key)) {
         fprintf(stderr, "ERROR: invalid master key\n");
         return false;
     }

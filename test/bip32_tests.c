@@ -15,7 +15,7 @@
 void test_bip32()
 {
     dogecoin_hdnode node, node2, node3, node4;
-    char str[112];
+    char str[HDKEYLEN];
     int r;
     uint8_t private_key_master[32];
     uint8_t chain_code_master[32];
