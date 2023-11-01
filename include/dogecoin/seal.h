@@ -51,11 +51,23 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_tpm (const SEED seed, c
 /* Decrypt a BIP32 seed with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm (SEED seed, const int file_num);
 
+/* Encrypt a BIP32 seed with software */
+LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw (const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite);
+
+/* Decrypt a BIP32 seed with software */
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw (SEED seed, const int file_num);
+
 /* Generate a BIP39 mnemonic and encrypt it with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words);
 
 /* Decrypt a BIP39 mnemonic with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_tpm(MNEMONIC mnemonic, const int file_num);
+
+/* Generate a BIP39 mnemonic and encrypt it with software */
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words);
+
+/* Decrypt a BIP39 mnemonic with software */
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemonic, const int file_num);
 
 /* Generate a BIP32 HD node and encrypt it with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite);
@@ -63,11 +75,20 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
 /* Decrypt a BIP32 HD node object with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* out, const int file_num);
 
+/* Generate a BIP32 HD node and encrypt it with software */
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite);
+
+/* Decrypt a BIP32 HD node object with software */
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int file_num);
+
 /* List all encryption keys in the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_list_encryption_keys_in_tpm(wchar_t* names[], size_t* count);
 
 /* Generate a 256-bit random english mnemonic with the TPM */
 LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);
+
+/* Generate a 256-bit random english mnemonic with software */
+LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicSW(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);
 
 LIBDOGECOIN_END_DECL
 

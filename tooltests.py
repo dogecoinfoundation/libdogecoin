@@ -59,5 +59,5 @@ for cmd in commands2:
     if retcode != cmd[1]:
         print("ERROR during "+cmd[0])
         sys.exit(os.EX_DATAERR)
-        
+
 sys.exit(os.EX_OK)

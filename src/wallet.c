@@ -315,7 +315,7 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     return wallet;
 }
 
-dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* name, const char* mnemonic_in, const char* pass, const dogecoin_bool tpm, const int file_num) {
+dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* name, const char* mnemonic_in, const char* pass, const dogecoin_bool encrypted, const dogecoin_bool tpm, const int file_num, const dogecoin_bool master_key) {
     dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
     int error;
     dogecoin_bool created;
@@ -362,18 +362,53 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                 exit(EXIT_FAILURE);
             }
         }
-        else if (tpm) {
-            // decrypt encrypted mnemonic with TPM
+        else if (encrypted) {
+
+            dogecoin_bool tpmSuccess = false;
             MNEMONIC mnemonic = {0};
-            if (dogecoin_decrypt_mnemonic_with_tpm (mnemonic, file_num) == false) {
-                showError("Decrypting mnemonic from TPM failed\n");
-                exit(EXIT_FAILURE);
+
+            if (tpm) {
+                // decrypt encrypted mnemonic with TPM
+                tpmSuccess = dogecoin_decrypt_mnemonic_with_tpm(mnemonic, file_num);
+                if (!tpmSuccess) {
+                    printf("ERROR: Decrypting mnemonic from TPM failed\n");
+                    printf("Trying to decrypt mnemonic from software...\n");
+                }
+            }
+            else {
+                // decrypt encrypted mnemonic with software
+                if (!tpmSuccess) {
+                    if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num)) {
+                        showError("Decrypting mnemonic from software failed\n");
+                        exit(EXIT_FAILURE);
+                    }
+                }
             }
 
             // generate seed from mnemonic
             if (dogecoin_seed_from_mnemonic(mnemonic, pass, seed) == -1) {
                 showError("Invalid mnemonic\n");
                 exit(EXIT_FAILURE);
+            }
+            if (master_key) {
+
+                if (tpm) {
+                    // decrypt encrypted master key with TPM
+                    tpmSuccess = dogecoin_decrypt_hdnode_with_tpm(&node, file_num);
+                    if (!tpmSuccess) {
+                        printf("ERROR: Decrypting master key from TPM failed\n");
+                        printf("Trying to decrypt master key from software...\n");
+                    }
+                }
+                else {
+                    // decrypt encrypted master key with software
+                    if (!tpmSuccess) {
+                        if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num)) {
+                            showError("Decrypting master key from software failed\n");
+                            exit(EXIT_FAILURE);
+                        }
+                    }
+                }
             }
         } else {
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
@@ -382,7 +417,9 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                 exit(EXIT_FAILURE);
             }
         }
-        dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
+        if (!master_key) {
+            dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
+        }
         dogecoin_wallet_set_master_key_copy(wallet, &node);
     } else {
         // ensure we have a key
@@ -409,7 +446,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
 #ifdef USE_UNISTRING
     else if (wallet->waddr_vector->len == 0) {
         int i=0;
-        for(;i<1;i++) {
+        for(;i<20;i++) {
             waddr = dogecoin_wallet_next_bip44_addr(wallet);
         }
         char str[P2PKHLEN];
@@ -1339,7 +1376,7 @@ dogecoin_wallet* dogecoin_wallet_read(char* address) {
     char* wallet_suffix = "_wallet.db";
     char* wallet_prefix = (char*)chain->chainname;
     char* walletfile = concat(wallet_prefix, wallet_suffix);
-    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, walletfile, 0, 0, false, -1);
+    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, walletfile, 0, 0, false, false, -1, false);
     wallet->filename = concat(wallet_prefix, wallet_suffix);
     dogecoin_free(walletfile);
     return wallet;
