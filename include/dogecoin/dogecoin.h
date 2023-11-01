@@ -149,6 +149,8 @@ typedef uint8_t uint256[32];
 typedef uint8_t uint160[20];
 typedef uint8_t SEED[MAX_SEED_SIZE];
 
+static const int WIDTH = 0x0000100/32;
+
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_DOGECOIN_H__

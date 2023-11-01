@@ -25,22 +25,66 @@
 
 #include <dogecoin/arith_uint256.h>
 
-arith_uint256 init_arith_uint256() {
-    arith_uint256 x;
-    x.WIDTH = 8;
-    dogecoin_mem_zero(x.pn, x.WIDTH);
+arith_uint256* init_arith_uint256() {
+    arith_uint256* x = dogecoin_calloc(8, sizeof(uint32_t));
+    int i = 0;
+    for (; i < WIDTH; i++) {
+        x->pn[i] = 0;
+    }
     return x;
 }
 
-arith_uint256 set_compact(arith_uint256 hash, uint32_t compact, dogecoin_bool *pf_negative, dogecoin_bool *pf_overflow) {
+void arith_shift_left(arith_uint256* input, unsigned int shift) {
+    // Temporary storage for the input as we're going to overwrite the data
+    arith_uint256 temp = *input;
+
+    // Clear the input
+    for (int i = 0; i < WIDTH; i++) {
+        input->pn[i] = 0;
+    }
+
+    int k = shift / 32;  // Number of full word shifts
+    shift = shift % 32;  // Remaining shift
+
+    // Perform the shift operation
+    for (int i = 0; i < WIDTH; i++) {
+        if (i + k + 1 < WIDTH && shift != 0)
+            input->pn[i + k + 1] |= (temp.pn[i] >> (32 - shift));
+        if (i + k < WIDTH)
+            input->pn[i + k] |= (temp.pn[i] << shift);
+    }
+}
+
+void arith_shift_right(arith_uint256* input, unsigned int shift) {
+    // Temporary storage for the input as we're going to overwrite the data
+    arith_uint256 temp = *input;
+
+    // Clear the input
+    for (int i = 0; i < WIDTH; i++) {
+        input->pn[i] = 0;
+    }
+
+    int k = shift / 32;  // Number of full word shifts
+    shift = shift % 32;  // Remaining shift
+
+    // Perform the shift operation
+    for (int i = 0; i < WIDTH; i++) {
+        if (i - k - 1 >= 0 && shift != 0)
+            input->pn[i - k - 1] |= (temp.pn[i] << (32 - shift));
+        if (i - k >= 0)
+            input->pn[i - k] |= (temp.pn[i] >> shift);
+    }
+}
+
+arith_uint256* set_compact(arith_uint256* hash, uint32_t compact, dogecoin_bool *pf_negative, dogecoin_bool *pf_overflow) {
     int size = compact >> 24;
     uint32_t word = compact & 0x007fffff;
     if (size <= 3) {
         word >>= 8 * (3 - size);
-        memcpy_safe(&hash, &word, sizeof word);
+        memcpy_safe(&hash->pn[0], &word, sizeof word);
     } else {
-        word <<= 8 * (size - 3);
-        memcpy_safe(&hash, &word, sizeof word);
+        memcpy_safe(&hash->pn[0], &word, sizeof word);
+        arith_shift_left(hash, 8 * (size - 3));
     }
     if (pf_negative) *pf_negative = word != 0 && (compact & 0x00800000) != 0;
     if (pf_overflow) *pf_overflow = word != 0 && ((size > 34) ||
@@ -49,25 +93,19 @@ arith_uint256 set_compact(arith_uint256 hash, uint32_t compact, dogecoin_bool *p
     return hash;
 }
 
-arith_uint256 uint_to_arith(const uint256* a)
+arith_uint256* uint_to_arith(const uint256* a)
 {
-    arith_uint256 b;
-    b.WIDTH = 8;
-    int x = 0;
-    for(; x < b.WIDTH; ++x)
-        b.pn[x] = read_le32((const unsigned char*)a + x * 4);
-    return b;
+    static arith_uint256 b;
+    memcpy_safe(b.pn, a, sizeof(b.pn));
+    return &b;
 }
 
-uint256* arith_to_uint256(const arith_uint256 a) {
-    uint256* b = dogecoin_uint256_vla(1);
-    int x = 0;
-    for(; x < a.WIDTH; ++x)
-        write_le32((unsigned char*)b + x * 4, a.pn[x]);
-    return b;
+uint8_t* arith_to_uint256(const arith_uint256* a) {
+    static uint256 b = {0};
+    memcpy_safe(b, a->pn, sizeof(uint256));
+    return &b[0];
 }
 
 uint64_t get_low64(arith_uint256 a) {
-    assert(a.WIDTH >= 2);
     return a.pn[0] | (uint64_t)a.pn[1] << 32;
 }
