@@ -35,7 +35,7 @@
 #include <string.h>
 
 #if defined(HAVE_CONFIG_H)
-#include "libdogecoin-config.h"
+#include <config/libdogecoin-config.h>
 #endif
 
 typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
@@ -130,7 +130,8 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 #define MAX_SEED_SIZE 64
 #define HDKEYLEN 112
 #define PRIVKEYWIFLEN 53
-#define PUBKEYLEN 35
+#define P2PKHLEN 35
+#define PRIVKEYHEXLEN DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1
 #define PUBKEYHEXLEN 67
 #define PUBKEYHASHLEN 41
 #define KEYPATHMAXLEN 256
@@ -148,6 +149,8 @@ LIBDOGECOIN_BEGIN_DECL
 typedef uint8_t uint256[32];
 typedef uint8_t uint160[20];
 typedef uint8_t SEED[MAX_SEED_SIZE];
+
+static const int WIDTH = 0x0000100/32;
 
 LIBDOGECOIN_END_DECL
 

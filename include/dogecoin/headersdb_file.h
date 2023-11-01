@@ -48,6 +48,7 @@ typedef struct dogecoin_headers_db_
     void *tree_root;
     dogecoin_bool use_binary_tree;
     unsigned int max_hdr_in_mem;
+    const dogecoin_chainparams *params;
     dogecoin_blockindex genesis;
     dogecoin_blockindex *chaintip;
     dogecoin_blockindex *chainbottom;

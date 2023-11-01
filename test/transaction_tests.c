@@ -245,7 +245,7 @@ void test_transaction()
 
     // prove internal p2pkh address was derived from public key hex:
 
-    char p2pkh_pubkey_internal[35];
+    char p2pkh_pubkey_internal[P2PKHLEN];
     dogecoin_pubkey pubkeytx;
     dogecoin_pubkey_init(&pubkeytx);
     pubkeytx.compressed = true;
@@ -431,7 +431,7 @@ void test_transaction()
     // test conversion from p2pkh to script hash and back
 
     char* res = dogecoin_malloc(40 + 6 + 4 + 1);
-    char p2pkh_address[PUBKEYLEN];
+    char p2pkh_address[P2PKHLEN];
     u_assert_int_eq(dogecoin_p2pkh_address_to_pubkey_hash(internal_p2pkh_address, res), 1);
     u_assert_str_eq(res, utxo_scriptpubkey);
 

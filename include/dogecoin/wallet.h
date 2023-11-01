@@ -83,7 +83,7 @@ typedef struct dogecoin_wtx_ {
 typedef struct dogecoin_utxo_ {
     uint256 txid;
     int vout;
-    char address[P2PKH_ADDR_STRINGLEN];
+    char address[P2PKHLEN];
     char* account;
     char script_pubkey[SCRIPT_PUBKEY_STRINGLEN];
     char amount[KOINU_STRINGLEN];

@@ -222,7 +222,7 @@ int dogecoin_tx_out_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p
                 break;
         }
     }
-    if (!dogecoin_p2pkh_addr_from_hash160(stripped_array, chain, p2pkh, 35)) {
+    if (!dogecoin_p2pkh_addr_from_hash160(stripped_array, chain, p2pkh, P2PKHLEN)) {
         printf("failed to convert hash160 to p2pkh!\n");
         return false;
     }
@@ -262,7 +262,7 @@ dogecoin_bool dogecoin_pubkey_hash_to_p2pkh_address(char* script_pubkey_hex, siz
                 break;
         }
     }
-    if (!dogecoin_p2pkh_addr_from_hash160(stripped_array, chain, p2pkh, 35)) {
+    if (!dogecoin_p2pkh_addr_from_hash160(stripped_array, chain, p2pkh, P2PKHLEN)) {
         printf("failed to convert hash160 to p2pkh!\n");
         return false;
     }
@@ -284,7 +284,7 @@ dogecoin_bool dogecoin_p2pkh_address_to_pubkey_hash(char* p2pkh, char* pubkey_ha
     if (!p2pkh) return false;
 
     // strlen(p2pkh) + 1 = 35
-    unsigned char dec[35]; //problem is here, it works if its char**
+    unsigned char dec[P2PKHLEN]; //problem is here, it works if its char**
 
     // MLUMIN: MSVC
     size_t decoded_length = dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, sizeof(dec) / sizeof(dec[0]));
@@ -314,7 +314,7 @@ char* dogecoin_address_to_pubkey_hash(char* p2pkh) {
     if (!p2pkh) return false;
 
     // strlen(p2pkh) + 1 = 35
-    unsigned char dec[35]; //problem is here, it works if its char**
+    unsigned char dec[P2PKHLEN]; //problem is here, it works if its char**
 
     // MLUMIN: MSVC
     size_t decoded_length = dogecoin_base58_decode_check(p2pkh, (uint8_t*)&dec, sizeof(dec) / sizeof(dec[0]));
@@ -357,7 +357,7 @@ char* dogecoin_private_key_wif_to_pubkey_hash(char* private_key_wif) {
         return false;
     }
 
-    char new_wif_privkey[53];
+    char new_wif_privkey[PRIVKEYWIFLEN];
     size_t sizeout = sizeof(new_wif_privkey);
     dogecoin_privkey_encode_wif(&key, chain, new_wif_privkey, &sizeout);
 
@@ -1200,7 +1200,7 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
  *
  * @return 1 if the address was added successfully, 0 otherwise.
  */
-int getAddrFromPubkeyHash(const char pubkey_hash[PUBKEYHASHLEN], const dogecoin_bool is_testnet, char p2pkh_address[PUBKEYLEN]) {
+int getAddrFromPubkeyHash(const char pubkey_hash[PUBKEYHASHLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]) {
     return dogecoin_pubkey_hash_to_p2pkh_address((char *)utils_hex_to_uint8(pubkey_hash), SCRIPT_PUBKEY_LENGTH, p2pkh_address, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main);
 }
 

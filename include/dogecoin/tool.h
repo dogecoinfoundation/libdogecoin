@@ -47,9 +47,9 @@ LIBDOGECOIN_API dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, c
 LIBDOGECOIN_API dogecoin_bool hd_derive(const dogecoin_chainparams* chain, const char* masterkey, const char* keypath, char* extkeyout, size_t extkeyout_size);
 
 /* wrappers for the above functions */
-LIBDOGECOIN_API int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[PUBKEYLEN]);
+LIBDOGECOIN_API int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]);
 LIBDOGECOIN_API int getPubkeyFromPrivkey(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
-LIBDOGECOIN_API int genPrivkey(const dogecoin_bool is_testnet, char privkey_wif[PUBKEYHEXLEN], size_t strsize_wif, char privkey_hex[PRIVKEYWIFLEN]);
+LIBDOGECOIN_API int genPrivkey(const dogecoin_bool is_testnet, char privkey_wif[PRIVKEYWIFLEN], size_t strsize_wif, char privkey_hex[PRIVKEYHEXLEN]);
 
 LIBDOGECOIN_API int genHDMaster(const dogecoin_bool is_testnet, char masterkeyhex[HDKEYLEN], size_t strsize);
 LIBDOGECOIN_API int printNode(const dogecoin_bool is_testnet, const char nodeser[HDKEYLEN]);

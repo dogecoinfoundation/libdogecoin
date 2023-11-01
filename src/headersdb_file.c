@@ -23,7 +23,7 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- 
+
 */
 
 #include <sys/stat.h>
@@ -31,21 +31,23 @@
 #include <dogecoin/headersdb_file.h>
 #include <dogecoin/block.h>
 #include <dogecoin/common.h>
+#include <dogecoin/pow.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/validation.h>
 
 static const unsigned char file_hdr_magic[4] = {0xA8, 0xF0, 0x11, 0xC5}; /* header magic */
 static const uint32_t current_version = 2;
 
 /**
  * "Compare two block headers by their hashes."
- * 
+ *
  * The function takes two block headers as arguments, and returns 0 if the two headers are identical,
  * and -1 if the first header is less than the second header
- * 
+ *
  * @param l the first pointer
  * @param r The right-hand side of the comparison.
- * 
+ *
  * @return Nothing.
  */
 int dogecoin_header_compare(const void *l, const void *r)
@@ -55,7 +57,7 @@ int dogecoin_header_compare(const void *l, const void *r)
 
     uint8_t *hashA = (uint8_t *)lm->hash;
     uint8_t *hashB = (uint8_t *)lr->hash;
-    
+
     unsigned int i;
     for (i = 0; i < sizeof(uint256); i++) {
         uint8_t iA = hashA[i];
@@ -71,10 +73,10 @@ int dogecoin_header_compare(const void *l, const void *r)
 
 /**
  * The function creates a new dogecoin_headers_db object and initializes it
- * 
+ *
  * @param chainparams The chainparams struct that contains the genesis block hash.
  * @param inmem_only If true, the database will be in-memory only. If false, it will be on disk.
- * 
+ *
  * @return Nothing.
  */
 dogecoin_headers_db* dogecoin_headers_db_new(const dogecoin_chainparams* chainparams, dogecoin_bool inmem_only) {
@@ -84,7 +86,7 @@ dogecoin_headers_db* dogecoin_headers_db_new(const dogecoin_chainparams* chainpa
     db->read_write_file = !inmem_only;
     db->use_binary_tree = true;
     db->max_hdr_in_mem = 1440;
-
+    db->params = chainparams;
     db->genesis.height = 0;
     db->genesis.prev = NULL;
     memcpy_safe(db->genesis.hash, chainparams->genesisblockhash, DOGECOIN_HASH_LENGTH);
@@ -100,7 +102,7 @@ dogecoin_headers_db* dogecoin_headers_db_new(const dogecoin_chainparams* chainpa
 
 /**
  * @param db The database object.
- * 
+ *
  * @return Nothing
  */
 void dogecoin_headers_db_free(dogecoin_headers_db* db) {
@@ -124,10 +126,10 @@ void dogecoin_headers_db_free(dogecoin_headers_db* db) {
 
 /**
  * Loads the headers database from disk
- * 
+ *
  * @param db the headers database object
  * @param file_path The path to the headers database file. If NULL, the default path is used.
- * 
+ *
  * @return The return value is a boolean value that indicates whether the database was successfully
  * opened.
  */
@@ -196,7 +198,7 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
                 {
                     dogecoin_blockindex *chainheader = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
                     chainheader->height = height;
-                    if (!dogecoin_block_header_deserialize(&chainheader->header, &cbuf_all)) {
+                    if (!dogecoin_block_header_deserialize(&chainheader->header, &cbuf_all, db->params)) {
                         dogecoin_block_header_free(&chainheader->header);
                         dogecoin_free(chainheader);
                         fprintf(stderr, "Error: Invalid data found.\n");
@@ -225,10 +227,10 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
 
 /**
  * The function takes a block index and writes it to the headers database
- * 
+ *
  * @param db the headers database
  * @param blockindex The block index to write to the database.
- * 
+ *
  * @return Nothing.
  */
 dogecoin_bool dogecoin_headers_db_write(dogecoin_headers_db* db, dogecoin_blockindex *blockindex) {
@@ -245,21 +247,21 @@ dogecoin_bool dogecoin_headers_db_write(dogecoin_headers_db* db, dogecoin_blocki
 /**
  * The function takes a pointer to a blockindex and checks if the block is in the blockchain. If it is,
  * it returns the pointer to the block. If it isn't, it returns a null pointer
- * 
+ *
  * @param db the database object
  * @param buf The buffer containing the block header.
  * @param load_process If true, the header will be loaded into the database. If false, it will only be
  * added to the tree.
  * @param connected A pointer to a boolean that will be set to true if the block was successfully
  * connected to the chain.
- * 
+ *
  * @return A pointer to the blockindex.
  */
 dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, struct const_buffer *buf, dogecoin_bool load_process, dogecoin_bool *connected) {
     *connected = false;
 
     dogecoin_blockindex *blockindex = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
-    if (!dogecoin_block_header_deserialize(&blockindex->header, buf)) return NULL;
+    if (!dogecoin_block_header_deserialize(&blockindex->header, buf, db->params)) return NULL;
 
     dogecoin_block_header_hash(&blockindex->header, (uint8_t *)&blockindex->hash);
 
@@ -280,7 +282,19 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
     }
 
     if (connect_at != NULL) {
-        /* TODO: check claimed PoW */
+        /* check claimed PoW */
+        if (!is_auxpow(blockindex->header.version)) {
+            uint256 hash = {0};
+            cstring* s = cstr_new_sz(64);
+            dogecoin_block_header_serialize(s, &blockindex->header);
+            dogecoin_block_header_scrypt_hash(s, &hash);
+            cstr_free(s, true);
+            if (!check_pow(&hash, blockindex->header.bits, db->params)) {
+                printf("%s:%d:%s : non-AUX proof of work failed : %s\n", __FILE__, __LINE__, __func__, strerror(errno));
+                return false;
+            }
+        }
+
         blockindex->prev = connect_at;
         blockindex->height = connect_at->height+1;
 
@@ -339,7 +353,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
 /**
  * The function iterates through the chain tip and adds the hash of each block to the blocklocators
  * vector
- * 
+ *
  * @param db the database object
  * @param blocklocators a vector of block hashes
  */
@@ -366,10 +380,10 @@ void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector *blo
 
 /**
  * The function takes a hash and returns the blockindex with that hash
- * 
+ *
  * @param db The headers database.
  * @param hash The hash of the block header to find.
- * 
+ *
  * @return A pointer to the blockindex.
  */
 dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256 hash) {
@@ -389,9 +403,9 @@ dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256 h
 
 /**
  * Get the block index of the current tip of the main chain
- * 
+ *
  * @param db The headers database.
- * 
+ *
  * @return The current tip of the blockchain.
  */
 dogecoin_blockindex * dogecoin_headersdb_getchaintip(dogecoin_headers_db* db) {
@@ -401,9 +415,9 @@ dogecoin_blockindex * dogecoin_headersdb_getchaintip(dogecoin_headers_db* db) {
 /**
  * If the chaintip is not null, then set the chaintip to the previous block and return true. Otherwise
  * return false
- * 
+ *
  * @param db The headers database.
- * 
+ *
  * @return A boolean value.
  */
 dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db) {
@@ -420,11 +434,11 @@ dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db) {
 
 /**
  * "Check if the headers database has a checkpoint start."
- * 
+ *
  * The function returns a bool value
- * 
+ *
  * @param db The headers database.
- * 
+ *
  * @return A boolean value.
  */
 dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db) {
@@ -433,7 +447,7 @@ dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db) {
 
 /**
  * Set the checkpoint block to the given hash and height
- * 
+ *
  * @param db The headers database.
  * @param hash The hash of the block that is the checkpoint.
  * @param height The height of the block that this is a checkpoint for.

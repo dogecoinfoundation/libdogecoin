@@ -2,7 +2,10 @@
 
  The MIT License (MIT)
 
- Copyright (c) 2023 bluezr, edtubbs, michilumin
+ Copyright (c) 2009-2010 Satoshi Nakamoto
+ Copyright (c) 2009-2016 The Bitcoin Core developers
+ Copyright (c) 2022 The Dogecoin Core developers
+ Copyright (c) 2023 bluezr
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -23,21 +26,28 @@
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 
- */
+*/
 
-#ifndef __LIBDOGECOIN_CONSTANTS_H__
-#define __LIBDOGECOIN_CONSTANTS_H__
+#ifndef __LIBDOGECOIN_VALIDATION_H__
+#define __LIBDOGECOIN_VALIDATION_H__
 
-#include "dogecoin.h"
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+#include <dogecoin/block.h>
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/pow.h>
+#include <dogecoin/utils.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-#define MAX_INT32_STRINGLEN 12
-#define DERIVED_PATH_STRINGLEN 33
-/* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
-#define KOINU_STRINGLEN 21
-#define SCRIPT_PUBKEY_STRINGLEN 51
+LIBDOGECOIN_API uint32_t get_chainid(uint32_t version);
+LIBDOGECOIN_API dogecoin_bool is_auxpow(uint32_t version);
+LIBDOGECOIN_API dogecoin_bool is_legacy(uint32_t version);
+LIBDOGECOIN_API dogecoin_bool check_auxpow(dogecoin_auxpow_block block, dogecoin_chainparams* params);
+LIBDOGECOIN_API dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256* hash);
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_CONSTANTS_H__
+#endif // __LIBDOGECOIN_VALIDATION_H__

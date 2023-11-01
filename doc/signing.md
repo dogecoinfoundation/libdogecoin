@@ -37,7 +37,7 @@ char* sign_message(char* privkey, char* msg) {
     if (!dogecoin_key_sign_hash_compact_recoverable_fcomp(&key, message_bytes, compact_signature, &compact_signature_length, &recid)) return false;
     if (!dogecoin_key_recover_pubkey((const unsigned char*)compact_signature, message_bytes, recid, &pubkey)) return false;
 
-    char p2pkh_address[35];
+    char p2pkh_address[P2PKHLEN];
     if (!dogecoin_pubkey_getaddr_p2pkh(&pubkey, &dogecoin_chainparams_main, p2pkh_address)) return false;
 
     unsigned char* base64_encoded_output = dogecoin_uchar_vla(1+(sizeof(char)*base64_encoded_size(compact_signature_length)));
@@ -90,7 +90,7 @@ int verify_message(char* sig, char* msg, char* address) {
     if (!dogecoin_key_recover_pubkey((const unsigned char*)decoded_signature, message_bytes, recid, &pub_key)) return false;
     if (!dogecoin_pubkey_verify_sigcmp(&pub_key, message_bytes, decoded_signature)) return false;
 
-    char p2pkh_address[35];
+    char p2pkh_address[P2PKHLEN];
     const dogecoin_chainparams* chain = chain_from_b58_prefix(address);
     if (!dogecoin_pubkey_getaddr_p2pkh(&pub_key, chain, p2pkh_address)) return false;
 

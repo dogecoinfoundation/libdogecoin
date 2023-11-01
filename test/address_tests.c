@@ -18,10 +18,10 @@
 void test_address()
 {
     /* initialize testing variables for simple keypair gen */
-    char privkeywif_main[53];
-    char privkeywif_test[53];
-    char p2pkh_pubkey_main[35];
-    char p2pkh_pubkey_test[35];
+    char privkeywif_main[PRIVKEYWIFLEN];
+    char privkeywif_test[PRIVKEYWIFLEN];
+    char p2pkh_pubkey_main[P2PKHLEN];
+    char p2pkh_pubkey_test[P2PKHLEN];
     dogecoin_mem_zero(privkeywif_main, sizeof(privkeywif_main));
     dogecoin_mem_zero(privkeywif_test, sizeof(privkeywif_test));
     // test generation ability
@@ -51,8 +51,8 @@ void test_address()
     u_assert_int_eq(verifyP2pkhAddress(p2pkh_pubkey_test, strlen(p2pkh_pubkey_test)), true);
 
     /* initialize testing variables for hd keypair gen */
-    size_t masterkeylen = 200;
-    size_t pubkeylen = 35;
+    size_t masterkeylen = HDKEYLEN;
+    size_t pubkeylen = P2PKHLEN;
 
     char* masterkey_main = dogecoin_char_vla(masterkeylen);
     char* masterkey_test=dogecoin_char_vla(masterkeylen);

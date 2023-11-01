@@ -49,6 +49,9 @@ typedef struct dogecoin_chainparams_ {
     uint256 genesisblockhash;
     int default_port;
     dogecoin_dns_seed dnsseeds[8];
+    dogecoin_bool strict_id;
+    dogecoin_bool auxpow_id;
+    uint256 pow_limit;
 } dogecoin_chainparams;
 
 typedef struct dogecoin_checkpoint_ {
@@ -70,8 +73,8 @@ LIBDOGECOIN_API const dogecoin_chainparams* chain_from_b58_prefix(const char* ad
 LIBDOGECOIN_API int chain_from_b58_prefix_bool(char* address);
 
 // check if the given prefix is a testnet or mainnet prefix
-LIBDOGECOIN_API dogecoin_bool isTestnetFromB58Prefix(const char address[PUBKEYLEN]);
-LIBDOGECOIN_API dogecoin_bool isMainnetFromB58Prefix(const char address[PUBKEYLEN]);
+LIBDOGECOIN_API dogecoin_bool isTestnetFromB58Prefix(const char address[P2PKHLEN]);
+LIBDOGECOIN_API dogecoin_bool isMainnetFromB58Prefix(const char address[P2PKHLEN]);
 
 LIBDOGECOIN_END_DECL
 

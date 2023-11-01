@@ -2,7 +2,9 @@
 
  The MIT License (MIT)
 
- Copyright (c) 2023 bluezr, edtubbs, michilumin
+ Copyright (c) 2009-2010 Satoshi Nakamoto
+ Copyright (c) 2009-2016 The Bitcoin Core developers
+ Copyright (c) 2023 bluezr
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -23,21 +25,22 @@
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 
- */
+*/
 
-#ifndef __LIBDOGECOIN_CONSTANTS_H__
-#define __LIBDOGECOIN_CONSTANTS_H__
+#ifndef __LIBDOGECOIN_POW_H__
+#define __LIBDOGECOIN_POW_H__
 
-#include "dogecoin.h"
+#include <dogecoin/arith_uint256.h>
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/block.h>
+#include <dogecoin/blockchain.h>
+#include <dogecoin/chainparams.h>
+#include <dogecoin/utils.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-#define MAX_INT32_STRINGLEN 12
-#define DERIVED_PATH_STRINGLEN 33
-/* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
-#define KOINU_STRINGLEN 21
-#define SCRIPT_PUBKEY_STRINGLEN 51
+dogecoin_bool check_pow(uint256* hash, unsigned int nbits, const dogecoin_chainparams *params);
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_CONSTANTS_H__
+#endif // __LIBDOGECOIN_POW_H__

@@ -2,7 +2,7 @@
 
  The MIT License (MIT)
 
- Copyright (c) 2023 bluezr, edtubbs, michilumin
+ Copyright (c) 2023 bluezr
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -25,19 +25,27 @@
 
  */
 
-#ifndef __LIBDOGECOIN_CONSTANTS_H__
-#define __LIBDOGECOIN_CONSTANTS_H__
+#ifndef __LIBDOGECOIN_VERSION_H__
+#define __LIBDOGECOIN_VERSION_H__
 
-#include "dogecoin.h"
+#include <dogecoin/dogecoin.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-#define MAX_INT32_STRINGLEN 12
-#define DERIVED_PATH_STRINGLEN 33
-/* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
-#define KOINU_STRINGLEN 21
-#define SCRIPT_PUBKEY_STRINGLEN 51
+#if defined(HAVE_CONFIG_H)
+#include <config/libdogecoin-config.h>
+#endif // HAVE_CONFIG_H
 
-LIBDOGECOIN_END_DECL
+//! These need to be macros, as version.c's voodoo requires it
+#define _PKG_VERSION_MAJOR 0
+#define _PKG_VERSION_MINOR 1
+#define _PKG_VERSION_BUILD 3
+#define _LIB_VERSION_REVISION 0
 
-#endif // __LIBDOGECOIN_CONSTANTS_H__
+static const int CLIENT_VERSION =
+                           1000000 * _PKG_VERSION_MAJOR
+                         +   10000 * _PKG_VERSION_MINOR
+                         +     100 * _PKG_VERSION_BUILD
+                         +       1 * _LIB_VERSION_REVISION;
+
+#endif // __LIBDOGECOIN_VERSION_H__

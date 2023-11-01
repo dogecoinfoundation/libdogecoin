@@ -2,7 +2,10 @@
 
  The MIT License (MIT)
 
- Copyright (c) 2023 bluezr, edtubbs, michilumin
+ Copyright (c) 2009-2010 Satoshi Nakamoto
+ Copyright (c) 2009-2014 The Bitcoin developers
+ Copyright (c) 2014-2016 Daniel Kraft
+ Copyright (c) 2023 bluezr
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -23,21 +26,26 @@
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 
- */
+*/
 
-#ifndef __LIBDOGECOIN_CONSTANTS_H__
-#define __LIBDOGECOIN_CONSTANTS_H__
+#ifndef __LIBDOGECOIN_AUXPOW__
+#define __LIBDOGECOIN_AUXPOW__
 
-#include "dogecoin.h"
+#include <dogecoin/block.h>
+#include <dogecoin/dogecoin.h>
+#include <dogecoin/hash.h>
+#include <dogecoin/vector.h>
 
 LIBDOGECOIN_BEGIN_DECL
 
-#define MAX_INT32_STRINGLEN 12
-#define DERIVED_PATH_STRINGLEN 33
-/* NOTE: Path string composed of m/44/3/+32bits_Account+/+bool_ischange+/+32bits_Address + string terminator; for a total of 33 bytes. */
-#define KOINU_STRINGLEN 21
-#define SCRIPT_PUBKEY_STRINGLEN 51
+#define BLOCK_VERSION_AUXPOW_BIT 0x100
+
+/** Header for merge-mining data in the coinbase.  */
+static const unsigned char pch_merged_mining_header[] = { 0xfa, 0xbe, 'm', 'm' };
+
+int get_expected_index(uint32_t nNonce, int nChainId, unsigned h);
+uint256* check_merkle_branch(uint256 hash, const vector* parent_coinbase_merkle, unsigned int n_index);
 
 LIBDOGECOIN_END_DECL
 
-#endif // __LIBDOGECOIN_CONSTANTS_H__
+#endif // __LIBDOGECOIN_AUXPOW__

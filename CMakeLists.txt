@@ -153,6 +153,8 @@ INSTALL(FILES
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/address.c
     src/aes.c
+    src/arith_uint256.c
+    src/auxpow.c
     src/base58.c
     src/bip32.c
     src/bip39.c
@@ -170,6 +172,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/moon.c
     src/qr.c
     src/qrengine.c
+    src/pow.c
     src/png.c
     src/jpeg.c
     src/random.c
@@ -184,6 +187,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/transaction.c
     src/tx.c
     src/utils.c
+    src/validation.c
     src/vector.c
 )
 TARGET_SOURCES(${LIBDOGECOIN_NAME} PUBLIC
