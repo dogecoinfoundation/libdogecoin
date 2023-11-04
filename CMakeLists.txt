@@ -28,7 +28,7 @@ SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
 SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
 SET(USE_TPM2 TRUE CACHE BOOL "enable tpm2")
 SET(USE_OPENENCLAVE FALSE CACHE BOOL "enable openenclave")
-SET(TEST_PASSWD FALSE CACHE BOOL "enable test password")
+SET(TEST_PASSWD TRUE CACHE BOOL "enable test password")
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
 # Set a default build type if none was specified
