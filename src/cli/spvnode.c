@@ -197,28 +197,45 @@ static void print_version() {
  */
 static void print_usage() {
     print_version();
-    printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-t[--testnet]) (-f <headersfile|0 for in mem only>) \
-(-n|-mnemonic <seed_phrase>) (-s|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-999>) (-w|-wallet_file <filename>) (-h|-headers_file <filename>) \
-(-k[--master_key] (-j[--use_tpm]) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
+    printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
+(-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-999>) \
+(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
+(-t[--testnet]) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
     printf("Sync up to the chain tip and stores all headers in headers.db (quit once synced):\n");
-    printf("> spvnode scan\n\n");
+    printf("> ./spvnode scan\n\n");
     printf("Sync up to the chain tip and give some debug output during that process:\n");
-    printf("> spvnode -d scan\n\n");
+    printf("> ./spvnode -d scan\n\n");
     printf("Sync up, show debug info, don't store headers in file (only in memory), wait for new blocks:\n");
-    printf("> spvnode -d -f 0 -c scan\n\n");
-    printf("Sync up, with a wallet file (ex. ./wallets/main_wallet.db), show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> spvnode -d -f 0 -c -w \"./wallets/main_wallet.db\" scan\n\n");
-    printf("Sync up, with a wallet file (ex. ./wallets/main_wallet.db), show debug info, with a headers file (ex. ./headers/main_headers.db), wait for new blocks:\n");
-    printf("> spvnode -d -c -w \"./wallets/main_wallet.db\" -h \"./headers/main_headers.db\" scan\n\n");
+    printf("> ./spvnode -d -f 0 -c -b scan\n\n");
+    printf("Sync up, with an address, show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -a \"DSVw8wkkTXccdq78etZ3UwELrmpfvAiVt1\" -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -w \"./main_wallet.db\" -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", show debug info, with a headers file \"main_headers.db\", wait for new blocks:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with an address, show debug info, with a headers file, with a headers file \"main_headers.db\", wait for new blocks:\n");
+    printf("> ./spvnode -d -c -a \"DSVw8wkkTXccdq78etZ3UwELrmpfvAiVt1\" -w \"./main_wallet.db\" -h \"./main_headers.db\" -b scan\n\n");
     printf("Sync up, with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> spvnode -d -f 0 -c -y 0 scan\n\n");
-    printf("Sync up, with encrypted mnemonic 0, pass phrase 'test', show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> spvnode -d -f 0 -c -y 0 -a \"test\" scan\n\n");
-    printf("Sync up, with mnemonic 'test', pass phrase 'test', show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> spvnode -d -f 0 -c -n \"test\" -a \"test\" scan\n\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -b scan\n\n");
+    printf("Sync up, with encrypted mnemonic 0, pass phrase \"test\", show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -s \"test\" -b scan\n\n");
+    printf("Sync up, with encrypted mnemonic 0, pass phrase \"test\", show debug info, don't store headers in file, wait for new blocks, use TPM:\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -s \"test\" -j -b scan\n\n");
+    printf("Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key:\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -k -b scan\n\n");
+    printf("Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key, use TPM:\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -k -j -b scan\n\n");
+    printf("Sync up, with mnemonic \"test\", pass phrase \"test\", show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -n \"test\" -s \"test\" -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -w \"./main_wallet.db\" -y 0 -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use TPM:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -j -b scan\n\n");
     }
 
 

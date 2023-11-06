@@ -361,8 +361,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                 showError("Invalid mnemonic\n");
                 exit(EXIT_FAILURE);
             }
-        }
-        else if (encrypted) {
+        } else if (encrypted && !master_key) {
 
             dogecoin_bool tpmSuccess = false;
             MNEMONIC mnemonic = {0};
@@ -375,13 +374,11 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                     printf("Trying to decrypt mnemonic from software...\n");
                 }
             }
-            else {
-                // decrypt encrypted mnemonic with software
-                if (!tpmSuccess) {
-                    if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num)) {
-                        showError("Decrypting mnemonic from software failed\n");
-                        exit(EXIT_FAILURE);
-                    }
+            // decrypt encrypted mnemonic with software
+            if (!tpmSuccess) {
+                if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num)) {
+                    showError("Decrypting mnemonic from software failed\n");
+                    exit(EXIT_FAILURE);
                 }
             }
 
@@ -390,27 +387,27 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                 showError("Invalid mnemonic\n");
                 exit(EXIT_FAILURE);
             }
-            if (master_key) {
+        } else if (encrypted && master_key) {
 
-                if (tpm) {
-                    // decrypt encrypted master key with TPM
-                    tpmSuccess = dogecoin_decrypt_hdnode_with_tpm(&node, file_num);
-                    if (!tpmSuccess) {
-                        printf("ERROR: Decrypting master key from TPM failed\n");
-                        printf("Trying to decrypt master key from software...\n");
-                    }
+            dogecoin_bool tpmSuccess = false;
+
+            if (tpm) {
+                // decrypt encrypted master key with TPM
+                tpmSuccess = dogecoin_decrypt_hdnode_with_tpm(&node, file_num);
+                if (!tpmSuccess) {
+                    printf("ERROR: Decrypting master key from TPM failed\n");
+                    printf("Trying to decrypt master key from software...\n");
                 }
-                else {
-                    // decrypt encrypted master key with software
-                    if (!tpmSuccess) {
-                        if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num)) {
-                            showError("Decrypting master key from software failed\n");
-                            exit(EXIT_FAILURE);
-                        }
-                    }
+            }
+            // decrypt encrypted master key with software
+            if (!tpmSuccess) {
+                if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num)) {
+                    showError("Decrypting master key from software failed\n");
+                    exit(EXIT_FAILURE);
                 }
             }
         } else {
+            // generate a random seed if no mnemonic or master key
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
             if (!res) {
                 showError("Generating random bytes failed\n");
@@ -418,12 +415,16 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             }
         }
         if (!master_key) {
+            // generate hdnode from mnemonic or random seed
             dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
         }
         dogecoin_wallet_set_master_key_copy(wallet, &node);
     } else {
-        // ensure we have a key
-        // TODO
+        // ensure we have a key/address
+        if (wallet->masterkey == NULL && address == NULL) {
+            showError("No master key or address in wallet.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     dogecoin_wallet_addr* waddr;
@@ -1025,6 +1026,8 @@ dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in
     vector_free(addrs, true);
 
     char* pubkey_hash = dogecoin_address_to_pubkey_hash((char*)address_in);
+    if (!pubkey_hash) return false;
+
     memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(pubkey_hash), 20);
 
     // if no match add to rbtree, vector and db:
