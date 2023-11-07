@@ -348,7 +348,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
     dogecoin_free(walletfile);
     if (!res) {
         showError("Loading wallet failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     if (created) {
         // create a new key
@@ -359,7 +359,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             // generate seed from mnemonic
             if (dogecoin_seed_from_mnemonic(mnemonic_in, pass, seed) == -1) {
                 showError("Invalid mnemonic\n");
-                exit(EXIT_FAILURE);
+                return NULL;
             }
         } else if (encrypted && !master_key) {
 
@@ -378,14 +378,14 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             if (!tpmSuccess) {
                 if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num)) {
                     showError("Decrypting mnemonic from software failed\n");
-                    exit(EXIT_FAILURE);
+                    return NULL;
                 }
             }
 
             // generate seed from mnemonic
             if (dogecoin_seed_from_mnemonic(mnemonic, pass, seed) == -1) {
                 showError("Invalid mnemonic\n");
-                exit(EXIT_FAILURE);
+                return NULL;
             }
         } else if (encrypted && master_key) {
 
@@ -403,7 +403,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             if (!tpmSuccess) {
                 if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num)) {
                     showError("Decrypting master key from software failed\n");
-                    exit(EXIT_FAILURE);
+                    return NULL;
                 }
             }
         } else {
@@ -411,7 +411,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
             if (!res) {
                 showError("Generating random bytes failed\n");
-                exit(EXIT_FAILURE);
+                return NULL;
             }
         }
         if (!master_key) {
@@ -439,7 +439,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             waddr = dogecoin_wallet_addr_new();
             if (!waddr->ignore) {
                 if (!dogecoin_p2pkh_address_to_wallet_pubkeyhash(ptr, waddr, wallet)) {
-                    exit(EXIT_FAILURE);
+                    return NULL;
                 }
             }
         }

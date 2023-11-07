@@ -91,68 +91,6 @@ dogecoin_bool fileValid (const int file_num)
 }
 
 /**
- * @brief Gets a password from the user
- *
- * Gets a password from the user without echoing the input to the console.
- *
- * @param[in] prompt The prompt to display to the user
- * @return The password entered by the user
- */
-#ifndef TEST_PASSWD
-char *getpass(const char *prompt) {
-    char buffer[PASS_MAX_LEN] = {0};  // Initialize to zero
-
-#ifdef _WIN32
-    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD mode, count;
-
-    if (!GetConsoleMode(hStdin, &mode) || !SetConsoleMode(hStdin, mode & ~ENABLE_ECHO_INPUT))
-        return NULL;
-
-    printf("%s", prompt);
-    fflush(stdout);
-
-    if (!ReadConsole(hStdin, buffer, sizeof(buffer) - 1, &count, NULL))
-        return NULL;  // -1 to ensure null-termination
-
-    if (!SetConsoleMode(hStdin, mode))
-        return NULL;
-
-    buffer[count] = '\0';  // Ensure null-termination
-
-#else
-    struct termios old, new;
-    ssize_t nread;
-
-    if (tcgetattr(STDIN_FILENO, &old) != 0)
-        return NULL;
-
-    new = old;
-    new.c_lflag &= ~ECHO;
-
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new) != 0)
-        return NULL;
-
-    printf("%s", prompt);
-    fflush(stdout);
-
-    if (!fgets(buffer, sizeof(buffer), stdin))
-        return NULL;
-
-    nread = strlen(buffer);
-    if (nread > 0 && buffer[nread-1] == '\n')
-        buffer[nread-1] = '\0';  // Remove newline character
-
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &old) != 0)
-        return NULL;
-
-#endif
-
-    return strdup(buffer);
-}
-#endif
-
-/**
  * @brief Encrypts a seed using the TPM
  *
  * Encrypts a seed using the TPM and stores the encrypted seed in a file.

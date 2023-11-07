@@ -77,7 +77,17 @@
 
 #endif
 
-#define MAX_LEN 128
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <termios.h>
+#endif
+
+#ifdef _MSC_VER
+#include <win/winunistd.h>
+#else
+#include <unistd.h>
+#endif
 
 static uint8_t buffer_hex_to_uint8[TO_UINT8_HEX_BUF_LEN];
 static char buffer_uint8_to_hex[TO_UINT8_HEX_BUF_LEN];
@@ -364,7 +374,7 @@ void swap_bytes(uint8_t *buf, int buf_size) {
     }
 }
 
-// Returns a pointer to the first byte of needle inside haystack, 
+// Returns a pointer to the first byte of needle inside haystack,
 uint8_t* bytes_find(uint8_t* haystack, size_t haystackLen, uint8_t* needle, size_t needleLen) {
     if (needleLen > haystackLen) {
         return false;
@@ -642,6 +652,74 @@ const char* get_build() {
         #endif
     }
 
+/**
+ * @brief Gets a password from the user
+ *
+ * Gets a password from the user without echoing the input to the console.
+ *
+ * @param[in] prompt The prompt to display to the user
+ * @return The password entered by the user
+ */
+#ifndef USE_OPENENCLAVE
+char *getpass(const char *prompt) {
+    char buffer[MAX_LEN] = {0};  // Initialize to zero
+
+#ifdef _WIN32
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode, count;
+
+    if (!GetConsoleMode(hStdin, &mode) || !SetConsoleMode(hStdin, mode & ~ENABLE_ECHO_INPUT))
+        return NULL;
+
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!ReadConsole(hStdin, buffer, sizeof(buffer) - 1, &count, NULL))
+        return NULL;  // -1 to ensure null-termination
+
+    if (count > 0 && buffer[count-1] == '\n')
+        count--;  // Remove newline character
+
+    if (count > 0 && buffer[count-1] == '\r')
+        count--;  // Remove carriage return character
+
+    if (!SetConsoleMode(hStdin, mode))
+        return NULL;
+
+    buffer[count] = '\0';  // Ensure null-termination
+
+#else
+    struct termios old, new;
+    ssize_t nread;
+
+    if (tcgetattr(STDIN_FILENO, &old) != 0)
+        return NULL;
+
+    new = old;
+    new.c_lflag &= ~ECHO;
+
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new) != 0)
+        return NULL;
+
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!fgets(buffer, sizeof(buffer), stdin))
+        return NULL;
+
+    nread = strlen(buffer);
+    if (nread > 0 && buffer[nread-1] == '\n')
+        buffer[nread-1] = '\0';  // Remove newline character
+
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &old) != 0)
+        return NULL;
+
+#endif
+
+    return strdup(buffer);
+}
+#endif
+
 /* reverse:  reverse string s in place */
 void dogecoin_str_reverse(char s[])
 {
@@ -653,7 +731,7 @@ void dogecoin_str_reverse(char s[])
         s[i] = s[j];
         s[j] = c;
     }
-}  
+}
 
 /* itoa:  convert n to characters in s */
 void dogecoin_uitoa(int n, char s[])
@@ -725,7 +803,7 @@ unsigned int base64_decoded_size(unsigned int in_size) {
 unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
 
 	unsigned int i=0, j=0, k=0, s[3];
-	
+
 	for (i=0;i<in_len;i++) {
 		s[j++]=*(in+i);
 		if (j==3) {
@@ -751,14 +829,14 @@ unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigne
 	}
 
 	out[k] = '\0';
-	
+
 	return k;
 }
 
 unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
 
 	unsigned int i=0, j=0, k=0, s[4];
-	
+
 	for (i=0;i<in_len;i++) {
 		s[j++]=base64_int(*(in+i));
 		if (j==4) {

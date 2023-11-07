@@ -41,6 +41,7 @@
 
 #define TO_UINT8_HEX_BUF_LEN 2048
 #define VARINT_LEN 20
+#define MAX_LEN 128
 
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
@@ -82,6 +83,7 @@ LIBDOGECOIN_API char* concat(char* prefix, char* suffix);
 LIBDOGECOIN_API void slice(const char *str, char *result, size_t start, size_t end);
 LIBDOGECOIN_API void text_to_hex(char* in, char* out);
 LIBDOGECOIN_API const char* get_build();
+LIBDOGECOIN_API char* getpass(const char *prompt);
 LIBDOGECOIN_API void dogecoin_str_reverse(char s[]);
 LIBDOGECOIN_API void dogecoin_uitoa(int n, char s[]);
 LIBDOGECOIN_API bool dogecoin_network_enabled();
@@ -115,7 +117,7 @@ static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *))
     if (freekey) goto end;
     if (r->left && !freekey) dogecoin_btree_tdestroy(r->left, freekey);
     if (r->right && !freekey) dogecoin_btree_tdestroy(r->right, freekey);
-    
+
 end:
     if (freekey) freekey(r->key);
     dogecoin_free(r);
