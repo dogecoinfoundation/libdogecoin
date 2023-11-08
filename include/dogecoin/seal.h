@@ -33,18 +33,6 @@ LIBDOGECOIN_API
 /* define test file number */
 #define TEST_FILE 999
 
-/* format string for mnemonic object names */
-/* e.g. mnemonic 000, mnemonic 001, mnemonic 002, etc. */
-#define MNEMONIC_OBJECT_NAME_FORMAT L"dogecoin_mnemonic_%03d"
-
-/* format string for seed object names */
-/* e.g. seed 000, seed 001, seed 002, etc. */
-#define SEED_OBJECT_NAME_FORMAT L"dogecoin_seed_%03d"
-
-/* format string for HD node object names */
-/* e.g. master 000, master 001, master 002, etc. */
-#define HDNODE_OBJECT_NAME_FORMAT L"dogecoin_master_%03d"
-
 /* Encrypt a BIP32 seed with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_tpm (const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite);
 
