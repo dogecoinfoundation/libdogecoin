@@ -211,6 +211,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_tpm(const SEED seed, co
         return false;
     }
 
+#ifndef TEST_PASSWD
     // Set the UI policy to force high protection (PIN dialog)
     NCRYPT_UI_POLICY uiPolicy;
     memset(&uiPolicy, 0, sizeof(NCRYPT_UI_POLICY));
@@ -225,6 +226,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_tpm(const SEED seed, co
         NCryptFreeObject(hProvider);
         return false;
     }
+#endif
 
     // Generate a new encryption key in the TPM storage provider
     status = NCryptFinalizeKey(hEncryptionKey, 0);
@@ -705,6 +707,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
         return false;
     }
 
+#ifndef TEST_PASSWD
     // Set the UI policy to force high protection (PIN dialog)
     NCRYPT_UI_POLICY uiPolicy;
     memset(&uiPolicy, 0, sizeof(NCRYPT_UI_POLICY));
@@ -719,6 +722,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
         NCryptFreeObject(hProvider);
         return false;
     }
+#endif
 
     // Generate a new encryption key in the TPM storage provider
     status = NCryptFinalizeKey(hEncryptionKey, 0);
@@ -1344,6 +1348,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMON
         return false;
     }
 
+#ifndef TEST_PASSWD
     // Set the UI policy to force high protection (PIN dialog)
     NCRYPT_UI_POLICY uiPolicy;
     memset(&uiPolicy, 0, sizeof(NCRYPT_UI_POLICY));
@@ -1358,6 +1363,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMON
         NCryptFreeObject(hProvider);
         return false;
     }
+#endif
 
     // Generate a new encryption key in the TPM storage provider
     status = NCryptFinalizeKey(hEncryptionKey, 0);

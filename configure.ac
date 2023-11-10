@@ -141,7 +141,7 @@ AC_ARG_ENABLE(tests,
 
 AC_ARG_ENABLE([test-passwd],
   [AS_HELP_STRING([--enable-test-passwd],
-  [enable test password for encrypt/decrypt])],
+  [enable test password for encrypt/decrypt (default is yes)])],
   [test_passwd=$enableval],
   [test_passwd=yes])
 
