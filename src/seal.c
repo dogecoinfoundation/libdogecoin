@@ -408,7 +408,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm(SEED seed, const in
     if (bytesRead != fileSize)
     {
         fprintf(stderr, "ERROR: Failed to read file\n");
-        free(pbOutput);
+        dogecoin_free(pbOutput);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
         return false;
@@ -420,7 +420,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm(SEED seed, const in
     {
         // Failed to decrypt the encrypted data
         fprintf(stderr, "ERROR: Failed to decrypt the encrypted data (0x%08x)\n", status);
-        free(pbOutput);
+        dogecoin_free(pbOutput);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
 
@@ -428,7 +428,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm(SEED seed, const in
     }
 
     // Free the output buffer, encryption key handle, and close the TPM storage provider
-    free(pbOutput);
+    dogecoin_free(pbOutput);
     NCryptFreeObject(hEncryptionKey);
     NCryptFreeObject(hProvider);
 
@@ -471,7 +471,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
 #endif
     if (strlen(password) == 0) {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
-        free(password);
+        dogecoin_free(password);
         return false;
     }
 
@@ -484,11 +484,15 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
 #endif
     if (strcmp(password, confirm_password) != 0) {
         fprintf(stderr, "ERROR: Passwords do not match.\n");
-        free(password);
-        free(confirm_password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_mem_zero(confirm_password, strlen(confirm_password));
+        dogecoin_free(password);
+        dogecoin_free(confirm_password);
         return false;
     }
-    free(confirm_password);
+    // Clear the confirm password
+    dogecoin_mem_zero(confirm_password, strlen(confirm_password));
+    dogecoin_free(confirm_password);
 
     // Generate a random salt for key derivation
     uint8_t salt[SALT_SIZE];
@@ -517,14 +521,17 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     FILE* fp = fopen(filename, "wb+");
     if (!fp) {
         fprintf(stderr, "ERROR: Failed to open file for writing.\n");
-        free(encrypted_seed);
+        dogecoin_free(encrypted_seed);
         return false;
     }
 
     // Hash the password
     uint8_t password_hash[SHA512_DIGEST_LENGTH];
     sha512_raw((const uint8_t*)password, strlen(password), password_hash);
-    free(password);
+
+    // Clear the password
+    dogecoin_mem_zero(password, strlen(password));
+    dogecoin_free(password);
 
     // Write the password hash to the file
     fwrite(password_hash, 1, sizeof(password_hash), fp);
@@ -537,7 +544,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
 
     fclose(fp);
 
-    free(encrypted_seed);
+    dogecoin_free(encrypted_seed);
 
     return true;
 }
@@ -571,7 +578,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
 #endif
     if (strlen(password) == 0) {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
-        free(password);
+        dogecoin_free(password);
         return false;
     }
 
@@ -579,7 +586,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     FILE* fp = fopen(filename, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: Failed to open file for reading.\n");
-        free(password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -589,7 +597,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     if (bytesRead != sizeof(password_hash)) {
         fprintf(stderr, "ERROR: Failed to read password hash from file.\n");
         fclose(fp);
-        free(password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -601,6 +610,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     if (memcmp(password_hash, password_hash2, sizeof(password_hash)) != 0) {
         fprintf(stderr, "ERROR: Incorrect password.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -611,19 +622,26 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     if (bytesRead != sizeof(iv)) {
         fprintf(stderr, "ERROR: Failed to read IV from file.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
     bytesRead = fread(salt, 1, sizeof(salt), fp);
     if (bytesRead != sizeof(salt)) {
         fprintf(stderr, "ERROR: Failed to read salt from file.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
     // Derive the encryption key from the password and salt using PBKDF2
     uint8_t encryption_key[AES_KEY_SIZE];
     pbkdf2_hmac_sha256((const uint8_t*)password, strlen(password), salt, sizeof(salt), PBKDF2_ITERATIONS, encryption_key, sizeof(encryption_key));
-    free(password);
+
+    // Clear the password
+    dogecoin_mem_zero(password, strlen(password));
+    dogecoin_free(password);
 
     // Read the encrypted seed from the file
     size_t encrypted_size = ENCRYPTED_SEED_SIZE;
@@ -638,7 +656,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     if (bytesRead != encrypted_size) {
         fprintf(stderr, "ERROR: Failed to read encrypted seed from file.\n");
         fclose(fp);
-        free(encrypted_seed);
+        dogecoin_free(encrypted_seed);
         return false;
     }
 
@@ -647,7 +665,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     // Decrypt the seed using AES
     aes256_cbc_decrypt(encryption_key, iv, encrypted_seed, encrypted_size, false, seed);
 
-    free(encrypted_seed);
+    dogecoin_free(encrypted_seed);
 
     return true;
 }
@@ -816,7 +834,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
         fprintf(stderr, "ERROR: Failed to encrypt the HD node with the encryption key (0x%08x)\n", status);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
-        free(pbResult);
+        dogecoin_free(pbResult);
         return false;
     }
 
@@ -829,7 +847,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
         fprintf(stderr, "ERROR: Failed to open file for writing\n");
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
-        free(pbResult);
+        dogecoin_free(pbResult);
         return false;
     }
 
@@ -840,7 +858,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
         fprintf(stderr, "ERROR: Failed to write encrypted hdnode to file\n");
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
-        free(pbResult);
+        dogecoin_free(pbResult);
         fclose(fp);
         return false;
     }
@@ -849,7 +867,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
     fclose(fp);
 
     // Free the memory for the encrypted HD node
-    free(pbResult);
+    dogecoin_free(pbResult);
 
     // Free the encryption key and provider
     NCryptFreeObject(hEncryptionKey);
@@ -954,7 +972,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* 
     if (bytesRead != fileSize)
     {
         fprintf(stderr, "ERROR: Failed to read file\n");
-        free(pbOutput);
+        dogecoin_free(pbOutput);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
         return false;
@@ -966,14 +984,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* 
     {
         // Failed to decrypt the encrypted data
         fprintf(stderr, "ERROR: Failed to decrypt the encrypted data (0x%08x)\n", status);
-        free(pbOutput);
+        dogecoin_free(pbOutput);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
         return false;
     }
 
     // Free memory and close handles
-    free(pbOutput);
+    dogecoin_free(pbOutput);
     NCryptFreeObject(hEncryptionKey);
     NCryptFreeObject(hProvider);
 
@@ -1021,7 +1039,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
 #endif
     if (strlen(password) == 0) {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
-        free(password);
+        dogecoin_free(password);
         return false;
     }
 
@@ -1035,11 +1053,15 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
 
     if (strcmp(password, confirm_password) != 0) {
         fprintf(stderr, "ERROR: Passwords do not match.\n");
-        free(password);
-        free(confirm_password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_mem_zero(confirm_password, strlen(confirm_password));
+        dogecoin_free(password);
+        dogecoin_free(confirm_password);
         return false;
     }
-    free(confirm_password);
+    // Clear the confirm password
+    dogecoin_mem_zero(confirm_password, strlen(confirm_password));
+    dogecoin_free(confirm_password);
 
     // Generate a random salt for key derivation
     uint8_t salt[SALT_SIZE];
@@ -1071,7 +1093,9 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     size_t encrypted_actual_size = aes256_cbc_encrypt(encryption_key, iv, (uint8_t*)out, encrypted_size, padding_used, encrypted_data);
     if (encrypted_actual_size == 0) {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
-        free(encrypted_data);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
+        dogecoin_free(encrypted_data);
         return false;
     }
 
@@ -1079,14 +1103,19 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     FILE* fp = fopen(filename, "wb+");
     if (!fp) {
         fprintf(stderr, "ERROR: Failed to open file for writing.\n");
-        free(encrypted_data);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
+        dogecoin_free(encrypted_data);
         return false;
     }
 
     // Hash the password
     uint8_t password_hash[SHA512_DIGEST_LENGTH];
     sha512_raw((const uint8_t*)password, strlen(password), password_hash);
-    free(password);
+
+    // Clear the password
+    dogecoin_mem_zero(password, strlen(password));
+    dogecoin_free(password);
 
     // Write the password hash to the file
     fwrite(password_hash, 1, sizeof(password_hash), fp);
@@ -1095,7 +1124,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     size_t bytes_written = fwrite(iv, 1, sizeof(iv), fp);
     if (bytes_written != sizeof(iv)) {
         fprintf(stderr, "ERROR: Failed to write IV to file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         fclose(fp);
         return false;
     }
@@ -1103,7 +1132,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     bytes_written = fwrite(salt, 1, sizeof(salt), fp);
     if (bytes_written != sizeof(salt)) {
         fprintf(stderr, "ERROR: Failed to write salt to file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         fclose(fp);
         return false;
     }
@@ -1112,13 +1141,13 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     bytes_written = fwrite(encrypted_data, 1, encrypted_actual_size, fp);
     if (bytes_written != encrypted_actual_size) {
         fprintf(stderr, "ERROR: Failed to write encrypted HD node to file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         fclose(fp);
         return false;
     }
 
     fclose(fp);
-    free(encrypted_data);
+    dogecoin_free(encrypted_data);
 
     return true;
 }
@@ -1157,7 +1186,7 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
 #endif
     if (strlen(password) == 0) {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
-        free(password);
+        dogecoin_free(password);
         return false;
     }
 
@@ -1165,7 +1194,8 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     FILE* fp = fopen(filename, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: Failed to open file for reading.\n");
-        free(password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1175,7 +1205,8 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     if (bytesRead != sizeof(password_hash)) {
         fprintf(stderr, "ERROR: Failed to read password hash from file.\n");
         fclose(fp);
-        free(password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1187,6 +1218,8 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     if (memcmp(password_hash, password_hash2, sizeof(password_hash)) != 0) {
         fprintf(stderr, "ERROR: Incorrect password.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1195,6 +1228,8 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     if (bytes_read != sizeof(iv)) {
         fprintf(stderr, "ERROR: Failed to read IV from file.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1203,13 +1238,18 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     if (bytes_read != sizeof(salt)) {
         fprintf(stderr, "ERROR: Failed to read salt from file.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
     // Derive the encryption key from the password and salt using PBKDF2
     uint8_t encryption_key[AES_KEY_SIZE];
     pbkdf2_hmac_sha256((const uint8_t*)password, strlen(password), salt, sizeof(salt), PBKDF2_ITERATIONS, encryption_key, sizeof(encryption_key));
-    free(password);
+
+    // Clear the password
+    dogecoin_mem_zero(password, strlen(password));
+    dogecoin_free(password);
 
     // Read the encrypted HD node from the file
     size_t encrypted_size = sizeof(dogecoin_hdnode);
@@ -1225,14 +1265,14 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
 
     if (bytes_read != encrypted_size) {
         fprintf(stderr, "ERROR: Failed to read encrypted HD node from file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         return false;
     }
 
     // Decrypt the HD node with software decryption (AES)
     dogecoin_bool padding_used = false;
     size_t decrypted_actual_size = aes256_cbc_decrypt(encryption_key, iv, encrypted_data, encrypted_size, padding_used, (uint8_t*)out);
-    free(encrypted_data);
+    dogecoin_free(encrypted_data);
 
     if (decrypted_actual_size == 0) {
         fprintf(stderr, "ERROR: AES decryption failed.\n");
@@ -1455,7 +1495,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMON
     fclose(fp);
 
     // Free the memory for the encrypted data
-    free(pbOutput);
+    dogecoin_free(pbOutput);
 
     // Free the encryption key and provider
     NCryptFreeObject(hEncryptionKey);
@@ -1562,7 +1602,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_tpm(MNEMONIC mnemon
     if (bytesRead != fileSize)
     {
         fprintf(stderr, "ERROR: Failed to read file\n");
-        free(pbOutput);
+        dogecoin_free(pbOutput);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
         return false;
@@ -1573,14 +1613,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_tpm(MNEMONIC mnemon
     if (status != ERROR_SUCCESS)
     {
         fprintf(stderr, "ERROR: Failed to decrypt the encrypted data (0x%08x)\n", status);
-        free(pbOutput);
+        dogecoin_free(pbOutput);
         NCryptFreeObject(hEncryptionKey);
         NCryptFreeObject(hProvider);
         return false;
     }
 
     // Free the output buffer, encryption key handle, and close the TPM storage provider
-    free(pbOutput);
+    dogecoin_free(pbOutput);
     NCryptFreeObject(hEncryptionKey);
     NCryptFreeObject(hProvider);
 
@@ -1639,7 +1679,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
 #endif
     if (strlen(password) == 0) {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
-        free(password);
+        dogecoin_free(password);
         return false;
     }
 
@@ -1653,11 +1693,15 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
 
     if (strcmp(password, confirm_password) != 0) {
         fprintf(stderr, "ERROR: Passwords do not match.\n");
-        free(password);
-        free(confirm_password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_mem_zero(confirm_password, strlen(confirm_password));
+        dogecoin_free(password);
+        dogecoin_free(confirm_password);
         return false;
     }
-    free(confirm_password);
+    // Clear the confirm password
+    dogecoin_mem_zero(confirm_password, strlen(confirm_password));
+    dogecoin_free(confirm_password);
 
     // Derive the encryption key from the password and a random salt using PBKDF2
     uint8_t salt[SALT_SIZE];
@@ -1691,7 +1735,9 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     size_t encrypted_actual_size = aes256_cbc_encrypt(encryption_key, iv, (uint8_t*)mnemonic, encrypted_size, padding_used, encrypted_data);
     if (encrypted_actual_size == 0) {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
-        free(encrypted_data);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
+        dogecoin_free(encrypted_data);
         return false;
     }
 
@@ -1699,14 +1745,19 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     FILE* fp = fopen(filename, "wb+");
     if (!fp) {
         fprintf(stderr, "ERROR: Failed to open file for writing.\n");
-        free(encrypted_data);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
+        dogecoin_free(encrypted_data);
         return false;
     }
 
     // Hash the password
     uint8_t password_hash[SHA512_DIGEST_LENGTH];
     sha512_raw((const uint8_t*)password, strlen(password), password_hash);
-    free(password);
+
+    // Clear the password
+    dogecoin_mem_zero(password, strlen(password));
+    dogecoin_free(password);
 
     // Write the password hash to the file
     fwrite(password_hash, 1, sizeof(password_hash), fp);
@@ -1715,7 +1766,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     size_t bytes_written = fwrite(iv, 1, sizeof(iv), fp);
     if (bytes_written != sizeof(iv)) {
         fprintf(stderr, "ERROR: Failed to write IV to file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         fclose(fp);
         return false;
     }
@@ -1723,7 +1774,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     bytes_written = fwrite(salt, 1, sizeof(salt), fp);
     if (bytes_written != sizeof(salt)) {
         fprintf(stderr, "ERROR: Failed to write salt to file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         fclose(fp);
         return false;
     }
@@ -1732,13 +1783,13 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     bytes_written = fwrite(encrypted_data, 1, encrypted_actual_size, fp);
     if (bytes_written != encrypted_actual_size) {
         fprintf(stderr, "ERROR: Failed to write encrypted mnemonic to file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         fclose(fp);
         return false;
     }
 
     fclose(fp);
-    free(encrypted_data);
+    dogecoin_free(encrypted_data);
 
     return true;
 }
@@ -1780,7 +1831,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
 #endif
     if (strlen(password) == 0) {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
-        free(password);
+        dogecoin_free(password);
         return false;
     }
 
@@ -1788,7 +1839,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     FILE* fp = fopen(filename, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: Failed to open file for reading.\n");
-        free(password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1798,7 +1850,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     if (bytesRead != sizeof(password_hash)) {
         fprintf(stderr, "ERROR: Failed to read password hash from file.\n");
         fclose(fp);
-        free(password);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1810,6 +1863,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     if (memcmp(password_hash, password_hash2, sizeof(password_hash)) != 0) {
         fprintf(stderr, "ERROR: Incorrect password.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1818,6 +1873,8 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     if (bytes_read != sizeof(iv)) {
         fprintf(stderr, "ERROR: Failed to read IV from file.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
@@ -1826,13 +1883,18 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     if (bytes_read != sizeof(salt)) {
         fprintf(stderr, "ERROR: Failed to read salt from file.\n");
         fclose(fp);
+        dogecoin_mem_zero(password, strlen(password));
+        dogecoin_free(password);
         return false;
     }
 
     // Derive the encryption key from the password and salt using PBKDF2
     uint8_t encryption_key[AES_KEY_SIZE];
     pbkdf2_hmac_sha256((const uint8_t*)password, strlen(password), salt, sizeof(salt), PBKDF2_ITERATIONS, encryption_key, sizeof(encryption_key));
-    free(password);
+
+    // Clear the password
+    dogecoin_mem_zero(password, strlen(password));
+    dogecoin_free(password);
 
     // Read the encrypted mnemonic from the file
     size_t encrypted_size = ENCRYPTED_MNEMONIC_SIZE;
@@ -1848,14 +1910,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
 
     if (bytes_read != encrypted_size) {
         fprintf(stderr, "ERROR: Failed to read encrypted mnemonic from file.\n");
-        free(encrypted_data);
+        dogecoin_free(encrypted_data);
         return false;
     }
 
     // Decrypt the mnemonic with software decryption (AES)
     dogecoin_bool padding_used = false;
     size_t decrypted_actual_size = aes256_cbc_decrypt(encryption_key, iv, encrypted_data, encrypted_size, padding_used, (uint8_t*)mnemonic);
-    free(encrypted_data);
+    dogecoin_free(encrypted_data);
 
     if (decrypted_actual_size == 0) {
         fprintf(stderr, "ERROR: AES decryption failed.\n");
