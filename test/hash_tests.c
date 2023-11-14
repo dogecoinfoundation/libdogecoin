@@ -116,8 +116,12 @@ void test_hash()
     dogecoin_tx_serialize(hw->cstr, tx);
     u_assert_uint64_eq(siphash_u256(1, 2, (uint256*)hw->get_hash(hw)), 0x79751e980c2a0a35ULL);
 
+    dogecoin_free(hash_in);
     dogecoin_free(hasher);
     dogecoin_free(hasher2);
     dogecoin_free(hasher3);
+    dogecoin_free(hw->ctx);
+    dogecoin_free(hw->hash);
     dogecoin_free(hw);
+    dogecoin_tx_free(tx);
 }
