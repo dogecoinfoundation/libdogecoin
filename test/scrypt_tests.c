@@ -15,7 +15,9 @@ void test_scrypt() {
     int i = 0;
     for (; i < HASHCOUNT; i++) {
         unsigned char inputbytes[80];
-        memcpy_safe(inputbytes, parse_hex(inputhex[i]), 80);
+        unsigned char* parsed = parse_hex(inputhex[i]);
+        memcpy_safe(inputbytes, parsed, 80);
+        dogecoin_free(parsed);
 #if defined(USE_SSE2)
         // Test SSE2 scrypt
         scrypt_1024_1_1_256_sp_sse2((const char*)&inputbytes[0], BEGIN(scrypthash), scratchpad);

@@ -97,7 +97,7 @@ void test_vector()
     size_t len = 15;
     size_t written = 0;
     size_t read = 0;
-    vec = vector_new(1, NULL);
+    vec = vector_new(1, free);
     res = vector_add(vec, strdup("TEST0"));
     assert(res == true);
     res = vector_add(vec, strdup("TEST1"));

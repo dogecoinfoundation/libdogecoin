@@ -351,31 +351,30 @@ dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* wri
  * @return 1 if the vector was deserialized successfully, 0 otherwise.
  */
 dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_t* read) {
-    if (!in || !inlen || !vec || !read) {
+    if (!in || inlen > MAX_SERIALIZE_SIZE || !vec || !read) {
         return false;
     }
 
     size_t offset = 0;
+
     while (offset < inlen) {
-        size_t len = strlen(in + offset);
-        if (!len) {
+        size_t len = strnlen(in + offset, MAX_SERIALIZE_SIZE - offset);
+        if (len == 0 || len >= MAX_SERIALIZE_SIZE) {
+            // Either a zero-length string or the string exceeds buffer size
             return false;
         }
 
-        char* str = dogecoin_malloc(len + 1);
+        char* str = strdup(in + offset);
         if (!str) {
-            return false;
+            return false; // Memory allocation failed
         }
-
-        memcpy(str, in + offset, len);
-        str[len] = '\0';
 
         if (!vector_add(vec, str)) {
-            dogecoin_free(str);
+            free(str); // Free the string if adding to the vector fails
             return false;
         }
 
-        offset += len;
+        offset += len + 1; // Move past the string and its null terminator
     }
 
     *read = offset;
