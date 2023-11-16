@@ -56,17 +56,29 @@ int get_expected_index (uint32_t nNonce, int nChainId, unsigned h)
   return rand % (1 << h);
 }
 
-uint256* check_merkle_branch(uint256 hash, const vector* parent_coinbase_merkle, unsigned int n_index) {
-    if (n_index == (unsigned int)-1) return dogecoin_uint256_vla(1);
-    unsigned int i = n_index;
-    for (; i < parent_coinbase_merkle->len; ++i) {
-        uint256 pcm;
-        memcpy(pcm, vector_idx(parent_coinbase_merkle, i), 32);
-        if (i & 1)
-            hash = (uint8_t *)Hash(UBEGIN(*pcm), UEND(*pcm), UBEGIN(hash), UEND(hash));
-        else
-            hash = (uint8_t *)Hash(UBEGIN(hash), UEND(hash), UBEGIN(*pcm), UEND(*pcm));
-        i >>= 1;
+// Computes the Merkle root from a given hash, Merkle branch, and index.
+uint256* check_merkle_branch(uint256* hash, const vector* merkle_branch, int index) {
+    if (index == -1) {
+        return dogecoin_uint256_vla(1);  // Return a zeroed-out uint256 array.
     }
-    return (uint256*)*&hash;
+
+    uint256* current_hash = dogecoin_uint256_vla(1);
+    memcpy(current_hash, hash, sizeof(uint256)); // Copy the initial hash
+
+    for (int i = 0; i < merkle_branch->len; ++i) {
+        uint256* next_branch_hash = (uint256*)vector_idx(merkle_branch, i);
+        uint256* new_hash;
+
+        if (index & 1) {
+            new_hash = Hash(next_branch_hash, current_hash);
+        } else {
+            new_hash = Hash(current_hash, next_branch_hash);
+        }
+
+        memcpy(current_hash, new_hash, sizeof(uint256)); // Update the current hash
+        dogecoin_free(new_hash); // Free the new hash memory
+        index >>= 1;
+    }
+
+    return current_hash;
 }
