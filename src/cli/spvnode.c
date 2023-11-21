@@ -171,7 +171,7 @@ static struct option long_options[] = {
         {"debug", no_argument, NULL, 'd'},
         {"maxnodes", no_argument, NULL, 'm'},
         {"mnemonic", no_argument, NULL, 'n'},
-        {"pass_phrase", required_argument, NULL, 's'},
+        {"pass_phrase", no_argument, NULL, 's'},
         {"dbfile", no_argument, NULL, 'f'},
         {"continuous", no_argument, NULL, 'c'},
         {"address", no_argument, NULL, 'a'},
@@ -198,9 +198,9 @@ static void print_version() {
 static void print_usage() {
     print_version();
     printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
-(-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-999>) \
+(-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase) (-y|-encrypted_file <file_num 0-999>) \
 (-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
-(-t[--testnet]) (-r[--regtest]) (-d[--debug]) (-s[--timeout] <secs>) <command>\n");
+(-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -220,16 +220,16 @@ static void print_usage() {
     printf("> ./spvnode -d -c -a \"DSVw8wkkTXccdq78etZ3UwELrmpfvAiVt1\" -w \"./main_wallet.db\" -h \"./main_headers.db\" -b scan\n\n");
     printf("Sync up, with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:\n");
     printf("> ./spvnode -d -f 0 -c -y 0 -b scan\n\n");
-    printf("Sync up, with encrypted mnemonic 0, pass phrase \"test\", show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> ./spvnode -d -f 0 -c -y 0 -s \"test\" -b scan\n\n");
-    printf("Sync up, with encrypted mnemonic 0, pass phrase \"test\", show debug info, don't store headers in file, wait for new blocks, use TPM:\n");
-    printf("> ./spvnode -d -f 0 -c -y 0 -s \"test\" -j -b scan\n\n");
+    printf("Sync up, with encrypted mnemonic 0, BIP39 passphrase, show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -s -b scan\n\n");
+    printf("Sync up, with encrypted mnemonic 0, BIP39 passphrase, show debug info, don't store headers in file, wait for new blocks, use TPM:\n");
+    printf("> ./spvnode -d -f 0 -c -y 0 -s -j -b scan\n\n");
     printf("Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key:\n");
     printf("> ./spvnode -d -f 0 -c -y 0 -k -b scan\n\n");
     printf("Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key, use TPM:\n");
     printf("> ./spvnode -d -f 0 -c -y 0 -k -j -b scan\n\n");
-    printf("Sync up, with mnemonic \"test\", pass phrase \"test\", show debug info, don't store headers in file, wait for new blocks:\n");
-    printf("> ./spvnode -d -f 0 -c -n \"test\" -s \"test\" -b scan\n\n");
+    printf("Sync up, with mnemonic \"test\", BIP39 passphrase, show debug info, don't store headers in file, wait for new blocks:\n");
+    printf("> ./spvnode -d -f 0 -c -n \"test\" -s -b scan\n\n");
     printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:\n");
     printf("> ./spvnode -d -f 0 -c -w \"./main_wallet.db\" -y 0 -b scan\n\n");
     printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks:\n");
@@ -303,7 +303,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrds:m:n:f:y:a:w:h:bpzkj:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:bpzkj:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
                     ips = optarg;
                     break;
                 case 's':
-                    pass = optarg;
+                    pass = getpass("BIP39 passphrase: \n");
                     break;
                 case 'n':
                     mnemonic_in = optarg;
@@ -375,6 +375,20 @@ int main(int argc, char* argv[]) {
 
 #if WITH_WALLET
         dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, encrypted, tpm, file_num, master_key);
+        if (!wallet) {
+            printf("Could not initialize wallet...\n");
+            // clear and free the passphrase
+            if (pass) {
+                dogecoin_mem_zero (pass, strlen(pass));
+                dogecoin_free(pass);
+                }
+            return EXIT_FAILURE;
+        }
+        // clear and free the passphrase
+        if (pass) {
+            dogecoin_mem_zero (pass, strlen(pass));
+            dogecoin_free(pass);
+            }
         print_utxos(wallet);
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;

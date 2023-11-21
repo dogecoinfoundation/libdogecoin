@@ -43,7 +43,7 @@ Most of these commands require a flag following them to denote things like exist
 | -m, --derived_path | derived_path        | yes | derive_child_key -p <extended_private_key> -m <derived_path> |
 | -e, --entropy  | hex_entropy | yes | generate_mnemonic -e <hex_entropy> |
 | -n, --mnemonic  | seed_phrase | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> |
-| -a, --pass_phrase  | pass_phrase | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -a <pass_phrase> |
+| -a, --pass_phrase  | pass_phrase | no | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -a |
 | -o, --account_int  | account_int | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -o <account_int> |
 | -g, --change_level  | change_level | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -g <change_level> |
 | -i, --address_index  | address_index | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -i <address_index> |
@@ -277,13 +277,13 @@ To utilize checkpoints for faster initial sync, apply the -p flag:
 | `-m`, `--maxnodes` | Max Peers | No | Set max peers: `./spvnode -m 8 scan` |
 | `-a`, `--address` | Address | Yes | Use address: `./spvnode -a "your address here" scan` |
 | `-n`, `--mnemonic` | Mnemonic Seed | Yes | Use BIP39 mnemonic: `./spvnode -n "your mnemonic here" scan` |
-| `-s`, `--pass_phrase` | Passphrase | Yes | Passphrase for BIP39 seed: `./spvnode -s "your passphrase" scan` |
-| `-f`, `--dbfile` | Database File | No | Headers DB file: `./spvnode -f ..db scan` |
+| `-s`, `--pass_phrase` | Passphrase | No | Passphrase for BIP39 seed: `./spvnode -s scan` |
+| `-f`, `--dbfile` | Database File | No | Headers DB file/mem-only (0): `./spvnode -f 0 scan` |
 | `-c`, `--continuous` | Continuous Mode | No | Run continuously: `./spvnode -c scan` |
 | `-b`, `--full_sync` | Full Sync | No | Perform a full sync: `./spvnode -b scan` |
 | `-p`, `--checkpoint` | Checkpoint | No | Enable checkpoint sync: `./spvnode -p scan` |
 | `-w`, `--wallet_file` | Wallet File | Yes | Specify wallet file: `./spvnode -w "./wallet.db" scan` |
-| `-h`, `--headers_file` | Headers File | Yes | Specify headers DB file: `./spvnode -h "..db" scan` |
+| `-h`, `--headers_file` | Headers File | Yes | Specify headers DB file: `./spvnode -h "./headers.db" scan` |
 | `-y`, `--encrypted_file` | Encrypted File | Yes | Use encrypted file: `./spvnode -y 0 scan` |
 | `-j`, `--use_tpm` | Use TPM | No | Utilize TPM for decryption: `./spvnode -j scan` |
 | `-k`, `--master_key` | Master Key | No | Use master key decryption: `./spvnode -k scan` |
@@ -334,11 +334,11 @@ When using -n with a mnemonic, instead of main_wallet.db, spvnode will generate 
 #### Sync up, with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:
     ./spvnode -d -f 0 -c -y 0 -b scan
 
-#### Sync up, with encrypted mnemonic 0, pass phrase "test", show debug info, don't store headers in file, wait for new blocks:
-    ./spvnode -d -f 0 -c -y 0 -s "test" -b scan
+#### Sync up, with encrypted mnemonic 0, BIP39 passphrase, show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -y 0 -s -b scan
 
-#### Sync up, with encrypted mnemonic 0, pass phrase "test", show debug info, don't store headers in file, wait for new blocks, use TPM:
-    ./spvnode -d -f 0 -c -y 0 -s "test" -j -b scan
+#### Sync up, with encrypted mnemonic 0, BIP39 passphrase, show debug info, don't store headers in file, wait for new blocks, use TPM:
+    ./spvnode -d -f 0 -c -y 0 -s -j -b scan
 
 #### Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key:
     ./spvnode -d -f 0 -c -y 0 -k -b scan
@@ -346,8 +346,8 @@ When using -n with a mnemonic, instead of main_wallet.db, spvnode will generate 
 #### Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key, use TPM:
     ./spvnode -d -f 0 -c -y 0 -k -j -b scan
 
-#### Sync up, with mnemonic "test", pass phrase "test", show debug info, don't store headers in file, wait for new blocks:
-    ./spvnode -d -f 0 -c -n "test" -s "test" -b scan
+#### Sync up, with mnemonic "test", BIP39 passphrase, show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -n "test" -s -b scan
 
 #### Sync up, with a wallet file "main_wallet.db", with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:
     ./spvnode -d -f 0 -c -w "./main_wallet.db" -y 0 -b scan

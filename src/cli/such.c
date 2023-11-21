@@ -619,7 +619,7 @@ static struct option long_options[] =
         {"raw_tx", required_argument, NULL, 'x'},
         {"entropy", required_argument, NULL, 'e'},
         {"mnemonic", required_argument, NULL, 'n'},
-        {"pass_phrase", required_argument, NULL, 'a'},
+        {"pass_phrase", no_argument, NULL, 'a'},
         {"account_int", required_argument, NULL, 'o'},
         {"change_level", required_argument, NULL, 'g'},
         {"address_index", required_argument, NULL, 'i'},
@@ -643,7 +643,7 @@ static void print_usage()
     print_version();
     printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-h|-sighash <sighash type>) \
 (-s|-script <script pubkey>) (-i|-input_index <input index>) (-x|-raw_tx <raw hex tx>) (-o|-account_int <account_int>) (-g|-change_level <change_level>) \
-(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-99>) (-w[--overwrite]) (-b[--silent]) \
+(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase) (-y|-encrypted_file <file_num 0-99>) (-w[--overwrite]) (-b[--silent]) \
 (-j[--use_tpm]) (-t[--testnet]) (-r[--regtest])\n");
     printf("Available commands:\n");
     printf("generate_public_key (requires -p <wif>),\n");
@@ -654,8 +654,8 @@ static void print_usage()
     printf("list_encryption_keys_in_tpm,\n");
     printf("decrypt_master_key (requires -y <file_num>, -j (use_tpm) optional),\n");
     printf("decrypt_mnemonic (requires -y <file_num>, -j (use_tpm) optional),\n");
-    printf("mnemonic_to_key (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase>, all optional),\n");
-    printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase>, all optional),\n");
+    printf("mnemonic_to_key (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
+    printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
     printf("print_keys (requires -p <private key hex>),\n");
     printf("derive_child_keys (requires -m <custom path> -p <private key>),\n");
     printf("sign (-x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -p <private key>),\n");
@@ -705,7 +705,7 @@ int main(int argc, char* argv[])
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:a:y:c:trvbwj", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "h:i:s:x:p:k:m:o:g:e:n:y:c:atrvbwj", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'p':
                     pkey = optarg;
@@ -733,7 +733,7 @@ int main(int argc, char* argv[])
                     mnemonic_in = optarg;
                     break;
                 case 'a':
-                    pass = optarg;
+                    pass = getpass("BIP39 passphrase: \n");
                     break;
                 case 'k':
                     pubkey = optarg;
@@ -860,7 +860,7 @@ int main(int argc, char* argv[])
             if (overwrite) {
                 printf("Overwrite? Y/N\n");
 
-                char buffer[2];
+                char buffer[MAX_LEN];
                 /* get user input */
                 if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                     if (buffer[0] != 'Y' && buffer[0] != 'y') {
@@ -1140,7 +1140,7 @@ int main(int argc, char* argv[])
             if (overwrite) {
                 printf("Overwrite? Y/N\n");
 
-                char buffer[2];
+                char buffer[MAX_LEN];
                 /* get user input */
                 if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                     if (buffer[0] != 'Y' && buffer[0] != 'y') {
@@ -1208,7 +1208,7 @@ int main(int argc, char* argv[])
         if (encrypted) {
             printf("Decrypt master key? Y/N\n");
 
-            char buffer[2];
+            char buffer[MAX_LEN];
             /* get user input */
             if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                 if (buffer[0] != 'Y' && buffer[0] != 'y') {
@@ -1258,7 +1258,7 @@ int main(int argc, char* argv[])
         if (encrypted) {
             printf("Decrypt mnemonic? Y/N\n");
 
-            char buffer[2];
+            char buffer[MAX_LEN];
             /* get user input */
             if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                 if (buffer[0] != 'Y' && buffer[0] != 'y') {
@@ -1343,7 +1343,19 @@ int main(int argc, char* argv[])
         /* generate seed from mnemonic */
         if (dogecoin_seed_from_mnemonic(encrypted ? mnemonic : mnemonic_in, pass, seed) == -1) {
             printf("mnemonic_to_key (-n <seed_phrase> or requires -y <file_num>, -j (use_tpm) optional),\n");
+
+            /* clear and free passphrase */
+            if (pass) {
+                dogecoin_mem_zero(pass, strlen(pass));
+                dogecoin_free(pass);
+                }
             return showError("failed to generate seed from mnemonic\n");
+            }
+
+        /* clear and free passphrase */
+        if (pass) {
+            dogecoin_mem_zero(pass, strlen(pass));
+            dogecoin_free(pass);
             }
 
         /* generate master key from seed */
@@ -1366,7 +1378,7 @@ int main(int argc, char* argv[])
         if (encrypted) {
             printf("Decrypt mnemonic for addresses? Y/N\n");
 
-            char buffer[2];
+            char buffer[MAX_LEN];
             /* get user input */
             if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                 if (buffer[0] != 'Y' && buffer[0] != 'y') {
@@ -1381,7 +1393,7 @@ int main(int argc, char* argv[])
             if (tpm) {
                 /* get mnemonic from tpm */
                 if (!dogecoin_decrypt_mnemonic_with_tpm (mnemonic, file_num)) {
-                    printf("mnemonic_to_addresses (requires -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase>, all optional),\n");
+                    printf("mnemonic_to_addresses (requires -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
                     return showError("failed to decrypt mnemonic with tpm\n");
                     }
                 }
@@ -1389,7 +1401,7 @@ int main(int argc, char* argv[])
             else {
                 /* get mnemonic from software */
                 if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num) == false) {
-                    printf("mnemonic_to_addresses (requires -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase>, all optional),\n");
+                    printf("mnemonic_to_addresses (requires -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
                     return showError("failed to decrypt mnemonic with software\n");
                     }
                 }
@@ -1397,7 +1409,7 @@ int main(int argc, char* argv[])
 
         /* else display usage */
         else if (!mnemonic_in) {
-            return showError("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase> (all optional))\n");
+            return showError("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a (all optional))\n");
             }
 
         /* generate wif address for slip44 account, index, and change_level, from bip39 mnemonic and password (optional) */
@@ -1406,6 +1418,12 @@ int main(int argc, char* argv[])
             /* Generate all addresses for the account. */
             for (int i = 0; i < 20; i++) {
                 if (getDerivedHDAddressFromMnemonic(account, i, change_level, encrypted ? mnemonic : mnemonic_in, pass, hd_pubkey_address, (chain == &dogecoin_chainparams_test)) == -1) {
+
+                    /* clear and free passphrase */
+                    if (pass) {
+                        dogecoin_mem_zero(pass, strlen(pass));
+                        dogecoin_free(pass);
+                        }
                     return showError("Failed to generate wif address from mnemonic\n");
                     }
                 printf("Address %d: %s\n", i, hd_pubkey_address);
@@ -1415,11 +1433,23 @@ int main(int argc, char* argv[])
 
             /* Generate a single address for the account. */
             if (getDerivedHDAddressFromMnemonic(account, inputindex, change_level, encrypted ? mnemonic : mnemonic_in, pass, hd_pubkey_address, (chain == &dogecoin_chainparams_test)) == -1) {
-                printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a <pass_phrase>, all optional),\n");
+                printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
+
+                /* clear and free passphrase */
+                if (pass) {
+                    dogecoin_mem_zero(pass, strlen(pass));
+                    dogecoin_free(pass);
+                    }
                 return showError("Failed to generate wif address from mnemonic\n");
                 }
 
             printf("Address %d: %s\n", inputindex, hd_pubkey_address);
+            }
+
+        /* clear and free passphrase */
+        if (pass) {
+            dogecoin_mem_zero(pass, strlen(pass));
+            dogecoin_free(pass);
             }
         }
     else if (strcmp(cmd, "signmessage") == 0) {
