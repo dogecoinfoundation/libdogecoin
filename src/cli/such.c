@@ -613,6 +613,10 @@ static struct option long_options[] =
         {"privkey", required_argument, NULL, 'p'},
         {"pubkey", required_argument, NULL, 'k'},
         {"derived_path", required_argument, NULL, 'm'},
+        {"sighash", required_argument, NULL, 'h'},
+        {"script", required_argument, NULL, 's'},
+        {"input_index", required_argument, NULL, 'i'},
+        {"raw_tx", required_argument, NULL, 'x'},
         {"entropy", required_argument, NULL, 'e'},
         {"mnemonic", required_argument, NULL, 'n'},
         {"pass_phrase", required_argument, NULL, 'a'},
@@ -637,8 +641,9 @@ static void print_version()
 static void print_usage()
     {
     print_version();
-    printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) \
-(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-999>) (-w[--overwrite]) (-b[--silent]) \
+    printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-h|-sighash <sighash type>) \
+(-s|-script <script pubkey>) (-i|-input_index <input index>) (-x|-raw_tx <raw hex tx>) (-o|-account_int <account_int>) (-g|-change_level <change_level>) \
+(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase <pass_phrase>) (-y|-encrypted_file <file_num 0-99>) (-w[--overwrite]) (-b[--silent]) \
 (-j[--use_tpm]) (-t[--testnet]) (-r[--regtest])\n");
     printf("Available commands:\n");
     printf("generate_public_key (requires -p <wif>),\n");
