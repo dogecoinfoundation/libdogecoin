@@ -2,7 +2,7 @@
 
 ## Overview
 
-If you are looking to just explore the functionality of Libdogecoin without building a complicated project yourself, look no further than the CLI tools provided in this repo. The first tool, `such`, is an interactive CLI application that allows you to perform all Essential address and transaction operations with prompts to guide you through the process. The second tool, `sendtx`, handles the process of broadcasting a transaction built using Libdogecoin to eventually push it onto the blockchain.
+If you are looking to just explore the functionality of Libdogecoin without building a complicated project yourself, look no further than the CLI tools provided in this repo. The first tool, `such`, is an interactive CLI application that allows you to perform all Essential address and transaction operations with prompts to guide you through the process. The second tool, `sendtx`, handles the process of broadcasting a transaction built using Libdogecoin to eventually push it onto the blockchain. The third tool, `spvnode`, run a Simple Payment Verification (SPV) node for the Dogecoin blockchain. It enables users to interact with the Dogecoin network, verify transactions and stay in sync with the blockchain.
 
 This document goes over the usage of these tools along with examples of how to use them.
 
@@ -234,3 +234,126 @@ Below are some examples on how to use the `sendtx` tool in practice.
 ##### Send a raw transaction to at most 5 random peers on mainnet
 
     ./sendtx -m 5 <tx_hex>
+
+
+## The `spvnode` Tool
+
+`spvnode` is a command-line tool that operates a Simple Payment Verification (SPV) node for the Dogecoin blockchain. It enables users to interact with the Dogecoin network, verify transactions, and stay in sync with the blockchain.
+
+### Operation Modes
+
+`spvnode` supports two operational modes:
+
+1. **Header-Only Mode**: This mode is for quickly catching up with the blockchain by downloading only the block headers. This mode is typically used for initial sync, and then the node can switch to full block mode for verifying transactions.
+
+2. **Full Block Mode**: After catching up with the blockchain headers, `spvnode` can switch to this mode to download full blocks for detailed transaction history scanning. This is essential for verifying transactions related to the user's wallet addresses.
+
+### Usage
+
+To use `spvnode`, execute it from the top level of the Libdogecoin directory. Start the tool by running `./spvnode` followed by the `scan` command. There are several flags that can be used to customize the behavior of `spvnode`:
+
+Each flag is accompanied by a description and usage example. To view the version of `spvnode`, simply run:
+
+    ./spvnode -v
+
+Run `spvnode` in header-only mode for a fast catch-up:
+
+    ./spvnode scan
+
+To activate full block validation mode for comprehensive address scanning, include the -b flag:
+
+    ./spvnode -b scan
+
+To utilize checkpoints for faster initial sync, apply the -p flag:
+
+    ./spvnode -p scan
+
+| Flag | Name | Required Arg? | Usage |
+|------|------|---------------|-------|
+| `-t`, `--testnet` | Testnet Mode | No | Activate testnet: `./spvnode -t scan` |
+| `-r`, `--regtest` | Regtest Mode | No | Activate regtest network: `./spvnode -r scan` |
+| `-i`, `--ips` | Initial Peers | Yes | Specify initial peers: `./spvnode -i 127.0.0.1:22556 scan` |
+| `-d`, `--debug` | Debug Mode | No | Enable debug output: `./spvnode -d scan` |
+| `-m`, `--maxnodes` | Max Peers | No | Set max peers: `./spvnode -m 8 scan` |
+| `-a`, `--address` | Address | Yes | Use address: `./spvnode -a "your address here" scan` |
+| `-n`, `--mnemonic` | Mnemonic Seed | Yes | Use BIP39 mnemonic: `./spvnode -n "your mnemonic here" scan` |
+| `-s`, `--pass_phrase` | Passphrase | Yes | Passphrase for BIP39 seed: `./spvnode -s "your passphrase" scan` |
+| `-f`, `--dbfile` | Database File | No | Headers DB file: `./spvnode -f ..db scan` |
+| `-c`, `--continuous` | Continuous Mode | No | Run continuously: `./spvnode -c scan` |
+| `-b`, `--full_sync` | Full Sync | No | Perform a full sync: `./spvnode -b scan` |
+| `-p`, `--checkpoint` | Checkpoint | No | Enable checkpoint sync: `./spvnode -p scan` |
+| `-w`, `--wallet_file` | Wallet File | Yes | Specify wallet file: `./spvnode -w "./wallet.db" scan` |
+| `-h`, `--headers_file` | Headers File | Yes | Specify headers DB file: `./spvnode -h "..db" scan` |
+| `-y`, `--encrypted_file` | Encrypted File | Yes | Use encrypted file: `./spvnode -y 0 scan` |
+| `-j`, `--use_tpm` | Use TPM | No | Utilize TPM for decryption: `./spvnode -j scan` |
+| `-k`, `--master_key` | Master Key | No | Use master key decryption: `./spvnode -k scan` |
+| `-z`, `--daemon` | Daemon Mode | No | Run as a daemon: `./spvnode -z scan` |
+
+### Commands
+
+The primary command for `spvnode` is `scan`, which syncs the blockchain headers:
+
+#### `scan`
+Connects to the Dogecoin network and synchronizes the blockchain headers to the local database.
+
+### Callback Functions
+
+The tool provides several callbacks for custom integration:
+
+- `spv_header_message_processed`: Triggered when a header is processed.
+- `spv_sync_completed`: Invoked upon completion of the sync process.
+
+### Best Practices and Notes
+When not specifying -w, spvnode will default to using main_wallet.db. To prevent unintended interactions with main_wallet.db, it's important to be consistent with the use of flags. The best practice is to always use -w and specify a distinct wallet file, especially when using new mnemonics or keys.
+
+When using -n with a mnemonic, instead of main_wallet.db, spvnode will generate main_mnemonic_wallet.db.
+
+## Examples
+
+#### Sync up to the chain tip and stores all headers in `headers.db` (quit once synced):
+    ./spvnode scan
+
+#### Sync up to the chain tip and give some debug output during that process:
+    ./spvnode -d scan
+
+#### Sync up, show debug info, don't store headers in file (only in memory), wait for new blocks:
+    ./spvnode -d -f 0 -c -b scan
+
+#### Sync up, with an address, show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -a "DSVw8wkkTXccdq78etZ3UwELrmpfvAiVt1" -b scan
+
+#### Sync up, with a wallet file "main_wallet.db", show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -w "./main_wallet.db" -b scan
+
+#### Sync up, with a wallet file "main_wallet.db", show debug info, with a headers file "main_headers.db", wait for new blocks:
+    ./spvnode -d -c -w "./main_wallet.db" -h "./main_headers.db" -b scan
+
+#### Sync up, with a wallet file "main_wallet.db", with an address, show debug info, with a headers file, with a headers file "main_headers.db", wait for new blocks:
+    ./spvnode -d -c -a "DSVw8wkkTXccdq78etZ3UwELrmpfvAiVt1" -w "./main_wallet.db" -h "./main_headers.db" -b scan
+
+#### Sync up, with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -y 0 -b scan
+
+#### Sync up, with encrypted mnemonic 0, pass phrase "test", show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -y 0 -s "test" -b scan
+
+#### Sync up, with encrypted mnemonic 0, pass phrase "test", show debug info, don't store headers in file, wait for new blocks, use TPM:
+    ./spvnode -d -f 0 -c -y 0 -s "test" -j -b scan
+
+#### Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key:
+    ./spvnode -d -f 0 -c -y 0 -k -b scan
+
+#### Sync up, with encrypted key 0, show debug info, don't store headers in file, wait for new blocks, use master key, use TPM:
+    ./spvnode -d -f 0 -c -y 0 -k -j -b scan
+
+#### Sync up, with mnemonic "test", pass phrase "test", show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -n "test" -s "test" -b scan
+
+#### Sync up, with a wallet file "main_wallet.db", with encrypted mnemonic 0, show debug info, don't store headers in file, wait for new blocks:
+    ./spvnode -d -f 0 -c -w "./main_wallet.db" -y 0 -b scan
+
+#### Sync up, with a wallet file "main_wallet.db", with encrypted mnemonic 0, show debug info, with a headers file "main_headers.db", wait for new blocks:
+    ./spvnode -d -c -w "./main_wallet.db" -h "./main_headers.db" -y 0 -b scan
+
+#### Sync up, with a wallet file "main_wallet.db", with encrypted mnemonic 0, show debug info, with a headers file "main_headers.db", wait for new blocks, use TPM:
+    ./spvnode -d -c -w "./main_wallet.db" -h "./main_headers.db" -y 0 -j -b scan
