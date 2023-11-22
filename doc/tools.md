@@ -172,6 +172,83 @@ Below are some examples on how to use the `such` tool in practice.
     ./such -c verifymessage -x bleh -s ICrbftD0KamyaB68IoXbeke3w4CpcIvv+Q4pncBNpMk8fF5+xsR9H9gqmfM0JrjlfzZZA3E8AJ0Nug1KWeoVw3g= -k D8mQ2sKYpLbFCQLhGeHCPBmkLJRi6kRoSg
     Message is verified!
 
+## Encrypted Mnemonics and Key Backups
+
+The `such` tool provides functionality to securely manage your encrypted mnemonics and key backups. With the ability to generate mnemonics and encrypt them for safe storage, and to decrypt them when needed, managing your cryptographic assets is made easier. To use encrypted files with `spvnode`, you must first use the `such` tool to generate and encrypt your mnemonic or master key. You can then use the `spvnode` tool to import the encrypted file and use it to connect to the network.
+
+### Generating and Encrypting Mnemonics
+
+To generate a new mnemonic, which is a 24-word seed phrase, you can use the following command:
+
+    ./such -c generate_mnemonic
+
+This will output a new mnemonic that you can use to generate keys and addresses. If you want to encrypt this mnemonic to keep it safe, you can use the following command:
+
+    ./such -c generate_mnemonic -y <file_num>
+
+The `-y` flag is used to specify the file number to use for encryption. This number is used to identify the encrypted file when you need to decrypt it. You can also use the `-w` flag to overwrite an existing file with the same number. If you want to encrypt the mnemonic using a TPM (Trusted Platform Module), you can use the `-j` flag as shown:
+
+    ./such -c generate_mnemonic -y <file_num> -j
+
+Replace `<file_num>` with the appropriate file number you want to use for encryption (e.g. 0, 1, 2, etc.). `999` is reserved for testing purposes.
+
+Encrypting a mnemonic will output a file with the encrypted mnemonic. You can use the `-b` flag to suppress the mnemonic output and only output the encrypted file. This is useful if you want to encrypt a mnemonic and save it to a file without displaying the mnemonic on the screen. For example:
+
+    ./such -c generate_mnemonic -y <file_num> -b
+
+All encryted files are saved in the store directory. On Linux, this is `.store` in the libdogecoin directory. On Windows, this is the `store` directory in the libdogecoin directory.
+
+### Decrypting Mnemonics
+
+When you need to access your encrypted mnemonic, you can decrypt it using the `decrypt_mnemonic` command. If the mnemonic was encrypted using TPM (Trusted Platform Module), you can use the `-j` flag as shown:
+
+    ./such -c decrypt_mnemonic -y <file_num> -j
+
+Replace `<file_num>` with the appropriate file number you used during encryption.
+
+### Handling Key Backups
+
+You can also encrypt and decrypt your master key using similar commands. To encrypt a master key, you might first generate it and then encrypt as follows:
+
+    ./such -c bip32_extended_master_key -y <file_num> -j
+
+And to decrypt it back when required:
+
+    ./such -c decrypt_master_key -y <file_num> -j
+
+Always ensure to replace `<file_num>` with the actual number of the encrypted file.
+
+### Overwriting Encrypted Files
+
+If you want to overwrite an existing encrypted file, you can use the `-w` flag as shown:
+
+    ./such -c generate_mnemonic -y <file_num> -w
+
+This will overwrite the existing file with the same number. You can also use the `-w` flag with the `bip32_extended_master_key` command to overwrite an existing encrypted master key.
+
+### Best Practices
+
+- **Backup**: Always backup your encrypted files in multiple secure locations. Adhering to the "rule of three" is advised, meaning you should have three copies of your data: the original, a primary backup, and a secondary backup, ideally kept in different locations to mitigate the risk of data loss due to environmental factors.
+- **File Numbers**: Encrypting files with the same file number will overwrite the previous file with the same number of that type. This is useful for overwriting old backups with new ones, but can be dangerous if you accidentally overwrite a file you need. Always keep track of your file numbers and what they are used for.
+- **Security**: Use a TPM where available for added security during encryption and decryption processes.  Encryption keys are stored in the TPM and never leave the TPM.  The TPM is a hardware device that is designed to be tamper resistant.  If you do not have a TPM, you can use software encryption and decryption, but this is less secure than using a TPM.
+- **Overwrites**: Overwriting encrypted files is irreversible. Files and backups encrypted with TPM cannot be decrypted once overwritten.  Files and backups encrypted with software can be decrypted with software, but the original file will be lost.
+
+### Important Notes (General)
+
+ - **If you lose your encrypted files, you will not be able to decrypt your mnemonics or master keys.**
+
+ - **If you lose your mnemonic or master key, you will not be able to recover your coins.**
+
+ - **Overwriting encrypted files is irreversible.**
+
+### Important Notes (TPM-specific)
+
+ - **If you lose your TPM, you will not be able to decrypt your mnemonics or master keys.**
+
+ - **TPM encrypted files cannot be decrypted with software.**
+
+These commands and flags are part of the `such` CLI tool's functionality, enabling a robust management system for your encrypted data within the Libdogecoin ecosystem.
+
 ### Interactive Transaction Building with `such`
 
 When you start the interactive `such` transaction tool with `./such -c transaction`, you will be faced with a menu of options. To choose one of these options to execute, simply type the number of that command and hit enter.
