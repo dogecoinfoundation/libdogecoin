@@ -98,7 +98,7 @@ typedef struct _chash256 {
 
 static inline chash256* dogecoin_chash256_init() {
     chash256* chash = dogecoin_calloc(1, sizeof(*chash));
-    sha256_context* ctx = NULL;
+    sha256_context* ctx = dogecoin_calloc(1, sizeof(*ctx));
     sha256_init(ctx);
     chash->sha = ctx;
     chash->write = sha256_write;
@@ -107,18 +107,33 @@ static inline chash256* dogecoin_chash256_init() {
     return chash;
 }
 
-static inline uint256* Hash(const uint256 p1begin, const uint256 p1end,
-                    const uint256 p2begin, const uint256 p2end) {
-    static const unsigned char pblank[1];
+// Hashes the data from two uint256 values and returns the double SHA-256 hash.
+static inline uint256* Hash(const uint256* p1, const uint256* p2) {
     uint256* result = dogecoin_uint256_vla(1);
     chash256* chash = dogecoin_chash256_init();
-    chash->write(chash->sha, p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]));
-    chash->write(chash->sha, p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]));
+
+    // Write the first uint256 to the hash context
+    if (p1) {
+        chash->write(chash->sha, (const uint8_t*)p1, sizeof(uint256));
+    }
+
+    // Write the second uint256 to the hash context
+    if (p2) {
+        chash->write(chash->sha, (const uint8_t*)p2, sizeof(uint256));
+    }
+
+    // Finalize and reset for double hashing
     chash->finalize(chash->sha, (unsigned char*)result);
     chash->reset(chash->sha);
+    chash->write(chash->sha, (const uint8_t*)result, SHA256_DIGEST_LENGTH);
+    chash->finalize(chash->sha, (unsigned char*)result);
+
+    // Cleanup
+    free(chash->sha);
+    free(chash);
+
     return result;
 }
-
 
 /** Hashwriter Psuedoclass */
 static enum ser_type {
