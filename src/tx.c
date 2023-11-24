@@ -99,6 +99,7 @@ dogecoin_tx_in* dogecoin_tx_in_new()
     tx_in = dogecoin_calloc(1, sizeof(*tx_in));
     dogecoin_mem_zero(&tx_in->prevout, sizeof(tx_in->prevout));
     tx_in->sequence = UINT32_MAX;
+    tx_in->prevout.n = UINT32_MAX;
     return tx_in;
 }
 
@@ -227,6 +228,7 @@ int dogecoin_tx_out_pubkey_hash_to_p2pkh_address(dogecoin_tx_out* txout, char* p
         return false;
     }
     dogecoin_free(stripped_array);
+    dogecoin_tx_out_free(copy);
     return true;
 }
 

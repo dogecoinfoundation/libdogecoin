@@ -120,8 +120,6 @@ void test_hash()
     dogecoin_free(hasher);
     dogecoin_free(hasher2);
     dogecoin_free(hasher3);
-    dogecoin_free(hw->ctx);
-    dogecoin_free(hw->hash);
-    dogecoin_free(hw);
+    dogecoin_hashwriter_free(hw);
     dogecoin_tx_free(tx);
 }
