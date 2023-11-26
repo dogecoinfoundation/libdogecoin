@@ -77,6 +77,27 @@ dogecoin_bool check(void *ctx, uint256* hash, uint32_t chainid, dogecoin_chainpa
     memcpy(vch_roothash, hash_to_string((uint8_t*)chain_merkle_root), 64); // Copy the data
     dogecoin_free(chain_merkle_root); // Free the computed merkle root
 
+    // Compute the Merkle root for the parent block
+    vector* parent_merkle_branch = vector_new(block->parent_merkle_count, NULL);
+    for (size_t p = 0; p < block->parent_merkle_count; p++) {
+        vector_add(parent_merkle_branch, block->parent_coinbase_merkle[p]);
+    }
+
+    // Compute the hash of the parent block's coinbase transaction
+    uint256 parent_coinbase_hash;
+    dogecoin_tx_hash(block->parent_coinbase, parent_coinbase_hash);
+
+    uint256* parent_merkle_root = check_merkle_branch(&parent_coinbase_hash, parent_merkle_branch, block->parent_merkle_index);
+    vector_free(parent_merkle_branch, true);
+
+    // Check that the computed Merkle root matches the parent block's Merkle root
+    if (memcmp(parent_merkle_root, block->parent_header->merkle_root, sizeof(uint256)) != 0) {
+        printf("Aux POW merkle root incorrect\n");
+        dogecoin_free(parent_merkle_root);
+        return false;
+    }
+    dogecoin_free(parent_merkle_root);
+
     dogecoin_tx_in *tx_in = vector_idx(block->parent_coinbase->vin, 0);
     size_t idx = 0, count = 0;
     for (; idx < tx_in->script_sig->len; idx++) {
