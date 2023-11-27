@@ -406,13 +406,10 @@ void transaction_output_menu(int txindex, int is_testnet) {
                                         break;
                                     case 2:
                                         memcpy_safe(coin_amount, (char*)getl("new amount"), 21);
-                                        if (strspn((char*)coin_amount, "0123456789") == strlen((char*)coin_amount)) {
-                                            koinu_amount = coins_to_koinu_str((char*)coin_amount);
-                                            tx_out->value = koinu_amount;
-                                            }
-                                        else {
-                                            printf("\namount is not a number!\n");
-                                            }
+                                        koinu_amount = coins_to_koinu_str((char*)coin_amount);
+                                        if (!koinu_amount) {
+                                            printf("number is invalid or set to 0\n");
+                                        } else tx_out->value = koinu_amount;
                                         break;
                                 }
                             tx_out_total = 0;
