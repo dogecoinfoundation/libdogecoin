@@ -39,7 +39,7 @@ jobs:
             os: ubuntu-20.04
             packages: g++-arm-linux-gnueabihf qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-            config-opts: "--enable-static --disable-shared"
+            config-opts: "--enable-static --disable-shared --enable-test-passwd"
             run-tests: true
             goal: install
           - name: aarch64-linux
@@ -47,7 +47,7 @@ jobs:
             os: ubuntu-20.04
             packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-            config-opts: "LIBS='-levent_pthreads' --enable-static --disable-shared"
+            config-opts: "LIBS='-levent_pthreads' --enable-static --disable-shared --enable-test-passwd"
             run-tests: true
             goal: install
           - name: x86_64-linux-dbg
@@ -56,7 +56,7 @@ jobs:
             run-tests: true
             packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
-            config-opts: "--enable-debug"
+            config-opts: "--enable-debug --enable-test-passwd"
             goal: install
           - name: x86_64-linux-openenclave
             host: x86_64-pc-linux-gnu
@@ -64,14 +64,14 @@ jobs:
             run-tests: true
             packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
-            config-opts: "--enable-debug --enable-openenclave CFLAGS=-U_FORTIFY_SOURCE"
+            config-opts: "--enable-debug --enable-openenclave --enable-test-passwd CFLAGS=-U_FORTIFY_SOURCE"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin15
             os: macos-latest
             run-tests: true
             dep-opts: "SPEED=slow V=1"
-            config-opts: "--enable-static --disable-shared"
+            config-opts: "--enable-static --disable-shared --enable-test-passwd"
             packages: cmake zlib xorriso
             goal: install
             sdk: 12.2
@@ -99,7 +99,7 @@ jobs:
               sudo update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix
               sudo update-binfmts --import /usr/share/binfmts/wine
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-            config-opts: ""
+            config-opts: "--enable-test-passwd"
             run-tests: true
             goal: install
           - name: i686-win
@@ -121,7 +121,7 @@ jobs:
               sudo update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix
               sudo update-binfmts --import /usr/share/binfmts/wine
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-            config-opts: ""
+            config-opts: "--enable-test-passwd"
             run-tests: true
             goal: install
           - name: i686-linux
@@ -130,7 +130,7 @@ jobs:
             packages: g++-multilib bc
             run-tests: true
             dep-opts: "SPEED=slow V=1"
-            config-opts: "--enable-static --disable-shared"
+            config-opts: "--enable-static --disable-shared --enable-test-passwd"
             goal: install
 
     runs-on: ${{ matrix.os }}

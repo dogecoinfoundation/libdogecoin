@@ -660,10 +660,10 @@ const char* get_build() {
  * @param[in] prompt The prompt to display to the user
  * @return The password entered by the user
  */
-#ifndef USE_OPENENCLAVE
 char *getpass(const char *prompt) {
     char buffer[MAX_LEN] = {0};  // Initialize to zero
 
+#ifndef USE_OPENENCLAVE
 #ifdef _WIN32
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     DWORD mode, count;
@@ -716,9 +716,19 @@ char *getpass(const char *prompt) {
 
 #endif
 
+#else // USE_OPENENCLAVE
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!fgets(buffer, sizeof(buffer), stdin))
+        return NULL;
+
+    ssize_t nread = strlen(buffer);
+    if (nread > 0 && buffer[nread-1] == '\n')
+        buffer[nread-1] = '\0';  // Remove newline character
+#endif
     return strdup(buffer);
 }
-#endif
 
 /* reverse:  reverse string s in place */
 void dogecoin_str_reverse(char s[])

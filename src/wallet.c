@@ -382,7 +382,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             }
             // decrypt encrypted mnemonic with software
             if (!tpmSuccess) {
-                if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num)) {
+                if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num, NULL)) {
                     showError("Decrypting mnemonic from software failed\n");
                     return NULL;
                 }
@@ -407,7 +407,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             }
             // decrypt encrypted master key with software
             if (!tpmSuccess) {
-                if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num)) {
+                if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num, NULL)) {
                     showError("Decrypting master key from software failed\n");
                     return NULL;
                 }

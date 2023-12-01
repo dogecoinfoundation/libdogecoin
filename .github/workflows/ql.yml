@@ -62,7 +62,7 @@ jobs:
     - name: build libdogecoin
       run: |
        ./autogen.sh
-       ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+       ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --enable-test-passwd
        make check -j3 VERBOSE=1
 
     - name: perform codeql analysis

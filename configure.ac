@@ -141,9 +141,9 @@ AC_ARG_ENABLE(tests,
 
 AC_ARG_ENABLE([test-passwd],
   [AS_HELP_STRING([--enable-test-passwd],
-  [enable test password for encrypt/decrypt (default is yes)])],
+  [enable test password for encrypt/decrypt (default is no)])],
   [test_passwd=$enableval],
-  [test_passwd=yes])
+  [test_passwd=no])
 
 AC_MSG_CHECKING([for __builtin_expect])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
@@ -190,6 +190,8 @@ fi
 
 if test "x$test_passwd" = xyes; then
   AC_DEFINE_UNQUOTED([TEST_PASSWD],[1],[Define to 1 to enable test password])
+  PASSWD_STR=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 12`
+  AC_DEFINE_UNQUOTED([PASSWD_STR],["$PASSWD_STR"],[Define to set test password])
 fi
 
 if test "x$with_net" = xyes; then
@@ -249,6 +251,9 @@ echo "  with unistring  = $with_unistring"
 echo
 echo "  SSE2 Scrypt     = $use_scrypt_sse2"
 echo "  test password   = $test_passwd"
+if test "x$test_passwd" = xyes; then
+echo "                    $PASSWD_STR"
+fi
 echo
 echo "  openenclave     = $use_openenclave"
 echo
