@@ -167,6 +167,8 @@ dogecoin_block_header* dogecoin_block_header_new() {
     header->nonce = 0;
     header->auxpow->check = check;
     header->auxpow->ctx = header;
+    header->auxpow->is = false;
+    dogecoin_mem_zero(&header->chainwork, DOGECOIN_HASH_LENGTH);
     return header;
     }
 
@@ -187,7 +189,6 @@ dogecoin_auxpow_block* dogecoin_auxpow_block_new() {
     block->aux_merkle_branch = NULL;
     block->aux_merkle_index = 0;
     block->parent_header = dogecoin_block_header_new();
-    block->header->auxpow->check = check;
     block->header->auxpow->ctx = block;
     return block;
     }
@@ -332,6 +333,7 @@ int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct cons
             printf("%s:%d:%s:%s\n", __FILE__, __LINE__, __func__, strerror(errno));
             return false;
         }
+        dogecoin_block_header_copy(header, block->header);
     }
     dogecoin_auxpow_block_free(block);
     return true;
@@ -470,6 +472,8 @@ void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_bloc
     dest->nonce = src->nonce;
     dest->auxpow->check = src->auxpow->check;
     dest->auxpow->ctx = src->auxpow->ctx;
+    dest->auxpow->is = src->auxpow->is;
+    memcpy_safe(&dest->chainwork, &src->chainwork, sizeof(src->chainwork));
     }
 
 /**

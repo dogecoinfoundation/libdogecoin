@@ -29,6 +29,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <conio.h>
 #else
 #include <getopt.h>
 #include <arpa/inet.h>
@@ -38,6 +39,7 @@
 #endif
 
 #include <assert.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -194,6 +196,12 @@ dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *
 
     if (!client->headers_db)
         return false;
+
+#ifndef _WIN32
+    // set stdin to non-blocking for quit command
+    int stdin_flags = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, stdin_flags | O_NONBLOCK);
+#endif
 
     return client->headers_db->load(client->headers_db_ctx, file_path);
 
@@ -490,11 +498,6 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
             cstring *p2p_msg = dogecoin_p2p_message_new(node->nodegroup->chainparams->netmagic, DOGECOIN_MSG_GETDATA, original_inv.p, original_inv.len);
             dogecoin_node_send(node, p2p_msg);
             cstr_free(p2p_msg, true);
-            if (varlen >= 500) {
-                /* directly request more blocks */
-                /* not sure if this is clever if we want to download, as example, the complete chain */
-                dogecoin_net_spv_node_request_headers_or_blocks(node, true);
-            }
         }
     }
 
@@ -544,7 +547,9 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
         {
             client->nodegroup->log_write_cb("Got invalid block (not in sequence) from node %d\n", node->nodeid);
             node->state &= ~NODE_BLOCKSYNC;
-            dogecoin_node_send(node, dogecoin_p2p_message_new(node->nodegroup->chainparams->netmagic, DOGECOIN_MSG_REJECT, NULL, 0));
+            cstring *reject_msg = dogecoin_p2p_message_new(node->nodegroup->chainparams->netmagic, DOGECOIN_MSG_REJECT, NULL, 0);
+            dogecoin_node_send(node, reject_msg);
+            cstr_free(reject_msg, true);
             return;
         }
 
@@ -615,4 +620,25 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
             dogecoin_net_spv_node_request_headers_or_blocks(node, false);
         }
     }
+
+    // Check for a 'Q' or 'q' on stdin, to quit.
+#ifdef _WIN32
+    if (_kbhit()) {
+        char c = fgetc(stdin);
+        if (c == 'Q' || c == 'q') {
+            printf("Disconnecting...\n");
+            dogecoin_node_group_shutdown(client->nodegroup);
+        }
+    }
+#else
+    char c = fgetc(stdin);
+    if (c == 'Q' || c == 'q') {
+        // Reset standard input back to blocking mode
+        int stdin_flags = fcntl(STDIN_FILENO, F_GETFL);
+        fcntl(STDIN_FILENO, F_SETFL, stdin_flags & ~O_NONBLOCK);
+
+        printf("Disconnecting...\n");
+        dogecoin_node_group_shutdown(client->nodegroup);
+    }
+#endif
 }

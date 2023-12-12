@@ -11,12 +11,15 @@
 #include <string.h>
 #include <assert.h>
 
+#include <dogecoin/arith_uint256.h>
 #include <dogecoin/block.h>
 
 #include <dogecoin/cstr.h>
 #include <dogecoin/key.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/pow.h>
 #include <dogecoin/utils.h>
+#include <dogecoin/validation.h>
 
 #include <test/utest.h>
 
@@ -28,17 +31,18 @@ struct blockheadertest {
     uint32_t bits;
     uint32_t nonce;
     const dogecoin_chainparams* params;
+    char chainwork[64];
 };
 
 static const struct blockheadertest block_header_tests[] =
         {
-                {"010000000000000000000000000000000000000000000000000000000000000000000000696ad20e2dd4365c7459b4a4a5af743d5e92c6da3229e6532cd605f6533f2a5b24a6a152f0ff0f1e67860100", "1a91e3dace36e2be3bf030a65679fe821aa1d6ef92e7c9902eb318182c355691", 1, 1386325540, 504365040, 99943, &dogecoin_chainparams_main}, // genesis hash
-                {"020162000d6f03470d329026cd1fc720c0609cd378ca8691a117bd1aa46f01fb09b1a8468a15bf6f0b0e83f2e5036684169eafb9406468d4f075c999fb5b2a78fbb827ee41fb11548441361b00000000", "60323982f9c5ff1b5a954eac9dc1269352835f47c2c5222691d80f0d50dcf053", 6422786, 1410464577, 456540548, 0, &dogecoin_chainparams_main}, // 331337
-                {"020162002107cd08bec145c55ba8ffcbb4a9c0e836dfca383aa6ca1b380259a670aeb56fe5ea77d4f004afc5a0d31af1b89d5ebd9fd60cd7da7f4dcd96b0db1096a5bb1a7afb115488632e1b00000000","aff80f7b4dc8c667ebf4c76a6a62f9c4479844a37421ca2bf5abb485f4579fb6", 6422786, 1410464634, 456024968, 0, &dogecoin_chainparams_main}, // 331339
-                {"03016200c96fd9d1b98330440082bcc1e58a39fe5a522f42defc501bff9b68f7b67ed99e1144e430166c54e9b911d8e059c03d0f972e7ab971c51f5505ff0bb21fee6fb1d88a9d5be132051a00000000", "c91f5a44a752c7549c1c689af5aeb42639582011d887282f976d550477abe25a", 6422787, 1537051352, 436548321, 0, &dogecoin_chainparams_main}, // 2391337
-                {"0401620057bd4aa5170622b624bff774a087ea879a288226925c7cd5f3ead6ca4b6146e227b0e3699361bf58440971cfb28e16d9bab909769668ef3aac26220c6c0dc5fbda52595f9a97031a00000000", "8d7e4e91b571025ca109f2a0aeaf114ecc6aa2feec7f8bf23d405ac026c65d5e", 6422788, 1599689434, 436443034, 0, &dogecoin_chainparams_main}, // 3391337
+                {"010000000000000000000000000000000000000000000000000000000000000000000000696ad20e2dd4365c7459b4a4a5af743d5e92c6da3229e6532cd605f6533f2a5b24a6a152f0ff0f1e67860100", "1a91e3dace36e2be3bf030a65679fe821aa1d6ef92e7c9902eb318182c355691", 1, 1386325540, 504365040, 99943, &dogecoin_chainparams_main, "1000100000000000000000000000000000000000000000000000000000000000"}, // genesis hash
+                {"020162000d6f03470d329026cd1fc720c0609cd378ca8691a117bd1aa46f01fb09b1a8468a15bf6f0b0e83f2e5036684169eafb9406468d4f075c999fb5b2a78fbb827ee41fb11548441361b00000000", "60323982f9c5ff1b5a954eac9dc1269352835f47c2c5222691d80f0d50dcf053", 6422786, 1410464577, 456540548, 0, &dogecoin_chainparams_main, ""}, // 331337
+                {"020162002107cd08bec145c55ba8ffcbb4a9c0e836dfca383aa6ca1b380259a670aeb56fe5ea77d4f004afc5a0d31af1b89d5ebd9fd60cd7da7f4dcd96b0db1096a5bb1a7afb115488632e1b00000000","aff80f7b4dc8c667ebf4c76a6a62f9c4479844a37421ca2bf5abb485f4579fb6", 6422786, 1410464634, 456024968, 0, &dogecoin_chainparams_main, ""}, // 331339
+                {"03016200c96fd9d1b98330440082bcc1e58a39fe5a522f42defc501bff9b68f7b67ed99e1144e430166c54e9b911d8e059c03d0f972e7ab971c51f5505ff0bb21fee6fb1d88a9d5be132051a00000000", "c91f5a44a752c7549c1c689af5aeb42639582011d887282f976d550477abe25a", 6422787, 1537051352, 436548321, 0, &dogecoin_chainparams_main, ""}, // 2391337
+                {"0401620057bd4aa5170622b624bff774a087ea879a288226925c7cd5f3ead6ca4b6146e227b0e3699361bf58440971cfb28e16d9bab909769668ef3aac26220c6c0dc5fbda52595f9a97031a00000000", "8d7e4e91b571025ca109f2a0aeaf114ecc6aa2feec7f8bf23d405ac026c65d5e", 6422788, 1599689434, 436443034, 0, &dogecoin_chainparams_main, ""}, // 3391337
                 // end mainnet blocks
-                {"020162002770a8b89647bbb542f044754a07dc6e56545793f5dcecdf43826ae0cb7192a12466d048e51b0f8a3cbaaf8a624b9aa1212ce4c2a4feba0750f7ad14feb75f54c69de053837b091e00000000", "8afc65a42c47b5ed5862194fb846171ba4afb999a1b4cce149f56c328d8a90e4", 6422786, 1407229382, 503937923, 0, &dogecoin_chainparams_test} // 158391
+                {"020162002770a8b89647bbb542f044754a07dc6e56545793f5dcecdf43826ae0cb7192a12466d048e51b0f8a3cbaaf8a624b9aa1212ce4c2a4feba0750f7ad14feb75f54c69de053837b091e00000000", "8afc65a42c47b5ed5862194fb846171ba4afb999a1b4cce149f56c328d8a90e4", 6422786, 1407229382, 503937923, 0, &dogecoin_chainparams_test, ""} // 158391
         };
 
 void test_block_header()
@@ -82,6 +86,29 @@ void test_block_header()
         assert(header->timestamp == test->timestamp);
         assert(header->bits == test->bits);
         assert(header->nonce == test->nonce);
+
+        // Check chainwork (genesis block only)
+        if (i == 0) {
+            arith_uint256* target = init_arith_uint256();
+            uint256 chainwork = {0};
+            cstring* s = cstr_new_sz(64);
+            dogecoin_bool f_negative, f_overflow;
+            uint256* hash = dogecoin_uint256_vla(1);
+
+            // Compute the hash of the block header
+            dogecoin_block_header_serialize(s, header);
+            dogecoin_block_header_scrypt_hash(s, hash);
+
+            // Compute the chainwork
+            target = set_compact(target, block_header_tests[i].bits, &f_negative, &f_overflow);
+            check_pow(hash, block_header_tests[i].bits, block_header_tests[i].params, &chainwork);
+
+            // Check the chainwork matches
+            u_assert_mem_eq(utils_uint8_to_hex(chainwork, DOGECOIN_HASH_LENGTH), test->chainwork, 64);
+            cstr_free(s, true);
+            dogecoin_free(hash);
+            dogecoin_free(target);
+        }
 
         dogecoin_block_header_free(header);
         dogecoin_block_header_free(header_copy);
