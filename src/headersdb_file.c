@@ -117,9 +117,29 @@ void dogecoin_headers_db_free(dogecoin_headers_db* db) {
     }
 
     if (db->tree_root) {
-        dogecoin_btree_tdestroy(db->tree_root, dogecoin_free);
+        dogecoin_btree_tdestroy(db->tree_root, NULL);
         db->tree_root = NULL;
     }
+
+    // Free all blockindex structures starting from chaintip to chainbottom
+    if (db->chaintip) {
+        dogecoin_blockindex *scan_tip = db->chaintip;
+        while (scan_tip && scan_tip != db->chainbottom) {
+            dogecoin_blockindex *prev = scan_tip->prev;
+            dogecoin_free(scan_tip);
+            scan_tip = prev;
+        }
+#ifndef __APPLE__
+        // If scan_tip is chainbottom, free it
+        if (scan_tip == db->chainbottom) {
+            dogecoin_free(scan_tip);
+            db->chainbottom = NULL;
+        }
+#endif
+    }
+
+    db->chaintip = NULL;
+    db->chainbottom = NULL;
 
     dogecoin_free(db);
 }
@@ -181,8 +201,17 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
     size_t connected_headers_count = 0;
     if (db->headers_tree_file && !create)
     {
+        printf("Loading headers from disk, this may take several minutes...\n");
+
         while (!feof(db->headers_tree_file))
         {
+            // print progress
+            if (connected_headers_count % 1000 == 0)
+            {
+                printf("\r%ld headers loaded", connected_headers_count);
+                fflush(stdout);
+            }
+
             uint8_t buf_all[32+4+80];
             if (fread(buf_all, sizeof(buf_all), 1, db->headers_tree_file) == 1) {
                 struct const_buffer cbuf_all = {buf_all, sizeof(buf_all)};
@@ -201,7 +230,7 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
                     if (!dogecoin_block_header_deserialize(&chainheader->header, &cbuf_all, db->params)) {
                         dogecoin_block_header_free(&chainheader->header);
                         dogecoin_free(chainheader);
-                        fprintf(stderr, "Error: Invalid data found.\n");
+                        fprintf(stderr, "\nError: Invalid data found.\n");
                         return -1;
                     }
                     dogecoin_block_header_hash(&chainheader->header, (uint8_t *)&chainheader->hash);
@@ -212,7 +241,7 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
                     dogecoin_headers_db_connect_hdr(db, &cbuf_all, true, &connected);
                     if (!connected)
                     {
-                        printf("Connecting header failed (at height: %d)\n", db->chaintip->height);
+                        printf("\nConnecting header failed (at height: %d)\n", db->chaintip->height);
                     }
                     else {
                         connected_headers_count++;
@@ -221,7 +250,7 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
             }
         }
     }
-    printf("Connected %ld headers, now at height: %d\n",  connected_headers_count, db->chaintip->height);
+    printf("\nConnected %ld headers, now at height: %d\n",  connected_headers_count, db->chaintip->height);
     return (db->headers_tree_file != NULL);
 }
 
@@ -261,7 +290,12 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
     *connected = false;
 
     dogecoin_blockindex *blockindex = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
-    if (!dogecoin_block_header_deserialize(&blockindex->header, buf, db->params)) return NULL;
+    if (!dogecoin_block_header_deserialize(&blockindex->header, buf, db->params))
+    {
+        dogecoin_free(blockindex);
+        fprintf(stderr, "Error deserializing block header\n");
+        return NULL;
+    }
 
     dogecoin_block_header_hash(&blockindex->header, (uint8_t *)&blockindex->hash);
 
@@ -313,6 +347,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
             }
         }
         if (db->use_binary_tree) {
+            /* TODO: update when fork handling is implemented */
             dogecoin_btree_tfind(blockindex, &db->tree_root, dogecoin_header_compare);
         }
 
@@ -340,14 +375,12 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
             }
         }
         *connected = true;
+        return blockindex;
+    } else {
+        // Connection not established, free allocated memory
+        dogecoin_free(blockindex);
+        return NULL;
     }
-    else {
-        //TODO, add to orphans
-        char hex[65] = {0};
-        utils_bin_to_hex(blockindex->hash, DOGECOIN_HASH_LENGTH, hex);
-    }
-
-    return blockindex;
 }
 
 /**

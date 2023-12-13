@@ -36,8 +36,8 @@
 /**
  * @brief This function instantiates a new working transaction,
  * but does not add it to the hash table.
- * 
- * @return A pointer to the new working transaction. 
+ *
+ * @return A pointer to the new working transaction.
  */
 working_transaction* new_transaction() {
     working_transaction* working_tx = (struct working_transaction*)dogecoin_calloc(1, sizeof *working_tx);
@@ -49,9 +49,9 @@ working_transaction* new_transaction() {
 /**
  * @brief This function takes a pointer to an existing working
  * transaction object and adds it to the hash table.
- * 
+ *
  * @param working_tx The pointer to the working transaction.
- * 
+ *
  * @return Nothing.
  */
 void add_transaction(working_transaction *working_tx) {
@@ -68,9 +68,9 @@ void add_transaction(working_transaction *working_tx) {
 /**
  * @brief This function takes an index and returns the working
  * transaction associated with that index in the hash table.
- * 
+ *
  * @param idx The index of the target working transaction.
- * 
+ *
  * @return The pointer to the working transaction associated with
  * the provided index.
  */
@@ -83,9 +83,9 @@ working_transaction* find_transaction(int idx) {
 /**
  * @brief This function removes the specified working transaction
  * from the hash table and frees the transactions in memory.
- * 
+ *
  * @param working_tx The pointer to the transaction to remove.
- * 
+ *
  * @return Nothing.
  */
 void remove_transaction(working_transaction *working_tx) {
@@ -97,8 +97,8 @@ void remove_transaction(working_transaction *working_tx) {
 /**
  * @brief This function removes all working transactions from
  * the hash table.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 void remove_all() {
     struct working_transaction *current_tx;
@@ -112,8 +112,8 @@ void remove_all() {
 /**
  * @brief This function prints the raw hex representation of
  * each working transaction in the hash table.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 void print_transactions()
 {
@@ -127,8 +127,8 @@ void print_transactions()
 /**
  * @brief This function counts the number of working
  * transactions currently in the hash table.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 void count_transactions() {
     int temp = HASH_COUNT(transactions);
@@ -139,12 +139,12 @@ void count_transactions() {
  * @brief This function takes two working transactions
  * and returns the difference of their indices to aid
  * in sorting transactions.
- * 
+ *
  * @param a The pointer to the first working transaction.
  * @param b The pointer to the second working transaction.
- * 
+ *
  * @return The integer difference between the indices of
- * the two provided transactions. 
+ * the two provided transactions.
  */
 int by_id(const struct working_transaction *a, const struct working_transaction *b)
 {
@@ -154,10 +154,10 @@ int by_id(const struct working_transaction *a, const struct working_transaction 
 /**
  * @brief This function prints a prompt and parses the user's
  * response for a CLI tool.
- * 
+ *
  * @param prompt The prompt to display to the user.
- * 
- * @return The string containing user input. 
+ *
+ * @return The string containing user input.
  */
 const char *getl(const char *prompt)
 {
@@ -176,9 +176,9 @@ const char *getl(const char *prompt)
 /**
  * @brief This function prompts the user to enter a raw
  * transaction and parses it.
- * 
+ *
  * @param prompt_tx The prompt to display to the user.
- * 
+ *
  * @return The string containing user input.
  */
 const char *get_raw_tx(const char *prompt_tx)
@@ -198,9 +198,9 @@ const char *get_raw_tx(const char *prompt_tx)
 /**
  * @brief This function prompts the user to enter a private key
  * and parses it.
- * 
+ *
  * @param prompt_tx The prompt to display to the user.
- * 
+ *
  * @return The string containing user input.
  */
 const char *get_private_key(const char *prompt_key)
@@ -221,7 +221,7 @@ const char *get_private_key(const char *prompt_key)
  * @brief This function creates a new transaction, places it in
  * the hash table, and returns the index of the new transaction,
  * starting from 1 and incrementing each subsequent call.
- * 
+ *
  * @return The index of the new transaction.
  */
 int start_transaction() {
@@ -235,11 +235,11 @@ int start_transaction() {
  * @brief This function takes a transaction represented in raw
  * hex and serializes it into a transaction which is then saved
  * in the hashtable at the specified index.
- * 
+ *
  * @param txindex The index to save the transaction to.
  * @param hexadecimal_transaction The raw hex of the transaction to serialize and save.
- * 
- * @return 1 if the transaction was saved successfully, 0 otherwise. 
+ *
+ * @return 1 if the transaction was saved successfully, 0 otherwise.
  */
 int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
     debug_print("raw_hexadecimal_transaction: %s\n", hexadecimal_transaction);
@@ -273,12 +273,12 @@ int save_raw_transaction(int txindex, const char* hexadecimal_transaction) {
 /**
  * @brief This function takes a transaction represented in raw
  * hex and adds it as an input to the specified working transaction.
- * 
+ *
  * @param txindex The index of the transaction to add the input to.
  * @param hex_utxo_txid The raw transaction hex of the input transaction.
  * @param vout The output index of the input transaction containing spendable funds.
- * 
- * @return 1 if the transaction input was added successfully, 0 otherwise. 
+ *
+ * @return 1 if the transaction input was added successfully, 0 otherwise.
  */
 int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     // find working transaction by index and pass to funciton local variable to manipulate:
@@ -311,11 +311,11 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
  * @brief This function constructs an output sending the specified
  * amount to the specified address and adds it to the transaction
  * with the specified index.
- * 
+ *
  * @param txindex The index of the transaction where the output will be added.
  * @param destinationaddress The address to send the funds to.
  * @param amount The amount of dogecoin to send.
- * 
+ *
  * @return 1 if the transaction input was added successfully, 0 otherwise.
  */
 int add_output(int txindex, char* destinationaddress, char* amount) {
@@ -337,13 +337,13 @@ int add_output(int txindex, char* destinationaddress, char* amount) {
 /**
  * @brief This function is for internal use and constructs an extra
  * output which returns the change back to the sender so that all of
- * the funds from inputs are spent in the current transaction.  
- * 
+ * the funds from inputs are spent in the current transaction.
+ *
  * @param txindex The transaction which needs the output for returning change.
  * @param public_key The address of the sender for returning the change.
  * @param subtractedfee The amount to set aside for the mining fee.
  * @param amount The remaining funds after outputs have been subtracted from the inputs.
- * 
+ *
  * @return 1 if the additional output was created successfully, 0 otherwise.
  */
 static int make_change(int txindex, char* public_key, uint64_t subtractedfee, uint64_t amount) {
@@ -366,13 +366,13 @@ static int make_change(int txindex, char* public_key, uint64_t subtractedfee, ui
 /**
  * @brief This function 'closes the inputs' by returning change to the recipient
  * after the total amount and desired fee is confirmed.
- * 
+ *
  * @param txindex The index of the working transaction to finalize.
  * @param destinationaddress The address where the funds are being sent.
  * @param subtractedfee The amount to set aside as a fee to the miner.
  * @param out_dogeamount_for_verification An echo of the total amount to send.
  * @param changeaddress The address of the sender to receive the change.
- * 
+ *
  * @return The hex of the finalized transaction.
  */
 char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress) {
@@ -424,9 +424,9 @@ char* finalize_transaction(int txindex, char* destinationaddress, char* subtract
 /**
  * @brief This function takes an index of a working transaction and returns
  * the hex representation of it.
- * 
+ *
  * @param txindex The index of the working transaction.
- * 
+ *
  * @return The hex representation of the transaction.
  */
 char* get_raw_transaction(int txindex) {
@@ -452,9 +452,9 @@ char* get_raw_transaction(int txindex) {
 /**
  * @brief This function removes the specified working transaction
  * from the hash table.
- * 
+ *
  * @param txindex The index of the working transaction to remove.
- * 
+ *
  * @return Nothing.
  */
 void clear_transaction(int txindex) {
@@ -467,13 +467,13 @@ void clear_transaction(int txindex) {
 /**
  * @brief This function signs the specified input of a working transaction,
  * according to the signing parameters specified.
- * 
+ *
  * @param inputindex The index of the current transaction input to sign.
  * @param incomingrawtx The hex representation of the transaction to sign.
  * @param scripthex The hex representation of the public key script.
  * @param sighashtype The type of signature hash to perform.
  * @param privkey The private key used to sign the transaction input.
- * 
+ *
  * @return 1 if the raw transaction was signed successfully, 0 otherwise.
  */
 int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey) {
@@ -512,7 +512,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
         return false;
     }
 
-    // initialize byte array with length equal to account for byte size 
+    // initialize byte array with length equal to account for byte size
     uint8_t* script_data = dogecoin_uint8_vla(strlen(scripthex));
     // convert hex string to byte array
     utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlength);
@@ -585,14 +585,14 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
 /**
  * @brief This function is for internal use and saves the result of
  * sign_raw_transaction to a working transaction in the hash table.
- * 
+ *
  * @param txindex The index where the signed transaction will be saved.
  * @param inputindex The index of the current transaction input to sign.
  * @param incomingrawtx The hex representation of the transaction to sign.
  * @param scripthex The hex representation of the public key script.
  * @param sighashtype The type of signature hash to perform.
  * @param privkey The private key used to sign the transaction input.
- * 
+ *
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
 int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey) {
@@ -611,11 +611,11 @@ int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawt
 /**
  * @brief This function signs all of the inputs in the specified working
  * transaction using the provided script pubkey and private key.
- * 
+ *
  * @param txindex The index of the working transaction to sign.
  * @param script_pubkey The hex representation of the public key script.
  * @param privkey The private key used to sign the transaction input.
- * 
+ *
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
 int sign_transaction(int txindex, char* script_pubkey, char* privkey) {
@@ -651,11 +651,11 @@ int sign_transaction(int txindex, char* script_pubkey, char* privkey) {
 /**
  * @brief This function signs a specific vin index in the specified working
  * transaction using the provided private key and vin index.
- * 
+ *
  * @param txindex The index of the working transaction to sign.
  * @param vout_index The index of the unspent tx output we are spending.
  * @param privkey The private key used to sign the transaction input.
- * 
+ *
  * @return 1 if the transaction was signed successfully, 0 otherwise.
  */
 int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey) {
@@ -679,10 +679,13 @@ int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey) {
     // free byte array
     dogecoin_free(data_bin);
     if (!sign_indexed_raw_transaction(txindex, vout_index, raw_hexadecimal_transaction, script_pubkey, 1, privkey)) {
+        dogecoin_free(script_pubkey);
+        dogecoin_tx_free(txtmp);
         printf("error signing raw transaction: %s\n", __func__);
         return false;
     }
     save_raw_transaction(txindex, raw_hexadecimal_transaction);
+    dogecoin_free(script_pubkey);
     dogecoin_tx_free(txtmp);
     return true;
 }
@@ -690,9 +693,9 @@ int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey) {
 /**
  * @brief This function stores a raw transaction to the next available
  * working transaction in the hash table.
- * 
+ *
  * @param incomingrawtx The hex of the raw transaction
- * 
+ *
  * @return The index of the new working transaction if stored successfully, 0 otherwise.
  */
 int store_raw_transaction(char* incomingrawtx) {

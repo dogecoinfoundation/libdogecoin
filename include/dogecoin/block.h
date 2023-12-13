@@ -48,7 +48,7 @@ typedef struct _auxpow {
 } auxpow;
 
 typedef struct dogecoin_block_header_ {
-    uint32_t version;
+    int32_t version;
     uint256 prev_block;
     uint256 merkle_root;
     uint32_t timestamp;

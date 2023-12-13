@@ -165,6 +165,7 @@ void test_wallet()
     utils_hex_to_bin("e195b669de8e49f955749033fa2d79390732c435", waddr->pubkeyhash, 40, &outlen);
 
     dogecoin_btree_tsearch(waddr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+    vector_add(wallet->waddr_vector, waddr);
 
     int64_t totalin = 0;
     unsigned int i;
@@ -175,6 +176,7 @@ void test_wallet()
 
         dogecoin_wtx* wtx = dogecoin_wallet_wtx_new();
         dogecoin_tx_deserialize(tx_data, outlen, wtx->tx, NULL);
+        dogecoin_free(tx_data);
 
         dogecoin_wallet_add_wtx_move(wallet, wtx);
         totalin += dogecoin_wallet_wtx_get_credit(wallet, wtx);
@@ -183,6 +185,9 @@ void test_wallet()
     int64_t amount = dogecoin_wallet_get_balance(wallet);
     u_assert_uint32_eq(amount,  669388541);
     u_assert_uint32_eq(totalin, 669388541);
+
+    dogecoin_wallet_flush(wallet);
+    dogecoin_wallet_free(wallet);
 }
 
 void test_wallet_basics()
@@ -242,6 +247,7 @@ void test_wallet_basics()
     u_assert_str_eq(addrs->data[0],"DHprgyNMcy3Ct9zVbJCrezYywxTBDWPL3v");
     u_assert_str_eq(addrs->data[1],"DMTbb3NbwAdimWDMVabwip7FjPAVx6Qeq4");
     u_assert_str_eq(addrs->data[2],"DMTbb3NbwAdimWDMVabwip7FjPAVx6Qeq4"); // we have forced to regenerate this key
+    vector_free(addrs, true);
 
     dogecoin_wallet_flush(wallet);
     dogecoin_wallet_free(wallet);

@@ -65,14 +65,14 @@ uint256* check_merkle_branch(uint256* hash, const vector* merkle_branch, int ind
     uint256* current_hash = dogecoin_uint256_vla(1);
     memcpy(current_hash, hash, sizeof(uint256)); // Copy the initial hash
 
-    for (int i = 0; i < merkle_branch->len; ++i) {
+    for (size_t i = 0; i < merkle_branch->len; ++i) {
         uint256* next_branch_hash = (uint256*)vector_idx(merkle_branch, i);
         uint256* new_hash;
 
         if (index & 1) {
-            new_hash = Hash(next_branch_hash, current_hash);
+            new_hash = Hash((const uint256*) next_branch_hash, (const uint256*) current_hash);
         } else {
-            new_hash = Hash(current_hash, next_branch_hash);
+            new_hash = Hash((const uint256*) current_hash, (const uint256*) next_branch_hash);
         }
 
         memcpy(current_hash, new_hash, sizeof(uint256)); // Update the current hash

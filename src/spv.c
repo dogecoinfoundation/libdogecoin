@@ -68,7 +68,7 @@ void dogecoin_net_spv_node_handshake_done(dogecoin_node *node);
  * the nodegroup's handshake_done_cb to dogecoin_net_spv_node_handshake_done,
  * the nodegroup's node_connection_state_changed_cb to NULL, and the
  * nodegroup's periodic_timer_cb to dogecoin_net_spv_node_timer_callback
- * 
+ *
  * @param nodegroup The nodegroup to set the callbacks for.
  */
 void dogecoin_net_set_spv(dogecoin_node_group *nodegroup)
@@ -81,11 +81,11 @@ void dogecoin_net_set_spv(dogecoin_node_group *nodegroup)
 
 /**
  * The function creates a new dogecoin_spv_client object and initializes it
- * 
+ *
  * @param params The chainparams struct that we created earlier.
  * @param debug If true, the node will print out debug messages to stdout.
  * @param headers_memonly If true, the headers database will not be loaded from disk.
- * 
+ *
  * @return A pointer to a dogecoin_spv_client object.
  */
 dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync)
@@ -128,7 +128,7 @@ dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params,
 
 /**
  * It adds peers to the nodegroup.
- * 
+ *
  * @param client the dogecoin_spv_client object
  * @param ips A comma-separated list of IPs or seeds to connect to.
  */
@@ -140,7 +140,7 @@ void dogecoin_spv_client_discover_peers(dogecoin_spv_client* client, const char 
 /**
  * The function loops through all the nodes in the node group and connects to the next nodes in the
  * node group
- * 
+ *
  * @param client The dogecoin_spv_client object.
  */
 void dogecoin_spv_client_runloop(dogecoin_spv_client* client)
@@ -151,9 +151,9 @@ void dogecoin_spv_client_runloop(dogecoin_spv_client* client)
 
 /**
  * It frees the memory allocated for the client
- * 
+ *
  * @param client The client object to be freed.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_spv_client_free(dogecoin_spv_client *client)
@@ -163,7 +163,10 @@ void dogecoin_spv_client_free(dogecoin_spv_client *client)
 
     if (client->headers_db)
     {
-        client->headers_db->free(client->headers_db_ctx);
+        if (client->headers_db_ctx)
+        {
+            client->headers_db->free(client->headers_db_ctx);
+        }
         client->headers_db_ctx = NULL;
         client->headers_db = NULL;
     }
@@ -178,10 +181,10 @@ void dogecoin_spv_client_free(dogecoin_spv_client *client)
 
 /**
  * Loads the headers database from a file
- * 
+ *
  * @param client the client object
  * @param file_path The path to the headers database file.
- * 
+ *
  * @return A boolean value.
  */
 dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *file_path)
@@ -198,7 +201,7 @@ dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *
 
 /**
  * If we are in the header sync state, we request headers from a random node
- * 
+ *
  * @param node the node that we are checking
  * @param now The current time in seconds.
  */
@@ -228,9 +231,9 @@ void dogecoin_net_spv_periodic_statecheck(dogecoin_node *node, uint64_t *now)
         // we are downloading blocks from this peer
         int64_t timedetla = *now - node->time_last_request;
 
-        client->nodegroup->log_write_cb("No block response in time (used %d) for node %d\n", timedetla, node->nodeid);
         if (timedetla > HEADERS_MAX_RESPONSE_TIME)
         {
+            client->nodegroup->log_write_cb("No block response in time (used %d) for node %d\n", timedetla, node->nodeid);
             dogecoin_node_disconnect(node);
             node->time_last_request = 0;
             dogecoin_net_spv_request_headers(client);
@@ -242,21 +245,26 @@ void dogecoin_net_spv_periodic_statecheck(dogecoin_node *node, uint64_t *now)
         dogecoin_net_spv_request_headers(client);
     }
 
+    if ((client->stateflags & SPV_FULLBLOCK_SYNC_FLAG) == SPV_FULLBLOCK_SYNC_FLAG)
+    {
+        dogecoin_net_spv_request_headers(client);
+    }
+
     client->last_statecheck_time = *now;
 }
 
 /**
- * This function is called by the dogecoin_node_timer_callback function. 
- * 
- * It checks if the last_statecheck_time is greater than the minimum time delta for state checks. 
- * 
- * If it is, it calls the dogecoin_net_spv_periodic_statecheck function. 
- * 
- * The dogecoin_net_spv_periodic_statecheck function checks if the node is connected to the network. 
- * 
+ * This function is called by the dogecoin_node_timer_callback function.
+ *
+ * It checks if the last_statecheck_time is greater than the minimum time delta for state checks.
+ *
+ * If it is, it calls the dogecoin_net_spv_periodic_statecheck function.
+ *
+ * The dogecoin_net_spv_periodic_statecheck function checks if the node is connected to the network.
+ *
  * @param node The node that the timer is being called on.
  * @param now the current time in seconds since the epoch
- * 
+ *
  * @return A boolean value.
  */
 static dogecoin_bool dogecoin_net_spv_node_timer_callback(dogecoin_node *node, uint64_t *now)
@@ -273,10 +281,10 @@ static dogecoin_bool dogecoin_net_spv_node_timer_callback(dogecoin_node *node, u
 
 /**
  * Fill up the blocklocators vector with the blocklocators from the headers database
- * 
+ *
  * @param client the spv client
  * @param blocklocators a vector of block hashes that we want to scan from
- * 
+ *
  * @return The blocklocators are being returned.
  */
 void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *blocklocators) {
@@ -298,7 +306,7 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
                     }
                 }
             }
-            if (blocklocators->len > 0) return; // return if we could fill up the blocklocator with checkpoints 
+            if (blocklocators->len > 0) return; // return if we could fill up the blocklocator with checkpoints
         }
         uint256 *hash = dogecoin_calloc(1, sizeof(uint256));
         memcpy_safe(hash, &client->chainparams->genesisblockhash, sizeof(uint256));
@@ -312,7 +320,7 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
 /**
  * This function is called when a node is in headers sync state. It will request the next block headers
  * from the node
- * 
+ *
  * @param node The node that is requesting headers or blocks.
  * @param blocks boolean, true if we want to request blocks, false if we want to request headers
  */
@@ -345,23 +353,49 @@ void dogecoin_net_spv_node_request_headers_or_blocks(dogecoin_node *node, dogeco
 /**
  * If we have not yet reached the height of the blockchain tip, we request headers from a peer. If we
  * have reached the height of the blockchain tip, we request blocks from a peer
- * 
+ *
  * @param client the spv client
- * 
+ *
  * @return dogecoin_bool
  */
 dogecoin_bool dogecoin_net_spv_request_headers(dogecoin_spv_client *client)
 {
     size_t i;
+    dogecoin_bool new_headers_available = false;
     for(i = 0; i < client->nodegroup->nodes->len; ++i)
     {
         dogecoin_node *check_node = vector_idx(client->nodegroup->nodes, i);
         if (((check_node->state & NODE_HEADERSYNC) == NODE_HEADERSYNC || (check_node->state & NODE_BLOCKSYNC) == NODE_BLOCKSYNC) && (check_node->state & NODE_CONNECTED) == NODE_CONNECTED) { return true; }
     }
 
-    dogecoin_bool new_headers_available = false;
+    // If in header or block sync state, request headers or blocks from the node with the longest chain
+    if ((client->stateflags & SPV_HEADER_SYNC_FLAG) == SPV_HEADER_SYNC_FLAG || (client->stateflags & SPV_FULLBLOCK_SYNC_FLAG) == SPV_FULLBLOCK_SYNC_FLAG)
+    {
+        dogecoin_node *node_with_longest_chain = NULL;
+        unsigned int longest_chain_height = 0;
+        for(i = 0; i < client->nodegroup->nodes->len; ++i)
+        {
+            dogecoin_node *check_node = vector_idx(client->nodegroup->nodes, i);
+            if (((check_node->state & NODE_CONNECTED) == NODE_CONNECTED) && check_node->version_handshake)
+            {
+                if (check_node->bestknownheight > longest_chain_height)
+                {
+                    longest_chain_height = check_node->bestknownheight;
+                    node_with_longest_chain = check_node;
+                }
+            }
+        }
+
+        // Request headers or blocks from the node with the longest chain
+        if (node_with_longest_chain != NULL) {
+            dogecoin_net_spv_node_request_headers_or_blocks(node_with_longest_chain, (client->stateflags & SPV_FULLBLOCK_SYNC_FLAG) == SPV_FULLBLOCK_SYNC_FLAG);
+            new_headers_available = true;
+        }
+    }
+
+    // Fallback: original logic for handling cases where no suitable node was found
     unsigned int nodes_at_same_height = 0;
-    if (client->headers_db->getchaintip(client->headers_db_ctx)->header.timestamp < client->oldest_item_of_interest - (BLOCK_GAP_TO_DEDUCT_TO_START_SCAN_FROM * BLOCKS_DELTA_IN_S) && client->stateflags == SPV_HEADER_SYNC_FLAG)
+    if (!new_headers_available && client->headers_db->getchaintip(client->headers_db_ctx)->header.timestamp < client->oldest_item_of_interest - (BLOCK_GAP_TO_DEDUCT_TO_START_SCAN_FROM * BLOCKS_DELTA_IN_S) && client->stateflags == SPV_HEADER_SYNC_FLAG)
     {
         for(i = 0; i < client->nodegroup->nodes->len; i++)
         {
@@ -371,26 +405,25 @@ dogecoin_bool dogecoin_net_spv_request_headers(dogecoin_spv_client *client)
                 if (check_node->bestknownheight > client->headers_db->getchaintip(client->headers_db_ctx)->height) {
                     dogecoin_net_spv_node_request_headers_or_blocks(check_node, false);
                     new_headers_available = true;
-                    return new_headers_available;
+                    break;
                 } else if (check_node->bestknownheight == client->headers_db->getchaintip(client->headers_db_ctx)->height) {
                     nodes_at_same_height++;
                 }
             }
         }
     }
-    if (!new_headers_available && dogecoin_node_group_amount_of_connected_nodes(client->nodegroup, NODE_CONNECTED) > 0) {
+    if (!new_headers_available && (dogecoin_node_group_amount_of_connected_nodes(client->nodegroup, NODE_CONNECTED) > 0) && client->stateflags == SPV_FULLBLOCK_SYNC_FLAG) {
         // try to fetch blocks if no new headers are available but connected nodes are reachable
         for(i = 0; i< client->nodegroup->nodes->len; i++)
         {
             dogecoin_node *check_node = vector_idx(client->nodegroup->nodes, i);
             if (((check_node->state & NODE_CONNECTED) == NODE_CONNECTED) && check_node->version_handshake)
             {
-                if (check_node->bestknownheight > client->headers_db->getchaintip(client->headers_db_ctx)->height) {
-                    dogecoin_net_spv_node_request_headers_or_blocks(check_node, true);
-                    return true;
-                } else if (check_node->bestknownheight == client->headers_db->getchaintip(client->headers_db_ctx)->height) {
+                if (check_node->bestknownheight == client->headers_db->getchaintip(client->headers_db_ctx)->height) {
                     nodes_at_same_height++;
                 }
+                dogecoin_net_spv_node_request_headers_or_blocks(check_node, true);
+                new_headers_available = true;
             }
         }
     }
@@ -401,12 +434,12 @@ dogecoin_bool dogecoin_net_spv_request_headers(dogecoin_spv_client *client)
         client->called_sync_completed = true;
     }
 
-    return false;
+    return new_headers_available;
 }
 
 /**
  * When the handshake is done, we request the headers
- * 
+ *
  * @param node The node that just completed the handshake.
  */
 void dogecoin_net_spv_node_handshake_done(dogecoin_node *node)
@@ -416,11 +449,11 @@ void dogecoin_net_spv_node_handshake_done(dogecoin_node *node)
 
 /**
  * The function is called when a new message is received from a peer
- * 
+ *
  * @param node
  * @param hdr
  * @param buf
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, struct const_buffer *buf)
@@ -470,28 +503,26 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
         dogecoin_bool connected;
         dogecoin_blockindex *pindex = client->headers_db->connect_hdr(client->headers_db_ctx, buf, false, &connected);
 
-        if (!pindex) {
-            return;
-        }
-
-        uint32_t amount_of_txs;
-        if (!deser_varlen(&amount_of_txs, buf)) {
-            return;
-        }
-
         // flag off the block request stall check
         node->time_last_request = time(NULL);
 
-        // for now, turn of stall checks if we are near the tip
-        if (pindex->header.timestamp > node->time_last_request - 30*60) {
-            node->time_last_request = 0;
-        }
-
         if (connected) {
             if (client->header_connected) { client->header_connected(client); }
+
+            // for now, turn of stall checks if we are near the tip
+            if (pindex->header.timestamp > node->time_last_request - 30*60) {
+                node->time_last_request = 0;
+            }
+
             time_t lasttime = pindex->header.timestamp;
             printf("Downloaded new block with size %d at height %d from %s\n", hdr->data_len, pindex->height, ctime(&lasttime));
             uint64_t start = time(NULL);
+
+            uint32_t amount_of_txs;
+            if (!deser_varlen(&amount_of_txs, buf)) {
+                return;
+            }
+
             client->nodegroup->log_write_cb("Start parsing %d transactions...\n", (int)amount_of_txs);
 
             size_t consumedlength = 0;
@@ -501,12 +532,20 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
                 dogecoin_tx* tx = dogecoin_tx_new();
                 if (!dogecoin_tx_deserialize(buf->p, buf->len, tx, &consumedlength)) {
                     client->nodegroup->log_write_cb("Error deserializing transaction\n");
+                    dogecoin_tx_free(tx);
                 }
                 deser_skip(buf, consumedlength);
                 if (client->sync_transaction) { client->sync_transaction(client->sync_transaction_ctx, tx, i, pindex); }
                 dogecoin_tx_free(tx);
             }
             client->nodegroup->log_write_cb("done (took %llu secs)\n", (unsigned long long)(time(NULL) - start));
+        }
+        else
+        {
+            client->nodegroup->log_write_cb("Got invalid block (not in sequence) from node %d\n", node->nodeid);
+            node->state &= ~NODE_BLOCKSYNC;
+            dogecoin_node_send(node, dogecoin_p2p_message_new(node->nodegroup->chainparams->netmagic, DOGECOIN_MSG_REJECT, NULL, 0));
+            return;
         }
 
         if (dogecoin_hash_equal(node->last_requested_inv, pindex->hash)) {
@@ -534,19 +573,16 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
             if (!pindex)
             {
                 client->nodegroup->log_write_cb("Header deserialization failed (node %d)\n", node->nodeid);
-                return;
             }
             if (!deser_skip(buf, 1)) {
                 client->nodegroup->log_write_cb("Header deserialization (tx count skip) failed (node %d)\n", node->nodeid);
-                return;
             }
-            
+
             if (!connected)
             {
                 client->nodegroup->log_write_cb("Got invalid headers (not in sequence) from node %d\n", node->nodeid);
                 node->state &= ~NODE_HEADERSYNC;
-                dogecoin_node_misbehave(node);
-                dogecoin_net_spv_request_headers(client);
+                break;
             } else {
                 if (client->header_connected) { client->header_connected(client); }
                 connected_headers++;

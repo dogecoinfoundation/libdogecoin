@@ -23,7 +23,7 @@
 struct blockheadertest {
     char hexheader[160];
     char hexhash[64];
-    uint32_t version;
+    int32_t version;
     uint32_t timestamp;
     uint32_t bits;
     uint32_t nonce;
@@ -67,7 +67,7 @@ void test_block_header()
         // Check the serialized form matches
         dogecoin_block_header_serialize(serialized, header);
         utils_bin_to_hex((unsigned char*) serialized->str, serialized->len, hexbuf);
-        
+
         assert(memcmp(hexbuf, test->hexheader, 160) == 0);
 
         // Check the block hash

@@ -55,8 +55,7 @@ void test_bip44()
     // Convert mnemonic to seed
     uint8_t* seed = malloc(MAX_SEED_SIZE);
     memset(seed, 0, MAX_SEED_SIZE);
-    const uint8_t* test_seed = malloc(MAX_SEED_SIZE);
-    test_seed = utils_hex_to_uint8("5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4");
+    uint8_t* test_seed = utils_hex_to_uint8("5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4");
     dogecoin_seed_from_mnemonic (words, "", seed);
     u_assert_mem_eq(seed, test_seed, MAX_SEED_SIZE);
 

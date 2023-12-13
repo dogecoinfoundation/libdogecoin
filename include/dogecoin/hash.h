@@ -189,6 +189,12 @@ static hashwriter* init_hashwriter(int n_type, int n_version) {
     return hw;
 }
 
+static void dogecoin_hashwriter_free(hashwriter* hw) {
+    free(hw->ctx->sha);
+    free(hw->ctx);
+    dogecoin_free(hw->hash);
+    dogecoin_free(hw);
+}
 
 /** SipHash 2-4 */
 typedef struct siphasher {

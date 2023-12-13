@@ -66,7 +66,7 @@ void test_address()
     /* test generation ability */
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey_main, NULL, false), true)
     u_assert_int_eq(generateHDMasterPubKeypair(NULL, NULL, false), true)
-    u_assert_int_eq(generateHDMasterPubKeypair(NULL, NULL, NULL), true)
+    u_assert_int_eq(generateHDMasterPubKeypair(NULL, NULL, true), true)
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey_main, p2pkh_master_pubkey_main, false), true);
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey_test, p2pkh_master_pubkey_test, true), true);
 
