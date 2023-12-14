@@ -150,6 +150,7 @@ LIBDOGECOIN_API void dogecoin_wallet_set_master_key_copy(dogecoin_wallet* wallet
 LIBDOGECOIN_API dogecoin_wallet_addr* dogecoin_wallet_next_addr(dogecoin_wallet* wallet);
 LIBDOGECOIN_API dogecoin_wallet_addr* dogecoin_wallet_next_bip44_addr(dogecoin_wallet* wallet);
 LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in, dogecoin_wallet_addr* addr, dogecoin_wallet* wallet);
+LIBDOGECOIN_API dogecoin_wallet_addr* dogecoin_p2pkh_address_to_wallet(const char* address_in, dogecoin_wallet* wallet);
 
 /** writes all available addresses (P2PKH) to the addr_out vector */
 LIBDOGECOIN_API void dogecoin_wallet_get_addresses(dogecoin_wallet* wallet, vector* addr_out);
