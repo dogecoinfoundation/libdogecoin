@@ -183,8 +183,8 @@ void test_wallet()
     }
 
     int64_t amount = dogecoin_wallet_get_balance(wallet);
-    u_assert_uint32_eq(amount,  669388541);
-    u_assert_uint32_eq(totalin, 669388541);
+    u_assert_uint32_eq(amount,  821686535);
+    u_assert_uint32_eq(totalin, 821686535);
 
     dogecoin_wallet_flush(wallet);
     dogecoin_wallet_free(wallet);
