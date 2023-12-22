@@ -476,6 +476,18 @@ int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, do
         return false;
     }
 
+    uint8_t flags = 0;
+    if (vlen == 0) {
+        /* We read a dummy or an empty vin. */
+        deser_bytes(&flags, &buf, 1);
+        if (flags != 0) {
+            // contains witness, deser the vin len
+            if (!deser_varlen(&vlen, &buf)) {
+                return false;
+            }
+        }
+    }
+    
     unsigned int i;
     for (i = 0; i < vlen; i++) {
         dogecoin_tx_in* tx_in = dogecoin_tx_in_new();
@@ -499,6 +511,27 @@ int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, do
         } else {
             vector_add(tx->vout, tx_out);
         }
+    }
+
+    if ((flags & 1)) {
+        /* The witness flag is present, and we support witnesses. */
+        flags ^= 1;
+        for (i = 0; i < tx->vin->len; i++) {
+            if (!deser_varlen(&vlen, &buf))
+                return false;
+            for (size_t j = 0; j < vlen; j++) {
+                cstring* witness_item = cstr_new_sz(1024);
+                if (!deser_varstr(&witness_item, &buf)) {
+                    cstr_free(witness_item, true);
+                    return false;
+                }
+                cstr_free(witness_item, true);
+            }
+        }
+    }
+    if (flags) {
+        /* Unknown flag in the serialization */
+        return false;
     }
 
     if (!deser_u32(&tx->locktime, &buf)) {
