@@ -31,6 +31,7 @@ jobs:
           - x86_64-macos
           # - arm64-macos
           - x86_64-win
+          - x86_64-win-native
           - i686-win
           - i686-linux
         include:
@@ -101,6 +102,15 @@ jobs:
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
             config-opts: ""
             run-tests: true
+          - name: x86_64-win-native
+            host: x86_64-pc-windows-msvc
+            os: windows-latest
+            packages: cmake
+            postinstall: |
+              choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+            dep-opts: "CROSS_COMPILE='no' SPEED=slow V=1"
+            config-opts: ""
+            run-tests: false
             goal: install
           - name: i686-win
             host: i686-w64-mingw32
@@ -147,15 +157,18 @@ jobs:
 
       - name: install packages
         run: |
-          if ([ "${{ matrix.name }}" == "x86_64-macos" ] || [ "${{ matrix.name }}" == "arm64-macos" ]); then
-              brew update
-              brew install automake coreutils ${{ matrix.packages }}
-              echo PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH" >> ~/.bashrc
-              source ~/.bashrc
-          else
-            sudo apt-get update
-            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
+          if ([ "${{ matrix.name }}" != "x86_64-win-native" ]); then
+            if ([ "${{ matrix.name }}" == "x86_64-macos" ] || [ "${{ matrix.name }}" == "arm64-macos" ]); then
+                brew update
+                brew install automake coreutils ${{ matrix.packages }}
+                echo PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH" >> ~/.bashrc
+                source ~/.bashrc
+            else
+              sudo apt-get update
+              DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
+            fi
           fi
+        shell: bash
 
       - name: post install
         if: ${{ matrix.postinstall }}
@@ -196,6 +209,7 @@ jobs:
       - name: build depends
         run: |
           make $MAKEJOBS -C depends HOST=${{ matrix.host }} ${{ matrix.dep-opts }}
+        if: matrix.host != 'x86_64-pc-windows-msvc'
 
       - name: ccache
         uses: actions/cache@v3
@@ -210,17 +224,22 @@ jobs:
           depends/${{ matrix.host }}/native/bin/ccache --max-size=$CCACHE_SIZE
           ./autogen.sh
           ./configure --prefix=`pwd`/depends/${{ matrix.host }} ${{ matrix.config-opts }} HOST=${{ matrix.host }} || ( cat config.log && false)
+        if: matrix.host != 'x86_64-pc-windows-msvc'
 
       - name: build libdogecoin
         run: |
           build_dir=./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
-          make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
-          mkdir -p $build_dir/bin $build_dir/docs $build_dir/examples $build_dir/include $build_dir/lib
-          if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
-              cp spvnode.exe such.exe sendtx.exe $build_dir/bin/
+          mkdir -p $build_dir/bin $build_dir/docs $build_dir/examples $build_dir/include $build_dir/lib $build_dir/test/ $build_dir/test/wordlist
+          if [ "${{ matrix.host }}" == "x86_64-pc-windows-msvc" ]; then
+            cmake -B $build_dir
+            cmake --build $build_dir
           else
-              cp spvnode such sendtx $build_dir/bin/
-          fi
+            make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
+            if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
+            cp spvnode.exe such.exe sendtx.exe $build_dir/bin/
+            else
+            cp spvnode such sendtx $build_dir/bin/
+            fi
           cp doc/*.md $build_dir/docs/
           cp contrib/examples/example.c $build_dir/examples/
           cp include/dogecoin/dogecoin.h \
@@ -228,9 +247,12 @@ jobs:
               include/dogecoin/constants.h \
               config/libdogecoin-config.h \
               include/dogecoin/uthash.h $build_dir/include/
+          cp test/wordlist/* $build_dir/test/wordlist/
           cp .libs/* $build_dir/lib/
           cp LICENSE $build_dir/
           chmod +x ./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}/*
+          fi
+        shell: bash
 
       - name: test libdogecoin
         if: ${{ matrix.run-tests }}
@@ -283,3 +305,199 @@ jobs:
           name: libdogecoin-${{ github.sha }}-${{ matrix.name }}
           path: |
             ${{ github.workspace }}/build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
+
+  sign-x86_64-win:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win
+
+      - name: Import certificate (x86_64-win)
+        run: |
+          $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
+          $certBytes = [Convert]::FromBase64String($certData)
+          [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
+          $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+        shell: pwsh
+
+      - name: Sign spvnode.exe (x86_64-win)
+        uses: lando/code-sign-action@v2
+        with:
+          file: bin/spvnode.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign such.exe (x86_64-win)
+        uses: lando/code-sign-action@v2
+        with:
+          file: bin/such.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign sendtx.exe (x86_64-win)
+        uses: lando/code-sign-action@v2
+        with:
+          file: bin/sendtx.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Upload artifacts (x86_64-win)
+        uses: actions/upload-artifact@v3
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-signed
+          path: .
+
+  sign-x86_64-win-native:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-native
+
+      - name: Import certificate (x86_64-win)
+        run: |
+          $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
+          $certBytes = [Convert]::FromBase64String($certData)
+          [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
+          $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+        shell: pwsh
+
+      - name: Sign spvnode.exe (x86_64-win-native)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Debug/spvnode.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign such.exe (x86_64-win-native)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Debug/such.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign sendtx.exe (x86_64-win-native)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Debug/sendtx.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Upload artifacts (x86_64-win-native)
+        uses: actions/upload-artifact@v3
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-native-signed
+          path: .
+
+  sign-i686-win:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: libdogecoin-${{ github.sha }}-i686-win
+
+      - name: Import certificate (i686-win)
+        run: |
+          $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
+          $certBytes = [Convert]::FromBase64String($certData)
+          [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
+          $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+        shell: pwsh
+
+      - name: Sign spvnode.exe (i686-win)
+        uses: lando/code-sign-action@v2
+        with:
+          file: bin/spvnode.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign such.exe (i686-win)
+        uses: lando/code-sign-action@v2
+        with:
+          file: bin/such.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign sendtx.exe (i686-win)
+        uses: lando/code-sign-action@v2
+        with:
+          file: bin/sendtx.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Upload artifacts (i686-win)
+        uses: actions/upload-artifact@v3
+        with:
+          name: libdogecoin-${{ github.sha }}-i686-win-signed
+          path: .
+
+  sign-x86_64-macos:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-macos
+
+      - name: Import certificate to keychain (x86_64-macos)
+        env:
+          LIBDOGECOIN_DEV_MACOS_CERT_DATA: ${{ secrets.LIBDOGECOIN_DEV_MACOS_CERT_DATA }}
+          LIBDOGECOIN_DEV_MACOS_CERT_PASS: ${{ secrets.LIBDOGECOIN_DEV_MACOS_CERT_PASSWORD }}
+        run: |
+          echo $LIBDOGECOIN_DEV_MACOS_CERT_DATA | base64 --decode > certificate.p12
+          security create-keychain -p $LIBDOGECOIN_DEV_MACOS_CERT_PASS ~/Library/Keychains/build.keychain
+          security default-keychain -s ~/Library/Keychains/build.keychain
+          security unlock-keychain -p $LIBDOGECOIN_DEV_MACOS_CERT_PASS ~/Library/Keychains/build.keychain
+          security import certificate.p12 -k ~/Library/Keychains/build.keychain -P $LIBDOGECOIN_DEV_MACOS_CERT_PASS -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $LIBDOGECOIN_DEV_MACOS_CERT_PASS ~/Library/Keychains/build.keychain
+
+      - name: Sign spvnode (x86_64-macos)
+        env:
+          MACOS_CODE_CERT_TEAM_ID: ${{ secrets.LIBDOGECOIN_DEV_APPLE_TEAM_ID }}
+          MACOS_EXECUTABLE_PATH: bin/spvnode
+        run: |
+          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
+
+      - name: Sign such (x86_64-macos)
+        env:
+          MACOS_CODE_CERT_TEAM_ID: ${{ secrets.LIBDOGECOIN_DEV_APPLE_TEAM_ID }}
+          MACOS_EXECUTABLE_PATH: bin/such
+        run: |
+          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
+
+      - name: Sign sendtx (x86_64-macos)
+        env:
+          MACOS_CODE_CERT_TEAM_ID: ${{ secrets.LIBDOGECOIN_DEV_APPLE_TEAM_ID }}
+          MACOS_EXECUTABLE_PATH: bin/sendtx
+        run: |
+          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
+
+      - name: Upload artifacts (i686-win)
+        uses: actions/upload-artifact@v3
+        with:
+          name: libdogecoin-${{ github.sha }}-i686-win-signed
+          path: .
+
