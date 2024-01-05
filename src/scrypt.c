@@ -52,6 +52,7 @@
   #define INLINE inline
 #endif
 
+#ifndef __DragonFly__
 static INLINE uint32_t
 be32dec(const void *pp)
 {
@@ -71,6 +72,7 @@ be32enc(void *pp, uint32_t x)
 	p[1] = (x >> 16) & 0xff;
 	p[0] = (x >> 24) & 0xff;
 }
+#endif
 
 #define ROTL(a, b) (((a) << (b)) | ((a) >> (32 - (b))))
 
