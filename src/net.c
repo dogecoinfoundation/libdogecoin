@@ -219,7 +219,6 @@ void node_periodical_timer(int fd, short int event, void* ctx)
     if (node->time_started_con + DOGECOIN_CONNECT_TIMEOUT_S < now && ((node->state & NODE_CONNECTING) == NODE_CONNECTING)) {
         node->state = 0;
         node->time_started_con = 0;
-        node->state |= NODE_ERRORED;
         node->state |= NODE_TIMEOUT;
         dogecoin_node_connection_state_changed(node);
     }
@@ -534,7 +533,7 @@ int dogecoin_node_group_amount_of_connected_nodes(dogecoin_node_group* group, en
 }
 
 /**
- * Try to connect to a node that is not connected, not in connecting state, not errored, and has not
+ * Try to connect to a node that is not connected, not in connecting state, and has not
  * been connected for more than DOGECOIN_PERIODICAL_NODE_TIMER_S seconds.
  * 
  * @param group the node group we're connecting to
@@ -554,9 +553,7 @@ dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
         dogecoin_node* node = vector_idx(group->nodes, i);
         if (
             !((node->state & NODE_CONNECTED) == NODE_CONNECTED) &&
-            !((node->state & NODE_CONNECTING) == NODE_CONNECTING) &&
-            !((node->state & NODE_DISCONNECTED) == NODE_DISCONNECTED) &&
-            !((node->state & NODE_ERRORED) == NODE_ERRORED)) {
+            !((node->state & NODE_CONNECTING) == NODE_CONNECTING)) {
             /* setup buffer event */
             node->event_bev = bufferevent_socket_new(group->event_base, -1, BEV_OPT_CLOSE_ON_FREE);
             bufferevent_setcb(node->event_bev, read_cb, write_cb, event_cb, node);
