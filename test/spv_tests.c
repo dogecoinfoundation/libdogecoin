@@ -73,7 +73,7 @@ void test_spv()
     dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
-    dogecoin_spv_client_load(client, headersfile);
+    dogecoin_spv_client_load(client, headersfile, false);
     dogecoin_free(headersfile);
 
     printf("Discover peers...");
@@ -100,7 +100,7 @@ void test_reorg() {
     dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
-    dogecoin_spv_client_load(client, headersfile);
+    dogecoin_spv_client_load(client, headersfile, false);
 
     // Create headers for the main chain and new chain
     dogecoin_block_header* header1 = dogecoin_block_header_new();

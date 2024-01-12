@@ -41,6 +41,7 @@
 #endif
 
 #include <inttypes.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -179,6 +180,7 @@ static struct option long_options[] = {
         {"checkpoint", no_argument, NULL, 'p'},
         {"wallet_file", required_argument, NULL, 'w'},
         {"headers_file", required_argument, NULL, 'h'},
+        {"no_prompt", no_argument, NULL, 'l'},
         {"encrypted_file", required_argument, NULL, 'y'},
         {"use_tpm", no_argument, NULL, 'j'},
         {"master_key", no_argument, NULL, 'k'},
@@ -199,7 +201,7 @@ static void print_usage() {
     print_version();
     printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
 (-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase) (-y|-encrypted_file <file_num 0-999>) \
-(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
+(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
 (-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
@@ -273,6 +275,16 @@ void spv_sync_completed(dogecoin_spv_client* client) {
     }
 }
 
+// Signal handler for SIGINT
+void handle_sigint() {
+    // Reset standard input back to blocking mode
+#ifndef _WIN32
+    int stdin_flags = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, stdin_flags & ~O_NONBLOCK);
+#endif
+    exit(0);
+}
+
 int main(int argc, char* argv[]) {
     int ret = 0;
     int long_index = 0;
@@ -290,6 +302,7 @@ int main(int argc, char* argv[]) {
     char* headers_name = 0;
     dogecoin_bool full_sync = false;
     dogecoin_bool have_decl_daemon = false;
+    dogecoin_bool prompt = true;
     dogecoin_bool encrypted = false;
     dogecoin_bool master_key = false;
     dogecoin_bool tpm = false;
@@ -303,7 +316,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:bpzkj:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -341,6 +354,9 @@ int main(int argc, char* argv[]) {
                 case 'h':
                     headers_name = optarg;
                     break;
+                case 'l':
+                    prompt = false;
+                    break;
                 case 'y':
                     encrypted = true;
                     file_num = (int)strtol(optarg, (char**)NULL, 10);
@@ -372,9 +388,10 @@ int main(int argc, char* argv[]) {
         dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
+        signal(SIGINT, handle_sigint);
 
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, encrypted, tpm, file_num, master_key);
+        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, encrypted, tpm, file_num, master_key, prompt);
         if (!wallet) {
             printf("Could not initialize wallet...\n");
             // clear and free the passphrase
@@ -382,6 +399,8 @@ int main(int argc, char* argv[]) {
                 dogecoin_mem_zero (pass, strlen(pass));
                 dogecoin_free(pass);
                 }
+            dogecoin_spv_client_free(client);
+            dogecoin_ecc_stop();
             return EXIT_FAILURE;
         }
         // clear and free the passphrase
@@ -405,19 +424,19 @@ int main(int argc, char* argv[]) {
             dogecoin_free(header_type_prefix);
             if (headers_name) {
                 // Load headers file name with headers name:
-                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name));
+                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name), prompt);
             } else {
                 // Otherwise, use default headers file name:
-                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile), prompt);
             }
         }
         else if (headers_name) {
             // Load headers file name with headers name:
-            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name));
+            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name), prompt);
         } else {
             // Otherwise, use default headers file name:
             headersfile = concat(header_prefix, header_suffix);
-            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile), prompt);
         }
 
         dogecoin_free(headersfile);

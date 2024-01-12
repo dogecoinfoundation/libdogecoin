@@ -321,7 +321,7 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     return wallet;
 }
 
-dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* name, const char* mnemonic_in, const char* pass, const dogecoin_bool encrypted, const dogecoin_bool tpm, const int file_num, const dogecoin_bool master_key) {
+dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const char* address, const char* name, const char* mnemonic_in, const char* pass, const dogecoin_bool encrypted, const dogecoin_bool tpm, const int file_num, const dogecoin_bool master_key, const dogecoin_bool prompt) {
     dogecoin_wallet* wallet = dogecoin_wallet_new(chain);
     int error;
     dogecoin_bool created;
@@ -336,24 +336,25 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
         dogecoin_free(wallet_type_prefix);
         if (name) {
             // Override wallet file name with name:
-            res = dogecoin_wallet_load(wallet, name, &error, &created);
+            res = dogecoin_wallet_load(wallet, name, &error, &created, prompt);
         }
         else {
-            res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
+            res = dogecoin_wallet_load(wallet, walletfile, &error, &created, prompt);
         }
     }
     // else if name is set, use name for wallet file name:
     else if (name) {
-        res = dogecoin_wallet_load(wallet, name, &error, &created);
+        res = dogecoin_wallet_load(wallet, name, &error, &created, prompt);
     }
     else {
         // prefix chain to wallet file name:
         walletfile = concat(wallet_prefix, wallet_suffix);
-        res = dogecoin_wallet_load(wallet, walletfile, &error, &created);
+        res = dogecoin_wallet_load(wallet, walletfile, &error, &created, prompt);
     }
     dogecoin_free(walletfile);
     if (!res) {
         showError("Loading wallet failed\n");
+        dogecoin_wallet_free(wallet);
         return NULL;
     }
     if (created) {
@@ -365,6 +366,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             // generate seed from mnemonic
             if (dogecoin_seed_from_mnemonic(mnemonic_in, pass, seed) == -1) {
                 showError("Invalid mnemonic\n");
+                dogecoin_wallet_free(wallet);
                 return NULL;
             }
         } else if (encrypted && !master_key) {
@@ -384,6 +386,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             if (!tpmSuccess) {
                 if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num, NULL)) {
                     showError("Decrypting mnemonic from software failed\n");
+                    dogecoin_wallet_free(wallet);
                     return NULL;
                 }
             }
@@ -391,6 +394,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             // generate seed from mnemonic
             if (dogecoin_seed_from_mnemonic(mnemonic, pass, seed) == -1) {
                 showError("Invalid mnemonic\n");
+                dogecoin_wallet_free(wallet);
                 return NULL;
             }
         } else if (encrypted && master_key) {
@@ -409,6 +413,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             if (!tpmSuccess) {
                 if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num, NULL)) {
                     showError("Decrypting master key from software failed\n");
+                    dogecoin_wallet_free(wallet);
                     return NULL;
                 }
             }
@@ -417,7 +422,34 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             res = dogecoin_random_bytes(seed, sizeof(seed), true);
             if (!res) {
                 showError("Generating random bytes failed\n");
+                dogecoin_wallet_free(wallet);
                 return NULL;
+            }
+            if (prompt) {
+                printf("Store seed in encrypted file? (Y/n): ");
+
+                char buffer[MAX_LEN];
+                int file_id = 0; // Variable to store file ID, defaulting to 0
+
+                // read user input
+                if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+                    if (buffer[0] == 'Y' || buffer[0] == 'y') {
+                        printf("Enter file ID (0-999): ");
+                        if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+                            file_id = atoi(buffer); // Update file_id with user input
+                        }
+
+                        printf("Overwrite file if found? (Y/n): ");
+                        if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+                            bool overwrite = (buffer[0] == 'Y' || buffer[0] == 'y');
+                            // encrypt seed for storage with software
+                            if (dogecoin_encrypt_seed_with_sw(seed, sizeof(seed), file_id, overwrite, NULL) == false) {
+                                dogecoin_wallet_free(wallet);
+                                return NULL;
+                            }
+                        }
+                    }
+                }
             }
         }
         if (!master_key) {
@@ -429,6 +461,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
         // ensure we have a key/address
         if (wallet->masterkey == NULL && address == NULL) {
             showError("No master key or address in wallet.\n");
+            dogecoin_wallet_free(wallet);
             exit(EXIT_FAILURE);
         }
     }
@@ -826,14 +859,38 @@ dogecoin_bool dogecoin_wallet_load_transaction(dogecoin_wallet* wallet, uint32_t
 //     return true;
 // }
 
-dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_path, int *error, dogecoin_bool *created)
+dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_path, int *error, dogecoin_bool *created, dogecoin_bool prompt)
 {
     (void)(error);
     if (!wallet) { return false; }
 
     struct stat buffer;
     *created = true;
-    if (stat(file_path, &buffer) == 0) *created = false;
+
+    if (stat(file_path, &buffer) == 0) {
+        *created = false; // Set created to false as file already exists
+
+        if (prompt) {
+            printf("Load %s? (Enter) or (o)verwrite:\n", file_path);
+            char response[MAX_LEN];
+            if (!fgets(response, MAX_LEN, stdin)) {
+                printf("Error reading input.\n");
+                return false;
+            }
+            if (response[0] == 'o' || response[0] == 'O') {
+                printf("Are you sure? (y/n): \n");
+                char confirm[MAX_LEN];
+                if (!fgets(confirm, MAX_LEN, stdin)) {
+                    printf("Error reading input.\n");
+                    return false;
+                }
+                if (confirm[0] == 'y' || confirm[0] == 'Y') {
+                    remove(file_path); // remove the existing file
+                    *created = true; // Set created to true as a new file will be created
+                }
+            }
+        }
+    }
 
     wallet->dbfile = fopen(file_path, *created ? "a+b" : "r+b");
 
@@ -1415,7 +1472,7 @@ dogecoin_wallet* dogecoin_wallet_read(char* address) {
     char* wallet_suffix = "_wallet.db";
     char* wallet_prefix = (char*)chain->chainname;
     char* walletfile = concat(wallet_prefix, wallet_suffix);
-    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, walletfile, 0, 0, false, false, -1, false);
+    dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, walletfile, 0, 0, false, false, -1, false, false);
     wallet->filename = concat(wallet_prefix, wallet_suffix);
     dogecoin_free(walletfile);
     return wallet;
@@ -1469,7 +1526,7 @@ int dogecoin_unregister_watch_address_with_node(char* address) {
             char* oldname = concat(path, concat(unix_delim, "temp.bin"));
             char* newname = concat(path, concat(unix_delim, (char*)wallet->filename));
 #endif
-            dogecoin_wallet_load(wallet_new, oldname, &error, &created);
+            dogecoin_wallet_load(wallet_new, oldname, &error, &created, false);
             wallet_new->filename = oldname;
             dogecoin_wallet_addr* waddr_check = dogecoin_wallet_addr_new();
             // convert address to 20 byte script hash:

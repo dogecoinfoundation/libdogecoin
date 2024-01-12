@@ -509,10 +509,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       password = malloc(PASS_MAX_LEN);
        strcpy(password, test_password);
     }
     else
@@ -533,10 +534,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     }
 
     // Confirm the password
-    char* confirm_password = malloc(PASS_MAX_LEN);
+    char* confirm_password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       confirm_password = malloc(PASS_MAX_LEN);
        strcpy(confirm_password, test_password);
     }
     else
@@ -656,10 +658,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       password = malloc(PASS_MAX_LEN);
        strcpy(password, test_password);
     }
     else
@@ -1220,10 +1223,11 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       password = malloc(PASS_MAX_LEN);
        strcpy(password, test_password);
     }
     else
@@ -1245,10 +1249,11 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
 
 
     // Confirm the password
-    char* confirm_password = malloc(PASS_MAX_LEN);
+    char* confirm_password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       confirm_password = malloc(PASS_MAX_LEN);
        strcpy(confirm_password, test_password);
     }
     else
@@ -1376,10 +1381,11 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       password = malloc(PASS_MAX_LEN);
        strcpy(password, test_password);
     }
     else
@@ -1951,10 +1957,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       password = malloc(PASS_MAX_LEN);
        strcpy(password, test_password);
     }
     else
@@ -1975,10 +1982,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     }
 
     // Confirm the password
-    char* confirm_password = malloc(PASS_MAX_LEN);
+    char* confirm_password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       confirm_password = malloc(PASS_MAX_LEN);
        strcpy(confirm_password, test_password);
     }
     else
@@ -2106,10 +2114,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
     if (test_password)
     {
+       password = malloc(PASS_MAX_LEN);
        strcpy(password, test_password);
     }
     else

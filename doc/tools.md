@@ -20,6 +20,7 @@ The `such` tool can be used by simply running the command `./such` in the top le
 - list_encryption_keys_in_tpm
 - decrypt_master_key
 - decrypt_mnemonic
+- seed_to_master_key
 - mnemonic_to_key
 - mnemonic_to_addresses
 - print_keys
@@ -47,10 +48,10 @@ Most of these commands require a flag following them to denote things like exist
 | -o, --account_int  | account_int | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -o <account_int> |
 | -g, --change_level  | change_level | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -g <change_level> |
 | -i, --address_index  | address_index | yes | mnemonic_to_key or mnemonic_to_addresses -n <seed_phrase> -i <address_index> |
-| -y, --encrypted_file | file_num | yes | generate_mnemonic, bip32_extended_master_key, decrypt_master_key, decrypt_mnemonic, mnemonic_to_key or mnemonic_to_addresses -y <file_num>
+| -y, --encrypted_file | file_num | yes | generate_mnemonic, bip32_extended_master_key, decrypt_master_key, decrypt_mnemonic, seed_to_master_key, mnemonic_to_key or mnemonic_to_addresses -y <file_num>
 | -w, --overwrite | overwrite | no | generate_mnemonic or bip32_extended_master_key -w |
 | -b, --silent | silent | no | generate_mnemonic or bip32_extended_master_key -b |
-| -j, --use_tpm | use_tpm | no | generate_mnemonic, bip32_extended_master_key, decrypt_master_key, decrypt_mnemonic, mnemonic_to_key or mnemonic_to_addresses -j |
+| -j, --use_tpm | use_tpm | no | generate_mnemonic, bip32_extended_master_key, decrypt_master_key, decrypt_mnemonic, seed_to_master_key, mnemonic_to_key or mnemonic_to_addresses -j |
 | -t, --testnet  | designate_testnet   | no  | generate_private_key -t |
 | -s  | script_hex          | yes | comp2der -s <compact_signature> |
 | -x  | transaction_hex     | yes | sign -x <transaction_hex> -s <pubkey_script> -i <index_of_utxo_to_sign> -h <sig_hash_type> |
@@ -71,6 +72,7 @@ Below is a list of all the commands and the flags that they require. As a remind
 | list_encryption_keys_in_tpm | None                 | None | List the encryption keys in the TPM. |
 | decrypt_master_key | -y   | -j | Decrypt the master key with the TPM or SW. |
 | decrypt_mnemonic | -y     | -j | Decrypt the mnemonic with the TPM or SW. |
+| seed_to_master_key | -y   | -j, -t | Generates an extended master private key from a seed for either mainnet or testnet. |
 | mnemonic_to_key | -n      | -a, -y, -o, g, -i, -t | Generates a private key from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
 | mnemonic_to_addresses     | -n      | -a, -y, -o, g, -i, -t   | Generates an address from a seed phrase with a default path or specified account, change level and index for either mainnet or testnet. |
 | print_keys                | -p                     | -t   | Print all keys associated with the provided private key.
@@ -172,9 +174,9 @@ Below are some examples on how to use the `such` tool in practice.
     ./such -c verifymessage -x bleh -s ICrbftD0KamyaB68IoXbeke3w4CpcIvv+Q4pncBNpMk8fF5+xsR9H9gqmfM0JrjlfzZZA3E8AJ0Nug1KWeoVw3g= -k D8mQ2sKYpLbFCQLhGeHCPBmkLJRi6kRoSg
     Message is verified!
 
-## Encrypted Mnemonics and Key Backups
+## Encrypted Mnemonics, Key and Seed Backups
 
-The `such` tool provides functionality to securely manage your encrypted mnemonics and key backups. With the ability to generate mnemonics and encrypt them for safe storage, and to decrypt them when needed, managing your cryptographic assets is made easier. To use encrypted files with `spvnode`, you must first use the `such` tool to generate and encrypt your mnemonic or master key. You can then use the `spvnode` tool to import the encrypted file and use it to connect to the network.
+The `such` tool provides functionality to securely manage your encrypted mnemonics, key and seed backups. With the ability to generate mnemonics and encrypt them for safe storage, and to decrypt them when needed, managing your cryptographic assets is made easier. To use encrypted files with `spvnode`, you must first use the `such` tool to generate and encrypt your mnemonic or master key. You can then use the `spvnode` tool to import the encrypted file and use it to connect to the network.
 
 ### Generating and Encrypting Mnemonics
 
@@ -217,6 +219,12 @@ And to decrypt it back when required:
     ./such -c decrypt_master_key -y <file_num> -j
 
 Always ensure to replace `<file_num>` with the actual number of the encrypted file.
+
+### Handling Seed Backups
+
+You can also decrypt your seed backups using the `seed_to_master_key` command. This command will decrypt the seed and generate a master key from it. If the seed was encrypted using TPM (Trusted Platform Module), you can use the `-j` flag as shown:
+
+    ./such -c seed_to_master_key -y <file_num> -j
 
 ### Overwriting Encrypted Files
 
@@ -361,6 +369,7 @@ To utilize checkpoints for faster initial sync, apply the -p flag:
 | `-p`, `--checkpoint` | Checkpoint | No | Enable checkpoint sync: `./spvnode -p scan` |
 | `-w`, `--wallet_file` | Wallet File | Yes | Specify wallet file: `./spvnode -w "./wallet.db" scan` |
 | `-h`, `--headers_file` | Headers File | Yes | Specify headers DB file: `./spvnode -h "./headers.db" scan` |
+| `-l`, `--no_prompt` | No Prompt | No | Load wallet and headers without prompt: `./spvnode -l scan` |
 | `-y`, `--encrypted_file` | Encrypted File | Yes | Use encrypted file: `./spvnode -y 0 scan` |
 | `-j`, `--use_tpm` | Use TPM | No | Utilize TPM for decryption: `./spvnode -j scan` |
 | `-k`, `--master_key` | Master Key | No | Use master key decryption: `./spvnode -k scan` |
