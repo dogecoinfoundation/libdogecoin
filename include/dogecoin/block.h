@@ -55,6 +55,7 @@ typedef struct dogecoin_block_header_ {
     uint32_t bits;
     uint32_t nonce;
     auxpow auxpow[1];
+    uint256 chainwork;
 } dogecoin_block_header;
 
 typedef struct dogecoin_auxpow_block_ {

@@ -462,6 +462,7 @@ int main(int argc, char* argv[]) {
             printf("Connecting to the p2p network...\n");
             dogecoin_spv_client_runloop(client);
             dogecoin_spv_client_free(client);
+            printf("done\n");
             ret = EXIT_SUCCESS;
 #if WITH_WALLET
             dogecoin_wallet_free(wallet);
