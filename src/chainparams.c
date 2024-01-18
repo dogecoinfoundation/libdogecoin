@@ -148,6 +148,10 @@ const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
         case '6':
             count++;
             break;
+        case 'n':
+            return &dogecoin_chainparams_test;
+        case 'm':
+            return &dogecoin_chainparams_regtest;
     }
     return count ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 }
