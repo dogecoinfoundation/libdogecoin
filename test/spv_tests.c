@@ -48,10 +48,12 @@ void test_spv_sync_completed(dogecoin_spv_client* client) {
 }
 
 dogecoin_bool test_spv_header_message_processed(struct dogecoin_spv_client_ *client, dogecoin_node *node, dogecoin_blockindex *newtip) {
-    UNUSED(client);
     UNUSED(node);
     if (newtip) {
         printf("New headers tip height %d\n", newtip->height);
+        if (newtip->height >= 4008284) {
+            test_spv_sync_completed(client);
+        }
     }
     return true;
 }
