@@ -488,29 +488,93 @@ int main(int argc, char* argv[]) {
 #endif
             }
         dogecoin_ecc_stop();
-    } else if (strcmp(data, "wallet") == 0) {
+    } else if (strcmp(data, "sanity") == 0) {
 #if WITH_WALLET
     dogecoin_ecc_start();
     if (address != NULL) {
-        int res = dogecoin_register_watch_address_with_node(address);
-        printf("registered:     %d %s\n", res, address);
-        uint64_t amount = dogecoin_get_balance(address);
-        if (amount > 0) {
-            printf("amount:         %s\n", dogecoin_get_balance_str(address));
-            unsigned int utxo_count = dogecoin_get_utxos_length(address);
-            if (utxo_count) {
-                printf("utxo count:     %d\n", utxo_count);
-                unsigned int i = 1;
-                for (; i <= utxo_count; i++) {
-                    printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, i));
-                    printf("vout:           %d\n", dogecoin_get_utxo_vout(address, i));
-                    printf("amount:         %s\n", dogecoin_get_utxo_amount(address, i));
-                }
+        char delim[] = " ";
+        // copy address into a new string, strtok modifies the string
+        char* address_copy = strdup(address);
+
+        // backup existing default wallet file prior to radio doge functions test
+        const dogecoin_chainparams *params = chain_from_b58_prefix(address_copy);
+        dogecoin_wallet *tmp = dogecoin_wallet_new(params);
+        int result;
+        FILE *file;
+        if ((file = fopen(tmp->filename, "r")))
+        {
+            fclose(file);
+#ifdef WIN32
+            #include <winbase.h>
+            result = CopyFile((char*)tmp->filename, "tmp.bin", true);
+            if (result == 1) result = 0;
+#else
+            result = file_copy((char *)tmp->filename, "tmp.bin");
+#endif
+            if (result != 0) {
+                printf( "could not copy '%s' %d\n", tmp->filename, result );
+            } else {
+                printf( "File '%s' copied to 'tmp.bin'\n", tmp->filename);
             }
         }
-        res = dogecoin_unregister_watch_address_with_node(address);
-        printf("unregistered:   %s\n", res ? "true" : "false");
+
+        char *ptr;
+        char* temp_address_copy = address_copy;
+
+        while((ptr = strtok_r(temp_address_copy, delim, &temp_address_copy))) {
+            int res = dogecoin_register_watch_address_with_node(ptr);
+            printf("registered:     %d %s\n", res, ptr);
+            uint64_t amount = dogecoin_get_balance(ptr);
+            if (amount > 0) {
+                char* amount_str = dogecoin_get_balance_str(ptr);
+                printf("total:          %s\n", amount_str);
+                unsigned int utxo_count = dogecoin_get_utxos_length(ptr);
+                if (utxo_count) {
+                    printf("utxo count:     %d\n", utxo_count);
+                    unsigned int i = 1;
+                    for (; i <= utxo_count; i++) {
+                        printf("txid:           %s\n", dogecoin_get_utxo_txid_str(ptr, i));
+                        printf("vout:           %d\n", dogecoin_get_utxo_vout(ptr, i));
+                        char* utxo_amount_str = dogecoin_get_utxo_amount(ptr, i);
+                        printf("amount:         %s\n", utxo_amount_str);
+                        dogecoin_free(utxo_amount_str);
+                    }
+                }
+                dogecoin_free(amount_str);
+            }
+            res = dogecoin_unregister_watch_address_with_node(ptr);
+            printf("unregistered:   %s\n", res ? "true" : "false");
+        }
+
+        if ((file = fopen("tmp.bin", "r"))) {
+            fclose(file);
+#ifdef WIN32
+            #include <winbase.h>
+            char *tmp_filename = _strdup((char *)tmp->filename);
+            char *filename = _strdup((char *)tmp->filename);
+            replace_last_after_delim(filename, "\\", "tmp.bin");
+            LPVOID message;
+            result = DeleteFile(tmp->filename);
+            if (!result) {
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&message, 0, NULL);
+                printf("ERROR: %s\n", (char *)message);
+            }
+            result = rename(filename, tmp->filename);
+            dogecoin_free(filename);
+            dogecoin_free(tmp_filename);
+#else
+            result = rename("tmp.bin", tmp->filename);
+#endif
+            if( result != 0 ) {
+                printf( "could not copy 'tmp.bin' %d\n", result );
+            } else {
+                printf( "File 'tmp.bin' copied to '%s'\n", tmp->filename);
+            }
+        }
+        dogecoin_wallet_free(tmp);
+        dogecoin_free(address_copy);
     }
+
     dogecoin_ecc_stop();
 #endif
     } else {

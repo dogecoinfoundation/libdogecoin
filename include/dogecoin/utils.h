@@ -81,19 +81,20 @@ LIBDOGECOIN_API void prepend(char* s, const char* t);
 LIBDOGECOIN_API void append(char* s, char* t);
 LIBDOGECOIN_API char* concat(char* prefix, char* suffix);
 LIBDOGECOIN_API void slice(const char *str, char *result, size_t start, size_t end);
+LIBDOGECOIN_API void replace_last_after_delim(const char *str, char* delim, char* replacement);
 LIBDOGECOIN_API void text_to_hex(char* in, char* out);
 LIBDOGECOIN_API const char* get_build();
 LIBDOGECOIN_API char* getpass(const char *prompt);
 LIBDOGECOIN_API void dogecoin_str_reverse(char s[]);
 LIBDOGECOIN_API void dogecoin_uitoa(int n, char s[]);
 LIBDOGECOIN_API bool dogecoin_network_enabled();
-
+LIBDOGECOIN_API int integer_length(int x);
+LIBDOGECOIN_API int file_copy (char src [], char dest []);
 unsigned int base64_int(unsigned int ch);
 unsigned int base64_encoded_size(unsigned int in_size);
 unsigned int base64_decoded_size(unsigned int in_size);
 unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out);
 unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out);
-int integer_length(int x);
 
 #define _SEARCH_PRIVATE
 #ifdef _SEARCH_PRIVATE

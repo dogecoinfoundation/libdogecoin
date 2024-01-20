@@ -118,6 +118,7 @@ dist/
 contrib/gitian/
 contrib/gitian/*
 example
+dummy
 
 # CMake files
 build/*

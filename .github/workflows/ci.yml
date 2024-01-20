@@ -245,6 +245,8 @@ jobs:
               "x86_64-linux-dbg")
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               python3 tooltests.py
+              sudo ./rpctest/fetch.py --host x86_64-linux-gnu
+              sudo rm /usr/local/bin/dogecoind
               ;;
               "x86_64-linux-openenclave")
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
