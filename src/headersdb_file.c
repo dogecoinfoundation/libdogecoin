@@ -129,8 +129,8 @@ void dogecoin_headers_db_free(dogecoin_headers_db* db) {
             dogecoin_free(scan_tip);
             scan_tip = prev;
         }
-        // If scan_tip is chainbottom, free it
-        if (scan_tip == db->chainbottom && scan_tip != &db->genesis) {
+        // If scan_tip is not the genesis block, free it
+        if (scan_tip != &db->genesis) {
             dogecoin_free(scan_tip);
         }
     }
@@ -146,11 +146,12 @@ void dogecoin_headers_db_free(dogecoin_headers_db* db) {
  *
  * @param db the headers database object
  * @param file_path The path to the headers database file. If NULL, the default path is used.
+ * @param prompt If true, the user will be prompted to confirm loading the database.
  *
  * @return The return value is a boolean value that indicates whether the database was successfully
  * opened.
  */
-dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file_path) {
+dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file_path, dogecoin_bool prompt) {
 
     if (!db->read_write_file) {
         return 1;
@@ -169,8 +170,30 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
 
     struct stat buffer;
     dogecoin_bool create = true;
-    if (stat(file_path_local, &buffer) == 0)
-        create = false;
+    if (stat(file_path_local, &buffer) == 0) {
+        create = false; // Set create to false as file already exists
+
+        if (prompt) {
+            printf("\nLoad %s? ", file_path_local);
+            char response[MAX_LEN];
+            if (!fgets(response, MAX_LEN, stdin)) {
+                printf("Error reading input.\n");
+                return false;
+            }
+            if (response[0] == 'o' || response[0] == 'O') {
+                printf("Are you sure? (y/n): \n");
+                char confirm[MAX_LEN];
+                if (!fgets(confirm, MAX_LEN, stdin)) {
+                    printf("Error reading input.\n");
+                    return false;
+                }
+                if (confirm[0] == 'y' || confirm[0] == 'Y') {
+                    remove(file_path_local); // remove the existing file
+                    create = true; // Set create to true as a new file will be created
+                }
+            }
+        }
+    }
 
     db->headers_tree_file = fopen(file_path_local, create ? "a+b" : "r+b");
     cstr_free(path_ret, true);

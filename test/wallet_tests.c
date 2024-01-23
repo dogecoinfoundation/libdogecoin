@@ -156,7 +156,7 @@ void test_wallet()
     dogecoin_wallet *wallet = dogecoin_wallet_new(&dogecoin_chainparams_main);
     int error;
     dogecoin_bool created;
-    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created), true);
+    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created, false), true);
 
     // inject a key
     dogecoin_wallet_addr *waddr = dogecoin_wallet_addr_new();
@@ -196,7 +196,7 @@ void test_wallet_basics()
     dogecoin_wallet *wallet = dogecoin_wallet_new(&dogecoin_chainparams_main);
     int error;
     dogecoin_bool created;
-    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created), true);
+    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created, false), true);
 
     char *xpub = "dgub8kXBZ7ymNWy2T7WH3WgpGDv6htHqBEPU8bymfvJeHNJaBT65E2EjemjSx6ggYmaMDfnSrtJWbafCJu2b1voNTARsyhCULtT8d8MH2MQwCqV";
 
@@ -210,7 +210,7 @@ void test_wallet_basics()
     dogecoin_wallet_free(wallet);
 
     wallet = dogecoin_wallet_new(&dogecoin_chainparams_main);
-    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created), true);
+    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created, false), true);
     dogecoin_wallet_addr *wallet_addr2 = dogecoin_wallet_next_addr(wallet);
     u_assert_int_eq(wallet_addr2->childindex, 1);
 
@@ -240,7 +240,7 @@ void test_wallet_basics()
     dogecoin_wallet_free(wallet);
 
     wallet = dogecoin_wallet_new(&dogecoin_chainparams_main);
-    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created), true);
+    u_assert_int_eq(dogecoin_wallet_load(wallet, wallettmpfile, &error, &created, false), true);
     addrs = vector_new(1, free);
     dogecoin_wallet_get_addresses(wallet, addrs);
     u_assert_int_eq(addrs->len, 3);

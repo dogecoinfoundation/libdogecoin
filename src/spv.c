@@ -136,6 +136,12 @@ dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params,
  */
 void dogecoin_spv_client_discover_peers(dogecoin_spv_client* client, const char *ips)
 {
+#ifndef _WIN32
+    // set stdin to non-blocking for quit command
+    int stdin_flags = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, stdin_flags | O_NONBLOCK);
+#endif
+
     dogecoin_node_group_add_peers_by_ip_or_seed(client->nodegroup, ips);
 }
 
@@ -186,10 +192,11 @@ void dogecoin_spv_client_free(dogecoin_spv_client *client)
  *
  * @param client the client object
  * @param file_path The path to the headers database file.
+ * @param prompt If true, the user will be prompted to confirm loading the database.
  *
  * @return A boolean value.
  */
-dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *file_path)
+dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *file_path, dogecoin_bool prompt)
 {
     if (!client)
         return false;
@@ -197,13 +204,7 @@ dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *
     if (!client->headers_db)
         return false;
 
-#ifndef _WIN32
-    // set stdin to non-blocking for quit command
-    int stdin_flags = fcntl(STDIN_FILENO, F_GETFL);
-    fcntl(STDIN_FILENO, F_SETFL, stdin_flags | O_NONBLOCK);
-#endif
-
-    return client->headers_db->load(client->headers_db_ctx, file_path);
+    return client->headers_db->load(client->headers_db_ctx, file_path, prompt);
 
 }
 
