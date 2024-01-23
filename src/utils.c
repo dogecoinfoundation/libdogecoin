@@ -620,6 +620,31 @@ void slice(const char *str, char *result, size_t start, size_t end)
     strncpy(result, str + start, end - start);
 }
 
+void remove_substr(char *string, char *sub) {
+    char *match;
+    int len = strlen(sub);
+    while ((match = strstr(string, sub))) {
+        *match = '\0';
+        strcat(string, match+len);
+    }
+}
+
+void replace_last_after_delim(const char *str, char* delim, char* replacement) {
+    char* tmp = strdup((char*)str);
+    char* new = tmp;
+    char *strptr = strtok(new, delim);
+    char* last = NULL;
+    while (strptr != NULL) {
+        last = strptr;
+        strptr = strtok(NULL, delim);
+    }
+    if (last) {
+        remove_substr((char*)str, last);
+        append((char*)str, replacement);
+    }
+    dogecoin_free(tmp);
+}
+
 /**
  * @brief function to convert ascii text to hexadecimal string
  *
@@ -768,6 +793,38 @@ bool dogecoin_network_enabled() {
 #endif
 }
 
+int integer_length(int x) {
+    int count = 0;
+    while (x > 0) {
+        x /= 10;
+        count++;
+    }
+    return count > 0 ? count : 1;
+}
+
+int file_copy(char src [], char dest [])
+{
+    int   c;
+    FILE *stream_read;
+    FILE *stream_write; 
+
+    stream_read = fopen (src, "r");
+    if (stream_read == NULL)
+        return -1;
+    stream_write = fopen (dest, "w");   //create and write to file
+    if (stream_write == NULL)
+     {
+        fclose (stream_read);
+        return -2;
+     }    
+    while ((c = fgetc(stream_read)) != EOF)
+        fputc (c, stream_write);
+    fclose (stream_read);
+    fclose (stream_write);
+
+    return 0;
+}
+
 unsigned char base64_char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 unsigned int base64_int(unsigned int ch) {
@@ -868,13 +925,4 @@ unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigne
     out[k] = '\0';
 
 	return k;
-}
-
-int integer_length(int x) {
-    int count = 0;
-    while (x > 0) {
-        x /= 10;
-        count++;
-    }
-    return count > 0 ? count : 1;
 }

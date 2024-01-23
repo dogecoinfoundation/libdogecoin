@@ -71,7 +71,7 @@ DISABLE_WARNING_POP
 
 /** single key/value record */
 typedef struct dogecoin_wallet_ {
-    const char* filename;
+    const char filename[311]; // max path length
     FILE *dbfile;
     dogecoin_hdnode* masterkey;
     uint32_t next_childindex; //cached next child index
