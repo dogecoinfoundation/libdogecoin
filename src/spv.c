@@ -229,7 +229,6 @@ void dogecoin_net_spv_periodic_statecheck(dogecoin_node *node, uint64_t *now)
         {
             client->nodegroup->log_write_cb("No header response in time (used %d) for node %d\n", timedetla, node->nodeid);
             node->state &= ~NODE_HEADERSYNC;
-            dogecoin_node_disconnect(node);
             client->last_headersrequest_time = 0;
             dogecoin_net_spv_request_headers(client);
         }
@@ -242,7 +241,6 @@ void dogecoin_net_spv_periodic_statecheck(dogecoin_node *node, uint64_t *now)
         if (timedetla > HEADERS_MAX_RESPONSE_TIME)
         {
             client->nodegroup->log_write_cb("No block response in time (used %d) for node %d\n", timedetla, node->nodeid);
-            dogecoin_node_disconnect(node);
             node->time_last_request = 0;
             dogecoin_net_spv_request_headers(client);
         }
