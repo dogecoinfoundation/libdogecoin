@@ -480,11 +480,13 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
     while (fscanf(fp, "%s", word) == 1) {
         if (i >= LANG_WORD_CNT) {
             fprintf(stderr, "ERROR: too many words in file\n");
+            fclose(fp);
             return -1;
         }
         wordlist[i] = malloc(strlen(word) + 1);
         if (wordlist[i] == NULL) {
             fprintf(stderr, "ERROR: cannot allocate memory\n");
+            fclose(fp);
             return -1;
         }
         strcpy(wordlist[i], word);
