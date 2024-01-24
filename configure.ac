@@ -154,6 +154,18 @@ AC_ARG_ENABLE([openenclave],
   [use_openenclave=$enableval],
   [use_openenclave=no])
 
+AC_ARG_ENABLE([optee],
+  [AS_HELP_STRING([--enable-optee],
+  [Build with optee (default is no)])],
+  [use_optee=$enableval],
+  [use_optee=no])
+
+AC_ARG_ENABLE([yubikey],
+  [AS_HELP_STRING([--enable-yubikey],
+  [Build with yubikey (default is no)])],
+  [use_yubikey=$enableval],
+  [use_yubikey=no])
+
 AC_ARG_ENABLE(tests,
   AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
   [use_tests=$enableval],
@@ -256,6 +268,16 @@ if test "x$use_openenclave" = xyes; then
   AC_DEFINE(USE_OPENENCLAVE, 1, [Define this symbol if openenclave works])
 fi
 
+if test "x$use_optee" = xyes; then
+  AC_DEFINE_UNQUOTED([USE_OPTEE],[1],[Define this symbol if optee works])
+fi
+
+if test "x$use_yubikey" = xyes; then
+  AC_CHECK_LIB([ykpiv],[main],LIBYKPIV=-lykpiv,AC_MSG_ERROR(libpkpiv missing))
+  LIBS="$LIBS $LIBYKPIV"
+  AC_DEFINE(USE_YUBIKEY, 1, [Define this symbol if Yubikey works])
+fi
+
 AC_CONFIG_HEADERS([config/libdogecoin-config.h])
 AC_CONFIG_FILES([Makefile libdogecoin.pc])
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
@@ -265,6 +287,7 @@ AC_SUBST(EVENT_CORE_LIBS)
 AC_SUBST(EVENT_EXTRA_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(LIBUNISTRING)
+AC_SUBST(LIBYKPIV)
 AC_SUBST(NASMFLAGS)
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([WITH_BENCH], [test "x$with_bench" = "xyes"])
@@ -276,6 +299,8 @@ AM_CONDITIONAL([USE_AVX2], [test "x$use_intel_avx2" = "xyes"])
 AM_CONDITIONAL([USE_SSE], [test "x$use_intel_sse" = "xyes"])
 AM_CONDITIONAL([USE_SSE2], [test "x$use_scrypt_sse2" = "xyes"])
 AM_CONDITIONAL([USE_OPENENCLAVE], [test "x$use_openenclave" = "xyes"])
+AM_CONDITIONAL([USE_OPTEE], [test "x$use_optee" = "xyes"])
+AM_CONDITIONAL([USE_YUBIKEY], [test "x$use_yubikey" = "xyes"])
 AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
 AC_SUBST(LIB_VERSION_REVISION, _LIB_VERSION_REVISION)
 AC_SUBST(LIB_VERSION_AGE, _LIB_VERSION_AGE)
@@ -304,6 +329,8 @@ echo "                    $PASSWD_STR"
 fi
 echo
 echo "  openenclave     = $use_openenclave"
+echo "  optee           = $use_optee"
+echo "  Yubikey         = $use_yubikey"
 echo
 echo "  host            = $host"
 echo "  target os       = $TARGET_OS"
@@ -314,4 +341,5 @@ echo "  CFLAGS          = $CFLAGS"
 echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $CXXFLAGS"
 echo "  LDFLAGS         = $LDFLAGS"
+echo "  LIBS            = $LIBS"
 echo

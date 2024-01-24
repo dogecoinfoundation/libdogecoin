@@ -18,6 +18,9 @@ endif ()
 
 target_include_directories(
   host PRIVATE # Needed for the generated file libdogecoin_u.h
-                          ${CMAKE_CURRENT_BINARY_DIR})
+                          ${CMAKE_CURRENT_BINARY_DIR} /usr/local/include /usr/local/include/dogecoin /usr/include/ykpers-1 ${CMAKE_SOURCE_DIR}/../../depends/x86_64-pc-linux-gnu/include/ ${CMAKE_SOURCE_DIR}/../../depends/x86_64-pc-linux-gnu/include/dogecoin/ ${CMAKE_SOURCE_DIR}/../../depends/x86_64-pc-linux-gnu/include/ykpers-1 ${CMAKE_SOURCE_DIR}/../../src/libevent/build/include)
 
-target_link_libraries(host openenclave::oehost)
+# Add search paths to find the enclave libraries.
+target_link_directories(host PRIVATE ${CMAKE_SOURCE_DIR}../../ ${CMAKE_SOURCE_DIR}/../../src/libevent/build/lib ${CMAKE_SOURCE_DIR}/../../depends/x86_64-pc-linux-gnu/lib)
+
+target_link_libraries(host openenclave::oehost "libdogecoin.a" "libevent.a" "libunistring.a" "libykpers-1.so" "libyubikey.so" "libusb-1.0.so")

@@ -42,5 +42,7 @@ clean:
 	rm -f enc.o enc enclave.signed private.pem public.pem libdogecoin_t.o libdogecoin_t.h libdogecoin_t.c libdogecoin_args.h
 
 keys:
-	openssl genrsa -out private.pem -3 3072
-	openssl rsa -in private.pem -pubout -out public.pem
+	if [ ! -f private.pem ]; then \
+		openssl genrsa -out private.pem -3 3072; \
+		openssl rsa -in private.pem -pubout -out public.pem; \
+	fi

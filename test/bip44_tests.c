@@ -25,10 +25,10 @@ void test_bip44()
     dogecoin_hdnode bip44_change_key;
     dogecoin_hdnode bip44_address_key;
     uint32_t account = BIP44_FIRST_ACCOUNT_NODE;
-    size_t size;
     char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
 
     /* generate mnemonic(s) */
+    size_t size;
     char *words = NULL;
     char *entropy = "00000000000000000000000000000000";
     char* entropy_out = NULL;
@@ -58,7 +58,6 @@ void test_bip44()
     uint8_t* test_seed = utils_hex_to_uint8("5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4");
     dogecoin_seed_from_mnemonic (words, "", seed);
     u_assert_mem_eq(seed, test_seed, MAX_SEED_SIZE);
-
 
     char* seed_hex;
     seed_hex = utils_uint8_to_hex(seed, MAX_SEED_SIZE);
@@ -187,7 +186,7 @@ void test_bip44()
     char changepubkey[HDKEYLEN];
 
     u_assert_true(getHDRootKeyFromSeed(test_seed, MAX_SEED_SIZE, true, masterkey));
-    u_assert_true(deriveBIP44ExtendedKey(masterkey, NULL, NULL, NULL, NULL, accountkey, keypath));
+    u_assert_true(deriveBIP44ExtendedKey(masterkey, &account, NULL, NULL, NULL, accountkey, keypath));
     u_assert_true(deriveBIP44ExtendedKey(masterkey, &account, BIP44_CHANGE_EXTERNAL, NULL, NULL, bip32key, keypath));
     u_assert_str_eq(bip32key,
                     "tprv8hi9XJvkuKfu6oRGUsAnPAnQNUKcEjwrLbS2w2hTSPKrFj5YYS3Ax7UDDrZZHd4PSnPLW5whNxAXTW5bBrSNiSD1LUeg9n4j5sdGRJsZZwP");
@@ -196,7 +195,7 @@ void test_bip44()
     debug_print("deriveBIP44ExtendedKey: %s\n", bip32key);
 
     /* test deriveBIP44ExtendedPublicKey */
-    u_assert_true(deriveBIP44ExtendedKey(masterkey, NULL, NULL, NULL, NULL, accountkey, keypath));
+    u_assert_true(deriveBIP44ExtendedKey(masterkey, &account, NULL, NULL, NULL, accountkey, keypath));
     u_assert_true(deriveBIP44ExtendedKey(masterkey, &account, BIP44_CHANGE_EXTERNAL, NULL, NULL, bip32key, keypath));
     u_assert_true(deriveBIP44ExtendedPublicKey(masterkey, &account, NULL, NULL, NULL, accountPubkey, keypath));
     u_assert_true(deriveBIP44ExtendedPublicKey(masterkey, &account, BIP44_CHANGE_EXTERNAL, NULL, NULL, changepubkey, keypath));

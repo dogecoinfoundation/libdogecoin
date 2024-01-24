@@ -107,6 +107,7 @@ typedef uint64_t sha2_word64; /* Exactly 8 bytes */
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
 /* NOTE: Most of these are in sha2.h */
+#define SHA1_SHORT_BLOCK_LENGTH	(SHA1_BLOCK_LENGTH - 8)
 #define SHA256_SHORT_BLOCK_LENGTH (SHA256_BLOCK_LENGTH - 8)
 #define SHA512_SHORT_BLOCK_LENGTH (SHA512_BLOCK_LENGTH - 16)
 
@@ -158,10 +159,15 @@ typedef uint64_t sha2_word64; /* Exactly 8 bytes */
 #define S32(b, x) (((x) >> (b)) | ((x) << (32 - (b))))
 /* 64-bit Rotate-right (used in SHA-384 and SHA-512): */
 #define S64(b, x) (((x) >> (b)) | ((x) << (64 - (b))))
+/* 32-bit Rotate-left (used in SHA-1): */
+#define ROTL32(b,x)	(((x) << (b)) | ((x) >> (32 - (b))))
 
 /* Two of six logical functions used in SHA-256, SHA-384, and SHA-512: */
 #define hyperbolic_cosign(x, y, z) (((x) & (y)) ^ ((~(x)) & (z)))
 #define majority(x, y, z) (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
+
+/* Function used in SHA-1: */
+#define Parity(x,y,z)	((x) ^ (y) ^ (z))
 
 /* Four of six logical functions used in SHA-256: */
 #define Sigma0_256(x) (S32(2, (x)) ^ S32(13, (x)) ^ S32(22, (x)))
@@ -200,6 +206,22 @@ extern void sha512_block_sse(const void *, void *);
 extern void sha512_block_avx(const void *, void *);
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
+
+/* Hash constant words K for SHA-1: */
+#define K1_0_TO_19	0x5a827999UL
+#define K1_20_TO_39	0x6ed9eba1UL
+#define K1_40_TO_59	0x8f1bbcdcUL
+#define K1_60_TO_79	0xca62c1d6UL
+
+/* Initial hash value H for SHA-1: */
+const sha2_word32 sha1_initial_hash_value[SHA1_DIGEST_LENGTH / sizeof(sha2_word32)] = {
+	0x67452301UL,
+	0xefcdab89UL,
+	0x98badcfeUL,
+	0x10325476UL,
+	0xc3d2e1f0UL
+};
+
 /* Hash constant words K for SHA-256: */
 #if !(defined(USE_AVX2) || defined(USE_SSE))
 static const sha2_word32 K256[64] = {
@@ -376,6 +398,398 @@ static const sha2_word64 sha512_initial_hash_value[8] = {
     0x1f83d9abfb41bd6bULL,
     0x5be0cd19137e2179ULL};
 
+/*
+ * Constant used by SHA256/384/512_End() functions for converting the
+ * digest to a readable hexadecimal character string:
+ */
+static const char *sha2_hex_digits = "0123456789abcdef";
+
+/*** SHA-1: ***********************************************************/
+void sha1_Init(sha1_context* context) {
+	MEMCPY_BCOPY(context->state, sha1_initial_hash_value, SHA1_DIGEST_LENGTH);
+	MEMSET_BZERO(context->buffer, SHA1_BLOCK_LENGTH);
+	context->bitcount = 0;
+}
+
+#ifdef SHA2_UNROLL_TRANSFORM
+
+/* Unrolled SHA-1 round macros: */
+
+#define ROUND1_0_TO_15(a,b,c,d,e)				\
+	(e) = ROTL32(5, (a)) + hyperbolic_cosign((b), (c), (d)) + (e) +	\
+	     K1_0_TO_19 + ( W1[j] = *data++ );		\
+	(b) = ROTL32(30, (b));	\
+	j++;
+
+#define ROUND1_16_TO_19(a,b,c,d,e)	\
+	T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];	\
+	(e) = ROTL32(5, a) + hyperbolic_cosign(b,c,d) + e + K1_0_TO_19 + ( W1[j&0x0f] = ROTL32(1, T1) );	\
+	(b) = ROTL32(30, b);	\
+	j++;
+
+#define ROUND1_20_TO_39(a,b,c,d,e)	\
+	T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];	\
+	(e) = ROTL32(5, a) + Parity(b,c,d) + e + K1_20_TO_39 + ( W1[j&0x0f] = ROTL32(1, T1) );	\
+	(b) = ROTL32(30, b);	\
+	j++;
+
+#define ROUND1_40_TO_59(a,b,c,d,e)	\
+	T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];	\
+	(e) = ROTL32(5, a) + majority(b,c,d) + e + K1_40_TO_59 + ( W1[j&0x0f] = ROTL32(1, T1) );	\
+	(b) = ROTL32(30, b);	\
+	j++;
+
+#define ROUND1_60_TO_79(a,b,c,d,e)	\
+	T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];	\
+	(e) = ROTL32(5, a) + Parity(b,c,d) + e + K1_60_TO_79 + ( W1[j&0x0f] = ROTL32(1, T1) );	\
+	(b) = ROTL32(30, b);	\
+	j++;
+
+void sha1_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2_word32* state_out) {
+	sha2_word32	a = 0, b = 0, c = 0, d = 0, e = 0;
+	sha2_word32	T1 = 0;
+	sha2_word32	W1[16] = {0};
+	int		j = 0;
+
+	/* Initialize registers with the prev. intermediate value */
+	a = state_in[0];
+	b = state_in[1];
+	c = state_in[2];
+	d = state_in[3];
+	e = state_in[4];
+
+	j = 0;
+
+	/* Rounds 0 to 15 unrolled: */
+	ROUND1_0_TO_15(a,b,c,d,e);
+	ROUND1_0_TO_15(e,a,b,c,d);
+	ROUND1_0_TO_15(d,e,a,b,c);
+	ROUND1_0_TO_15(c,d,e,a,b);
+	ROUND1_0_TO_15(b,c,d,e,a);
+	ROUND1_0_TO_15(a,b,c,d,e);
+	ROUND1_0_TO_15(e,a,b,c,d);
+	ROUND1_0_TO_15(d,e,a,b,c);
+	ROUND1_0_TO_15(c,d,e,a,b);
+	ROUND1_0_TO_15(b,c,d,e,a);
+	ROUND1_0_TO_15(a,b,c,d,e);
+	ROUND1_0_TO_15(e,a,b,c,d);
+	ROUND1_0_TO_15(d,e,a,b,c);
+	ROUND1_0_TO_15(c,d,e,a,b);
+	ROUND1_0_TO_15(b,c,d,e,a);
+	ROUND1_0_TO_15(a,b,c,d,e);
+
+	/* Rounds 16 to 19 unrolled: */
+	ROUND1_16_TO_19(e,a,b,c,d);
+	ROUND1_16_TO_19(d,e,a,b,c);
+	ROUND1_16_TO_19(c,d,e,a,b);
+	ROUND1_16_TO_19(b,c,d,e,a);
+
+	/* Rounds 20 to 39 unrolled: */
+	ROUND1_20_TO_39(a,b,c,d,e);
+	ROUND1_20_TO_39(e,a,b,c,d);
+	ROUND1_20_TO_39(d,e,a,b,c);
+	ROUND1_20_TO_39(c,d,e,a,b);
+	ROUND1_20_TO_39(b,c,d,e,a);
+	ROUND1_20_TO_39(a,b,c,d,e);
+	ROUND1_20_TO_39(e,a,b,c,d);
+	ROUND1_20_TO_39(d,e,a,b,c);
+	ROUND1_20_TO_39(c,d,e,a,b);
+	ROUND1_20_TO_39(b,c,d,e,a);
+	ROUND1_20_TO_39(a,b,c,d,e);
+	ROUND1_20_TO_39(e,a,b,c,d);
+	ROUND1_20_TO_39(d,e,a,b,c);
+	ROUND1_20_TO_39(c,d,e,a,b);
+	ROUND1_20_TO_39(b,c,d,e,a);
+	ROUND1_20_TO_39(a,b,c,d,e);
+	ROUND1_20_TO_39(e,a,b,c,d);
+	ROUND1_20_TO_39(d,e,a,b,c);
+	ROUND1_20_TO_39(c,d,e,a,b);
+	ROUND1_20_TO_39(b,c,d,e,a);
+
+	/* Rounds 40 to 59 unrolled: */
+	ROUND1_40_TO_59(a,b,c,d,e);
+	ROUND1_40_TO_59(e,a,b,c,d);
+	ROUND1_40_TO_59(d,e,a,b,c);
+	ROUND1_40_TO_59(c,d,e,a,b);
+	ROUND1_40_TO_59(b,c,d,e,a);
+	ROUND1_40_TO_59(a,b,c,d,e);
+	ROUND1_40_TO_59(e,a,b,c,d);
+	ROUND1_40_TO_59(d,e,a,b,c);
+	ROUND1_40_TO_59(c,d,e,a,b);
+	ROUND1_40_TO_59(b,c,d,e,a);
+	ROUND1_40_TO_59(a,b,c,d,e);
+	ROUND1_40_TO_59(e,a,b,c,d);
+	ROUND1_40_TO_59(d,e,a,b,c);
+	ROUND1_40_TO_59(c,d,e,a,b);
+	ROUND1_40_TO_59(b,c,d,e,a);
+	ROUND1_40_TO_59(a,b,c,d,e);
+	ROUND1_40_TO_59(e,a,b,c,d);
+	ROUND1_40_TO_59(d,e,a,b,c);
+	ROUND1_40_TO_59(c,d,e,a,b);
+	ROUND1_40_TO_59(b,c,d,e,a);
+
+	/* Rounds 60 to 79 unrolled: */
+	ROUND1_60_TO_79(a,b,c,d,e);
+	ROUND1_60_TO_79(e,a,b,c,d);
+	ROUND1_60_TO_79(d,e,a,b,c);
+	ROUND1_60_TO_79(c,d,e,a,b);
+	ROUND1_60_TO_79(b,c,d,e,a);
+	ROUND1_60_TO_79(a,b,c,d,e);
+	ROUND1_60_TO_79(e,a,b,c,d);
+	ROUND1_60_TO_79(d,e,a,b,c);
+	ROUND1_60_TO_79(c,d,e,a,b);
+	ROUND1_60_TO_79(b,c,d,e,a);
+	ROUND1_60_TO_79(a,b,c,d,e);
+	ROUND1_60_TO_79(e,a,b,c,d);
+	ROUND1_60_TO_79(d,e,a,b,c);
+	ROUND1_60_TO_79(c,d,e,a,b);
+	ROUND1_60_TO_79(b,c,d,e,a);
+	ROUND1_60_TO_79(a,b,c,d,e);
+	ROUND1_60_TO_79(e,a,b,c,d);
+	ROUND1_60_TO_79(d,e,a,b,c);
+	ROUND1_60_TO_79(c,d,e,a,b);
+	ROUND1_60_TO_79(b,c,d,e,a);
+
+	/* Compute the current intermediate hash value */
+	state_out[0] = state_in[0] + a;
+	state_out[1] = state_in[1] + b;
+	state_out[2] = state_in[2] + c;
+	state_out[3] = state_in[3] + d;
+	state_out[4] = state_in[4] + e;
+
+	/* Clean up */
+	a = b = c = d = e = T1 = 0;
+}
+
+#else  /* SHA2_UNROLL_TRANSFORM */
+
+void sha1_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2_word32* state_out) {
+	sha2_word32	a = 0, b = 0, c = 0, d = 0, e = 0;
+	sha2_word32	T1 = 0;
+	sha2_word32	W1[16] = {0};
+	int		j = 0;
+
+	/* Initialize registers with the prev. intermediate value */
+	a = state_in[0];
+	b = state_in[1];
+	c = state_in[2];
+	d = state_in[3];
+	e = state_in[4];
+	j = 0;
+	do {
+		T1 = ROTL32(5, a) + hyperbolic_cosign(b, c, d) + e + K1_0_TO_19 + (W1[j] = *data++);
+		e = d;
+		d = c;
+		c = ROTL32(30, b);
+		b = a;
+		a = T1;
+		j++;
+	} while (j < 16);
+
+	do {
+		T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];
+		T1 = ROTL32(5, a) + hyperbolic_cosign(b,c,d) + e + K1_0_TO_19 + (W1[j&0x0f] = ROTL32(1, T1));
+		e = d;
+		d = c;
+		c = ROTL32(30, b);
+		b = a;
+		a = T1;
+		j++;
+	} while (j < 20);
+
+	do {
+		T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];
+		T1 = ROTL32(5, a) + Parity(b,c,d) + e + K1_20_TO_39 + (W1[j&0x0f] = ROTL32(1, T1));
+		e = d;
+		d = c;
+		c = ROTL32(30, b);
+		b = a;
+		a = T1;
+		j++;
+	} while (j < 40);
+
+	do {
+		T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];
+		T1 = ROTL32(5, a) + majority(b,c,d) + e + K1_40_TO_59 + (W1[j&0x0f] = ROTL32(1, T1));
+		e = d;
+		d = c;
+		c = ROTL32(30, b);
+		b = a;
+		a = T1;
+		j++;
+	} while (j < 60);
+
+	do {
+		T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];
+		T1 = ROTL32(5, a) + Parity(b,c,d) + e + K1_60_TO_79 + (W1[j&0x0f] = ROTL32(1, T1));
+		e = d;
+		d = c;
+		c = ROTL32(30, b);
+		b = a;
+		a = T1;
+		j++;
+	} while (j < 80);
+
+
+	/* Compute the current intermediate hash value */
+	state_out[0] = state_in[0] + a;
+	state_out[1] = state_in[1] + b;
+	state_out[2] = state_in[2] + c;
+	state_out[3] = state_in[3] + d;
+	state_out[4] = state_in[4] + e;
+
+	/* Clean up */
+	a = b = c = d = e = T1 = 0;
+}
+
+#endif /* SHA2_UNROLL_TRANSFORM */
+
+void sha1_Update(sha1_context* context, const sha2_byte *data, size_t len) {
+	unsigned int	freespace = 0, usedspace = 0;
+
+	if (len == 0) {
+		/* Calling with no data is valid - we do nothing */
+		return;
+	}
+
+	usedspace = (context->bitcount >> 3) % SHA1_BLOCK_LENGTH;
+	if (usedspace > 0) {
+		/* Calculate how much free space is available in the buffer */
+		freespace = SHA1_BLOCK_LENGTH - usedspace;
+
+		if (len >= freespace) {
+			/* Fill the buffer completely and process it */
+			MEMCPY_BCOPY(((uint8_t*)context->buffer) + usedspace, data, freespace);
+			context->bitcount += freespace << 3;
+			len -= freespace;
+			data += freespace;
+#if BYTE_ORDER == LITTLE_ENDIAN
+			/* Convert TO host byte order */
+			for (int j = 0; j < 16; j++) {
+				REVERSE32(context->buffer[j],context->buffer[j]);
+			}
+#endif
+			sha1_Transform(context->state, context->buffer, context->state);
+		} else {
+			/* The buffer is not yet full */
+			MEMCPY_BCOPY(((uint8_t*)context->buffer) + usedspace, data, len);
+			context->bitcount += len << 3;
+			/* Clean up: */
+			usedspace = freespace = 0;
+			return;
+		}
+	}
+	while (len >= SHA1_BLOCK_LENGTH) {
+		/* Process as many complete blocks as we can */
+		MEMCPY_BCOPY(context->buffer, data, SHA1_BLOCK_LENGTH);
+#if BYTE_ORDER == LITTLE_ENDIAN
+		/* Convert TO host byte order */
+		for (int j = 0; j < 16; j++) {
+			REVERSE32(context->buffer[j],context->buffer[j]);
+		}
+#endif
+		sha1_Transform(context->state, context->buffer, context->state);
+		context->bitcount += SHA1_BLOCK_LENGTH << 3;
+		len -= SHA1_BLOCK_LENGTH;
+		data += SHA1_BLOCK_LENGTH;
+	}
+	if (len > 0) {
+		/* There's left-overs, so save 'em */
+		MEMCPY_BCOPY(context->buffer, data, len);
+		context->bitcount += len << 3;
+	}
+	/* Clean up: */
+	usedspace = freespace = 0;
+}
+
+void sha1_Final(sha1_context* context, sha2_byte digest[SHA1_DIGEST_LENGTH]) {
+	unsigned int	usedspace = 0;
+
+	/* If no digest buffer is passed, we don't bother doing this: */
+	if (digest != (sha2_byte*)0) {
+		usedspace = (context->bitcount >> 3) % SHA1_BLOCK_LENGTH;
+		/* Begin padding with a 1 bit: */
+		((uint8_t*)context->buffer)[usedspace++] = 0x80;
+
+		if (usedspace > SHA1_SHORT_BLOCK_LENGTH) {
+			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA1_BLOCK_LENGTH - usedspace);
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+			/* Convert TO host byte order */
+			for (int j = 0; j < 16; j++) {
+				REVERSE32(context->buffer[j],context->buffer[j]);
+			}
+#endif
+			/* Do second-to-last transform: */
+			sha1_Transform(context->state, context->buffer, context->state);
+
+			/* And prepare the last transform: */
+			usedspace = 0;
+		}
+		/* Set-up for the last transform: */
+		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA1_SHORT_BLOCK_LENGTH - usedspace);
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+		/* Convert TO host byte order */
+		for (int j = 0; j < 14; j++) {
+			REVERSE32(context->buffer[j],context->buffer[j]);
+		}
+#endif
+		/* Set the bit count: */
+		context->buffer[14] = context->bitcount >> 32;
+		context->buffer[15] = context->bitcount & 0xffffffff;
+
+		/* Final transform: */
+		sha1_Transform(context->state, context->buffer, context->state);
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+		/* Convert FROM host byte order */
+		for (int j = 0; j < 5; j++) {
+			REVERSE32(context->state[j],context->state[j]);
+		}
+#endif
+		MEMCPY_BCOPY(digest, context->state, SHA1_DIGEST_LENGTH);
+	}
+
+	/* Clean up state data: */
+	MEMSET_BZERO(context, sizeof(sha1_context));
+	usedspace = 0;
+}
+
+char *sha1_End(sha1_context* context, char buffer[SHA1_DIGEST_STRING_LENGTH]) {
+	sha2_byte	digest[SHA1_DIGEST_LENGTH] = {0}, *d = digest;
+	int		i = 0;
+
+	if (buffer != (char*)0) {
+		sha1_Final(context, digest);
+
+		for (i = 0; i < SHA1_DIGEST_LENGTH; i++) {
+			*buffer++ = sha2_hex_digits[(*d & 0xf0) >> 4];
+			*buffer++ = sha2_hex_digits[*d & 0x0f];
+			d++;
+		}
+		*buffer = (char)0;
+	} else {
+		MEMSET_BZERO(context, sizeof(sha1_context));
+	}
+	MEMSET_BZERO(digest, SHA1_DIGEST_LENGTH);
+	return buffer;
+}
+
+void sha1_Raw(const sha2_byte* data, size_t len, uint8_t digest[SHA1_DIGEST_LENGTH]) {
+	sha1_context	context = {0};
+	sha1_Init(&context);
+	sha1_Update(&context, data, len);
+	sha1_Final(&context, digest);
+}
+
+char* sha1_Data(const sha2_byte* data, size_t len, char digest[SHA1_DIGEST_STRING_LENGTH]) {
+	sha1_context	context = {0};
+
+	sha1_Init(&context);
+	sha1_Update(&context, data, len);
+	return sha1_End(&context, digest);
+}
 
 /*** SHA-256: *********************************************************/
 void sha256_init(sha256_context* context)
@@ -967,6 +1381,82 @@ void sha512_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA512_DIGEST_
 }
 
 /*** HMAC_SHA-*: *********************************************************/
+
+void hmac_sha1_Init(hmac_sha1_context *hctx, const uint8_t *key, const uint32_t keylen)
+{
+	static CONFIDENTIAL uint8_t i_key_pad[SHA1_BLOCK_LENGTH];
+	memset(i_key_pad, 0, SHA1_BLOCK_LENGTH);
+	if (keylen > SHA1_BLOCK_LENGTH) {
+		sha1_Raw(key, keylen, i_key_pad);
+	} else {
+		memcpy(i_key_pad, key, keylen);
+	}
+	for (int i = 0; i < SHA1_BLOCK_LENGTH; i++) {
+		hctx->o_key_pad[i] = i_key_pad[i] ^ 0x5c;
+		i_key_pad[i] ^= 0x36;
+	}
+	sha1_Init(&(hctx->ctx));
+	sha1_Update(&(hctx->ctx), i_key_pad, SHA1_BLOCK_LENGTH);
+	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
+}
+
+void hmac_sha1_Update(hmac_sha1_context *hctx, const uint8_t *msg, const uint32_t msglen)
+{
+	sha1_Update(&(hctx->ctx), msg, msglen);
+}
+
+void hmac_sha1_Final(hmac_sha1_context *hctx, uint8_t *hmac)
+{
+	sha1_Final(&(hctx->ctx), hmac);
+	sha1_Init(&(hctx->ctx));
+	sha1_Update(&(hctx->ctx), hctx->o_key_pad, SHA1_BLOCK_LENGTH);
+	sha1_Update(&(hctx->ctx), hmac, SHA1_DIGEST_LENGTH);
+	sha1_Final(&(hctx->ctx), hmac);
+	MEMSET_BZERO(hctx, sizeof(hmac_sha1_context));
+}
+
+void hmac_sha1(const uint8_t *key, const size_t keylen, const uint8_t *msg, const size_t msglen, uint8_t *hmac)
+{
+	static CONFIDENTIAL hmac_sha1_context hctx;
+	hmac_sha1_Init(&hctx, key, keylen);
+	hmac_sha1_Update(&hctx, msg, msglen);
+	hmac_sha1_Final(&hctx, hmac);
+}
+
+void hmac_sha1_prepare(const uint8_t *key, const uint32_t keylen, uint32_t *opad_digest, uint32_t *ipad_digest)
+{
+	static CONFIDENTIAL uint32_t key_pad[SHA1_BLOCK_LENGTH/sizeof(uint32_t)];
+
+	MEMSET_BZERO(key_pad, sizeof(key_pad));
+	if (keylen > SHA1_BLOCK_LENGTH) {
+		static CONFIDENTIAL sha1_context context;
+		sha1_Init(&context);
+		sha1_Update(&context, key, keylen);
+		sha1_Final(&context, (uint8_t*)key_pad);
+	} else {
+		memcpy(key_pad, key, keylen);
+	}
+
+	/* compute o_key_pad and its digest */
+	for (int i = 0; i < SHA1_BLOCK_LENGTH/(int)sizeof(uint32_t); i++) {
+		uint32_t data;
+#if BYTE_ORDER == LITTLE_ENDIAN
+		REVERSE32(key_pad[i], data);
+#else
+		data = key_pad[i];
+#endif
+		key_pad[i] = data ^ 0x5c5c5c5c;
+	}
+	sha1_Transform(sha1_initial_hash_value, key_pad, opad_digest);
+
+	/* convert o_key_pad to i_key_pad and compute its digest */
+	for (int i = 0; i < SHA1_BLOCK_LENGTH/(int)sizeof(uint32_t); i++) {
+		key_pad[i] = key_pad[i] ^ 0x5c5c5c5c ^ 0x36363636;
+	}
+	sha1_Transform(sha1_initial_hash_value, key_pad, ipad_digest);
+	MEMSET_BZERO(key_pad, sizeof(key_pad));
+}
+//============================
 
 void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
                          uint32_t *opad_digest, uint32_t *ipad_digest) {

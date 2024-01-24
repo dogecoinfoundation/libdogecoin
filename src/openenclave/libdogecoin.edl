@@ -4,15 +4,27 @@
 enclave {
     from "openenclave/edl/syscall.edl" import *;
     from "platform.edl" import *;
+    from "openenclave/edl/logging.edl" import oe_write_ocall;
+    from "openenclave/edl/fcntl.edl" import *;
+    from "openenclave/edl/socket.edl" import *;
+    from "openenclave/edl/utsname.edl" import *;
+    from "openenclave/edl/epoll.edl" import *;
 
     trusted {
         public void enclave_libdogecoin();
-        public void enclave_libdogecoin_generate_mnemonic();
+        public void enclave_libdogecoin_attest(uint8_t* report, size_t len);
+        public void enclave_libdogecoin_run_example();
+        public void enclave_libdogecoin_generate_encrypted_seed(uint8_t** encrypted_blob, size_t* len);
+        public void enclave_libdogecoin_generate_master_key(uint8_t** encrypted_blob, size_t* len);
+
+        public void enclave_libdogecoin_generate_mnemonic(uint8_t** encrypted_blob, size_t* len, char* mnemonic, const char* shared_secret, const char* mnemonic_in, const char* entropy_size);
+        public void enclave_libdogecoin_generate_extended_public_key(uint8_t* encrypted_blob, size_t len, char* pubkey, uint32_t* account, const char* change_level, const uint32_t auth_token);
+        public void enclave_libdogecoin_generate_address(uint8_t* encrypted_blob, size_t len, char* addresses, uint32_t account, uint32_t address_index, const char* change_level, uint32_t num_addresses, const uint32_t auth_token);
+        public void enclave_libdogecoin_sign_message(uint8_t* encrypted_blob, size_t len, const char* message, char* signature, uint32_t account, uint32_t address_index, const char* change_level, const uint32_t auth_token);
+        public void enclave_libdogecoin_sign_transaction(uint8_t* encrypted_blob, size_t len, const char* raw_tx, char* signed_tx, uint32_t account, uint32_t address_index, const char* change_level, const uint32_t auth_token);
     };
 
     untrusted {
         void host_libdogecoin();
     };
 };
-
-

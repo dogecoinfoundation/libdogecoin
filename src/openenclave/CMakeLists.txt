@@ -36,18 +36,22 @@ set(OE_CRYPTO_LIB
 add_subdirectory(enclave)
 add_subdirectory(host)
 
-# Generate key
-add_custom_command(
-  OUTPUT private.pem public.pem
-  COMMAND openssl genrsa -out private.pem -3 3072
-  COMMAND openssl rsa -in private.pem -pubout -out public.pem)
+if (NOT DEFINED ENV{GITHUB_ACTIONS})
+  # Generate key
+  add_custom_command(
+    OUTPUT private.pem public.pem
+    COMMAND openssl genrsa -out private.pem -3 3072
+    COMMAND openssl rsa -in private.pem -pubout -out public.pem)
+endif ()
 
 # Sign enclave
 add_custom_command(
   OUTPUT enclave/enclave.signed
   DEPENDS enclave enclave/libdogecoin.conf private.pem
   COMMAND openenclave::oesign sign -e $<TARGET_FILE:enclave> -c
-          ${CMAKE_SOURCE_DIR}/enclave/libdogecoin.conf -k private.pem)
+          ${CMAKE_SOURCE_DIR}/enclave/libdogecoin.conf -k private.pem
+  COMMENT "Signing enclave"
+)
 
 add_custom_target(sign ALL DEPENDS enclave/enclave.signed)
 
@@ -55,10 +59,12 @@ if ((NOT DEFINED ENV{OE_SIMULATION}) OR (NOT $ENV{OE_SIMULATION}))
   add_custom_target(
     run
     DEPENDS host sign
-    COMMAND host ${CMAKE_BINARY_DIR}/enclave/enclave.signed)
-endif ()
+    COMMAND host ${CMAKE_BINARY_DIR}/enclave/enclave.signed
+  )
+endif()
 
 add_custom_target(
   simulate
   DEPENDS host sign
-  COMMAND host ${CMAKE_BINARY_DIR}/enclave/enclave.signed --simulate)
+  COMMAND host ${CMAKE_BINARY_DIR}/enclave/enclave.signed --simulate
+)

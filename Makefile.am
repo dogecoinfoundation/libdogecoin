@@ -205,6 +205,7 @@ tests_SOURCES = \
     test/rmd160_tests.c \
     test/scrypt_tests.c \
     test/serialize_tests.c \
+    test/sha1_tests.c \
     test/sha2_tests.c \
     test/signmsg_tests.c \
     test/tpm_tests.c \
