@@ -370,19 +370,19 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
         if (fork_from_block && blockindex->height > db->chaintip->height && arith_uint256_greater_than(added_chainwork, chaintip_chainwork)) {
 
             // Identify the common ancestor
-            dogecoin_blockindex* common_ancestor = connect_at->prev;
-            dogecoin_blockindex* chain_tip = db->chaintip;
+            dogecoin_blockindex* common_ancestor = db->chaintip;
+            dogecoin_blockindex* fork_chain = blockindex;
 
-            // Find the common ancestor
-            while (common_ancestor && chain_tip && common_ancestor->height != chain_tip->height) {
-                if (common_ancestor->height > chain_tip->height) {
+            // Find the common ancestor by comparing hashes
+            while (common_ancestor && fork_chain && memcmp(common_ancestor->hash, fork_chain->hash, DOGECOIN_HASH_LENGTH) != 0) {
+                if (common_ancestor->height > fork_chain->height) {
                     common_ancestor = common_ancestor->prev;
                 } else {
-                    chain_tip = chain_tip->prev;
+                    fork_chain = fork_chain->prev;
                 }
 
                 // Break the loop if either reaches the start of the chain
-                if (!common_ancestor || !chain_tip) {
+                if (!common_ancestor || !fork_chain) {
                     fprintf(stderr, "Unable to find common ancestor.\n");
                     dogecoin_free(blockindex);
                     dogecoin_free(chaintip_chainwork);
