@@ -175,11 +175,11 @@ jobs:
         run: ${{ matrix.postinstall }}
 
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: sdk cache
         if: ${{ matrix.sdk }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: sdk
         with:
@@ -199,7 +199,7 @@ jobs:
           tar -C depends/SDKs -xf depends/sdk-sources/${{ env.sdk-filename }}
 
       - name: dependency cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: depends
         with:
@@ -212,7 +212,7 @@ jobs:
         if: matrix.host != 'x86_64-pc-windows-msvc'
 
       - name: ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: ccache
         with:
@@ -302,7 +302,7 @@ jobs:
             esac
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-${{ matrix.name }}
           path: |
@@ -311,6 +311,7 @@ jobs:
   sign-x86_64-win:
     needs: build
     runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -351,7 +352,7 @@ jobs:
           certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
 
       - name: Upload artifacts (x86_64-win)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-win-signed
           path: .
@@ -359,6 +360,7 @@ jobs:
   sign-x86_64-win-native:
     needs: build
     runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -399,7 +401,7 @@ jobs:
           certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
 
       - name: Upload artifacts (x86_64-win-native)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-win-native-signed
           path: .
@@ -407,6 +409,7 @@ jobs:
   sign-i686-win:
     needs: build
     runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -447,7 +450,7 @@ jobs:
           certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
 
       - name: Upload artifacts (i686-win)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-i686-win-signed
           path: .
@@ -455,6 +458,7 @@ jobs:
   sign-x86_64-macos:
     needs: build
     runs-on: macos-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -498,8 +502,7 @@ jobs:
           /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
 
       - name: Upload artifacts (i686-win)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-i686-win-signed
           path: .
-
