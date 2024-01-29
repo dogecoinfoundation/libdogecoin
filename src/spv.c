@@ -546,9 +546,6 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
         {
             client->nodegroup->log_write_cb("Got invalid block (not in sequence) from node %d\n", node->nodeid);
             node->state &= ~NODE_BLOCKSYNC;
-            cstring *reject_msg = dogecoin_p2p_message_new(node->nodegroup->chainparams->netmagic, DOGECOIN_MSG_REJECT, NULL, 0);
-            dogecoin_node_send(node, reject_msg);
-            cstr_free(reject_msg, true);
             return;
         }
 
