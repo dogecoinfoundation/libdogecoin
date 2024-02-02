@@ -4,7 +4,7 @@
 
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2023 bluezr
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),

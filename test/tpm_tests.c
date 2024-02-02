@@ -1,7 +1,7 @@
 /**********************************************************************
  * Copyright (c) 2015 Jonas Schnelli                                  *
  * Copyright (c) 2023 edtubbs                                         *
- * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Copyright (c) 2022-2024 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/

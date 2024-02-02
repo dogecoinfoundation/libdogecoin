@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2023 edtubbs
- * Copyright (c) 2023 The Dogecoin Foundation
+ * Copyright (c) 2023-2024 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
