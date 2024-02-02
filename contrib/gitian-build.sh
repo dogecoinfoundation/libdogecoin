@@ -109,7 +109,6 @@ if [ ! -d "gitian" ]; then
 fi
 
 pushd gitian
-
 if [ ! -d "gitian-builder" ]; then
     git clone https://github.com/devrandom/gitian-builder.git
 fi
@@ -123,10 +122,19 @@ pushd libdogecoin
 popd
 
 pushd gitian-builder
+if [ ! -d "patches" ]; then
+    mkdir -p patches
+fi
+
+if [ ! -f "patches/fix-mirror_base.patch" ]; then
+    wget -P patches https://gist.githubusercontent.com/xanimo/aeb7d031bc5ced761f8b2a28af3779ae/raw/241426ddcf5d272e02fe2b9fd7019afddea0f67a/fix-mirror_base.patch
+    git apply patches/fix-mirror_base.patch
+fi
+
 if [ "$USE_DOCKER" ]; then
-    bin/make-base-vm --docker --suite bionic --arch amd64
+    bin/make-base-vm --docker --suite focal --arch amd64
 elif [ "$USE_LXC" ]; then
-    bin/make-base-vm --lxc --suite bionic --arch amd64
+    bin/make-base-vm --lxc --suite focal --arch amd64
 fi
 
 if [ ! -d "inputs" ]; then
@@ -151,12 +159,6 @@ if [ ! -d "${BUILD_SUFFIX}" ]; then
     mkdir -p ${BUILD_SUFFIX}
 fi
 
-# uncomment once we fix mac and windows packaging
-# if [ "$SIGNER" ]; then
-#     DESCRIPTORS+=('win-signer' 'osx-signer')
-# fi
-
-# leaving commented in case it failure in loop above
 ./bin/gbuild -m ${MEM} -j ${PROC} --commit libdogecoin=${COMMIT} --url libdogecoin=${URL} ../libdogecoin/contrib/gitian-descriptors/gitian-linux.yml
 if [ "$SIGNER" ]; then
 ./bin/gsign --signer "$SIGNER" --release "$COMMIT"-"linux" \

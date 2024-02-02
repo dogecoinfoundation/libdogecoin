@@ -3,7 +3,7 @@
 #include <string.h>
 
 // Example of how to use libdogecoin API functions:
-// gcc ./examples/example.c -I./include -L./lib -ldogecoin -o example
+// gcc ./examples/example.c -I./include -L./lib -ldogecoin -lunistring -o example
 
 // (or in the case of this project's directory structure, and if you want to build statically):
 // (after build, from the /libdogecoin project root directory)
