@@ -313,11 +313,8 @@ jobs:
     runs-on: windows-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-win
 
@@ -328,6 +325,7 @@ jobs:
           [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
           $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
           Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+          Remove-Item ./mycert.pfx
         shell: pwsh
 
       - name: Sign spvnode.exe (x86_64-win)
@@ -355,18 +353,22 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-win-signed
-          path: .
+          path: |
+            bin/**
+            docs/**
+            examples/**
+            include/**
+            lib/**
+            test/**
+            LICENSE
 
   sign-x86_64-win-native:
     needs: build
     runs-on: windows-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-win-native
 
@@ -377,6 +379,7 @@ jobs:
           [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
           $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
           Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+          Remove-Item ./mycert.pfx
         shell: pwsh
 
       - name: Sign spvnode.exe (x86_64-win-native)
@@ -404,18 +407,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-win-native-signed
-          path: .
+          path: |
+            Debug/**
+            test/**
 
   sign-i686-win:
     needs: build
     runs-on: windows-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-i686-win
 
@@ -426,6 +428,7 @@ jobs:
           [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
           $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
           Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+          Remove-Item ./mycert.pfx
         shell: pwsh
 
       - name: Sign spvnode.exe (i686-win)
@@ -453,18 +456,22 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-i686-win-signed
-          path: .
+          path: |
+            bin/**
+            docs/**
+            examples/**
+            include/**
+            lib/**
+            test/**
+            LICENSE
 
   sign-x86_64-macos:
     needs: build
     runs-on: macos-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-x86_64-macos
 
@@ -505,4 +512,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-i686-win-signed
-          path: .
+          path: |
+            bin/**
+            docs/**
+            examples/**
+            include/**
+            lib/**
+            test/**
+            LICENSE
