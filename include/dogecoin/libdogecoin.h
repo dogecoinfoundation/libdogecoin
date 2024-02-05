@@ -137,8 +137,8 @@ int getDerivedHDAddressByPath(const char masterkey[HDKEYLEN], const char derived
 dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char pubkey_hex[PUBKEYHEXLEN], char p2pkh_address[P2PKHLEN]);
 int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]);
 
-/* generate the hex publickey from a given hex private key */
-dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char privkey_hex[PRIVKEYHEXLEN], char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
+/* generate the hex publickey from a given WIF private key */
+dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char privkey_wif[PRIVKEYWIFLEN], char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
 int getPubkeyFromPrivkey(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
 
 /* generate a new private key (hex) */
