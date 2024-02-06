@@ -62,7 +62,7 @@ IF(WITH_NET)
             -DEVENT__DISABLE_REGRESS=ON
             -DEVENT__DISABLE_BENCHMARK=ON
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
-        execute_process(COMMAND cmake --build .
+        execute_process(COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
         file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/build/include" DESTINATION "${PROJECT_SOURCE_DIR}")
         file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include/event2" DESTINATION "${PROJECT_SOURCE_DIR}/include")

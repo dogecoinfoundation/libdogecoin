@@ -92,7 +92,8 @@ dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const ch
     dogecoin_pubkey_from_key(&key, &pubkey);
     assert(dogecoin_pubkey_is_valid(&pubkey) == 1);
     dogecoin_privkey_cleanse(&key);
-    assert (dogecoin_pubkey_get_hex(&pubkey, pubkey_hex, sizeout) == 1);
+    if (!dogecoin_pubkey_get_hex(&pubkey, pubkey_hex, sizeout))
+        return false;
     dogecoin_pubkey_cleanse(&pubkey);
     return true;
 }
@@ -117,7 +118,8 @@ dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wi
     dogecoin_privkey_init(&key);
     dogecoin_privkey_gen(&key);
     memcpy_safe(&pkeybase58c[1], key.privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
-    assert(dogecoin_base58_encode_check(pkeybase58c, 34, privkey_wif, strsize_wif) != 0);
+    if (dogecoin_base58_encode_check(pkeybase58c, 34, privkey_wif, strsize_wif) == 0)
+        return false;
     // also export the hex privkey if use had passed in a valid pointer
     // will always export 32 bytes
     if (privkey_hex_or_null != NULL)
@@ -177,7 +179,8 @@ dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodes
     pkeybase58c[33] = 1; /* always use compressed keys */
     char privkey_wif[PRIVKEYWIFLEN];
     memcpy_safe(&pkeybase58c[1], node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH);
-    assert(dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), privkey_wif, sizeof(privkey_wif)) != 0);
+    if (dogecoin_base58_encode_check(pkeybase58c, sizeof(pkeybase58c), privkey_wif, sizeof(privkey_wif)) == 0)
+        return false;
     if (dogecoin_hdnode_has_privkey(&node)) {
         printf("privatekey WIF:      %s\n", privkey_wif);
     }

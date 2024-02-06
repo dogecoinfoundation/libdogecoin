@@ -89,6 +89,7 @@ void test_tpm()
     TBS_HCONTEXT hContext = 0;
     TBS_CONTEXT_PARAMS2 params;
     params.version = TBS_CONTEXT_VERSION_TWO;
+    params.includeTpm20 = 1;
     TBS_RESULT hr = Tbsi_Context_Create((PCTBS_CONTEXT_PARAMS)&params, &hContext);
     u_assert_uint32_eq (hr, TBS_SUCCESS);
 
