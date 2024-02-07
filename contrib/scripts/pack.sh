@@ -109,7 +109,7 @@ if [ "$HOST" ]; then
         ;;
     esac
     BUILD_SUFFIX="libdogecoin"
-    EXE="`pwd`/such$BINARY_SUFFIX `pwd`/sendtx$BINARY_SUFFIX"
+    EXE="`pwd`/such$BINARY_SUFFIX `pwd`/sendtx$BINARY_SUFFIX `pwd`/spvnode$BINARY_SUFFIX"
     FILES="$LIB $EXE"
 fi
 
@@ -159,7 +159,7 @@ if [ ! -f "$BUILD_PREFIX/$BUILD_SUFFIX/checksums.txt" ]; then
         if [ ! -d "`pwd`/bin" ]; then
             mkdir -p `pwd`/bin
         fi
-        mv such* sendtx* "`pwd`/bin"
+        mv such* sendtx* spvnode* "`pwd`/bin"
     popd
 fi
 
@@ -168,6 +168,8 @@ if [ ! -d "$BUILD_PREFIX/$BUILD_SUFFIX/lib" ]; then
 fi
 
 mv "$BUILD_PREFIX/$BUILD_SUFFIX/libdogecoin.a" "$BUILD_PREFIX/$BUILD_SUFFIX/lib/libdogecoin.a"
+mv `pwd`/depends/$HOST/lib/libunistring.a "$BUILD_PREFIX/$BUILD_SUFFIX/lib/libunistring.a"
+mv `pwd`/depends/$HOST/lib/libevent_core.a "$BUILD_PREFIX/$BUILD_SUFFIX/lib/libevent_core.a"
 
 if [ ! -d "$BUILD_PREFIX/$BUILD_SUFFIX/include" ]; then
     mkdir -p "$BUILD_PREFIX/$BUILD_SUFFIX/include"

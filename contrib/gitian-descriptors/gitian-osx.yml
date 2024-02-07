@@ -2,7 +2,7 @@
 name: "libdogecoin-osx-0.1.3"
 enable_cache: true
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -22,6 +22,8 @@ packages:
 - "python3"
 - "python3-dev"
 - "python3-setuptools"
+- "libtinfo5"
+- "xorriso"
 remotes:
 - "url": "${URL}"
   "dir": "libdogecoin"
@@ -111,7 +113,6 @@ script: |
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     ./contrib/scripts/build.sh --host ${i} --depends
-    ./contrib/scripts/combine.sh --target .libs/libdogecoin.a --append "depends/${i}/lib/libunistring.a"
     ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.3"
   done
 

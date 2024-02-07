@@ -115,6 +115,7 @@ test-suite.log
 **/__pycache__/
 *.py[cod]
 dist/
+gitian/
 contrib/gitian/
 contrib/gitian/*
 example
