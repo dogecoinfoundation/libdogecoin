@@ -524,12 +524,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     if (password == NULL)
     {
         fprintf(stderr, "ERROR: Failed to read password.\n");
+        fclose(fp);
         return false;
     }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -548,6 +550,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     {
         fprintf(stderr, "ERROR: Failed to read password.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
     if (strcmp(password, confirm_password) != 0)
@@ -557,6 +560,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
         dogecoin_mem_zero(confirm_password, strlen(confirm_password));
         dogecoin_free(password);
         dogecoin_free(confirm_password);
+        fclose(fp);
         return false;
     }
     // Clear the confirm password
@@ -571,6 +575,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
         dogecoin_mem_zero(password, strlen(password));
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -595,6 +600,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     if (!dogecoin_random_bytes(iv, sizeof(iv), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
 
@@ -605,6 +611,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     if (!encrypted_seed)
     {
         fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        fclose(fp);
         return false;
     }
 
@@ -613,6 +620,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
         dogecoin_free(encrypted_seed);
+        fclose(fp);
         return false;
     }
 
@@ -1239,12 +1247,14 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (password == NULL)
     {
         fprintf(stderr, "ERROR: Failed to read password.\n");
+        fclose(fp);
         return false;
     }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -1264,6 +1274,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     {
         fprintf(stderr, "ERROR: Failed to read password.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
     if (strcmp(password, confirm_password) != 0)
@@ -1273,6 +1284,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
         dogecoin_mem_zero(confirm_password, strlen(confirm_password));
         dogecoin_free(password);
         dogecoin_free(confirm_password);
+        fclose(fp);
         return false;
     }
     dogecoin_mem_zero(confirm_password, strlen(confirm_password));
@@ -1286,6 +1298,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
         dogecoin_mem_zero(password, strlen(password));
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -1310,6 +1323,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (!dogecoin_random_bytes(iv, sizeof(iv), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
 
@@ -1318,6 +1332,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (!dogecoin_random_bytes(seed, sizeof(seed), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
     dogecoin_hdnode_from_seed(seed, sizeof(seed), out);
@@ -1329,6 +1344,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (!encrypted_data)
     {
         fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        fclose(fp);
         return false;
     }
 
@@ -1337,6 +1353,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
         dogecoin_free(encrypted_data);
+        fclose(fp);
         return false;
     }
 
@@ -1974,12 +1991,14 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (password == NULL)
     {
         fprintf(stderr, "ERROR: Failed to read password.\n");
+        fclose(fp);
         return false;
     }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -1998,6 +2017,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     {
         fprintf(stderr, "ERROR: Failed to read password.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
     if (strcmp(password, confirm_password) != 0)
@@ -2007,6 +2027,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
         dogecoin_mem_zero(confirm_password, strlen(confirm_password));
         dogecoin_free(password);
         dogecoin_free(confirm_password);
+        fclose(fp);
         return false;
     }
     dogecoin_mem_zero(confirm_password, strlen(confirm_password));
@@ -2020,6 +2041,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
         dogecoin_mem_zero(password, strlen(password));
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -2045,6 +2067,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (mnemonicResult == -1)
     {
         fprintf(stderr, "ERROR: Failed to generate mnemonic\n");
+        fclose(fp);
         return false;
     }
 
@@ -2053,6 +2076,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (!dogecoin_random_bytes(iv, sizeof(iv), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
 
@@ -2062,6 +2086,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (!encrypted_data)
     {
         fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        fclose(fp);
         return false;
     }
     memset(encrypted_data, 0, encrypted_size);
@@ -2071,6 +2096,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
         dogecoin_free(encrypted_data);
+        fclose(fp);
         return false;
     }
 
