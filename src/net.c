@@ -592,19 +592,18 @@ dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
  */
 void dogecoin_node_connection_state_changed(dogecoin_node* node)
 {
-    if (node->nodegroup->node_connection_state_changed_cb)
+    /* connect to more nodes are required */
+    if (node->nodegroup->node_connection_state_changed_cb) {
         node->nodegroup->node_connection_state_changed_cb(node);
+    }
 
     if ((node->state & NODE_ERRORED) == NODE_ERRORED) {
         dogecoin_node_release_events(node);
-
-        /* connect to more nodes are required */
-        dogecoin_bool should_connect_to_more_nodes = true;
-        if (node->nodegroup->should_connect_to_more_nodes_cb)
-            should_connect_to_more_nodes = node->nodegroup->should_connect_to_more_nodes_cb(node);
-
-        if (should_connect_to_more_nodes && (dogecoin_node_group_amount_of_connected_nodes(node->nodegroup, NODE_CONNECTED) + dogecoin_node_group_amount_of_connected_nodes(node->nodegroup, NODE_CONNECTING) < node->nodegroup->desired_amount_connected_nodes))
-            dogecoin_node_group_connect_next_nodes(node->nodegroup);
+        if (node->nodegroup->should_connect_to_more_nodes_cb) {
+            if (node->nodegroup->should_connect_to_more_nodes_cb(node)) {
+                dogecoin_node_group_connect_next_nodes(node->nodegroup);
+            }
+        }
     }
     if ((node->state & NODE_MISSBEHAVED) == NODE_MISSBEHAVED) {
         if ((node->state & NODE_CONNECTED) == NODE_CONNECTED || (node->state & NODE_CONNECTING) == NODE_CONNECTING) {

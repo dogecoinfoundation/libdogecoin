@@ -74,19 +74,19 @@ class SPVToolTest (BitcoinTestFramework):
         log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
         address = "mggFqzCUQmWWnh9vaoyT4BwKen7EbqhBmY mrvi2kJiHJGb3fSyHVmRa19Pt1xwanxuEF mmzGnpWs4VnwLvMoyRqbmf2GKbHTZks3bm"
         #sync with no headers database (-f 0) and debug (-d) only against localhost
-        cmd = "./spvnode --regtest -l -f 0 -d -i 127.0.0.1:"+str(p2p_port(0))+" -a '" + address + "' scan"
+        cmd = "./spvnode --regtest -l -f 0 -d -m 1 -i 127.0.0.1:"+str(p2p_port(0))+" -a '" + address + "' scan"
         data = self.execute_and_get_response(cmd)
-        assert("Sync completed, at height 11725" in data)
-        cmd = "./spvnode --regtest -a " + address + " sanity"
+        assert("Sync completed, at height 12200" in data)
+        cmd = "./spvnode --regtest -a '" + address + "' sanity"
         data = self.execute_and_get_response(cmd)
-        assert("total:          6.00000000" in data)
+        assert("total:          5.00000000" in data)
         # do the same with a headers db
-        cmd = "./spvnode --regtest -l -d -i 127.0.0.1:"+str(p2p_port(0))+" -a '" + address + "' scan"
+        cmd = "./spvnode --regtest -l -d -m 1 -i 127.0.0.1:"+str(p2p_port(0))+" -a '" + address + "' scan"
         data = self.execute_and_get_response(cmd)
-        assert("Sync completed, at height 11725" in data)
-        cmd = "./spvnode --regtest -a " + address + " sanity"
+        assert("Sync completed, at height 12200" in data)
+        cmd = "./spvnode --regtest -a '" + address + "' sanity"
         data = self.execute_and_get_response(cmd)
-        assert("total:          6.00000000" in data)
+        assert("total:          5.00000000" in data)
         try:
             os.remove("regtest_headers.db")
             os.remove("regtest_wallet.db")
