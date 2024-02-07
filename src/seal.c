@@ -910,6 +910,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
     TBS_HCONTEXT hContext = 0;
     TBS_CONTEXT_PARAMS2 params;
     params.version = TBS_CONTEXT_VERSION_TWO;
+    params.includeTpm20 = 1;
     TBS_RESULT hr = Tbsi_Context_Create((PCTBS_CONTEXT_PARAMS)&params, &hContext);
     if (hr != TBS_SUCCESS)
     {
@@ -1133,7 +1134,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* 
     }
 
     // Decrypt the encrypted data
-    status = NCryptDecrypt(hEncryptionKey, pbOutput, bytesRead, NULL, (PBYTE)out, (DWORD)cbResult, &cbResult, NCRYPT_PAD_PKCS1_FLAG);
+    status = NCryptDecrypt(hEncryptionKey, pbOutput, bytesRead, NULL, (PBYTE)out, sizeof(dogecoin_hdnode), &cbResult, NCRYPT_PAD_PKCS1_FLAG);
     if (status != ERROR_SUCCESS)
     {
         // Failed to decrypt the encrypted data
@@ -1576,6 +1577,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMON
     TBS_HCONTEXT hContext = 0;
     TBS_CONTEXT_PARAMS2 params;
     params.version = TBS_CONTEXT_VERSION_TWO;
+    params.includeTpm20 = 1;
     TBS_RESULT hr = Tbsi_Context_Create((PCTBS_CONTEXT_PARAMS)&params, &hContext);
     if (hr != TBS_SUCCESS)
     {
