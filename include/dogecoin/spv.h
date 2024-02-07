@@ -64,12 +64,13 @@ typedef struct dogecoin_spv_client_
     void *sync_transaction_ctx;
 } dogecoin_spv_client;
 
-LIBDOGECOIN_API dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync);
+LIBDOGECOIN_API dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync, int maxnodes);
 LIBDOGECOIN_API void dogecoin_spv_client_free(dogecoin_spv_client *client);
 LIBDOGECOIN_API dogecoin_bool dogecoin_spv_client_load(dogecoin_spv_client *client, const char *file_path, dogecoin_bool prompt);
 LIBDOGECOIN_API void dogecoin_spv_client_discover_peers(dogecoin_spv_client *client, const char *ips);
 LIBDOGECOIN_API void dogecoin_spv_client_runloop(dogecoin_spv_client *client);
 LIBDOGECOIN_API dogecoin_bool dogecoin_net_spv_request_headers(dogecoin_spv_client *client);
+LIBDOGECOIN_API void dogecoin_net_spv_node_request_headers_or_blocks(dogecoin_node *node, dogecoin_bool blocks);
 
 LIBDOGECOIN_END_DECL
 

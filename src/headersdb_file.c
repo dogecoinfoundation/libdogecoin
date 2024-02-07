@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 
 #include <dogecoin/headersdb_file.h>
-#include <dogecoin/block.h>
+#include <dogecoin/blockchain.h>
 #include <dogecoin/common.h>
 #include <dogecoin/pow.h>
 #include <dogecoin/serialize.h>
@@ -82,7 +82,6 @@ int dogecoin_header_compare(const void *l, const void *r)
 dogecoin_headers_db* dogecoin_headers_db_new(const dogecoin_chainparams* chainparams, dogecoin_bool inmem_only) {
     dogecoin_headers_db* db;
     db = dogecoin_calloc(1, sizeof(*db));
-
     db->read_write_file = !inmem_only;
     db->use_binary_tree = true;
     db->max_hdr_in_mem = 1440;
@@ -222,7 +221,6 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
     if (db->headers_tree_file && !create)
     {
         printf("Loading headers from disk, this may take several minutes...\n");
-
         while (!feof(db->headers_tree_file))
         {
             // print progress
@@ -258,10 +256,11 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
                     db->chaintip = chainheader;
                     firstblock = false;
                 } else {
-                    dogecoin_headers_db_connect_hdr(db, &cbuf_all, true, &connected);
+                    dogecoin_blockindex *pindex = dogecoin_headers_db_connect_hdr(db, &cbuf_all, true, &connected);
                     if (!connected)
                     {
-                        printf("\nConnecting header failed (at height: %d)\n", db->chaintip->height);
+                        printf("\nConnecting header %s failed (at height: %d) read_write: %d\n", hash_to_string(hash), db->chaintip->height, db->read_write_file);
+                        dogecoin_free(pindex);
                     }
                     else {
                         connected_headers_count++;
@@ -426,7 +425,6 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
 
             // Set the new block as the new chain tip
             db->chaintip = blockindex;
-
         }
         else if (blockindex->height > db->chaintip->height) {
             db->chaintip = blockindex;
@@ -471,11 +469,8 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
         }
         *connected = true;
         return blockindex;
-    } else {
-        // Connection not established, free allocated memory
-        dogecoin_free(blockindex);
-        return NULL;
     }
+    return blockindex;
 }
 
 /**

@@ -72,7 +72,7 @@ void test_spv()
     unlink(headersfile);
 
     // init new spv client with debugging off and syncing to memory:
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false);
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
@@ -99,7 +99,7 @@ void test_reorg() {
     unlink(headersfile);
 
     // Initialize SPV client
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false);
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false, 8);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
@@ -482,7 +482,7 @@ void test_reorg() {
     u_assert_true (connected);
     dogecoin_headers_db_connect_hdr(db, &cbuf_header4, false, &connected);
     u_assert_true (connected);
-    dogecoin_headers_db_connect_hdr(db, &cbuf_header5_fork, false, &connected);
+    dogecoin_free(dogecoin_headers_db_connect_hdr(db, &cbuf_header5_fork, false, &connected));
     u_assert_true (!connected);
     dogecoin_headers_db_connect_hdr(db, &cbuf_header2_fork, false, &connected);
     u_assert_true (connected);

@@ -1364,11 +1364,19 @@ dogecoin_bool dogecoin_wallet_txout_is_mine(dogecoin_wallet* wallet, dogecoin_tx
     vector* vec = vector_new(16, free);
     enum dogecoin_tx_out_type type = dogecoin_script_classify(tx_out->script_pubkey, vec);
 
-    //TODO: Multisig, etc.
-    if (type == DOGECOIN_TX_PUBKEYHASH) {
-        //TODO: find a better format for vector elements (not a pure pointer)
-        uint8_t* hash160 = vector_idx(vec, 0);
-        if (dogecoin_wallet_have_key(wallet, hash160)) {
+    if (type == DOGECOIN_TX_PUBKEY) { //TODO: find a better format for vector elements (not a pure pointer)
+        goto check;
+    } else if (type == DOGECOIN_TX_PUBKEYHASH) {
+        goto check;
+    } else if (type == DOGECOIN_TX_SCRIPTHASH) {
+        goto check;
+    } else if (type == DOGECOIN_TX_MULTISIG) {
+        goto check;
+    }
+
+check:
+    if (vec->len >= 1) {
+        if (dogecoin_wallet_have_key(wallet, (uint8_t*)vector_idx(vec, 0))) {
             ismine = true;
         }
     }
@@ -1498,7 +1506,7 @@ dogecoin_bool dogecoin_wallet_get_unspent(vector* unspents)
 void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *tx, unsigned int pos, dogecoin_blockindex *pindex) {
     (void)(pos);
     dogecoin_wallet *wallet = (dogecoin_wallet *)ctx;
-    if (dogecoin_wallet_is_mine(wallet, tx)) {
+    if (dogecoin_wallet_is_mine(wallet, tx) || dogecoin_wallet_is_from_me(wallet, tx)) {
         printf("\nFound relevant transaction!\n");
         dogecoin_wtx* wtx = dogecoin_wallet_wtx_new();
         uint256 blockhash;

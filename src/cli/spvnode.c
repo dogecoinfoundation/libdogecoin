@@ -292,6 +292,7 @@ int main(int argc, char* argv[]) {
     char* data = 0;
     char* ips = 0;
     dogecoin_bool debug = false;
+    int maxnodes = 10;
     char* dbfile = 0;
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
     char* address = NULL;
@@ -335,6 +336,9 @@ int main(int argc, char* argv[]) {
                     break;
                 case 's':
                     pass = getpass("BIP39 passphrase: \n");
+                    break;
+                case 'm':
+                    maxnodes = (int)strtol(optarg, (char**)NULL, 10);
                     break;
                 case 'n':
                     mnemonic_in = optarg;
@@ -385,7 +389,7 @@ int main(int argc, char* argv[]) {
 
     if (strcmp(data, "scan") == 0) {
         dogecoin_ecc_start();
-        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync);
+        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
         signal(SIGINT, handle_sigint);
