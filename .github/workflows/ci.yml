@@ -212,7 +212,7 @@ jobs:
 
       - name: android ndk cache
         if: ${{ matrix.android-ndk }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: android-ndk
         with:
