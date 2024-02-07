@@ -12,7 +12,11 @@
 static const char *wallettmpfile = "dummy";
 #else
 #include <unistd.h>
+#ifdef __ANDROID__
+static const char *wallettmpfile = "/data/local/tmp/dummy";
+#else
 static const char *wallettmpfile = "/tmp/dummy";
+#endif
 #endif
 
 #include <test/utest.h>

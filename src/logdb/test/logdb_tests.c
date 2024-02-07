@@ -17,7 +17,11 @@
 static const char *dbtmpfile = "dummy";
 #else
 #include <unistd.h>
+#ifdef __ANDROID__
+static const char *dbtmpfile = "/data/local/tmp/dummy";
+#else
 static const char *dbtmpfile = "/tmp/dummy";
+#endif
 #endif
 
 #include <errno.h>
