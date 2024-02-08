@@ -31,7 +31,7 @@ jobs:
           - x86_64-linux-dbg
           - x86_64-linux-openenclave
           - x86_64-macos
-          # - arm64-macos
+          - arm64-macos
           - x86_64-win
           - x86_64-win-native
           - i686-win
@@ -90,17 +90,17 @@ jobs:
             mac-sdk: 12.2
             mac-sdk-build: 12B45b
             mac-sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
-          # - name: arm64-macos
-          #   host: arm64-apple-darwin
-          #   os: macos-latest
-          #   run-tests: true
-          #   dep-opts: "SPEED=slow V=1"
-          #   config-opts: ""
-          #   packages: cmake zlib xorriso
-          #   goal: install
-          #   mac-sdk: 12.2
-          #   mac-sdk-build: 12B45b
-          #   mac-sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
+          - name: arm64-macos
+            host: arm64-apple-darwin
+            os: macos-13-xlarge
+            run-tests: true
+            dep-opts: "SPEED=slow V=1"
+            config-opts: "--enable-static --disable-shared --enable-test-passwd"
+            packages: cmake zlib xorriso libtool
+            goal: install
+            mac-sdk: 12.2
+            mac-sdk-build: 12B45b
+            mac-sdk-shasum: "df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
