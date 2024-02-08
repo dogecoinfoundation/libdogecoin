@@ -3,7 +3,7 @@
  * Copyright (c) 2013-2014 Tomas Dzetkulic
  * Copyright (c) 2013-2014 Pavol Rusnak
  * Copyright (c) 2022 bluezr
- * Copyright (c) 2022 The Dogecoin Foundation
+ * Copyright (c) 2022-2024 The Dogecoin Foundation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
