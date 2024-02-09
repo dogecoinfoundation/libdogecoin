@@ -110,7 +110,7 @@ On Windows, you will need to run the following commands in the Visual Studio Dev
 ```c
 mkdir build
 cd build
-cmake ..
+cmake -DBUILD_SHARED_LIBS=ON ..
 cmake --build .
 Debug\tests.exe
 ```
