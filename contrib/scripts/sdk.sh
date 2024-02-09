@@ -6,11 +6,10 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel 2> /dev/null)
 
 $PROJECT_ROOT/contrib/scripts/check_dir.sh
 
-SDK_VERSION=10.14
 SDK_URL=https://bitcoincore.org/depends-sources/sdks
-SDK_SHASUM="be17f48fd0b08fb4dcd229f55a6ae48d9f781d210839b4ea313ef17dd12d6ea5"
-SDK_VERSION=12.1
-SDK_BUILD="12A7403"
+SDK_SHASUM="df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619"
+SDK_VERSION=12.2
+SDK_BUILD="12B45b"
 SDK_FILENAME=Xcode-$SDK_VERSION-$SDK_BUILD-extracted-SDK-with-libcxx-headers.tar.gz
 
 echo $SDK_FILENAME

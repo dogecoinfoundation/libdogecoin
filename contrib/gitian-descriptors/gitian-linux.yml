@@ -1,33 +1,32 @@
 ---
-name: "libdogecoin-linux-0.1.2"
+name: "libdogecoin-linux-0.1.3"
 enable_cache: true
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
 - "curl"
-- "shellcheck"
 - "g++-aarch64-linux-gnu"
-- "g++-7-aarch64-linux-gnu"
-- "gcc-7-aarch64-linux-gnu"
+- "g++-9-aarch64-linux-gnu"
+- "gcc-9-aarch64-linux-gnu"
 - "binutils-aarch64-linux-gnu"
 - "g++-arm-linux-gnueabihf"
-- "g++-7-arm-linux-gnueabihf"
-- "gcc-7-arm-linux-gnueabihf"
+- "g++-9-arm-linux-gnueabihf"
+- "gcc-9-arm-linux-gnueabihf"
 - "binutils-arm-linux-gnueabihf"
-- "g++-7-multilib"
-- "gcc-7-multilib"
-- "binutils-gold"
-- "git-core"
+- "g++-9-multilib"
+- "gcc-9-multilib"
+- "binutils"
+- "git"
 - "pkg-config"
 - "autoconf"
 - "libtool"
 - "automake"
+- "make"
 - "faketime"
 - "bsdmainutils"
 - "ca-certificates"
-- "python"
 remotes:
 - "url": "${URL}"
   "dir": "libdogecoin"
@@ -129,7 +128,7 @@ script: |
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
-  git archive --format=tar --prefix=libdogecoin-0.1.2/ HEAD | gzip -9n > libdogecoin-0.1.2.tar.gz
+  git archive --format=tar --prefix=libdogecoin-0.1.3/ HEAD | gzip -9n > libdogecoin-0.1.3.tar.gz
   SOURCEDIST=`echo libdogecoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order
@@ -144,8 +143,7 @@ script: |
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     ./contrib/scripts/build.sh --host ${i} --depends
-    ./contrib/scripts/combine.sh --target .libs/libdogecoin.a --append "depends/${i}/lib/libunistring.a"
-    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.2"
+    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.3"
   done
 
   # Move them to gitian-builder/build/out/src

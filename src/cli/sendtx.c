@@ -4,7 +4,7 @@
 
  Copyright (c) 2017 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -30,8 +30,10 @@
 //MLUMIN:MSVC
 #ifndef _MSC_VER
 #include <getopt.h>
+#include <unistd.h>
 #else
-#include <../contrib/getopt/wingetopt.h>
+#include <win/wingetopt.h>
+#include <win/winunistd.h>
 #endif
 
 #ifdef HAVE_CONFIG_H
@@ -43,12 +45,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#ifndef _MSC_VER
-#include <unistd.h>
-#else
-#include <dogecoin/winunistd.h>
-#endif
 
 #ifdef WITH_NET
 #include <event2/event.h>

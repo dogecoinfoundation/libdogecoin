@@ -77,10 +77,11 @@ configure
 libtool
 such
 sendtx
-src/libdogecoin-config.h
-src/libdogecoin-config.h.in
-src/libdogecoin-config.h.in~
-src/stamp-h1
+spvnode
+config/libdogecoin-config.h
+config/libdogecoin-config.h.in
+config/libdogecoin-config.h.in~
+config/stamp-h1
 m4/libtool.m4
 m4/ltoptions.m4
 m4/ltsugar.m4
@@ -113,13 +114,12 @@ test-suite.log
 *.pc
 **/__pycache__/
 *.py[cod]
-libdogecoin.egg-info/
-**/libdogecoin.c
 dist/
-!wrappers/golang/libdogecoin/go.mod
+gitian/
 contrib/gitian/
 contrib/gitian/*
 example
+dummy
 
 # CMake files
 build/*
@@ -151,3 +151,7 @@ include/include.am
 # QR
 qrtest.png
 qrtest.jpg
+
+# Store
+store/*
+.store/*

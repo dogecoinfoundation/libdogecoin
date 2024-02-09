@@ -1,12 +1,13 @@
 /**********************************************************************
- * Copyright (c) 2022 bluezr                                          *
- * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Copyright (c) 2023 bluezr                                          *
+ * Copyright (c) 2023 edtubbs                                         *
+ * Copyright (c) 2023 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
 #if defined HAVE_CONFIG_H
-#include "src/libdogecoin-config.h"
+#include "libdogecoin-config.h"
 #endif
 
 #include <assert.h>
@@ -14,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #ifdef HAVE_BUILTIN_EXPECT
 #define EXPECT(x, c) __builtin_expect((x), (c))
@@ -54,12 +55,14 @@ extern void test_moon();
 extern void test_op_return();
 extern void test_random();
 extern void test_rmd160();
+extern void test_scrypt();
 extern void test_serialize();
 extern void test_sha_256();
 extern void test_sha_512();
 extern void test_sha_hmac();
 extern void test_signmsg();
 extern void test_signmsg_ext();
+extern void test_tpm();
 extern void test_transaction();
 extern void test_tx_serialization();
 extern void test_tx_sighash();
@@ -74,6 +77,18 @@ extern void test_utils();
 extern void test_vector();
 extern void test_qr();
 
+#ifdef WITH_LOGDB
+extern void test_red_black_tree();
+extern void test_logdb_memdb();
+extern void test_logdb_rbtree();
+extern void test_examples();
+#endif
+
+#ifdef WITH_WALLET
+extern void test_wallet_basics();
+extern void test_wallet();
+#endif
+
 #ifdef WITH_TOOLS
 extern void test_tool();
 #endif
@@ -82,6 +97,8 @@ extern void test_tool();
 extern void test_net_basics_plus_download_block();
 extern void test_protocol();
 extern void test_net_flag_defined();
+extern void test_reorg();
+extern void test_spv();
 #else
 extern void test_net_flag_not_defined();
 #endif
@@ -101,8 +118,10 @@ int main()
     u_run_test(test_base58);
     u_run_test(test_base64);
     u_run_test(test_bip32);
+#if WIN32 || USE_UNISTRING
     u_run_test(test_bip39);
     u_run_test(test_bip44);
+#endif
     u_run_test(test_block_header);
     u_run_test(test_buffer);
     u_run_test(test_cstr);
@@ -115,12 +134,14 @@ int main()
     u_run_test(test_op_return);
     u_run_test(test_random);
     u_run_test(test_rmd160);
+    u_run_test(test_scrypt);
     u_run_test(test_serialize);
     u_run_test(test_sha_256);
     u_run_test(test_sha_512);
     u_run_test(test_sha_hmac);
     u_run_test(test_signmsg);
     u_run_test(test_signmsg_ext);
+    u_run_test(test_tpm);
     u_run_test(test_transaction);
     u_run_test(test_tx_serialization);
     u_run_test(test_invalid_tx_deser);
@@ -134,6 +155,19 @@ int main()
     u_run_test(test_utils);
     u_run_test(test_vector);
     u_run_test(test_qr);
+
+#ifdef WITH_LOGDB
+    u_run_test(test_red_black_tree);
+    u_run_test(test_logdb_memdb);
+    u_run_test(test_logdb_rbtree);
+    u_run_test(test_examples);
+#endif
+
+#ifdef WITH_WALLET
+    u_run_test(test_wallet_basics);
+    u_run_test(test_wallet);
+#endif
+
 #ifdef WITH_TOOLS
     u_run_test(test_tool);
 #endif
@@ -142,6 +176,8 @@ int main()
     u_run_test(test_net_flag_defined);
     u_run_test(test_net_basics_plus_download_block);
     u_run_test(test_protocol);
+    u_run_test(test_reorg);
+    u_run_test(test_spv);
 #else
     u_run_test(test_net_flag_not_defined);
 #endif

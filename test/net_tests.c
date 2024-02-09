@@ -1,11 +1,11 @@
 /**********************************************************************
  * Copyright (c) 2022 bluezr                                          *
- * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Copyright (c) 2022-2023 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#include "utest.h"
+#include <test/utest.h>
 
 #include <dogecoin/block.h>
 #include <dogecoin/net.h>
@@ -83,7 +83,7 @@ void postcmd(struct dogecoin_node_ *node, dogecoin_p2p_msg_hdr *hdr, struct cons
     if (strcmp(hdr->command, "block") == 0)
     {
         dogecoin_block_header header;
-        if (!dogecoin_block_header_deserialize(&header, buf)) return;
+        if (!dogecoin_block_header_deserialize(&header, buf, node->nodegroup->chainparams)) return;
 
         uint32_t vsize;
         if (!deser_varlen(&vsize, buf)) return;

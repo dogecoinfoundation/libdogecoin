@@ -2,7 +2,7 @@
  The MIT License (MIT)
  
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -92,6 +92,8 @@ LIBDOGECOIN_API int sign_raw_transaction(int inputindex, char* incomingrawtx, ch
 LIBDOGECOIN_API int sign_indexed_raw_transaction(int txindex, int inputindex, char* incomingrawtx, char* scripthex, int sighashtype, char* privkey);
 
 LIBDOGECOIN_API int sign_transaction(int txindex, char* script_pubkey, char* privkey);
+
+LIBDOGECOIN_API int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey);
 
 LIBDOGECOIN_API int store_raw_transaction(char* incomingrawtx);
 

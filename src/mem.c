@@ -4,7 +4,7 @@
 
  Copyright (c) 2016 libbtc developers
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -246,6 +246,13 @@ volatile void* dogecoin_mem_zero(volatile void* dst, size_t len)
     return 0;
 }
 
+uint8_t* dogecoin_uint8_vla(size_t size)
+{
+    uint8_t* outarray;
+    outarray = (uint8_t*)malloc(size * sizeof(uint8_t));
+    return outarray;
+}
+
 uint32_t* dogecoin_uint32_vla(size_t size)
 {
     uint32_t* outarray;
@@ -253,10 +260,9 @@ uint32_t* dogecoin_uint32_vla(size_t size)
     return outarray;
 }
 
-uint8_t* dogecoin_uint8_vla(size_t size)
-{
-    uint8_t* outarray;
-    outarray = (uint8_t*)malloc(size * sizeof(uint8_t));
+uint256* dogecoin_uint256_vla(size_t size) {
+    uint256* outarray;
+    outarray = (uint256*)dogecoin_malloc(size * sizeof(uint256));
     return outarray;
 }
 

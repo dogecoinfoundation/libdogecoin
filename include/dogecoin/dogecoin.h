@@ -2,6 +2,7 @@
 
  The MIT License (MIT)
  Copyright (c) 2023 bluezr
+ Copyright (c) 2023 edtubbs
  Copyright (c) 2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
@@ -34,7 +35,7 @@
 #include <string.h>
 
 #if defined(HAVE_CONFIG_H)
-#include "src/libdogecoin-config.h"
+#include <config/libdogecoin-config.h>
 #endif
 
 typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
@@ -73,7 +74,7 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 
 #if defined(_MSC_VER)
     #define DISABLE_WARNING_PUSH           __pragma(warning( push ))
-    #define DISABLE_WARNING_POP            __pragma(warning( pop )) 
+    #define DISABLE_WARNING_POP            __pragma(warning( pop ))
     #define DISABLE_WARNING(warningNumber) __pragma(warning( disable : warningNumber ))
 
     #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER    DISABLE_WARNING(4100)
@@ -82,7 +83,7 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
 
-    //MLUMIN:MSVC - need winsock for msvc 
+    //MLUMIN:MSVC - need winsock for msvc
     #pragma comment(lib, "Ws2_32.lib")
     #pragma comment(lib, "wsock32.lib")
     //MLUMIN:MSVC - need Iphlpapi.lib for __imp_f_nametoindex in msvc
@@ -94,13 +95,13 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 #elif defined(__GNUC__) || defined(__clang__)
     #define DO_PRAGMA(X) _Pragma(#X)
     #define DISABLE_WARNING_PUSH           DO_PRAGMA(GCC diagnostic push)
-    #define DISABLE_WARNING_POP            DO_PRAGMA(GCC diagnostic pop) 
+    #define DISABLE_WARNING_POP            DO_PRAGMA(GCC diagnostic pop)
     #define DISABLE_WARNING(warningName)   DO_PRAGMA(GCC diagnostic ignored #warningName)
-    
+
     #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER    DISABLE_WARNING(-Wunused-parameter)
     #define DISABLE_WARNING_UNREFERENCED_FUNCTION            DISABLE_WARNING(-Wunused-function)
-   // other warnings you want to deactivate... 
-    
+   // other warnings you want to deactivate...
+
 #else
     #define DISABLE_WARNING_PUSH
     #define DISABLE_WARNING_POP
@@ -119,18 +120,37 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
                                 __LINE__, __func__, __VA_ARGS__); } while (0)
 #endif
 
+/* Constants for ECC */
 #define DOGECOIN_ECKEY_UNCOMPRESSED_LENGTH 65
 #define DOGECOIN_ECKEY_COMPRESSED_LENGTH 33
 #define DOGECOIN_ECKEY_PKEY_LENGTH 32
 #define DOGECOIN_HASH_LENGTH 32
+
+/* Constants for BIP32 */
+#define MAX_SEED_SIZE 64
+#define HDKEYLEN 112
+#define PRIVKEYWIFLEN 53
+#define P2PKHLEN 35
+#define PRIVKEYHEXLEN DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1
+#define PUBKEYHEXLEN 67
+#define PUBKEYHASHLEN 41
+#define KEYPATHMAXLEN 256
+
+/* Constants for transaction */
+#define SCRIPT_PUBKEY_LENGTH 25
+#define MAX_SERIALIZE_SIZE 2048
 
 #define DOGECOIN_MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define DOGECOIN_MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 LIBDOGECOIN_BEGIN_DECL
 
+/* Data array types */
 typedef uint8_t uint256[32];
 typedef uint8_t uint160[20];
+typedef uint8_t SEED[MAX_SEED_SIZE];
+
+static const int WIDTH = 0x0000100/32;
 
 LIBDOGECOIN_END_DECL
 

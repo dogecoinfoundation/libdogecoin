@@ -5,7 +5,7 @@
  Copyright (c) 2015 Douglas J. Bakkum
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -77,7 +77,17 @@
 
 #endif
 
-#define MAX_LEN 128
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <termios.h>
+#endif
+
+#ifdef _MSC_VER
+#include <win/winunistd.h>
+#else
+#include <unistd.h>
+#endif
 
 static uint8_t buffer_hex_to_uint8[TO_UINT8_HEX_BUF_LEN];
 static char buffer_uint8_to_hex[TO_UINT8_HEX_BUF_LEN];
@@ -324,6 +334,102 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
         }
     }
 
+uint256* uint256S(const char *str)
+{
+    return (uint256*)utils_hex_to_uint8(str);
+}
+
+unsigned char* parse_hex(const char* psz)
+{
+    int i = 0;
+    unsigned char* input = dogecoin_uchar_vla(strlen(psz));
+    while (true)
+    {
+        while (isspace(*psz))
+            psz++;
+        signed char c = utils_hex_digit(*psz++);
+        if (c == (signed char)-1)
+            break;
+        unsigned char n = (c << 4);
+        c = utils_hex_digit(*psz++);
+        if (c == (signed char)-1)
+            break;
+        n |= c;
+        input[i] = n;
+        i++;
+    }
+    return input;
+}
+
+/**
+ * Swaps bytes of a given buffer, effectively performing a big-endian to/from little-endian conversion
+ */
+void swap_bytes(uint8_t *buf, int buf_size) {
+    int i = 0;
+    for (; i < buf_size/2; i++)
+    {
+        uint8_t temp = buf[i];
+        buf[i] = buf[buf_size-i-1];
+        buf[buf_size-i-1] = temp;
+    }
+}
+
+// Returns a pointer to the first byte of needle inside haystack,
+uint8_t* bytes_find(uint8_t* haystack, size_t haystackLen, uint8_t* needle, size_t needleLen) {
+    if (needleLen > haystackLen) {
+        return false;
+    }
+    uint8_t* match = memchr(haystack, needle[0], haystackLen);
+    if (match != NULL) {
+        size_t remaining = haystackLen - ((uint8_t*)match - haystack);
+        if (needleLen <= remaining) {
+            if (memcmp(match, needle, needleLen) == 0) {
+                return match;
+            }
+        }
+    }
+    return NULL;
+}
+
+const char *find_needle(const char *haystack, size_t haystack_length, const char *needle, size_t needle_length) {
+    size_t haystack_index = 0;
+    for (; haystack_index < haystack_length; haystack_index++) {
+
+        bool needle_found = true;
+        size_t needle_index = 0;
+        for (; needle_index < needle_length; needle_index++) {
+            const int haystack_character = haystack[haystack_index + needle_index];
+            const int needle_character = needle[needle_index];
+            if (haystack_character == needle_character) {
+                continue;
+            } else {
+                needle_found = false;
+                break;
+            }
+        }
+
+        if (needle_found) {
+            return &haystack[haystack_index];
+        }
+    }
+
+    return NULL;
+}
+
+char* to_string(uint8_t* x) {
+    return utils_uint8_to_hex(x, 32);
+}
+
+char* hash_to_string(uint8_t* x) {
+    char* hexbuf = to_string(x);
+    utils_reverse_hex(hexbuf, DOGECOIN_HASH_LENGTH*2);
+    return hexbuf;
+}
+
+uint8_t* hash_to_bytes(uint8_t* x) {
+    char* hexbuf = hash_to_string(x);
+    return utils_hex_to_uint8(hexbuf);
+}
 
 /**
  * @brief This function executes malloc() but exits the
@@ -501,6 +607,44 @@ void append(char* s, char* t)
     memcpy(&s[length + i], "\0", 1);
     }
 
+char* concat(char* prefix, char* suffix) {
+    size_t suffix_length = strlen(suffix), prefix_length = strlen(prefix);
+    char* file = dogecoin_char_vla(prefix_length + suffix_length + 1);
+    memcpy_safe(file, prefix, prefix_length + 1);
+    memcpy_safe(file + prefix_length, suffix, suffix_length + 1);
+    return file;
+}
+
+void slice(const char *str, char *result, size_t start, size_t end)
+{
+    strncpy(result, str + start, end - start);
+}
+
+void remove_substr(char *string, char *sub) {
+    char *match;
+    int len = strlen(sub);
+    while ((match = strstr(string, sub))) {
+        *match = '\0';
+        strcat(string, match+len);
+    }
+}
+
+void replace_last_after_delim(const char *str, char* delim, char* replacement) {
+    char* tmp = strdup((char*)str);
+    char* new = tmp;
+    char *strptr = strtok(new, delim);
+    char* last = NULL;
+    while (strptr != NULL) {
+        last = strptr;
+        strptr = strtok(NULL, delim);
+    }
+    if (last) {
+        remove_substr((char*)str, last);
+        append((char*)str, replacement);
+    }
+    dogecoin_free(tmp);
+}
+
 /**
  * @brief function to convert ascii text to hexadecimal string
  *
@@ -533,6 +677,84 @@ const char* get_build() {
         #endif
     }
 
+/**
+ * @brief Gets a password from the user
+ *
+ * Gets a password from the user without echoing the input to the console.
+ *
+ * @param[in] prompt The prompt to display to the user
+ * @return The password entered by the user
+ */
+char *getpass(const char *prompt) {
+    char buffer[MAX_LEN] = {0};  // Initialize to zero
+
+#ifndef USE_OPENENCLAVE
+#ifdef _WIN32
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode, count;
+
+    if (!GetConsoleMode(hStdin, &mode) || !SetConsoleMode(hStdin, mode & ~ENABLE_ECHO_INPUT))
+        return NULL;
+
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!ReadConsole(hStdin, buffer, sizeof(buffer) - 1, &count, NULL))
+        return NULL;  // -1 to ensure null-termination
+
+    if (count > 0 && buffer[count-1] == '\n')
+        count--;  // Remove newline character
+
+    if (count > 0 && buffer[count-1] == '\r')
+        count--;  // Remove carriage return character
+
+    if (!SetConsoleMode(hStdin, mode))
+        return NULL;
+
+    buffer[count] = '\0';  // Ensure null-termination
+
+#else
+    struct termios old, new;
+    ssize_t nread;
+
+    if (tcgetattr(STDIN_FILENO, &old) != 0)
+        return NULL;
+
+    new = old;
+    new.c_lflag &= ~ECHO;
+
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new) != 0)
+        return NULL;
+
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!fgets(buffer, sizeof(buffer), stdin))
+        return NULL;
+
+    nread = strlen(buffer);
+    if (nread > 0 && buffer[nread-1] == '\n')
+        buffer[nread-1] = '\0';  // Remove newline character
+
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &old) != 0)
+        return NULL;
+
+#endif
+
+#else // USE_OPENENCLAVE
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!fgets(buffer, sizeof(buffer), stdin))
+        return NULL;
+
+    ssize_t nread = strlen(buffer);
+    if (nread > 0 && buffer[nread-1] == '\n')
+        buffer[nread-1] = '\0';  // Remove newline character
+#endif
+    return strdup(buffer);
+}
+
 /* reverse:  reverse string s in place */
 void dogecoin_str_reverse(char s[])
 {
@@ -544,7 +766,7 @@ void dogecoin_str_reverse(char s[])
         s[i] = s[j];
         s[j] = c;
     }
-}  
+}
 
 /* itoa:  convert n to characters in s */
 void dogecoin_uitoa(int n, char s[])
@@ -569,6 +791,38 @@ bool dogecoin_network_enabled() {
 #else
     return true;
 #endif
+}
+
+int integer_length(int x) {
+    int count = 0;
+    while (x > 0) {
+        x /= 10;
+        count++;
+    }
+    return count > 0 ? count : 1;
+}
+
+int file_copy(char src [], char dest [])
+{
+    int   c;
+    FILE *stream_read;
+    FILE *stream_write; 
+
+    stream_read = fopen (src, "r");
+    if (stream_read == NULL)
+        return -1;
+    stream_write = fopen (dest, "w");   //create and write to file
+    if (stream_write == NULL)
+     {
+        fclose (stream_read);
+        return -2;
+     }    
+    while ((c = fgetc(stream_read)) != EOF)
+        fputc (c, stream_write);
+    fclose (stream_read);
+    fclose (stream_write);
+
+    return 0;
 }
 
 unsigned char base64_char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -616,7 +870,7 @@ unsigned int base64_decoded_size(unsigned int in_size) {
 unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
 
 	unsigned int i=0, j=0, k=0, s[3];
-	
+
 	for (i=0;i<in_len;i++) {
 		s[j++]=*(in+i);
 		if (j==3) {
@@ -642,14 +896,14 @@ unsigned int base64_encode(const unsigned char* in, unsigned int in_len, unsigne
 	}
 
 	out[k] = '\0';
-	
+
 	return k;
 }
 
 unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigned char* out) {
 
 	unsigned int i=0, j=0, k=0, s[4];
-	
+
 	for (i=0;i<in_len;i++) {
 		s[j++]=base64_int(*(in+i));
 		if (j==4) {

@@ -1,9 +1,9 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2016 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -36,8 +36,8 @@ LIBDOGECOIN_BEGIN_DECL
 /* generate the p2pkh address from a given hex pubkey */
 LIBDOGECOIN_API dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address);
 
-/* generate the hex publickey from a given hex private key */
-LIBDOGECOIN_API dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_hex, char* pubkey_hex, size_t* sizeout);
+/* generate the hex publickey from a given WIF private key */
+LIBDOGECOIN_API dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_wif, char* pubkey_hex, size_t* sizeout);
 
 /* generate a new private key (hex) */
 LIBDOGECOIN_API dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wif, size_t strsize_wif, char* privkey_hex);
@@ -45,6 +45,15 @@ LIBDOGECOIN_API dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, 
 LIBDOGECOIN_API dogecoin_bool hd_gen_master(const dogecoin_chainparams* chain, char* masterkeyhex, size_t strsize);
 LIBDOGECOIN_API dogecoin_bool hd_print_node(const dogecoin_chainparams* chain, const char* nodeser);
 LIBDOGECOIN_API dogecoin_bool hd_derive(const dogecoin_chainparams* chain, const char* masterkey, const char* keypath, char* extkeyout, size_t extkeyout_size);
+
+/* wrappers for the above functions */
+LIBDOGECOIN_API int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]);
+LIBDOGECOIN_API int getPubkeyFromPrivkey(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
+LIBDOGECOIN_API int genPrivkey(const dogecoin_bool is_testnet, char privkey_wif[PRIVKEYWIFLEN], size_t strsize_wif, char privkey_hex[PRIVKEYHEXLEN]);
+
+LIBDOGECOIN_API int genHDMaster(const dogecoin_bool is_testnet, char masterkeyhex[HDKEYLEN], size_t strsize);
+LIBDOGECOIN_API int printNode(const dogecoin_bool is_testnet, const char nodeser[HDKEYLEN]);
+LIBDOGECOIN_API int deriveHDExtFromMaster(const dogecoin_bool is_testnet, const char masterkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], char extkeyout[HDKEYLEN], size_t extkeyout_size);
 
 LIBDOGECOIN_END_DECL
 

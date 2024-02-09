@@ -4,7 +4,7 @@
 
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -53,6 +53,10 @@ LIBDOGECOIN_API void vector_remove_range(vector* vec, size_t idx, size_t len);
 LIBDOGECOIN_API dogecoin_bool vector_resize(vector* vec, size_t newsz);
 
 LIBDOGECOIN_API ssize_t vector_find(vector* vec, void* data);
+
+/* serialization functions */
+LIBDOGECOIN_API dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* written);
+LIBDOGECOIN_API dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_t* read);
 
 LIBDOGECOIN_END_DECL
 

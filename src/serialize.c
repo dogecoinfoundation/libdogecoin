@@ -7,6 +7,7 @@
 
 #include <dogecoin/cstr.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/portable_endian.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/utils.h>
 
@@ -25,7 +26,6 @@ void ser_bytes(cstring* s, const void* p, size_t len)
 {
     cstr_append_buf(s, p, len);
 }
-
 
 /**
  * @brief This function takes 2 unsigned bytes and
@@ -398,6 +398,54 @@ int deser_varlen(uint32_t* lo, struct const_buffer* buf)
     return true;
 }
 
+/**
+ * Deserialize variable length from file.
+ * 
+ * @param lo the length of the variable-length data
+ * @param file the file to read from
+ * 
+ * @return Nothing.
+ */
+int deser_varlen_from_file(uint32_t* lo, FILE* file)
+{
+    uint32_t len;
+    struct const_buffer buf;
+    unsigned char c;
+    const unsigned char bufp[sizeof(uint64_t)];
+
+    if (fread(&c, 1, 1, file) != 1)
+        return false;
+
+    buf.p = (void*)bufp;
+    buf.len = sizeof(uint64_t);
+
+    if (c == 253) {
+        uint16_t v16;
+        if (fread((void*)buf.p, 1, sizeof(v16), file) != sizeof(v16))
+            return false;
+        if (!deser_u16(&v16, &buf))
+            return false;
+        len = v16;
+    } else if (c == 254) {
+        uint32_t v32;
+        if (fread((void*)buf.p, 1, sizeof(v32), file) != sizeof(v32))
+            return false;
+        if (!deser_u32(&v32, &buf))
+            return false;
+        len = v32;
+    } else if (c == 255) {
+        uint64_t v64;
+        if (fread((void*)buf.p, 1, sizeof(v64), file) != sizeof(v64))
+            return false;
+        if (!deser_u64(&v64, &buf))
+            return false;
+        len = (uint32_t)v64; /* WARNING: truncate */
+    } else
+        len = c;
+
+    *lo = len;
+    return true;
+}
 
 /**
  * @brief This function reads the first byte of the file

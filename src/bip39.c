@@ -4,7 +4,7 @@
  * Copyright (c) 2022 edtubbs
  * Copyright (c) 2022 bluezr
  * Copyright (c) 2022 michilumin
- * Copyright (c) 2023 The Dogecoin Foundation
+ * Copyright (c) 2023-2024 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,7 @@
 #define WINVER 0x0600
 #endif
 #include <windows.h>
-#else
+#elif USE_UNISTRING
 #include <uninorm.h>
 #endif
 
@@ -120,11 +120,13 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
             return -1;
         }
         memcpy_safe(local_entropy, entropy_bytes, entBytes);
+        utils_clear_buffers();
     }
 
     /* Convert local entropy and copy to entropy parameter if allocated */
     if (entropy_out != NULL) {
         strcpy(entropy_out, utils_uint8_to_hex(local_entropy, entBytes));
+        utils_clear_buffers();
     }
 
     /* Concatenate string of bits from entropy bytes */
@@ -191,10 +193,15 @@ int get_mnemonic(const int entropysize, const char* entropy, const char* wordlis
  * This function implements the second part of the BIP-39 algorithm.
  */
 
-int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
+int get_root_seed(const char *pass, const char *passphrase, SEED seed) {
 
-    /* initialize variables */
-    unsigned char digest[64];
+    /* Initialize seed */
+    memset (seed, 0, MAX_SEED_SIZE);
+
+    /* Validate inputs */
+    if (pass == NULL || passphrase == NULL) {
+        return -1;
+    }
 
     /* create salt, passphrase could be empty string */
     char *salt = malloc(strlen(passphrase) + 9);
@@ -210,9 +217,10 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         return -1;
     }
 
+#ifdef _WIN32
     /* normalize the passphrase and salt */
     size_t norm_pass_len, norm_salt_len;
-#ifdef _WIN32
+
     int pass_len = strlen(pass);
     int salt_len = strlen(salt);
 
@@ -221,32 +229,32 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     int salt_wlen = MultiByteToWideChar(CP_UTF8, 0, salt, salt_len, NULL, 0);
 
     if (pass_wlen == 0) {
-        fprintf(stderr, "Error converting passphrase to wide characters\n");
+        fprintf(stderr, "ERROR: converting passphrase to wide characters\n");
         dogecoin_free(salt);
         return -1;
     }
     if (salt_wlen == 0) {
-        fprintf(stderr, "Error converting salt to wide characters\n");
+        fprintf(stderr, "ERROR: converting salt to wide characters\n");
         dogecoin_free(salt);
         return -1;
     }
 
     LPWSTR pass_w = malloc((pass_wlen) * sizeof(WCHAR));
     if (pass_w == NULL) {
-        fprintf(stderr, "Error allocating memory for passphrase wide characters\n");
+        fprintf(stderr, "ERROR: allocating memory for passphrase wide characters\n");
         dogecoin_free(salt);
         return -1;
     }
     LPWSTR salt_w = malloc((salt_wlen) * sizeof(WCHAR));
     if (salt_w == NULL) {
-        fprintf(stderr, "Error allocating memory for salt wide characters\n");
+        fprintf(stderr, "ERROR: allocating memory for salt wide characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         return -1;
     }
 
     if (MultiByteToWideChar(CP_UTF8, 0, pass, pass_len, pass_w, pass_wlen) == 0) {
-        fprintf(stderr, "Error converting passphrase to wide characters\n");
+        fprintf(stderr, "ERROR: converting passphrase to wide characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -254,7 +262,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     }
 
     if (MultiByteToWideChar(CP_UTF8, 0, salt, salt_len, salt_w, salt_wlen) == 0) {
-        fprintf(stderr, "Error converting salt to wide characters\n");
+        fprintf(stderr, "ERROR: converting salt to wide characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -268,7 +276,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         DWORD error = GetLastError();
         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&message, 0, NULL);
-        fprintf(stderr, "Error getting length of normalized passphrase: %s\n", message);
+        fprintf(stderr, "ERROR: getting length of normalized passphrase: %s\n", message);
         LocalFree(message);
         dogecoin_free(salt);
         dogecoin_free(pass_w);
@@ -276,7 +284,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         return -1;
     }
     if (norm_salt_len <= 0) {
-        fprintf(stderr, "Error getting length of normalized salt\n");
+        fprintf(stderr, "ERROR: getting length of normalized salt\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -285,7 +293,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 
     LPWSTR norm_pass = malloc((norm_pass_len) * sizeof(WCHAR));
     if (norm_pass == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized passphrase\n");
+        fprintf(stderr, "ERROR: allocating memory for normalized passphrase\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -297,7 +305,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
         dogecoin_free(norm_pass);
-        fprintf(stderr, "Error allocating memory for normalized salt\n");
+        fprintf(stderr, "ERROR: allocating memory for normalized salt\n");
         return -1;
     }
 
@@ -305,7 +313,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     norm_salt_len = NormalizeString(NormalizationKD, salt_w, salt_wlen, norm_salt, norm_salt_len);
 
     if (norm_pass_len <= 0) {
-        fprintf(stderr, "Error getting normalized passphrase\n");
+        fprintf(stderr, "ERROR: getting normalized passphrase\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -314,7 +322,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         return -1;
     }
     if (norm_salt_len <= 0) {
-        fprintf(stderr, "Error getting normalized salt\n");
+        fprintf(stderr, "ERROR: getting normalized salt\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -328,7 +336,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     int norm_salt_mb_len = WideCharToMultiByte(CP_UTF8, 0, norm_salt, norm_salt_len, NULL, 0, NULL, NULL);
 
     if (norm_pass_len == 0) {
-        fprintf(stderr, "Error converting normalized passphrase to multi-byte characters\n");
+        fprintf(stderr, "ERROR: converting normalized passphrase to multi-byte characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -337,7 +345,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         return -1;
     }
     if (norm_salt_len == 0) {
-        fprintf(stderr, "Error converting normalized seed to multi-byte characters\n");
+        fprintf(stderr, "ERROR: converting normalized seed to multi-byte characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -348,7 +356,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
 
     char* norm_pass_mb = malloc(norm_pass_mb_len * sizeof(char));
     if (norm_pass_mb == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized passphrase multi-byte characters\n");
+        fprintf(stderr, "ERROR: allocating memory for normalized passphrase multi-byte characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -358,7 +366,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     }
     char* norm_salt_mb = malloc(norm_salt_mb_len * sizeof(char));
     if (norm_salt_mb == NULL) {
-        fprintf(stderr, "Error allocating memory for normalized salt multi-byte characters\n");
+        fprintf(stderr, "ERROR: allocating memory for normalized salt multi-byte characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -369,7 +377,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     }
 
     if (WideCharToMultiByte(CP_UTF8, 0, norm_pass, norm_pass_len, norm_pass_mb, norm_pass_mb_len, NULL, NULL) == 0) {
-        fprintf(stderr, "Error converting normalized passphrase to multi-byte characters\n");
+        fprintf(stderr, "ERROR: converting normalized passphrase to multi-byte characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -381,7 +389,7 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
     }
 
     if (WideCharToMultiByte(CP_UTF8, 0, norm_salt, norm_salt_len, norm_salt_mb, norm_salt_mb_len, NULL, NULL) == 0) {
-        fprintf(stderr, "Error converting normalized passphrase to multi-byte characters\n");
+        fprintf(stderr, "ERROR: converting normalized passphrase to multi-byte characters\n");
         dogecoin_free(salt);
         dogecoin_free(pass_w);
         dogecoin_free(salt_w);
@@ -392,46 +400,59 @@ int get_root_seed(const char *pass, const char *passphrase, uint8_t seed[64]) {
         return -1;
     }
 
+    /* we're done with salt */
+    dogecoin_free(salt);
     dogecoin_free(pass_w);
     dogecoin_free(salt_w);
+    dogecoin_free(norm_pass);
+    dogecoin_free(norm_salt);
 
     /* pbkdf2 hmac sha512 */
-    pbkdf2_hmac_sha512((const unsigned char*) norm_pass_mb, norm_pass_mb_len, (const unsigned char*) norm_salt_mb, norm_salt_mb_len, LANG_WORD_CNT, digest);
+    pbkdf2_hmac_sha512((const unsigned char*) norm_pass_mb, norm_pass_mb_len, (const unsigned char*) norm_salt_mb, norm_salt_mb_len, ITERATIONS, seed);
 
     dogecoin_free(norm_pass_mb);
     dogecoin_free(norm_salt_mb);
 
-#else
+    return 0;
+
+#elif USE_UNISTRING
+    /* normalize the passphrase and salt */
+    size_t norm_pass_len, norm_salt_len;
+
     uint8_t *norm_pass;
     uint8_t *norm_salt;
 
     norm_pass = u8_normalize(UNINORM_NFKD, (const uint8_t *) pass, strlen(pass), NULL, &norm_pass_len);
     if (norm_pass == NULL) {
-        fprintf(stderr, "Error normalizing passphrase\n");
+        fprintf(stderr, "ERROR: normalizing passphrase\n");
         dogecoin_free(salt);
         return -1;
     }
     norm_salt = u8_normalize(UNINORM_NFKD, (const uint8_t *) salt, strlen(salt), NULL, &norm_salt_len);
     if (norm_salt == NULL) {
-        fprintf(stderr, "Error normalizing salt\n");
+        fprintf(stderr, "ERROR: normalizing salt\n");
         dogecoin_free(salt);
         dogecoin_free(norm_pass);
         return -1;
     }
 
-    /* pbkdf2 hmac sha512 */
-    pbkdf2_hmac_sha512((const unsigned char*) norm_pass, norm_pass_len, (const unsigned char*) norm_salt, norm_salt_len, LANG_WORD_CNT, digest);
-#endif
-
     /* we're done with salt */
     dogecoin_free(salt);
+
+    /* pbkdf2 hmac sha512 */
+    pbkdf2_hmac_sha512((const unsigned char*) norm_pass, norm_pass_len, (const unsigned char*) norm_salt, norm_salt_len, ITERATIONS, seed);
+
     dogecoin_free(norm_pass);
     dogecoin_free(norm_salt);
 
-    /* copy the digest into seed*/
-    memcpy_safe(seed, digest, SHA512_DIGEST_LENGTH);
-
     return 0;
+#else
+
+    fprintf(stderr, "ERROR: no normalizer\n");
+    dogecoin_free(salt);
+    return -1;
+#endif
+
 }
 
 /*
@@ -459,11 +480,13 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
     while (fscanf(fp, "%s", word) == 1) {
         if (i >= LANG_WORD_CNT) {
             fprintf(stderr, "ERROR: too many words in file\n");
+            fclose(fp);
             return -1;
         }
         wordlist[i] = malloc(strlen(word) + 1);
         if (wordlist[i] == NULL) {
             fprintf(stderr, "ERROR: cannot allocate memory\n");
+            fclose(fp);
             return -1;
         }
         strcpy(wordlist[i], word);
@@ -592,11 +615,16 @@ int produce_mnemonic_sentence(const int segSize, const int checksumBits, const c
             sprintf(csBits, BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(bytes[0]));
             break;
         default:
-            return -1;
+            /* Invalid byte, return from the function */
+            fprintf(stderr, "ERROR: Failed to convert first byte\n");
             dogecoin_free (segment);
             dogecoin_free (csBits);
-            break;
+            utils_clear_buffers();
+            return -1;
     }
+    /* Clear the bytes buffer */
+    utils_clear_buffers();
+
     csBits[checksumBits - 1] = '\0';   // null-terminate the checksum string
 
     /* Concatenate the entropy and checksum bits onto the segment array,
@@ -726,7 +754,7 @@ int dogecoin_generate_mnemonic (const ENTROPY_SIZE entropy_size, const char* lan
 
             /* Verify size of the string equals the entropy_size specified */
             if (strlen(entropy) != expected_entropy_size) {
-                fprintf(stderr, "ERROR: invalid entropy string, expected %ld bytes\n", expected_entropy_size);
+                fprintf(stderr, "ERROR: invalid entropy string, expected %ld characters\n", expected_entropy_size);
 
                 /* Free memory for custom words */
                 if (filepath != NULL) {
@@ -788,7 +816,7 @@ int dogecoin_seed_from_mnemonic (const char* mnemonic, const char* passphrase, S
         passphrase = "";
     }
 
-    /* get random binary seed */
+    /* get binary seed */
     if (get_root_seed(mnemonic, passphrase, seed) == -1) {
         fprintf(stderr, "ERROR: Failed to get root seed\n");
         return -1;

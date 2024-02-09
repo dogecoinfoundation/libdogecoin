@@ -10,7 +10,8 @@ These scripts are partitioned to support different phases of the development pro
  - aarch64-linux-gnu
  - x86_64-w64-mingw32
  - i686-w64-mingw32
- - x86_64-apple-darwin14
+ - x86_64-apple-darwin15
+ - arm64-apple-darwin
 
 Please take note of these target host triplets as they're required when using these scripts!
 
@@ -54,16 +55,6 @@ To run the python valgrind tooltests run:
 ./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --valgrind
 ```
 
-To run the python wrappers test suite run (only available for `x86_64-pc-linux-gnu`):
-```
-./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --cython
-```
-
-To run the golang wrappers test suite run (only available for `x86_64-pc-linux-gnu`):
-```
-./contrib/scripts/test.sh --host x86_64-pc-linux-gnu --extended --go
-```
-
 Note that this was an example for setting up, building and testing the target-host-triplet `x86_64-pc-linux-gnu`.
 
 -----------
@@ -89,4 +80,4 @@ Optional flag to purge cached dependencies and previously built files:
 --clean
 ```
 
-Note that if building on linux, the preceeding examples can be used to cross compile every supported host platform triplet with exception to being capable of running tests on `x86_64-apple-darwin14`.
+Note that if building on linux, the preceeding examples can be used to cross compile every supported host platform triplet with exception to being capable of running tests on `x86_64-apple-darwin15` and `arm64-apple-darwin`.

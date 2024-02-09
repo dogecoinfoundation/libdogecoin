@@ -4,7 +4,7 @@
 
  Copyright (c) 2017 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,7 @@
  */
 
 #include <dogecoin/chainparams.h>
+#include <dogecoin/utils.h>
 
 const dogecoin_chainparams dogecoin_chainparams_main = {
     "main",
@@ -40,6 +41,9 @@ const dogecoin_chainparams dogecoin_chainparams_main = {
     {0x91, 0x56, 0x35, 0x2c, 0x18, 0x18, 0xb3, 0x2e, 0x90, 0xc9, 0xe7, 0x92, 0xef, 0xd6, 0xa1, 0x1a, 0x82, 0xfe, 0x79, 0x56, 0xa6, 0x30, 0xf0, 0x3b, 0xbe, 0xe2, 0x36, 0xce, 0xda, 0xe3, 0x91, 0x1a},
     22556,
     {{"seed.multidoge.org"}, {{1}}},
+    true,
+    0x0062,
+    {0x00, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff} // pow limit
 };
 
 const dogecoin_chainparams dogecoin_chainparams_test = {
@@ -54,6 +58,9 @@ const dogecoin_chainparams dogecoin_chainparams_test = {
     {0x9e, 0x55, 0x50, 0x73, 0xd0, 0xc4, 0xf3, 0x64, 0x56, 0xdb, 0x89, 0x51, 0xf4, 0x49, 0x70, 0x4d, 0x54, 0x4d, 0x28, 0x26, 0xd9, 0xaa, 0x60, 0x63, 0x6b, 0x40, 0x37, 0x46, 0x26, 0x78, 0x0a, 0xbb},
     44556,
     {{"testseed.jrn.me.uk"}, {{0}}},
+    false,
+    0x0062,
+    {0x00, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff} // pow limit
 };
 
 const dogecoin_chainparams dogecoin_chainparams_regtest = {
@@ -68,6 +75,9 @@ const dogecoin_chainparams dogecoin_chainparams_regtest = {
     {0xa5, 0x73, 0xe9, 0x1c, 0x17, 0x72, 0x07, 0x6c, 0x0d, 0x40, 0xf7, 0x0e, 0x44, 0x08, 0xc8, 0x3a, 0x31, 0x70, 0x5f, 0x29, 0x6a, 0xe6, 0xe7, 0x62, 0x9d, 0x4a, 0xdc, 0xb5, 0xa3, 0x60, 0x21, 0x3d},
     18332,
     {{"testseed.jrn.me.uk"}, {{0}}},
+    true,
+    0x0062,
+    {0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff} // pow limit
 };
 
 const dogecoin_checkpoint dogecoin_mainnet_checkpoint_array[] = {
@@ -91,7 +101,8 @@ const dogecoin_checkpoint dogecoin_mainnet_checkpoint_array[] = {
     {3500000, "eaa303b93c1c64d2b3a2cdcf6ccf21b10cc36626965cc2619661e8e1879abdfb", 1606543340, 0x1a08d505},
     {3606083, "954c7c66dee51f0a3fb1edb26200b735f5275fe54d9505c76ebd2bcabac36f1e", 1613218169, 0x1a03d764},
     {3854173, "e4b4ecda4c022406c502a247c0525480268ce7abbbef632796e8ca1646425e75", 1628934997, 0x1a03ca36},
-    {3963597, "2b6927cfaa5e82353d45f02be8aadd3bfd165ece5ce24b9bfa4db20432befb5d", 1635884460, 0x1a037bc9}};
+    {3963597, "2b6927cfaa5e82353d45f02be8aadd3bfd165ece5ce24b9bfa4db20432befb5d", 1635884460, 0x1a037bc9},
+    {4303965, "ed7d266dcbd8bb8af80f9ccb8deb3e18f9cc3f6972912680feeb37b090f8cee0", 1657646310, 0x1a0344f5}};
 
 const dogecoin_checkpoint dogecoin_testnet_checkpoint_array[] = {
     {0, "bb0a78264637406b6360aad926284d544d7049f45189db5664f3c4d07350559e", 1391503289, 0x1e0ffff0},
@@ -110,7 +121,8 @@ const dogecoin_checkpoint dogecoin_testnet_checkpoint_array[] = {
     {2750000, "473ea9f625d59f534ffcc9738ffc58f7b7b1e0e993078614f5484a9505885563", 1594694481, 0x1d00ee30},
     {3062910, "113c41c00934f940a41f99d18b2ad9aefd183a4b7fe80527e1e6c12779bd0246", 1613218844, 0x1e0e2221},
     {3286675, "07fef07a255d510297c9189dc96da5f4e41a8184bc979df8294487f07fee1cf3", 1628932841, 0x1e0fffff},
-    {3445426, "70574db7856bd685abe7b0a8a3e79b29882620645bd763b01459176bceb58cd1", 1635884611, 0x1e0fffff}};
+    {3445426, "70574db7856bd685abe7b0a8a3e79b29882620645bd763b01459176bceb58cd1", 1635884611, 0x1e0fffff},
+    {3976284, "af23c3e750bb4f2ce091235f006e7e4e2af453d4c866282e7870471dcfeb4382", 1657646588, 0x1e0fffff}};
 
 const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
     /* determine address prefix for network chainparams */
@@ -136,6 +148,10 @@ const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
         case '6':
             count++;
             break;
+        case 'n':
+            return &dogecoin_chainparams_test;
+        case 'm':
+            return &dogecoin_chainparams_regtest;
     }
     return count ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 }
@@ -151,4 +167,22 @@ int chain_from_b58_prefix_bool(char* address) {
             return true;
     }
     return false;
+}
+
+/* check if a given address is a testnet address */
+dogecoin_bool isTestnetFromB58Prefix(const char address[P2PKHLEN]) {
+    /* Determine address prefix for network chainparams */
+    const dogecoin_chainparams* chainparams = chain_from_b58_prefix(address);
+
+    /* Check if chainparams is testnet */
+    return (chainparams == &dogecoin_chainparams_test);
+}
+
+/* check if a given address is a mainnet address */
+dogecoin_bool isMainnetFromB58Prefix(const char address[P2PKHLEN]) {
+    /* Determine address prefix for network chainparams */
+    const dogecoin_chainparams* chainparams = chain_from_b58_prefix(address);
+
+    /* Check if chainparams is mainnet */
+    return (chainparams == &dogecoin_chainparams_main);
 }

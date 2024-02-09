@@ -1,7 +1,7 @@
 /**********************************************************************
  * Copyright (c) 2015 Jonas Schnelli                                  *
  * Copyright (c) 2022 bluezr                                          *
- * Copyright (c) 2022 The Dogecoin Foundation                         *
+ * Copyright (c) 2022-2023 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -91,5 +91,25 @@ void test_vector()
     some_data->dummy2 = dogecoin_calloc(1, 10);
     vec = vector_new(1, free_dummy);
     vector_add(vec, some_data);
+    vector_free(vec, true);
+    /* test serialization */
+    char serialized[MAX_SERIALIZE_SIZE] = { 0 };
+    size_t len = 15;
+    size_t written = 0;
+    size_t read = 0;
+    vec = vector_new(1, free);
+    res = vector_add(vec, strdup("TEST0"));
+    assert(res == true);
+    res = vector_add(vec, strdup("TEST1"));
+    assert(res == true);
+    res = vector_add(vec, strdup("TEST2"));
+    assert(res == true);
+    assert(serializeVector(vec, serialized, len, &written) == true);
+    assert(strcmp(serialized, "TEST0TEST1TEST2") == 0);
+    /* test deserialization */
+    assert(deserializeVector(vec, serialized, len, &read) == true);
+    assert(strcmp(vector_idx(vec, 0), "TEST0") == 0);
+    assert(strcmp(vector_idx(vec, 1), "TEST1") == 0);
+    assert(strcmp(vector_idx(vec, 2), "TEST2") == 0);
     vector_free(vec, true);
 }

@@ -38,10 +38,10 @@ LIBDOGECOIN_BEGIN_DECL
 typedef struct eckey {
     int idx;
     dogecoin_key private_key;
-    char private_key_wif[128];
+    char private_key_wif[PRIVKEYWIFLEN];
     dogecoin_pubkey public_key;
-    char public_key_hex[128];
-    char address[35];
+    char public_key_hex[PUBKEYHEXLEN];
+    char address[P2PKHLEN];
     UT_hash_handle hh;
 } eckey;
 

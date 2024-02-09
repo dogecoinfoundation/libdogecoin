@@ -32,7 +32,7 @@ fi
 
 if has_param '--host' "$@"; then
     if has_param '--all' "$@"; then
-        ALL_HOST_TRIPLETS=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "aarch64-linux-gnu" "arm-linux-gnueabihf" "x86_64-apple-darwin14" "x86_64-w64-mingw32" "i686-w64-mingw32")
+        ALL_HOST_TRIPLETS=("x86_64-pc-linux-gnu" "i686-pc-linux-gnu" "aarch64-linux-gnu" "arm-linux-gnueabihf" "x86_64-apple-darwin15" "arm64-apple-darwin" "x86_64-w64-mingw32" "i686-w64-mingw32")
     else
         ALL_HOST_TRIPLETS=($2)
     fi

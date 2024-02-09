@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #include <dogecoin/eckey.h>
 #include <dogecoin/mem.h>

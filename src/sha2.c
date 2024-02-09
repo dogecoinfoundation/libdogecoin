@@ -2,7 +2,7 @@
  * Copyright (c) 2000-2001 Aaron D. Gifford
  * Copyright (c) 2013 Pavol Rusnak
  * Copyright (c) 2022 bluezr
- * Copyright (c) 2022 The Dogecoin Foundation
+ * Copyright (c) 2022-2024 The Dogecoin Foundation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 #include <dogecoin/sha2.h>
 #include <dogecoin/utils.h>
 #include <dogecoin/mem.h>
+#include <dogecoin/options.h>
 
 /*
  * ASSERT NOTE:
@@ -540,7 +541,7 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
 
 void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
 {
-    unsigned int freespace, usedspace;
+    unsigned int freespace = 0, usedspace = 0;
     if (len == 0)
         return; /* Calling with no data is valid - we do nothing */
     usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
@@ -573,11 +574,14 @@ void sha256_write(sha256_context* context, const sha2_byte* data, size_t len)
         MEMCPY_BCOPY(context->buffer, data, len);
         context->bitcount += len << 3;
     }
+
+	/* Clean up: */
+	usedspace = freespace = 0;
 }
 
 void sha256_finalize(sha256_context* context, sha2_byte digest[SHA256_DIGEST_LENGTH]) {
     sha2_word32* d = (sha2_word32*)digest;
-    unsigned int usedspace;
+    unsigned int usedspace = 0;
     sha2_word64* t;
     /* If no digest buffer is passed, we don't bother doing this: */
     if (digest != (sha2_byte*)0) {
@@ -638,6 +642,14 @@ void sha256_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA256_DIGEST_
     sha256_init(&context);
     sha256_write(&context, data, len);
     sha256_finalize(&context, digest);
+}
+
+void sha256_reset(sha256_context* ctx) {
+    if (ctx == (sha256_context*)0)
+        return;
+    MEMCPY_BCOPY(ctx->state, sha256_initial_hash_value, SHA256_DIGEST_LENGTH);
+    MEMSET_BZERO(ctx->buffer, SHA256_BLOCK_LENGTH);
+    ctx->bitcount = 0;
 }
 
 /*** SHA-512: *********************************************************/
@@ -925,6 +937,41 @@ void sha512_raw(const sha2_byte* data, size_t len, uint8_t digest[SHA512_DIGEST_
 
 /*** HMAC_SHA-*: *********************************************************/
 
+void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
+                         uint32_t *opad_digest, uint32_t *ipad_digest) {
+  static CONFIDENTIAL uint32_t key_pad[SHA256_BLOCK_LENGTH / sizeof(uint32_t)];
+
+  dogecoin_mem_zero(key_pad, sizeof(key_pad));
+  if (keylen > SHA256_BLOCK_LENGTH) {
+    static CONFIDENTIAL sha256_context context;
+    sha256_init(&context);
+    sha256_write(&context, key, keylen);
+    sha256_finalize(&context, (uint8_t *)key_pad);
+  } else {
+    memcpy_safe(key_pad, key, keylen);
+  }
+
+  /* compute o_key_pad and its digest */
+  int i = 0;
+  for (; i < SHA256_BLOCK_LENGTH / (int)sizeof(uint32_t); i++) {
+    uint32_t data = 0;
+#if BYTE_ORDER == LITTLE_ENDIAN
+    REVERSE32(key_pad[i], data);
+#else
+    data = key_pad[i];
+#endif
+    key_pad[i] = data ^ 0x5c5c5c5c;
+  }
+  sha256_transform((sha256_context*)key_pad, opad_digest);
+
+  /* convert o_key_pad to i_key_pad and compute its digest */
+  for (i = 0; i < SHA256_BLOCK_LENGTH / (int)sizeof(uint32_t); i++) {
+    key_pad[i] = key_pad[i] ^ 0x5c5c5c5c ^ 0x36363636;
+  }
+  sha256_transform((sha256_context*)key_pad, ipad_digest);
+  dogecoin_mem_zero(key_pad, sizeof(key_pad));
+}
+
 void hmac_sha256_init(hmac_sha256_context *hctx, const uint8_t *key, const uint32_t keylen)
 {
 	uint8_t i_key_pad[SHA256_BLOCK_LENGTH];
@@ -1051,13 +1098,23 @@ void hmac_sha512(const uint8_t* key, const size_t keylen, const uint8_t* msg, co
 
 /*** PBKDF2-*: *********************************************************/
 
-void pbkdf2_hmac_sha256_init(pbkdf2_hmac_sha256_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)
+void pbkdf2_hmac_sha256_init(pbkdf2_hmac_sha256_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t blocknr)
 {
-	hmac_sha256_context hctx;
+	hmac_sha256_context hctx = {0};
+#if BYTE_ORDER == LITTLE_ENDIAN
+  REVERSE32(blocknr, blocknr);
+#endif
+
+    hmac_sha256_prepare(pass, passlen, pctx->odig, pctx->idig);
+    dogecoin_mem_zero(pctx->g, sizeof(pctx->g));
+    pctx->g[8] = 0x80000000;
+    pctx->g[15] = (SHA256_BLOCK_LENGTH + SHA256_DIGEST_LENGTH) * 8;
+    memcpy(hctx.ctx.state, pctx->idig, sizeof(pctx->idig));
+    hctx.ctx.bitcount = SHA256_BLOCK_LENGTH * 8;
 	hmac_sha256_init(&hctx, pass, passlen);
 	hmac_sha256_write(&hctx, salt, saltlen);
-	hmac_sha256_write(&hctx, (const uint8_t *)"\x00\x00\x00\x01", 4);
-	hmac_sha256_finalize(&hctx, pctx->g);
+	hmac_sha256_write(&hctx, (uint8_t *)&blocknr, sizeof(blocknr));
+	hmac_sha256_finalize(&hctx, (uint8_t*)pctx->g);
 	memcpy(pctx->f, pctx->g, SHA256_DIGEST_LENGTH);
 	pctx->pass = pass;
 	pctx->passlen = passlen;
@@ -1068,9 +1125,9 @@ void pbkdf2_hmac_sha256_write(pbkdf2_hmac_sha256_context *pctx, uint32_t iterati
 {
     uint32_t i;
 	for (i = pctx->first; i < iterations; i++) {
-		hmac_sha256(pctx->pass, pctx->passlen, pctx->g, SHA256_DIGEST_LENGTH, pctx->g);
-        uint32_t j;
-		for (j = 0; j < SHA256_DIGEST_LENGTH; j++) {
+		hmac_sha256(pctx->pass, pctx->passlen, (const uint8_t*)pctx->g, SHA256_DIGEST_LENGTH, (uint8_t*)pctx->g);
+        uint32_t j = 0;
+		for (; j < 8; j++) {
 			pctx->f[j] ^= pctx->g[j];
 		}
 	}
@@ -1083,12 +1140,29 @@ void pbkdf2_hmac_sha256_finalize(pbkdf2_hmac_sha256_context *pctx, uint8_t *key)
 	MEMSET_BZERO(pctx, sizeof(pbkdf2_hmac_sha256_context));
 }
 
-void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen)
 {
-	pbkdf2_hmac_sha256_context pctx;
-	pbkdf2_hmac_sha256_init(&pctx, pass, passlen, salt, saltlen);
-	pbkdf2_hmac_sha256_write(&pctx, iterations);
-	pbkdf2_hmac_sha256_finalize(&pctx, key);
+    uint32_t last_block_size = keylen % SHA256_DIGEST_LENGTH;
+    uint32_t blocks_count = keylen / SHA256_DIGEST_LENGTH;
+    if (last_block_size) {
+    blocks_count++;
+    } else {
+    last_block_size = SHA256_DIGEST_LENGTH;
+    }
+    uint32_t blocknr = 1;
+    for (; blocknr <= blocks_count; blocknr++) {
+        pbkdf2_hmac_sha256_context pctx = {0};
+        pbkdf2_hmac_sha256_init(&pctx, pass, passlen, salt, saltlen, blocknr);
+        pbkdf2_hmac_sha256_write(&pctx, iterations);
+        uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+        pbkdf2_hmac_sha256_finalize(&pctx, digest);
+        uint32_t key_offset = (blocknr - 1) * SHA256_DIGEST_LENGTH;
+        if (blocknr < blocks_count) {
+            memcpy_safe(key + key_offset, digest, SHA256_DIGEST_LENGTH);
+        } else {
+            memcpy_safe(key + key_offset, digest, last_block_size);
+        }
+    }
 }
 
 void pbkdf2_hmac_sha512_init(pbkdf2_hmac_sha512_context *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)

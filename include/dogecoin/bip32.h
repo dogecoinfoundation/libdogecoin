@@ -4,7 +4,7 @@
  * Copyright (c) 2015 Douglas J. Bakkumk
  * Copyright (c) 2015 Jonas Schnelli
  * Copyright (c) 2022 bluezr
- * Copyright (c) 2022 The Dogecoin Foundation
+ * Copyright (c) 2022-2024 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -67,10 +67,16 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const
 
 //!derive dogecoin_hdnode from extended private or extended public key orkey
 //if you use pub child key derivation, pass usepubckd=true
-LIBDOGECOIN_API dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypath, const uint8_t* keymaster, const uint8_t* chaincode, dogecoin_bool usepubckd);
+LIBDOGECOIN_API dogecoin_bool dogecoin_hd_generate_key(dogecoin_hdnode* node, const char* keypath, const uint8_t* keymaster, const uint32_t depth, const uint8_t* chaincode, dogecoin_bool usepubckd);
 
 //!checks if a node has the according private key (or if its a pubkey only node)
 LIBDOGECOIN_API dogecoin_bool dogecoin_hdnode_has_privkey(dogecoin_hdnode* node);
+
+// wrappers for bip32 key derivation functions
+LIBDOGECOIN_API dogecoin_bool getHDRootKeyFromSeed(const SEED seed, const int seed_len, const dogecoin_bool is_testnet, char masterkey[HDKEYLEN]);
+LIBDOGECOIN_API dogecoin_bool getHDPubKey(const char hdkey[HDKEYLEN], const dogecoin_bool is_testnet, char hdpubkey[HDKEYLEN]);
+LIBDOGECOIN_API dogecoin_bool deriveExtKeyFromHDKey(const char extkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], const dogecoin_bool is_testnet, char key[HDKEYLEN]);
+LIBDOGECOIN_API dogecoin_bool deriveExtPubKeyFromHDKey(const char extpubkey[HDKEYLEN], const char keypath[KEYPATHMAXLEN], const dogecoin_bool is_testnet, char pubkey[HDKEYLEN]);
 
 LIBDOGECOIN_END_DECL
 

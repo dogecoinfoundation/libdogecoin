@@ -4,7 +4,7 @@
 
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -33,10 +33,10 @@
 /**
  * @brief This function creates a new vector object
  * and initializes it to 0.
- * 
+ *
  * @param res The size of memory to allocate for the vector's contents.
  * @param free_f The function that will be called when a vector element is freed.
- * 
+ *
  * @return A pointer to the new vector object.
  */
 vector* vector_new(size_t res, void (*free_f)(void*))
@@ -63,11 +63,11 @@ vector* vector_new(size_t res, void (*free_f)(void*))
 /**
  * @brief This function frees all of a vector's elements,
  * calling the function associated with its free operation
- * set during vector creation. The vector object itself 
+ * set during vector creation. The vector object itself
  * is not freed.
- * 
+ *
  * @param vec The pointer to the vector to be freed.
- * 
+ *
  * @return Nothing.
  */
 static void vector_free_data(vector* vec)
@@ -92,12 +92,12 @@ static void vector_free_data(vector* vec)
 
 
 /**
- * @brief This function frees an entire vector 
+ * @brief This function frees an entire vector
  * object and all of its elements if specified.
- * 
+ *
  * @param vec The pointer to the vector to be freed.
  * @param free_array The flag denoting whether to free the vector's elements.
- * 
+ *
  * @return Nothing.
  */
 void vector_free(vector* vec, dogecoin_bool free_array)
@@ -118,10 +118,10 @@ void vector_free(vector* vec, dogecoin_bool free_array)
 /**
  * @brief This function grows the vector by doubling
  * in size until it is larger than the size specified.
- * 
+ *
  * @param vec The pointer to the vector to be grown.
  * @param min_sz The minimum size the vector must be grown to.
- * 
+ *
  * @return 1 if the vector is grown successfully, 0 if it reaches the max size allowed.
  */
 static dogecoin_bool vector_grow(vector* vec, size_t min_sz)
@@ -149,10 +149,10 @@ static dogecoin_bool vector_grow(vector* vec, size_t min_sz)
 /**
  * @brief This function finds and returns the first element
  * in the vector whose data matches the data specified.
- * 
+ *
  * @param vec The pointer to the vector to search.
  * @param data The data to match.
- * 
+ *
  * @return The index of the data if it exists in the vector, -1 otherwise.
  */
 ssize_t vector_find(vector* vec, void* data)
@@ -173,10 +173,10 @@ ssize_t vector_find(vector* vec, void* data)
 /**
  * @brief This function adds an element to an existing
  * vector, growing it by one if necessary.
- * 
+ *
  * @param vec The pointer to the vector to add to.
  * @param data The data to be added into the vector.
- * 
+ *
  * @return 1 if the element was added successfully, 0 otherwise.
  */
 dogecoin_bool vector_add(vector* vec, void* data)
@@ -196,11 +196,11 @@ dogecoin_bool vector_add(vector* vec, void* data)
 /**
  * @brief This function deletes a range of consecutive
  * elements from the specified vector.
- * 
+ *
  * @param vec The pointer to the vector to edit.
  * @param pos The index of the first item to remove.
  * @param len The number of consecutive elements to remove.
- * 
+ *
  * @return Nothing.
  */
 void vector_remove_range(vector* vec, size_t pos, size_t len)
@@ -224,7 +224,7 @@ void vector_remove_range(vector* vec, size_t pos, size_t len)
 /**
  * @brief This function removes a single element from
  * the specified vector.
- * 
+ *
  * @param vec The pointer to the vector to edit.
  * @param pos The index of the element to remove.
  */
@@ -238,10 +238,10 @@ void vector_remove_idx(vector* vec, size_t pos)
  * @brief This function finds an element whose data
  * matches the data specified and removes it if it
  * exists.
- * 
+ *
  * @param vec The pointer to the vector to edit.
  * @param data The data to match.
- * 
+ *
  * @return 1 if the element was removed successfully, 0 if the data was not found.
  */
 dogecoin_bool vector_remove(vector* vec, void* data)
@@ -262,10 +262,10 @@ dogecoin_bool vector_remove(vector* vec, void* data)
  * is grown and the new elements are left empty. If the
  * new size is smaller, vector elements will be truncated.
  * If the new size is the same, do nothing.
- * 
+ *
  * @param vec The pointer to the vector to resize.
  * @param newsz The new desired size of the vector.
- * 
+ *
  * @return 1 if the vector was resized successfully, 0 otherwise.
  */
 dogecoin_bool vector_resize(vector* vec, size_t newsz)
@@ -302,5 +302,81 @@ dogecoin_bool vector_resize(vector* vec, size_t newsz)
         vec->data[i] = NULL;
     }
 
+    return true;
+}
+
+/**
+ * @brief This function serializes a vector into a string.
+ *
+ * @param vec The vector to serialize.
+ * @param out The output buffer.
+ * @param outlen The length of the output buffer.
+ * @param written The number of bytes written to the output buffer.
+ *
+ * @return 1 if the vector was serialized successfully, 0 otherwise.
+ */
+dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* written) {
+    if (!out || !outlen || !vec || !written) {
+        return false;
+    }
+
+    size_t i;
+    size_t offset = 0;
+    for (i = 0; i < vec->len; i++) {
+        if (!vec->data[i]) {
+            continue;
+        }
+
+        size_t len = strlen(vec->data[i]);
+        if (len > outlen - offset) {
+            return false;
+        }
+
+        memcpy(out + offset, vec->data[i], len);
+        offset += len;
+    }
+
+    *written = offset;
+    return true;
+}
+
+/**
+ * @brief This function deserializes a string into a vector.
+ *
+ * @param vec The vector to deserialize into.
+ * @param in The input buffer.
+ * @param inlen The length of the input buffer.
+ * @param read The number of bytes read from the input buffer.
+ *
+ * @return 1 if the vector was deserialized successfully, 0 otherwise.
+ */
+dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_t* read) {
+    if (!in || inlen > MAX_SERIALIZE_SIZE || !vec || !read) {
+        return false;
+    }
+
+    size_t offset = 0;
+
+    while (offset < inlen) {
+        size_t len = strnlen(in + offset, MAX_SERIALIZE_SIZE - offset);
+        if (len == 0 || len >= MAX_SERIALIZE_SIZE) {
+            // Either a zero-length string or the string exceeds buffer size
+            return false;
+        }
+
+        char* str = strdup(in + offset);
+        if (!str) {
+            return false; // Memory allocation failed
+        }
+
+        if (!vector_add(vec, str)) {
+            free(str); // Free the string if adding to the vector fails
+            return false;
+        }
+
+        offset += len + 1; // Move past the string and its null terminator
+    }
+
+    *read = offset;
     return true;
 }

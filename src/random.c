@@ -4,7 +4,7 @@
 
  Copyright (c) 2015 Douglas J. Bakkum
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -39,7 +39,7 @@
 #include <time.h>
 #if defined _WIN32
 #ifdef _MSC_VER
-#include <dogecoin/winunistd.h>
+#include <win/winunistd.h>
 #endif
 #else
 #include <unistd.h>
@@ -147,6 +147,12 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     return true;
     }
 #else
+/* Define a function pointer for random */
+int (*rng_ptr) (void*, size_t) = NULL;
+void set_rng(int (*ptr)(void *, size_t))
+    {
+    rng_ptr = ptr;
+    }
 void dogecoin_random_init_internal(void)
     {
     }
@@ -196,6 +202,12 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     errno = ENOSYS;
     return -1;
 #else
+#ifdef USE_OPENENCLAVE
+    if (rng_ptr != NULL)
+        if (rng_ptr(buf, len) == 0)
+            return true;
+#endif
+
     (void)update_seed; //unused
     FILE* frand = fopen("/dev/urandom", "r"); // figure out why RANDOM_DEVICE is undeclared here
     if (!frand)

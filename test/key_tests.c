@@ -1,9 +1,9 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2023 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utest.h"
+#include <test/utest.h>
 
 #include <dogecoin/key.h>
 #include <dogecoin/utils.h>
@@ -79,11 +79,14 @@ void test_key()
     assert(dogecoin_privkey_is_valid(&key_wif) == 0);
     dogecoin_privkey_gen(&key_wif);
     assert(dogecoin_privkey_is_valid(&key_wif) == 1);
-    char wifstr[100];
-    size_t wiflen = 100;
+    char wifstr[PRIVKEYWIFLEN];
+    size_t wiflen = PRIVKEYWIFLEN;
     dogecoin_privkey_encode_wif(&key_wif, &dogecoin_chainparams_main, wifstr, &wiflen);
-    wiflen = 100;
+    wiflen = PRIVKEYWIFLEN;
     dogecoin_key key_wif_decode;
     dogecoin_privkey_decode_wif(wifstr, &dogecoin_chainparams_main, &key_wif_decode);
+    u_assert_mem_eq(key_wif_decode.privkey, key_wif.privkey, sizeof(key_wif_decode.privkey));
+    getWifEncodedPrivKey(key_wif.privkey, false, wifstr, &wiflen);
+    getDecodedPrivKeyWif(wifstr, false, key_wif_decode.privkey);
     u_assert_mem_eq(key_wif_decode.privkey, key_wif.privkey, sizeof(key_wif_decode.privkey));
 }
