@@ -4,7 +4,7 @@
 
  Copyright (c) 2017 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -77,7 +77,7 @@ const dogecoin_chainparams dogecoin_chainparams_regtest = {
     {{"testseed.jrn.me.uk"}, {{0}}},
     true,
     0x0062,
-    {0x00, 0x00, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff} // pow limit
+    {0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff} // pow limit
 };
 
 const dogecoin_checkpoint dogecoin_mainnet_checkpoint_array[] = {
@@ -148,6 +148,10 @@ const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
         case '6':
             count++;
             break;
+        case 'n':
+            return &dogecoin_chainparams_test;
+        case 'm':
+            return &dogecoin_chainparams_regtest;
     }
     return count ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
 }

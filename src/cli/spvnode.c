@@ -4,7 +4,7 @@
 
  Copyright (c) 2017 Jonas Schnelli
  Copyright (c) 2023 bluezr
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -41,6 +41,7 @@
 #endif
 
 #include <inttypes.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -179,6 +180,7 @@ static struct option long_options[] = {
         {"checkpoint", no_argument, NULL, 'p'},
         {"wallet_file", required_argument, NULL, 'w'},
         {"headers_file", required_argument, NULL, 'h'},
+        {"no_prompt", no_argument, NULL, 'l'},
         {"encrypted_file", required_argument, NULL, 'y'},
         {"use_tpm", no_argument, NULL, 'j'},
         {"master_key", no_argument, NULL, 'k'},
@@ -199,7 +201,7 @@ static void print_usage() {
     print_version();
     printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
 (-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase) (-y|-encrypted_file <file_num 0-999>) \
-(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
+(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
 (-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
@@ -273,6 +275,16 @@ void spv_sync_completed(dogecoin_spv_client* client) {
     }
 }
 
+// Signal handler for SIGINT
+void handle_sigint() {
+    // Reset standard input back to blocking mode
+#ifndef _WIN32
+    int stdin_flags = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, stdin_flags & ~O_NONBLOCK);
+#endif
+    exit(0);
+}
+
 int main(int argc, char* argv[]) {
     int ret = 0;
     int long_index = 0;
@@ -280,6 +292,7 @@ int main(int argc, char* argv[]) {
     char* data = 0;
     char* ips = 0;
     dogecoin_bool debug = false;
+    int maxnodes = 10;
     char* dbfile = 0;
     const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
     char* address = NULL;
@@ -290,6 +303,7 @@ int main(int argc, char* argv[]) {
     char* headers_name = 0;
     dogecoin_bool full_sync = false;
     dogecoin_bool have_decl_daemon = false;
+    dogecoin_bool prompt = true;
     dogecoin_bool encrypted = false;
     dogecoin_bool master_key = false;
     dogecoin_bool tpm = false;
@@ -303,7 +317,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:bpzkj:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -323,6 +337,9 @@ int main(int argc, char* argv[]) {
                 case 's':
                     pass = getpass("BIP39 passphrase: \n");
                     break;
+                case 'm':
+                    maxnodes = (int)strtol(optarg, (char**)NULL, 10);
+                    break;
                 case 'n':
                     mnemonic_in = optarg;
                     break;
@@ -340,6 +357,9 @@ int main(int argc, char* argv[]) {
                     break;
                 case 'h':
                     headers_name = optarg;
+                    break;
+                case 'l':
+                    prompt = false;
                     break;
                 case 'y':
                     encrypted = true;
@@ -369,12 +389,13 @@ int main(int argc, char* argv[]) {
 
     if (strcmp(data, "scan") == 0) {
         dogecoin_ecc_start();
-        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync);
+        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes);
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
+        signal(SIGINT, handle_sigint);
 
 #if WITH_WALLET
-        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, encrypted, tpm, file_num, master_key);
+        dogecoin_wallet* wallet = dogecoin_wallet_init(chain, address, name, mnemonic_in, pass, encrypted, tpm, file_num, master_key, prompt);
         if (!wallet) {
             printf("Could not initialize wallet...\n");
             // clear and free the passphrase
@@ -382,6 +403,8 @@ int main(int argc, char* argv[]) {
                 dogecoin_mem_zero (pass, strlen(pass));
                 dogecoin_free(pass);
                 }
+            dogecoin_spv_client_free(client);
+            dogecoin_ecc_stop();
             return EXIT_FAILURE;
         }
         // clear and free the passphrase
@@ -405,19 +428,19 @@ int main(int argc, char* argv[]) {
             dogecoin_free(header_type_prefix);
             if (headers_name) {
                 // Load headers file name with headers name:
-                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name));
+                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name), prompt);
             } else {
                 // Otherwise, use default headers file name:
-                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+                response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile), prompt);
             }
         }
         else if (headers_name) {
             // Load headers file name with headers name:
-            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name));
+            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headers_name), prompt);
         } else {
             // Otherwise, use default headers file name:
             headersfile = concat(header_prefix, header_suffix);
-            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile));
+            response = dogecoin_spv_client_load(client, (dbfile ? dbfile : headersfile), prompt);
         }
 
         dogecoin_free(headersfile);
@@ -462,35 +485,100 @@ int main(int argc, char* argv[]) {
             printf("Connecting to the p2p network...\n");
             dogecoin_spv_client_runloop(client);
             dogecoin_spv_client_free(client);
+            printf("done\n");
             ret = EXIT_SUCCESS;
 #if WITH_WALLET
             dogecoin_wallet_free(wallet);
 #endif
             }
         dogecoin_ecc_stop();
-    } else if (strcmp(data, "wallet") == 0) {
+    } else if (strcmp(data, "sanity") == 0) {
 #if WITH_WALLET
     dogecoin_ecc_start();
     if (address != NULL) {
-        int res = dogecoin_register_watch_address_with_node(address);
-        printf("registered:     %d %s\n", res, address);
-        uint64_t amount = dogecoin_get_balance(address);
-        if (amount > 0) {
-            printf("amount:         %s\n", dogecoin_get_balance_str(address));
-            unsigned int utxo_count = dogecoin_get_utxos_length(address);
-            if (utxo_count) {
-                printf("utxo count:     %d\n", utxo_count);
-                unsigned int i = 1;
-                for (; i <= utxo_count; i++) {
-                    printf("txid:           %s\n", dogecoin_get_utxo_txid_str(address, i));
-                    printf("vout:           %d\n", dogecoin_get_utxo_vout(address, i));
-                    printf("amount:         %s\n", dogecoin_get_utxo_amount(address, i));
-                }
+        char delim[] = " ";
+        // copy address into a new string, strtok modifies the string
+        char* address_copy = strdup(address);
+
+        // backup existing default wallet file prior to radio doge functions test
+        const dogecoin_chainparams *params = chain_from_b58_prefix(address_copy);
+        dogecoin_wallet *tmp = dogecoin_wallet_new(params);
+        int result;
+        FILE *file;
+        if ((file = fopen(tmp->filename, "r")))
+        {
+            fclose(file);
+#ifdef WIN32
+            #include <winbase.h>
+            result = CopyFile((char*)tmp->filename, "tmp.bin", true);
+            if (result == 1) result = 0;
+#else
+            result = file_copy((char *)tmp->filename, "tmp.bin");
+#endif
+            if (result != 0) {
+                printf( "could not copy '%s' %d\n", tmp->filename, result );
+            } else {
+                printf( "File '%s' copied to 'tmp.bin'\n", tmp->filename);
             }
         }
-        res = dogecoin_unregister_watch_address_with_node(address);
-        printf("unregistered:   %s\n", res ? "true" : "false");
+
+        char *ptr;
+        char* temp_address_copy = address_copy;
+
+        while((ptr = strtok_r(temp_address_copy, delim, &temp_address_copy))) {
+            int res = dogecoin_register_watch_address_with_node(ptr);
+            printf("registered:     %d %s\n", res, ptr);
+            uint64_t amount = dogecoin_get_balance(ptr);
+            if (amount > 0) {
+                char* amount_str = dogecoin_get_balance_str(ptr);
+                printf("total:          %s\n", amount_str);
+                unsigned int utxo_count = dogecoin_get_utxos_length(ptr);
+                if (utxo_count) {
+                    printf("utxo count:     %d\n", utxo_count);
+                    unsigned int i = 1;
+                    for (; i <= utxo_count; i++) {
+                        printf("txid:           %s\n", dogecoin_get_utxo_txid_str(ptr, i));
+                        printf("vout:           %d\n", dogecoin_get_utxo_vout(ptr, i));
+                        char* utxo_amount_str = dogecoin_get_utxo_amount(ptr, i);
+                        printf("amount:         %s\n", utxo_amount_str);
+                        dogecoin_free(utxo_amount_str);
+                    }
+                }
+                dogecoin_free(amount_str);
+            }
+            res = dogecoin_unregister_watch_address_with_node(ptr);
+            printf("unregistered:   %s\n", res ? "true" : "false");
+        }
+
+        if ((file = fopen("tmp.bin", "r"))) {
+            fclose(file);
+#ifdef WIN32
+            #include <winbase.h>
+            char *tmp_filename = _strdup((char *)tmp->filename);
+            char *filename = _strdup((char *)tmp->filename);
+            replace_last_after_delim(filename, "\\", "tmp.bin");
+            LPVOID message;
+            result = DeleteFile(tmp->filename);
+            if (!result) {
+                FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&message, 0, NULL);
+                printf("ERROR: %s\n", (char *)message);
+            }
+            result = rename(filename, tmp->filename);
+            dogecoin_free(filename);
+            dogecoin_free(tmp_filename);
+#else
+            result = rename("tmp.bin", tmp->filename);
+#endif
+            if( result != 0 ) {
+                printf( "could not copy 'tmp.bin' %d\n", result );
+            } else {
+                printf( "File 'tmp.bin' copied to '%s'\n", tmp->filename);
+            }
+        }
+        dogecoin_wallet_free(tmp);
+        dogecoin_free(address_copy);
     }
+
     dogecoin_ecc_stop();
 #endif
     } else {

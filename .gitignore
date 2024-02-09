@@ -115,9 +115,11 @@ test-suite.log
 **/__pycache__/
 *.py[cod]
 dist/
+gitian/
 contrib/gitian/
 contrib/gitian/*
 example
+dummy
 
 # CMake files
 build/*
@@ -149,3 +151,7 @@ include/include.am
 # QR
 qrtest.png
 qrtest.jpg
+
+# Store
+store/*
+.store/*

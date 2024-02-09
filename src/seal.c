@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2023 edtubbs
- * Copyright (c) 2023 The Dogecoin Foundation
+ * Copyright (c) 2023-2024 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -66,7 +66,6 @@
 #define AES_KEY_SIZE 32
 #define AES_IV_SIZE 16
 #define SALT_SIZE 16
-#define TEST_PASS "12345678"
 #define NAME_MAX_LEN 100
 #define PASS_MAX_LEN 100
 #define FILE_PATH_MAX_LEN 1000
@@ -453,9 +452,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm(SEED seed, const in
  * @param size The size of the seed
  * @param file_num The file number to encrypt the seed for
  * @param overwrite Whether or not to overwrite an existing seed
+ * @param test_password The password to use for testing
  * @return Returns true if the seed is encrypted successfully, false otherwise.
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite)
+LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite, const char* test_password)
 {
 
     // Validate the input parameters
@@ -509,26 +509,50 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(password, TEST_PASS);
+    if (test_password)
+    {
+       password = malloc(PASS_MAX_LEN);
+       strcpy(password, test_password);
+    }
+    else
 #else
-    password = getpass("Enter password for seed encryption: \n");
+    (void) test_password;
 #endif
+    password = getpass("Enter password for seed encryption: \n");
+    if (password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        fclose(fp);
+        return false;
+    }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
     // Confirm the password
-    char* confirm_password = malloc(PASS_MAX_LEN);
+    char* confirm_password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(confirm_password, TEST_PASS);
-#else
-    confirm_password = getpass("Confirm password: \n");
+    if (test_password)
+    {
+       confirm_password = malloc(PASS_MAX_LEN);
+       strcpy(confirm_password, test_password);
+    }
+    else
 #endif
+    confirm_password = getpass("Confirm password: \n");
+    if (confirm_password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        dogecoin_free(password);
+        fclose(fp);
+        return false;
+    }
     if (strcmp(password, confirm_password) != 0)
     {
         fprintf(stderr, "ERROR: Passwords do not match.\n");
@@ -536,6 +560,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
         dogecoin_mem_zero(confirm_password, strlen(confirm_password));
         dogecoin_free(password);
         dogecoin_free(confirm_password);
+        fclose(fp);
         return false;
     }
     // Clear the confirm password
@@ -550,6 +575,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
         dogecoin_mem_zero(password, strlen(password));
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -574,6 +600,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     if (!dogecoin_random_bytes(iv, sizeof(iv), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
 
@@ -584,6 +611,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     if (!encrypted_seed)
     {
         fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        fclose(fp);
         return false;
     }
 
@@ -592,6 +620,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
     {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
         dogecoin_free(encrypted_seed);
+        fclose(fp);
         return false;
     }
 
@@ -616,9 +645,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, con
  *
  * @param seed Decrypted seed will be stored here
  * @param file_num The file number for the encrypted seed
+ * @param test_password The password to use for testing
  * @return Returns true if the seed is decrypted successfully, false otherwise.
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int file_num)
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int file_num, const char* test_password)
 {
 
     // Validate the input parameters
@@ -636,12 +666,23 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(password, TEST_PASS);
+    if (test_password)
+    {
+       password = malloc(PASS_MAX_LEN);
+       strcpy(password, test_password);
+    }
+    else
 #else
-    password = getpass("Enter password for seed decryption: \n");
+    (void) test_password;
 #endif
+    password = getpass("Enter password for seed decryption: \n");
+    if (password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        return false;
+    }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
@@ -877,6 +918,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
     TBS_HCONTEXT hContext = 0;
     TBS_CONTEXT_PARAMS2 params;
     params.version = TBS_CONTEXT_VERSION_TWO;
+    params.includeTpm20 = 1;
     TBS_RESULT hr = Tbsi_Context_Create((PCTBS_CONTEXT_PARAMS)&params, &hContext);
     if (hr != TBS_SUCCESS)
     {
@@ -1100,7 +1142,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* 
     }
 
     // Decrypt the encrypted data
-    status = NCryptDecrypt(hEncryptionKey, pbOutput, bytesRead, NULL, (PBYTE)out, (DWORD)cbResult, &cbResult, NCRYPT_PAD_PKCS1_FLAG);
+    status = NCryptDecrypt(hEncryptionKey, pbOutput, bytesRead, NULL, (PBYTE)out, sizeof(dogecoin_hdnode), &cbResult, NCRYPT_PAD_PKCS1_FLAG);
     if (status != ERROR_SUCCESS)
     {
         // Failed to decrypt the encrypted data
@@ -1133,9 +1175,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* 
  * @param out The HD node object to generate
  * @param file_num The file number of the encrypted mnemonic
  * @param overwrite Whether or not to overwrite the existing HD node object
+ * @param test_password The password to use for testing
  * @return Returns true if the HD node is generated and encrypted successfully, false otherwise.
  */
-dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, const int file_num, dogecoin_bool overwrite)
+dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, const int file_num, dogecoin_bool overwrite, const char* test_password)
 {
 
     // Validate the input parameters
@@ -1189,26 +1232,51 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(password, TEST_PASS);
+    if (test_password)
+    {
+       password = malloc(PASS_MAX_LEN);
+       strcpy(password, test_password);
+    }
+    else
 #else
-    password = getpass("Enter password for HD node encryption: \n");
+    (void) test_password;
 #endif
+    password = getpass("Enter password for HD node encryption: \n");
+    if (password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        fclose(fp);
+        return false;
+    }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
+
     // Confirm the password
-    char* confirm_password = malloc(PASS_MAX_LEN);
+    char* confirm_password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(confirm_password, TEST_PASS);
-#else
-    confirm_password = getpass("Confirm password: \n");
+    if (test_password)
+    {
+       confirm_password = malloc(PASS_MAX_LEN);
+       strcpy(confirm_password, test_password);
+    }
+    else
 #endif
+    confirm_password = getpass("Confirm password: \n");
+    if (confirm_password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        dogecoin_free(password);
+        fclose(fp);
+        return false;
+    }
     if (strcmp(password, confirm_password) != 0)
     {
         fprintf(stderr, "ERROR: Passwords do not match.\n");
@@ -1216,6 +1284,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
         dogecoin_mem_zero(confirm_password, strlen(confirm_password));
         dogecoin_free(password);
         dogecoin_free(confirm_password);
+        fclose(fp);
         return false;
     }
     dogecoin_mem_zero(confirm_password, strlen(confirm_password));
@@ -1229,6 +1298,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
         dogecoin_mem_zero(password, strlen(password));
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -1253,6 +1323,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (!dogecoin_random_bytes(iv, sizeof(iv), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
 
@@ -1261,6 +1332,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (!dogecoin_random_bytes(seed, sizeof(seed), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
     dogecoin_hdnode_from_seed(seed, sizeof(seed), out);
@@ -1272,6 +1344,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     if (!encrypted_data)
     {
         fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        fclose(fp);
         return false;
     }
 
@@ -1280,6 +1353,7 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
     {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
         dogecoin_free(encrypted_data);
+        fclose(fp);
         return false;
     }
 
@@ -1304,9 +1378,10 @@ dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, con
  *
  * @param out The decrypted HD node will be stored here
  * @param file_num The file number for the encrypted HD node
+ * @param test_password The password to use for testing
  * @return Returns true if the HD node is decrypted successfully, false otherwise.
  */
-dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int file_num)
+dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int file_num, const char* test_password)
 {
 
     // Validate the input parameters
@@ -1324,12 +1399,23 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int fi
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(password, TEST_PASS);
+    if (test_password)
+    {
+       password = malloc(PASS_MAX_LEN);
+       strcpy(password, test_password);
+    }
+    else
 #else
-    password = getpass("Enter password for HD node decryption: \n");
+    (void) test_password;
 #endif
+    password = getpass("Enter password for HD node decryption: \n");
+    if (password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        return false;
+    }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
@@ -1508,6 +1594,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMON
     TBS_HCONTEXT hContext = 0;
     TBS_CONTEXT_PARAMS2 params;
     params.version = TBS_CONTEXT_VERSION_TWO;
+    params.includeTpm20 = 1;
     TBS_RESULT hr = Tbsi_Context_Create((PCTBS_CONTEXT_PARAMS)&params, &hContext);
     if (hr != TBS_SUCCESS)
     {
@@ -1832,9 +1919,10 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_tpm(MNEMONIC mnemon
  * @param lang The language to use for the mnemonic
  * @param space The mnemonic space to use
  * @param words The mnemonic words to use
+ * @param test_password The password to use for testing
  * @return Returns true if the mnemonic is generated and encrypted successfully, false otherwise.
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words)
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words, const char* test_password)
 {
 
     // Validate the input parameters
@@ -1888,26 +1976,50 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(password, TEST_PASS);
+    if (test_password)
+    {
+       password = malloc(PASS_MAX_LEN);
+       strcpy(password, test_password);
+    }
+    else
 #else
-    password = getpass("Enter password for mnemonic encryption: \n");
+    (void) test_password;
 #endif
+    password = getpass("Enter password for mnenonic encryption: \n");
+    if (password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        fclose(fp);
+        return false;
+    }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
     // Confirm the password
-    char* confirm_password = malloc(PASS_MAX_LEN);
+    char* confirm_password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(confirm_password, TEST_PASS);
-#else
-    confirm_password = getpass("Confirm password: \n");
+    if (test_password)
+    {
+       confirm_password = malloc(PASS_MAX_LEN);
+       strcpy(confirm_password, test_password);
+    }
+    else
 #endif
+    confirm_password = getpass("Confirm password: \n");
+    if (confirm_password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        dogecoin_free(password);
+        fclose(fp);
+        return false;
+    }
     if (strcmp(password, confirm_password) != 0)
     {
         fprintf(stderr, "ERROR: Passwords do not match.\n");
@@ -1915,6 +2027,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
         dogecoin_mem_zero(confirm_password, strlen(confirm_password));
         dogecoin_free(password);
         dogecoin_free(confirm_password);
+        fclose(fp);
         return false;
     }
     dogecoin_mem_zero(confirm_password, strlen(confirm_password));
@@ -1928,6 +2041,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
         dogecoin_mem_zero(password, strlen(password));
         dogecoin_free(password);
+        fclose(fp);
         return false;
     }
 
@@ -1953,6 +2067,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (mnemonicResult == -1)
     {
         fprintf(stderr, "ERROR: Failed to generate mnemonic\n");
+        fclose(fp);
         return false;
     }
 
@@ -1961,6 +2076,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (!dogecoin_random_bytes(iv, sizeof(iv), 1))
     {
         fprintf(stderr, "ERROR: Failed to generate random bytes.\n");
+        fclose(fp);
         return false;
     }
 
@@ -1970,6 +2086,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     if (!encrypted_data)
     {
         fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        fclose(fp);
         return false;
     }
     memset(encrypted_data, 0, encrypted_size);
@@ -1979,6 +2096,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
     {
         fprintf(stderr, "ERROR: AES encryption failed.\n");
         dogecoin_free(encrypted_data);
+        fclose(fp);
         return false;
     }
 
@@ -2002,10 +2120,11 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONI
  *
  * @param mnemonic The decrypted mnemonic will be stored here
  * @param file_num The file number for the encrypted mnemonic
+ * @param test_password The password to use for testing
  *
  * @return True if the mnemonic was successfully decrypted, false otherwise
  */
-LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemonic, const int file_num)
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemonic, const int file_num, const char* test_password)
 {
 
     // Validate the input parameters
@@ -2023,12 +2142,23 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemoni
     }
 
     // Prompt for the password
-    char* password = malloc(PASS_MAX_LEN);
+    char* password = NULL;
 #ifdef TEST_PASSWD
-    strcpy(password, TEST_PASS);
+    if (test_password)
+    {
+       password = malloc(PASS_MAX_LEN);
+       strcpy(password, test_password);
+    }
+    else
 #else
-    password = getpass("Enter password for mnemonic decryption: \n");
+    (void) test_password;
 #endif
+    password = getpass("Enter password for mnemonic decryption: \n");
+    if (password == NULL)
+    {
+        fprintf(stderr, "ERROR: Failed to read password.\n");
+        return false;
+    }
     if (strlen(password) == 0)
     {
         fprintf(stderr, "ERROR: Password cannot be empty.\n");
@@ -2252,5 +2382,5 @@ LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicSW(MNEMONIC mnemonic,
 {
 
     // Generate an English mnemonic with software encryption
-    return dogecoin_generate_mnemonic_encrypt_with_sw(mnemonic, file_num, overwrite, "eng", " ", NULL);
+    return dogecoin_generate_mnemonic_encrypt_with_sw(mnemonic, file_num, overwrite, "eng", " ", NULL, NULL);
 }

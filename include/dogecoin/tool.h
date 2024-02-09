@@ -3,7 +3,7 @@
 
  Copyright (c) 2016 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -36,8 +36,8 @@ LIBDOGECOIN_BEGIN_DECL
 /* generate the p2pkh address from a given hex pubkey */
 LIBDOGECOIN_API dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const char* pubkey_hex, char* p2pkh_address);
 
-/* generate the hex publickey from a given hex private key */
-LIBDOGECOIN_API dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_hex, char* pubkey_hex, size_t* sizeout);
+/* generate the hex publickey from a given WIF private key */
+LIBDOGECOIN_API dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char* privkey_wif, char* pubkey_hex, size_t* sizeout);
 
 /* generate a new private key (hex) */
 LIBDOGECOIN_API dogecoin_bool gen_privatekey(const dogecoin_chainparams* chain, char* privkey_wif, size_t strsize_wif, char* privkey_hex);

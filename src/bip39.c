@@ -4,7 +4,7 @@
  * Copyright (c) 2022 edtubbs
  * Copyright (c) 2022 bluezr
  * Copyright (c) 2022 michilumin
- * Copyright (c) 2023 The Dogecoin Foundation
+ * Copyright (c) 2023-2024 The Dogecoin Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -480,11 +480,13 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
     while (fscanf(fp, "%s", word) == 1) {
         if (i >= LANG_WORD_CNT) {
             fprintf(stderr, "ERROR: too many words in file\n");
+            fclose(fp);
             return -1;
         }
         wordlist[i] = malloc(strlen(word) + 1);
         if (wordlist[i] == NULL) {
             fprintf(stderr, "ERROR: cannot allocate memory\n");
+            fclose(fp);
             return -1;
         }
         strcpy(wordlist[i], word);

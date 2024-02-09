@@ -86,7 +86,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
         dogecoin_block_header_scrypt_hash(s, &hash);
         cstr_free(s, true);
 
-        if (!check_pow(&hash, block->header->bits, params)) {
+        if (!check_pow(&hash, block->header->bits, params, &block->header->chainwork)) {
             printf("%s:%d:%s : non-AUX proof of work failed : %s\n", __FILE__, __LINE__, __func__, strerror(errno));
             return false;
         }
@@ -108,7 +108,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
     dogecoin_block_header_serialize(s2, block->parent_header);
     dogecoin_block_header_scrypt_hash(s2, &parent_hash);
     cstr_free(s2, true);
-    if (!check_pow(&parent_hash, block->header->bits, params)) {
+    if (!check_pow(&parent_hash, block->header->bits, params, &block->header->chainwork)) {
         printf("%s:%d:%s : AUX proof of work failed: %s\n", __FILE__, __LINE__, __func__, strerror(errno));
         return false;
     }

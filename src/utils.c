@@ -5,7 +5,7 @@
  Copyright (c) 2015 Douglas J. Bakkum
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2022 bluezr
- Copyright (c) 2022 The Dogecoin Foundation
+ Copyright (c) 2022-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -620,6 +620,31 @@ void slice(const char *str, char *result, size_t start, size_t end)
     strncpy(result, str + start, end - start);
 }
 
+void remove_substr(char *string, char *sub) {
+    char *match;
+    int len = strlen(sub);
+    while ((match = strstr(string, sub))) {
+        *match = '\0';
+        strcat(string, match+len);
+    }
+}
+
+void replace_last_after_delim(const char *str, char* delim, char* replacement) {
+    char* tmp = strdup((char*)str);
+    char* new = tmp;
+    char *strptr = strtok(new, delim);
+    char* last = NULL;
+    while (strptr != NULL) {
+        last = strptr;
+        strptr = strtok(NULL, delim);
+    }
+    if (last) {
+        remove_substr((char*)str, last);
+        append((char*)str, replacement);
+    }
+    dogecoin_free(tmp);
+}
+
 /**
  * @brief function to convert ascii text to hexadecimal string
  *
@@ -660,10 +685,10 @@ const char* get_build() {
  * @param[in] prompt The prompt to display to the user
  * @return The password entered by the user
  */
-#ifndef USE_OPENENCLAVE
 char *getpass(const char *prompt) {
     char buffer[MAX_LEN] = {0};  // Initialize to zero
 
+#ifndef USE_OPENENCLAVE
 #ifdef _WIN32
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     DWORD mode, count;
@@ -716,9 +741,19 @@ char *getpass(const char *prompt) {
 
 #endif
 
+#else // USE_OPENENCLAVE
+    printf("%s", prompt);
+    fflush(stdout);
+
+    if (!fgets(buffer, sizeof(buffer), stdin))
+        return NULL;
+
+    ssize_t nread = strlen(buffer);
+    if (nread > 0 && buffer[nread-1] == '\n')
+        buffer[nread-1] = '\0';  // Remove newline character
+#endif
     return strdup(buffer);
 }
-#endif
 
 /* reverse:  reverse string s in place */
 void dogecoin_str_reverse(char s[])
@@ -756,6 +791,38 @@ bool dogecoin_network_enabled() {
 #else
     return true;
 #endif
+}
+
+int integer_length(int x) {
+    int count = 0;
+    while (x > 0) {
+        x /= 10;
+        count++;
+    }
+    return count > 0 ? count : 1;
+}
+
+int file_copy(char src [], char dest [])
+{
+    int   c;
+    FILE *stream_read;
+    FILE *stream_write; 
+
+    stream_read = fopen (src, "r");
+    if (stream_read == NULL)
+        return -1;
+    stream_write = fopen (dest, "w");   //create and write to file
+    if (stream_write == NULL)
+     {
+        fclose (stream_read);
+        return -2;
+     }    
+    while ((c = fgetc(stream_read)) != EOF)
+        fputc (c, stream_write);
+    fclose (stream_read);
+    fclose (stream_write);
+
+    return 0;
 }
 
 unsigned char base64_char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -858,13 +925,4 @@ unsigned int base64_decode(const unsigned char* in, unsigned int in_len, unsigne
     out[k] = '\0';
 
 	return k;
-}
-
-int integer_length(int x) {
-    int count = 0;
-    while (x > 0) {
-        x /= 10;
-        count++;
-    }
-    return count > 0 ? count : 1;
 }

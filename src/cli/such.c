@@ -5,7 +5,7 @@
  Copyright (c) 2016 Jonas Schnelli
  Copyright (c) 2023 bluezr
  Copyright (c) 2023 edtubbs
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -640,7 +640,7 @@ static void print_usage()
     print_version();
     printf("Usage: such -c <cmd> (-m|-derived_path <bip_derived_path>) (-k|-pubkey <publickey>) (-p|-privkey <privatekey>) (-h|-sighash <sighash type>) \
 (-s|-script <script pubkey>) (-i|-input_index <input index>) (-x|-raw_tx <raw hex tx>) (-o|-account_int <account_int>) (-g|-change_level <change_level>) \
-(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase) (-y|-encrypted_file <file_num 0-99>) (-w[--overwrite]) (-b[--silent]) \
+(-e|-entropy <hex_entropy>) (-n|-mnemonic <seed_phrase>) (-a|-pass_phrase) (-y|-encrypted_file <file_num 0-999>) (-w[--overwrite]) (-b[--silent]) \
 (-j[--use_tpm]) (-t[--testnet]) (-r[--regtest])\n");
     printf("Available commands:\n");
     printf("generate_public_key (requires -p <wif>),\n");
@@ -651,6 +651,7 @@ static void print_usage()
     printf("list_encryption_keys_in_tpm,\n");
     printf("decrypt_master_key (requires -y <file_num>, -j (use_tpm) optional),\n");
     printf("decrypt_mnemonic (requires -y <file_num>, -j (use_tpm) optional),\n");
+    printf("seed_to_master_key (-y <file_num>, -j (use_tpm) optional),\n");
     printf("mnemonic_to_key (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
     printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
     printf("print_keys (requires -p <private key hex>),\n");
@@ -688,6 +689,7 @@ int main(int argc, char* argv[])
     char* pass = 0;
     char* entropy = 0;
     MNEMONIC mnemonic = {0};
+    SEED seed = {0};
     dogecoin_bool tpm = false;
     dogecoin_bool encrypted = false;
     dogecoin_bool overwrite = false;
@@ -883,7 +885,7 @@ int main(int argc, char* argv[])
 
             else {
                 /* generate and encrypt a new hd master key with software */
-                if (!dogecoin_generate_hdnode_encrypt_with_sw(&node, file_num, overwrite)) {
+                if (!dogecoin_generate_hdnode_encrypt_with_sw(&node, file_num, overwrite, NULL)) {
                     printf("bip32_extended_master_key (-y <file_num>, -j (use_tpm) and -w (overwrite), all optional),\n");
                     return showError("Failed to generate master key in sofware");
                     }
@@ -1229,7 +1231,7 @@ int main(int argc, char* argv[])
 
             else {
                 /* decrypt master key from software */
-                if (dogecoin_decrypt_hdnode_with_sw (&node, file_num) == false) {
+                if (dogecoin_decrypt_hdnode_with_sw (&node, file_num, NULL) == false) {
                     printf("decrypt_master_key (requires -y <file_num>, -j (use_tpm) optional),\n");
                     return showError("failed to decrypt master key with software\n");
                     }
@@ -1277,7 +1279,7 @@ int main(int argc, char* argv[])
 
             else {
                 /* decrypt mnemonic from software */
-                if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num) == false) {
+                if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num, NULL) == false) {
                     printf("decrypt_mnemonic (requires -y <file_num>, -j (use_tpm) optional),\n");
                     return showError("failed to decrypt mnemonic with software\n");
                     }
@@ -1291,6 +1293,50 @@ int main(int argc, char* argv[])
         else {
             return showError("decrypt_mnemonic (requires -y <file_num>, -j (use_tpm) optional\n");
             }
+        }
+    else if (strcmp(cmd, "seed_to_master_key") == 0) { /* Creating a bip32 master key from a seed. */
+
+        /* if tpm is enabled, get seed from tpm */
+        if (encrypted) {
+            printf("Decrypt seed for master key? Y/N\n");
+
+            char buffer[MAX_LEN];
+            /* get user input */
+            if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+                if (buffer[0] != 'Y' && buffer[0] != 'y') {
+
+                    /* if not confirmed, abort */
+                    printf("aborted\n");
+                    dogecoin_ecc_stop();
+                    return 1;
+                    }
+                }
+
+            if (tpm) {
+                /* get seed from tpm */
+                if (!dogecoin_decrypt_seed_with_tpm (seed, file_num)) {
+                    printf("seed_to_master_key (requires -y <file_num>, -j (use_tpm) optional),\n");
+                    return showError("failed to decrypt seed with tpm\n");
+                    }
+                }
+
+            else {
+                /* get seed from software */
+                if (dogecoin_decrypt_seed_with_sw (seed, file_num, NULL) == false) {
+                    printf("seed_to_master_key (requires -y <file_num>, -j (use_tpm) optional),\n");
+                    return showError("failed to decrypt seed with software\n");
+                    }
+                }
+            }
+
+            /* print master key from seed */
+            dogecoin_hdnode node;
+            char masterkey[HDKEYLEN];
+            dogecoin_hdnode_from_seed(seed, sizeof(seed), &node);
+            dogecoin_hdnode_serialize_private(&node, chain, masterkey, sizeof(masterkey));
+            printf("bip32 extended master key: %s\n", masterkey);
+            dogecoin_mem_zero(masterkey, strlen(masterkey));
+            dogecoin_mem_zero(seed, sizeof(seed));
         }
     else if (strcmp(cmd, "mnemonic_to_key") == 0) { /* Creating a bip32 master key from a mnemonic. */
 
@@ -1318,7 +1364,7 @@ int main(int argc, char* argv[])
 
             else {
                 /* get mnemonic from software */
-                if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num) == false) {
+                if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num, NULL) == false) {
                     printf("mnemonic_to_key (requires -y <file_num>, -j (use_tpm) optional),\n");
                     return showError("failed to decrypt mnemonic with software\n");
                     }
@@ -1397,7 +1443,7 @@ int main(int argc, char* argv[])
 
             else {
                 /* get mnemonic from software */
-                if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num) == false) {
+                if (dogecoin_decrypt_mnemonic_with_sw (mnemonic, file_num, NULL) == false) {
                     printf("mnemonic_to_addresses (requires -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
                     return showError("failed to decrypt mnemonic with software\n");
                     }

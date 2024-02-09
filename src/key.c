@@ -4,7 +4,7 @@
 
  Copyright (c) 2015 Jonas Schnelli
  Copyright (c) 2023 bluezr, edtubbs
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -93,7 +93,8 @@ void dogecoin_privkey_encode_wif(const dogecoin_key* privkey, const dogecoin_cha
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     memcpy_safe(&pkeybase58c[1], privkey->privkey, DOGECOIN_ECKEY_PKEY_LENGTH);
-    assert(dogecoin_base58_encode_check(pkeybase58c, 34, privkey_wif, *strsize_inout) != 0);
+    if (dogecoin_base58_encode_check(pkeybase58c, 34, privkey_wif, *strsize_inout) == 0)
+        *strsize_inout = 0;
     dogecoin_mem_zero(&pkeybase58c, 34);
 }
 
