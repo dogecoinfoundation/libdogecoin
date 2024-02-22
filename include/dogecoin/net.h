@@ -140,6 +140,9 @@ LIBDOGECOIN_API void dogecoin_node_group_add_node(dogecoin_node_group* group, do
 /* start node groups event loop */
 LIBDOGECOIN_API void dogecoin_node_group_event_loop(dogecoin_node_group* group);
 
+/* stop the event loop */
+LIBDOGECOIN_API void dogecoin_node_group_event_loopbreak(dogecoin_node_group* group);
+
 /* connect to more nodes */
 LIBDOGECOIN_API dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group);
 
