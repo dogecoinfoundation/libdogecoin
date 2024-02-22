@@ -184,8 +184,24 @@ static void sha512_last(sha512_context*);
 static void sha256_transform(sha256_context*, const sha2_word32*);
 static void sha512_transform(sha512_context*, const sha2_word64*);
 
+/*** SHA-XYZ EXTERN FUNCTION DEFINITIONS ******************************/
+/* NOTE: These functions are assembled from Intel's MB IPSEC library
+ * and are intended for use as a drop-in replacement for the original
+ * SHA-XYZ functions.  They are not intended for use outside of this
+ * library.
+ */
+extern void sha1_block_sse(const void *, void *);
+extern void sha1_block_avx(const void *, void *);
+
+extern void sha256_block_sse(const void *, void *);
+extern void sha256_block_avx(const void *, void *);
+
+extern void sha512_block_sse(const void *, void *);
+extern void sha512_block_avx(const void *, void *);
+
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
+#if !(defined(USE_AVX2) || defined(USE_SSE))
 static const sha2_word32 K256[64] = {
     0x428a2f98UL,
     0x71374491UL,
@@ -251,6 +267,7 @@ static const sha2_word32 K256[64] = {
     0xa4506cebUL,
     0xbef9a3f7UL,
     0xc67178f2UL};
+#endif /* USE_AVX2 || USE_SSE */
 
 /* Initial hash value H for SHA-256: */
 static const sha2_word32 sha256_initial_hash_value[8] = {
@@ -263,6 +280,7 @@ static const sha2_word32 sha256_initial_hash_value[8] = {
     0x1f83d9abUL,
     0x5be0cd19UL};
 
+#if !(defined(USE_AVX2) || defined(USE_SSE))
 /* Hash constant words K for SHA-384 and SHA-512: */
 static const sha2_word64 K512[80] = {
     0x428a2f98d728ae22ULL,
@@ -345,6 +363,7 @@ static const sha2_word64 K512[80] = {
     0x597f299cfc657e2aULL,
     0x5fcb6fab3ad6faecULL,
     0x6c44198c4a475817ULL};
+#endif /* USE_AVX2 || USE_SSE */
 
 /* Initial hash value H for SHA-512 */
 static const sha2_word64 sha512_initial_hash_value[8] = {
@@ -463,6 +482,11 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
 
 static void sha256_transform(sha256_context* context, const sha2_word32* data)
 {
+#ifdef USE_AVX2 /* Use AVX-optimized SHA-256 transform */
+    sha256_block_avx(data, context->state);
+#elif defined(USE_SSE) /* Use SSE-optimized SHA-256 transform */
+    sha256_block_sse(data, context->state);
+#else
     sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word32 T1, T2, *W256;
     int j;
@@ -535,6 +559,7 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
     context->state[5] += f;
     context->state[6] += g;
     context->state[7] += h;
+#endif /* USE_AVX || USE_SSE */
 }
 
 #endif /* SHA2_UNROLL_TRANSFORM */
@@ -753,6 +778,11 @@ static void sha512_transform(sha512_context* context, const sha2_word64* data)
 
 static void sha512_transform(sha512_context* context, const sha2_word64* data)
 {
+#ifdef USE_AVX2 /* Use AVX-optimized SHA-512 transform */
+    sha512_block_avx(data, context->state);
+#elif defined(USE_SSE) /* Use SSE-optimized SHA-512 transform */
+    sha512_block_sse(data, context->state);
+#else
     sha2_word64 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word64 T1, T2, *W512 = (sha2_word64*)context->buffer;
     int j;
@@ -823,6 +853,7 @@ static void sha512_transform(sha512_context* context, const sha2_word64* data)
     context->state[5] += f;
     context->state[6] += g;
     context->state[7] += h;
+#endif /* USE_AVX || USE_SSE */
 }
 
 #endif /* SHA2_UNROLL_TRANSFORM */

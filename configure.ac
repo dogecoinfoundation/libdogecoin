@@ -54,6 +54,7 @@ case $host in
   *mingw*)
     build_windows=yes
     TARGET_OS=windows
+    NASMFLAGS="-Werror -fwin64 -Xvc -gcv8 -DWIN_ABI"
     AC_CHECK_LIB([pthread],      [main],, AC_MSG_ERROR(lib missing))
     AC_CHECK_LIB([winpthread],      [main],, AC_MSG_ERROR(lib missing))
     AC_CHECK_LIB([shell32],      [main],, AC_MSG_ERROR(lib missing))
@@ -73,6 +74,7 @@ case $host in
   ;;
   *linux*)
     TARGET_OS=linux
+    NASMFLAGS="-Werror -felf64 -Xgnu -gdwarf -DLINUX -D__linux__"
   ;;
 esac
 warn_CFLAGS="-std=gnu99 -pedantic -Wall -Wextra -Wno-long-long -Wno-overlength-strings"
@@ -84,6 +86,18 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
   [ AC_MSG_RESULT([no])
     CFLAGS="$saved_CFLAGS"
   ])
+
+AC_ARG_ENABLE([intel-avx2],
+  [AS_HELP_STRING([--enable-intel-avx2],
+  [Build with Intel AVX2 implementation (default is no)])],
+  [use_intel_avx2=$enableval],
+  [use_intel_avx2=no])
+
+AC_ARG_ENABLE([intel-sse],
+  [AS_HELP_STRING([--enable-intel-sse],
+  [Build with Intel SSE implementation (default is no)])],
+  [use_intel_sse=$enableval],
+  [use_intel_sse=no])
 
 AC_ARG_ENABLE([scrypt-sse2],
   [AS_HELP_STRING([--enable-scrypt-sse2],
@@ -97,6 +111,12 @@ AC_ARG_ENABLE([debug],
                   [use debug compiler flags and macros (default is no)])],
   [enable_debug=$enableval],
   [enable_debug=no])
+
+AC_ARG_ENABLE([bench],
+  [AS_HELP_STRING([--disable-bench],
+  [disable benchmark functions])],
+  [with_bench=$enableval],
+  [with_bench=yes])
 
 AC_ARG_ENABLE([tools],
   [AS_HELP_STRING([--disable-tools],
@@ -165,9 +185,26 @@ if test "x$random_device" = x"/dev/random"; then
   AC_DEFINE([RANDOM_DEVICE],["/dev/random"],[Define to set random file handle])
 fi
 
+# Configure Intel AVX2
+if test x$use_intel_avx2 = xyes; then
+  AC_DEFINE(USE_AVX2, 1, [Define this symbol if AVX2 works])
+  CFLAGS="$CFLAGS -mavx2"
+fi
+
+# Configure Intel SSE
+if test x$use_intel_sse = xyes; then
+  AC_DEFINE(USE_SSE, 1, [Define this symbol if SSE works])
+  CFLAGS="$CFLAGS -msse4.2"
+fi
+
 # Configure Scrypt SSE2
 if test x$use_scrypt_sse2 = xyes; then
   AC_DEFINE(USE_SSE2, 1, [Define this symbol if SSE2 works])
+  CFLAGS="$CFLAGS -msse4.2"
+fi
+
+if test "x$with_bench" = xyes; then
+  AC_DEFINE_UNQUOTED([WITH_BENCH],[1],[Define to 1 to enable bench compilation])
 fi
 
 if test "x$with_tools" = xyes; then
@@ -224,11 +261,15 @@ AC_SUBST(BUILD_EXEEXT)
 AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(LIBUNISTRING)
+AC_SUBST(NASMFLAGS)
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
+AM_CONDITIONAL([WITH_BENCH], [test "x$with_bench" = "xyes"])
 AM_CONDITIONAL([WITH_TOOLS], [test "x$with_tools" = "xyes"])
 AM_CONDITIONAL([WITH_NET], [test "x$with_net" = "xyes"])
 AM_CONDITIONAL([WITH_LOGDB], [test "x$with_logdb" = "xyes"])
 AM_CONDITIONAL([WITH_WALLET], [test "x$with_wallet" = "xyes"])
+AM_CONDITIONAL([USE_AVX2], [test "x$use_intel_avx2" = "xyes"])
+AM_CONDITIONAL([USE_SSE], [test "x$use_intel_sse" = "xyes"])
 AM_CONDITIONAL([USE_SSE2], [test "x$use_scrypt_sse2" = "xyes"])
 AM_CONDITIONAL([USE_OPENENCLAVE], [test "x$use_openenclave" = "xyes"])
 AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
@@ -243,12 +284,15 @@ AC_OUTPUT
 echo
 echo "Options used to compile and link:"
 echo "  with tests      = $use_tests"
+echo "  with bench      = $with_bench"
 echo "  with tools      = $with_tools"
 echo "  with net        = $with_net"
 echo "  with logdb      = $with_logdb"
 echo "  with wallet     = $with_wallet"
 echo "  with unistring  = $with_unistring"
 echo
+echo "  Intel AVX2      = $use_intel_avx2"
+echo "  Intel SSE       = $use_intel_sse"
 echo "  SSE2 Scrypt     = $use_scrypt_sse2"
 echo "  test password   = $test_passwd"
 if test "x$test_passwd" = xyes; then
@@ -259,6 +303,7 @@ echo "  openenclave     = $use_openenclave"
 echo
 echo "  host            = $host"
 echo "  target os       = $TARGET_OS"
+echo "  nasm flags      = $NASMFLAGS"
 echo
 echo "  CC              = $CC"
 echo "  CFLAGS          = $CFLAGS"
