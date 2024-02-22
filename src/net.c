@@ -500,6 +500,16 @@ void dogecoin_node_group_event_loop(dogecoin_node_group* group)
 }
 
 /**
+ * Tells the event loop to stop.
+ *
+ * @param group The dogecoin_node_group object.
+ */
+void dogecoin_node_group_event_loopbreak(dogecoin_node_group* group)
+{
+    event_base_loopbreak(group->event_base);
+}
+
+/**
  * Adds a node to a node group
  * 
  * @param group The node group to add the node to.
