@@ -115,11 +115,10 @@ static inline void dogecoin_btree_tdestroy(void *root, void (*freekey)(void *))
 
     if (r == 0)
         return;
-    if (freekey) goto end;
-    if (r->left && !freekey) dogecoin_btree_tdestroy(r->left, freekey);
-    if (r->right && !freekey) dogecoin_btree_tdestroy(r->right, freekey);
 
-end:
+    if (r->left) dogecoin_btree_tdestroy(r->left, freekey);
+    if (r->right) dogecoin_btree_tdestroy(r->right, freekey);
+
     if (freekey) freekey(r->key);
     dogecoin_free(r);
 }

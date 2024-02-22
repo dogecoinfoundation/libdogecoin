@@ -590,8 +590,9 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
         }
         else
         {
-            client->nodegroup->log_write_cb("Got invalid block with hash %s and height %d (not in sequence) from node %d\n", hash_to_string(pindex->hash), pindex->height, node->nodeid);
+            client->nodegroup->log_write_cb("Got invalid block (not in sequence) from node %d\n", node->nodeid);
             node->state &= ~NODE_BLOCKSYNC;
+            node->state |= NODE_MISSBEHAVED;
             node->nodegroup->node_connection_state_changed_cb(node);
             dogecoin_free(pindex);
             return;
@@ -638,6 +639,8 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
             {
                 client->nodegroup->log_write_cb("Got invalid headers (not in sequence) from node %d\n", node->nodeid);
                 node->state &= ~NODE_HEADERSYNC;
+                node->nodegroup->node_connection_state_changed_cb(node);
+                dogecoin_free(pindex);
                 break;
             } else {
                 if (client->header_connected) { client->header_connected(client); }
