@@ -1,8 +1,8 @@
 /*
 
  Copyright (c) 2015 Douglas J. Bakkum
- Copyright (c) 2023 bluezr
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2024 bluezr
+ Copyright (c) 2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -125,12 +125,42 @@
         } while (0);                                                     \
     }
 
+#define u_assert_uint32_not_eq(R, E)                                     \
+    {                                                                    \
+        uint64_t r_ = (R);                                               \
+        uint64_t e_ = (E);                                               \
+        do {                                                             \
+            if (r_ == e_) {                                              \
+                printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
+                printf("\tExpect: \t%" PRIu64 "\n", e_);                 \
+                printf("\tReceive:\t%" PRIu64 "\n", r_);                 \
+                U_TESTS_FAIL++;                                          \
+                return;                                                  \
+            };                                                           \
+        } while (0);                                                     \
+    }
+
 #define u_assert_uint64_eq(R, E)                                         \
     {                                                                    \
         uint64_t r_ = (R);                                               \
         uint64_t e_ = (E);                                               \
         do {                                                             \
             if (r_ != e_) {                                              \
+                printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
+                printf("\tExpect: \t%" PRIu64 "\n", e_);                 \
+                printf("\tReceive:\t%" PRIu64 "\n", r_);                 \
+                U_TESTS_FAIL++;                                          \
+                return;                                                  \
+            };                                                           \
+        } while (0);                                                     \
+    }
+
+#define u_assert_uint64_not_eq(R, E)                                     \
+    {                                                                    \
+        uint64_t r_ = (R);                                               \
+        uint64_t e_ = (E);                                               \
+        do {                                                             \
+            if (r_ == e_) {                                              \
                 printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
                 printf("\tExpect: \t%" PRIu64 "\n", e_);                 \
                 printf("\tReceive:\t%" PRIu64 "\n", r_);                 \
@@ -157,8 +187,8 @@
     
 #define u_assert_double_eq(R, E)                                         \
     {                                                                    \
-        double r_ = (R);                                               \
-        double e_ = (E);                                               \
+        double r_ = (R);                                                 \
+        double e_ = (E);                                                 \
         do {                                                             \
             if (r_ != e_) {                                              \
                 printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
@@ -237,6 +267,22 @@
         size_t l_ = (L);                                                 \
         do {                                                             \
             if (memcmp(r_, e_, l_)) {                                    \
+                printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
+                printf("\tExpect: \t%s\n", utils_uint8_to_hex(e_, l_));  \
+                printf("\tReceive:\t%s\n", utils_uint8_to_hex(r_, l_));  \
+                U_TESTS_FAIL++;                                          \
+                return;                                                  \
+            };                                                           \
+        } while (0);                                                     \
+    }
+
+#define u_assert_mem_not_eq(R, E, L)                                     \
+    {                                                                    \
+        const void* r_ = (R);                                            \
+        const void* e_ = (E);                                            \
+        size_t l_ = (L);                                                 \
+        do {                                                             \
+            if (!memcmp(r_, e_, l_)) {                                   \
                 printf("FAILED - %s() - Line %d\n", __func__, __LINE__); \
                 printf("\tExpect: \t%s\n", utils_uint8_to_hex(e_, l_));  \
                 printf("\tReceive:\t%s\n", utils_uint8_to_hex(r_, l_));  \
