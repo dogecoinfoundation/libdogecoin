@@ -4,11 +4,16 @@ AUTOMAKE_OPTIONS = serial-tests
 .INTERMEDIATE: $(GENBIN)
 
 DIST_SUBDIRS = src/secp256k1
-
 LIBSECP256K1=src/secp256k1/libsecp256k1.la
-
 $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+SUBDIRS = $(DIST_SUBDIRS)
+.PHONY: subdirs $(SUBDIRS)
+subdirs: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+libdogecoin: src/secp256k1
 
 includedir = $(prefix)/include/dogecoin
 
@@ -326,6 +331,3 @@ endif
 endif
 
 libdogecoin_la_LDFLAGS = -no-undefined -version-info $(LIB_VERSION_CURRENT):$(LIB_VERSION_REVISION):$(LIB_VERSION_AGE)
-
-clean-local:
-	-$(MAKE) -C src/secp256k1 clean
