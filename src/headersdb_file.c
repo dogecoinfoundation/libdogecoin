@@ -116,22 +116,8 @@ void dogecoin_headers_db_free(dogecoin_headers_db* db) {
     }
 
     if (db->tree_root) {
-        dogecoin_btree_tdestroy(db->tree_root, NULL);
+        dogecoin_btree_tdestroy(db->tree_root, dogecoin_free);
         db->tree_root = NULL;
-    }
-
-    // Free all blockindex structures starting from chaintip to chainbottom
-    if (db->chaintip) {
-        dogecoin_blockindex *scan_tip = db->chaintip;
-        while (scan_tip->prev) {
-            dogecoin_blockindex *prev = scan_tip->prev;
-            dogecoin_free(scan_tip);
-            scan_tip = prev;
-        }
-        // If scan_tip is not the genesis block, free it
-        if (scan_tip != &db->genesis) {
-            dogecoin_free(scan_tip);
-        }
     }
 
     db->chaintip = NULL;
@@ -311,12 +297,18 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
     dogecoin_blockindex *blockindex = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
     if (!dogecoin_block_header_deserialize(&blockindex->header, buf, db->params))
     {
-        dogecoin_free(blockindex);
         fprintf(stderr, "Error deserializing block header\n");
-        return NULL;
+        return blockindex;
     }
 
     dogecoin_block_header_hash(&blockindex->header, (uint8_t *)&blockindex->hash);
+
+    // Check if the block header is already in the database
+    dogecoin_blockindex *block = dogecoin_headersdb_find(db, blockindex->hash);
+    if (block) {
+        // Block header already in database, return blockindex
+        return blockindex;
+    }
 
     dogecoin_blockindex *connect_at = NULL;
     dogecoin_blockindex *fork_from_block = NULL;
@@ -343,8 +335,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
             cstr_free(s, true);
             if (!check_pow(&hash, blockindex->header.bits, db->params, &blockindex->header.chainwork)) {
                 printf("%s:%d:%s : non-AUX proof of work failed : %s\n", __FILE__, __LINE__, __func__, strerror(errno));
-                dogecoin_free(blockindex);
-                return false;
+                return blockindex;
             }
         }
 
@@ -383,10 +374,9 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
                 // Break the loop if either reaches the start of the chain
                 if (!common_ancestor || !fork_chain) {
                     fprintf(stderr, "Unable to find common ancestor.\n");
-                    dogecoin_free(blockindex);
                     dogecoin_free(chaintip_chainwork);
                     dogecoin_free(added_chainwork);
-                    return NULL;
+                    return blockindex;
                 }
             }
 
@@ -413,7 +403,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
                     // Free the dynamically allocated memory
                     dogecoin_free(chaintip_chainwork);
                     dogecoin_free(added_chainwork);
-                    return NULL;
+                    return blockindex;
                 }
 
                 // Update the chain tip to the previous block
