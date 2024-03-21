@@ -111,17 +111,69 @@ libdogecoin_la_SOURCES = \
     src/validation.c \
     src/vector.c
 
+# NASM assembler setup
+NASM = nasm
+
+if USE_AVX2
+# Directory containing assembly source files and includes
+DIR_ASM_SOURCE = src/intel/avx_t1
+DIR_ASM_INCLUDE = src/intel/
+
+# Find all assembly source files and define corresponding object files
+ASM_SOURCE_FILES = $(wildcard $(DIR_ASM_SOURCE)/*.asm)
+ASM_OBJECT_FILES = $(ASM_SOURCE_FILES:.asm=.o)
+ASM_LIB_FILES = $(ASM_SOURCE_FILES:.asm=.a)
+
+# Add the assembly object files to the list of dependencies
+libdogecoin_la_DEPENDENCIES = $(ASM_LIB_FILES)
+
+# Pattern rule for building .o files from .asm files
+%.o: %.asm
+	$(NASM) $(NASMFLAGS) -I$(DIR_ASM_INCLUDE) -o $@ $<
+
+# Pattern rule for custom static library from .o files
+%.a: %.o
+	$(AR) $(ARFLAGS) $@ $<
+
+CLEANFILES = $(ASM_OBJECT_FILES)
+endif
+
+if USE_SSE
+# Directory containing assembly source files and includes
+DIR_ASM_SOURCE = src/intel/sse_t1
+DIR_ASM_INCLUDE = src/intel/
+
+# Find all assembly source files and define corresponding object files
+ASM_SOURCE_FILES = $(wildcard $(DIR_ASM_SOURCE)/*.asm)
+ASM_OBJECT_FILES = $(ASM_SOURCE_FILES:.asm=.o)
+ASM_LIB_FILES = $(ASM_SOURCE_FILES:.asm=.a)
+
+# Add the assembly object files to the list of dependencies
+libdogecoin_la_DEPENDENCIES = $(ASM_LIB_FILES)
+
+# Pattern rule for building .o files from .asm files
+%.o: %.asm
+	$(NASM) $(NASMFLAGS) -I$(DIR_ASM_INCLUDE) -o $@ $<
+
+# Pattern rule for custom static library from .o files
+%.a: %.o
+	$(AR) $(ARFLAGS) $@ $<
+
+CLEANFILES = $(ASM_OBJECT_FILES) $(ASM_LIB_FILES)
+endif
+
 if USE_SSE2
 libdogecoin_la_SOURCES += \
     src/scrypt-sse2.c
 endif
 
 libdogecoin_la_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/logdb/include -fPIC
-libdogecoin_la_LIBADD = $(LIBSECP256K1)
+libdogecoin_la_LIBADD = $(LIBSECP256K1) $(ASM_LIB_FILES)
+noinst_PROGRAMS =
 
 if USE_TESTS
-noinst_PROGRAMS = tests
-tests_LDADD = libdogecoin.la
+noinst_PROGRAMS += tests
+tests_LDADD = libdogecoin.la $(ASM_LIB_FILES)
 tests_SOURCES = \
     test/address_tests.c \
     test/aes_tests.c \
@@ -191,6 +243,16 @@ tests_SOURCES += \
 endif
 endif
 
+if WITH_BENCH
+noinst_PROGRAMS += bench
+bench_LDADD = libdogecoin.la $(ASM_LIB_FILES)
+bench_SOURCES = \
+    src/bench.c
+bench_CFLAGS = $(libdogecoin_la_CFLAGS)
+bench_CPPFLAGS = -I$(top_srcdir)/src
+bench_LDFLAGS = -static
+endif
+
 if WITH_WALLET
 noinst_HEADERS += \
     include/dogecoin/wallet.h
@@ -237,7 +299,7 @@ tests_SOURCES += \
 endif
 instdir=$(prefix)/bin
 inst_PROGRAMS = such
-such_LDADD = libdogecoin.la $(LIBSECP256K1)
+such_LDADD = libdogecoin.la $(LIBSECP256K1) $(ASM_LIB_FILES)
 such_SOURCES = \
     src/cli/such.c
 such_CFLAGS = $(libdogecoin_la_CFLAGS)
@@ -246,7 +308,7 @@ such_LDFLAGS = -static
 
 if WITH_NET
 inst_PROGRAMS += sendtx
-sendtx_LDADD = libdogecoin.la $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBSECP256K1)
+sendtx_LDADD = libdogecoin.la $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBSECP256K1) $(ASM_LIB_FILES)
 sendtx_SOURCES = \
     src/cli/sendtx.c
 sendtx_CFLAGS = $(libdogecoin_la_CFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
@@ -254,7 +316,7 @@ sendtx_CPPFLAGS = -I$(top_srcdir)/src
 sendtx_LDFLAGS = -static
 
 inst_PROGRAMS += spvnode
-spvnode_LDADD = libdogecoin.la
+spvnode_LDADD = libdogecoin.la $(ASM_LIB_FILES)
 spvnode_SOURCES = \
     src/cli/spvnode.c
 spvnode_CFLAGS = $(libdogecoin_la_CFLAGS)

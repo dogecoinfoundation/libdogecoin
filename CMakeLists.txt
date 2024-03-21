@@ -20,11 +20,14 @@ endif()
 
 INCLUDE(CTest)
 SET(USE_TESTS ${CMAKE_TESTING_ENABLED})
+SET(WITH_BENCH TRUE CACHE BOOL "enable bench")
 SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
 SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
 SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
+SET(USE_AVX2 FALSE CACHE BOOL "enable intel avx2")
+SET(USE_SSE FALSE CACHE BOOL "enable intel sse")
 SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
 SET(USE_TPM2 TRUE CACHE BOOL "enable tpm2")
 SET(USE_OPENENCLAVE FALSE CACHE BOOL "enable openenclave")
@@ -76,6 +79,41 @@ IF(WITH_NET)
     ENDIF()
 ENDIF()
 
+# NASM integration for AVX2
+if(USE_AVX2 OR USE_SSE)
+    enable_language(ASM_NASM)
+    if(NOT CMAKE_ASM_NASM_COMPILER_LOADED)
+        message(FATAL_ERROR "Can't find NASM assembler")
+    endif()
+
+    set(CMAKE_ASM_NASM_COMPILER nasm)
+
+    set(NASM_VERSION_REQUIRED "2.14")
+    execute_process(
+        COMMAND ${CMAKE_ASM_NASM_COMPILER} --version
+        OUTPUT_VARIABLE NASM_VERSION_OUTPUT
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX MATCH "NASM version ([0-9]*.[0-9]*)" NASM_VERSION "${NASM_VERSION_OUTPUT}")
+    if(NOT NASM_VERSION OR NASM_VERSION_REQUIRED VERSION_GREATER ${CMAKE_MATCH_1})
+        message(FATAL_ERROR "NASM version must be at least ${NASM_VERSION_REQUIRED}!")
+    endif()
+
+    # Define directories with assembly files (modify paths as needed)
+    set(DIR_ASM_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/intel)
+
+    # Define directories with include files (modify paths as needed)
+    set(DIR_ASM_INCLUDES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/intel)
+
+    # Find all assembly files in the defined directory
+    file(GLOB_RECURSE ASM_SOURCES "${DIR_ASM_SOURCES}/*.asm")
+
+    # Add include directories to the NASM compiler
+    set_property(SOURCE ${ASM_SOURCES} PROPERTY INCLUDE_DIRECTORIES ${DIR_ASM_INCLUDES})
+
+endif()
+
 ADD_DEFINITIONS(
     -DPACKAGE_NAME="${PROJECT_NAME}"
     -DPACKAGE_VERSION="${PROJECT_VERSION}"
@@ -87,6 +125,9 @@ ENDIF()
 
 IF(USE_TESTS)
     ADD_DEFINITIONS(-DUSE_TESTS=1)
+ENDIF()
+IF(WITH_BENCH)
+    ADD_DEFINITIONS(-DWITH_BENCH=1)
 ENDIF()
 IF(WITH_TOOLS)
     ADD_DEFINITIONS(-DWITH_TOOLS=1)
@@ -102,6 +143,12 @@ IF(WITH_UNISTRING)
 ENDIF()
 IF(WITH_WALLET)
     ADD_DEFINITIONS(-DWITH_WALLET=1)
+ENDIF()
+IF(USE_AVX2)
+    ADD_DEFINITIONS(-DUSE_AVX2=1)
+ENDIF()
+IF(USE_SSE)
+    ADD_DEFINITIONS(-DUSE_SSE=1)
 ENDIF()
 IF(USE_SSE2)
     ADD_DEFINITIONS(-DUSE_SSE2=1)
@@ -120,12 +167,15 @@ ENDIF()
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
 MESSAGE(STATUS "  USE_TESTS      = ${USE_TESTS}")
+MESSAGE(STATUS "  WITH_BENCH     = ${WITH_BENCH}")
 MESSAGE(STATUS "  WITH_TOOLS     = ${WITH_TOOLS}")
 MESSAGE(STATUS "  WITH_NET       = ${WITH_NET}")
 MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
 MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
 MESSAGE(STATUS "")
+MESSAGE(STATUS "  USE_AVX2       = ${USE_AVX2}")
+MESSAGE(STATUS "  USE_SSE        = ${USE_SSE}")
 MESSAGE(STATUS "  USE_SSE2       = ${USE_SSE2}")
 MESSAGE(STATUS "  USE_TPM2       = ${USE_TPM2}")
 MESSAGE(STATUS "  TEST_PASSWD    = ${TEST_PASSWD}")
@@ -140,7 +190,7 @@ MESSAGE(STATUS "")
 
 FILE(TOUCH config/libdogecoin-config.h)
 
-ADD_LIBRARY(${LIBDOGECOIN_NAME})
+ADD_LIBRARY(${LIBDOGECOIN_NAME} ${ASM_SOURCES})
 INSTALL(TARGETS
     ${LIBDOGECOIN_NAME}
     LIBRARY DESTINATION lib
@@ -294,6 +344,14 @@ ENDIF()
         GET_FILENAME_COMPONENT(wordlist_name ${wordlist} NAME)
         CONFIGURE_FILE(${wordlist} "${CMAKE_CURRENT_BINARY_DIR}/test/wordlist/${wordlist_name}" COPYONLY)
     ENDFOREACH()
+ENDIF()
+
+IF (WITH_BENCH)
+    ADD_EXECUTABLE(bench)
+    TARGET_SOURCES(bench ${visibility}
+        src/bench.c
+    )
+    TARGET_LINK_LIBRARIES(bench ${LIBDOGECOIN_NAME})
 ENDIF()
 
 IF(WITH_LOGDB)
