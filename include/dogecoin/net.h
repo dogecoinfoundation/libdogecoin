@@ -60,6 +60,7 @@ typedef struct dogecoin_node_group_ {
     char clientstr[1024];
     int desired_amount_connected_nodes;
     const dogecoin_chainparams* chainparams;
+    struct evhttp* http_server; /* HTTP server for processing API requests */
 
     /* callbacks */
     int (*log_write_cb)(const char* format, ...); /* log callback, default=printf */
@@ -102,6 +103,17 @@ typedef struct dogecoin_node_ {
 
     uint32_t hints; /* can be use for user defined state */
 } dogecoin_node;
+
+/* =================================== */
+/* HTTP SERVER */
+/* =================================== */
+
+LIBDOGECOIN_API void dogecoin_http_server_init(dogecoin_node_group* group, const char* bindaddr, int port);
+LIBDOGECOIN_API void dogecoin_http_server_shutdown(dogecoin_node_group* group);
+
+/* =================================== */
+/* LOGGING */
+/* =================================== */
 
 LIBDOGECOIN_API int net_write_log_printf(const char* format, ...);
 LIBDOGECOIN_API int net_write_log_null(const char* format, ...);

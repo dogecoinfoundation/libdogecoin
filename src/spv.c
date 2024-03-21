@@ -114,10 +114,14 @@ void dogecoin_net_set_spv(dogecoin_node_group *nodegroup)
  * @param params The chainparams struct that we created earlier.
  * @param debug If true, the node will print out debug messages to stdout.
  * @param headers_memonly If true, the headers database will not be loaded from disk.
+ * @param use_checkpoints If true, the client will use checkpoints.
+ * @param full_sync If true, the client will do a full sync.
+ * @param maxnodes The maximum amount of nodes that the client will connect to.
+ * @param http_server The IP and port for the HTTP server; if NULL, the HTTP server will not be initialized.
  *
  * @return A pointer to a dogecoin_spv_client object.
  */
-dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync, int maxnodes)
+dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync, int maxnodes, const char* http_server)
 {
     dogecoin_spv_client* client;
     client = dogecoin_calloc(1, sizeof(*client));
@@ -154,6 +158,18 @@ dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params,
     client->sync_completed = NULL;
     client->header_message_processed = NULL;
     client->sync_transaction = NULL;
+
+    if (http_server) {
+        // split ip and port
+        char* http_server_copy = strdup(http_server);
+        char* ip = strtok(http_server_copy, ":");
+        char* port = strtok(NULL, ":");
+
+        // HTTP server initialization
+        dogecoin_http_server_init(client->nodegroup, ip, atoi(port));
+        client->nodegroup->log_write_cb("HTTP server initialized\n");
+        free(http_server_copy);
+    }
 
     return client;
 }

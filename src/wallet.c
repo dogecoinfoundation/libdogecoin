@@ -374,7 +374,7 @@ dogecoin_wallet* dogecoin_wallet_new(const dogecoin_chainparams *params)
     wallet->chain = params;
     set_wallet_filename(wallet, params);
     wallet->hdkeys_rbtree = 0;
-    wallet->utxos = utxos;
+    wallet->utxos = 0;
     wallet->unspent_rbtree = 0;
     wallet->spends_rbtree = 0;
     wallet->vec_wtxes = vector_new(10, (void (*)(void *)) dogecoin_wallet_wtx_free);
@@ -991,6 +991,8 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
             }
         }
     }
+
+    wallet->utxos = utxos;
 
     return true;
 }

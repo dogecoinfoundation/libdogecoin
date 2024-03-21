@@ -72,7 +72,12 @@ void test_spv()
     unlink(headersfile);
 
     // init new spv client with debugging off and syncing to memory:
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8);
+#ifndef __APPLE__
+    // due to TBD anomaly in ci environment, enable http server if not running Apple
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8, "localhost:8888");
+#else
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8, NULL);
+#endif
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
@@ -99,7 +104,7 @@ void test_reorg() {
     unlink(headersfile);
 
     // Initialize SPV client
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false, 8);
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false, 8, NULL);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
