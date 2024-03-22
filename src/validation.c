@@ -64,7 +64,7 @@ dogecoin_bool is_legacy(uint32_t version) {
         || (version == 2 && get_chainid(version) == 0);
 }
 
-dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* params) {
+dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* params, uint256* chainwork) {
     /* Except for legacy blocks with full version 1, ensure that
        the chain ID is correct.  Legacy blocks are not allowed since
        the merge-mining start, which is checked in AcceptBlockHeader
@@ -86,7 +86,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
         dogecoin_block_header_scrypt_hash(s, &hash);
         cstr_free(s, true);
 
-        if (!check_pow(&hash, block->header->bits, params, &block->header->chainwork)) {
+        if (!check_pow(&hash, block->header->bits, params, chainwork)) {
             printf("%s:%d:%s : non-AUX proof of work failed : %s\n", __FILE__, __LINE__, __func__, strerror(errno));
             return false;
         }
@@ -108,7 +108,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
     dogecoin_block_header_serialize(s2, block->parent_header);
     dogecoin_block_header_scrypt_hash(s2, &parent_hash);
     cstr_free(s2, true);
-    if (!check_pow(&parent_hash, block->header->bits, params, &block->header->chainwork)) {
+    if (!check_pow(&parent_hash, block->header->bits, params, chainwork)) {
         printf("%s:%d:%s : AUX proof of work failed: %s\n", __FILE__, __LINE__, __func__, strerror(errno));
         return false;
     }

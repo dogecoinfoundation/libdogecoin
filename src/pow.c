@@ -47,7 +47,7 @@ dogecoin_bool check_pow(uint256* hash, unsigned int nbits, const dogecoin_chainp
     swap_bytes((uint8_t*)target, sizeof (arith_uint256));
     uint8_t* target_uint256 = dogecoin_malloc(sizeof(uint256));
     memcpy(target_uint256, target, sizeof(arith_uint256));
-    if (f_negative || (const uint8_t*)target == 0 || f_overflow || uint256_cmp(target_uint256, params->pow_limit)) {
+    if (f_negative || arith_uint256_is_zero(target) || f_overflow || uint256_cmp(target_uint256, params->pow_limit)) {
         printf("%d:%s: f_negative: %d target == 0: %d f_overflow: %d\n",
         __LINE__, __func__, f_negative, (const uint8_t*)target == 0, f_overflow);
         dogecoin_free(target);
