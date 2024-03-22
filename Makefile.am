@@ -180,6 +180,7 @@ if USE_TESTS
 noinst_PROGRAMS += tests
 tests_LDADD = libdogecoin.la $(ASM_LIB_FILES)
 tests_SOURCES = \
+    test/arith_uint256_tests.c \
     test/address_tests.c \
     test/aes_tests.c \
     test/base58_tests.c \

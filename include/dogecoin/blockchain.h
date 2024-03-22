@@ -40,6 +40,7 @@ LIBDOGECOIN_BEGIN_DECL
 typedef struct dogecoin_blockindex {
     uint32_t height;
     uint256 hash;
+    uint256 chainwork;
     dogecoin_block_header header;
     struct dogecoin_blockindex* prev;
 } dogecoin_blockindex;
