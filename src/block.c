@@ -168,7 +168,6 @@ dogecoin_block_header* dogecoin_block_header_new() {
     header->auxpow->check = check;
     header->auxpow->ctx = header;
     header->auxpow->is = false;
-    dogecoin_mem_zero(&header->chainwork, DOGECOIN_HASH_LENGTH);
     return header;
     }
 
@@ -310,10 +309,11 @@ void print_block(dogecoin_auxpow_block* block) {
  * @param header The header object to be constructed.
  * @param buf The buffer to deserialize from.
  * @param params The chain parameters.
+ * @param chainwork The computed chainwork.
  *
  * @return 1 if deserialization was successful, 0 otherwise.
  */
-int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf, const dogecoin_chainparams *params) {
+int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf, const dogecoin_chainparams *params, uint256* chainwork) {
     dogecoin_auxpow_block* block = dogecoin_auxpow_block_new();
     if (!deser_s32(&block->header->version, buf))
         return false;
@@ -329,7 +329,7 @@ int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct cons
         return false;
     dogecoin_block_header_copy(header, block->header);
     if ((block->header->version & 0x100) != 0 && buf->len) {
-        if (!deserialize_dogecoin_auxpow_block(block, buf, params)) {
+        if (!deserialize_dogecoin_auxpow_block(block, buf, params, chainwork)) {
             printf("%s:%d:%s:%s\n", __FILE__, __LINE__, __func__, strerror(errno));
             return false;
         }
@@ -339,7 +339,7 @@ int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct cons
     return true;
     }
 
-int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer, const dogecoin_chainparams *params) {
+int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer, const dogecoin_chainparams *params, uint256* chainwork) {
     if (buffer->len > DOGECOIN_MAX_P2P_MSG_SIZE) {
         return printf("\ntransaction is invalid or to large.\n\n");
         }
@@ -428,7 +428,7 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
         return false;
     }
 
-    if (!check_auxpow(block, (dogecoin_chainparams*)params)) {
+    if (!check_auxpow(block, (dogecoin_chainparams*)params, chainwork)) {
         printf("check_auxpow failed!\n");
         return false;
     }
@@ -473,7 +473,6 @@ void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_bloc
     dest->auxpow->check = src->auxpow->check;
     dest->auxpow->ctx = src->auxpow->ctx;
     dest->auxpow->is = src->auxpow->is;
-    memcpy_safe(&dest->chainwork, &src->chainwork, sizeof(src->chainwork));
     }
 
 /**

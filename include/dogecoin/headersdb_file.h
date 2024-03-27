@@ -63,7 +63,7 @@ dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256 h
 dogecoin_blockindex * dogecoin_headersdb_getchaintip(dogecoin_headers_db* db);
 dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db);
 dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db);
-void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256 hash, uint32_t height);
+void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256 hash, uint32_t height, uint256 chainwork);
 
 static const dogecoin_headers_db_interface dogecoin_headers_db_interface_file = {
     (void* (*)(const dogecoin_chainparams*, dogecoin_bool))dogecoin_headers_db_new,
