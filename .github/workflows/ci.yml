@@ -81,7 +81,7 @@ jobs:
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin15
-            os: macos-latest
+            os: macos-12
             run-tests: true
             dep-opts: "SPEED=slow V=1"
             config-opts: "--enable-static --disable-shared --enable-test-passwd"
