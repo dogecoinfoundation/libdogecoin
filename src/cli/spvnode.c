@@ -48,6 +48,9 @@
 #include <string.h>
 #include <time.h>
 
+#include <event2/buffer.h>
+#include <event2/http.h>
+
 #if defined(HAVE_CONFIG_H)
 #include "libdogecoin-config.h"
 #endif
@@ -57,6 +60,7 @@
 #include <dogecoin/base58.h>
 #include <dogecoin/bip39.h>
 #include <dogecoin/ecc.h>
+#include <dogecoin/headersdb_file.h>
 #include <dogecoin/koinu.h>
 #include <dogecoin/net.h>
 #include <dogecoin/seal.h>
@@ -184,6 +188,7 @@ static struct option long_options[] = {
         {"encrypted_file", required_argument, NULL, 'y'},
         {"use_tpm", no_argument, NULL, 'j'},
         {"master_key", no_argument, NULL, 'k'},
+        {"http_server", required_argument, NULL, 'u'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -199,10 +204,10 @@ static void print_version() {
  */
 static void print_usage() {
     print_version();
-    printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
-(-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase) (-y|-encrypted_file <file_num 0-999>) \
-(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
-(-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
+    printf("Usage: spvnode (-c|continuous) (-i|--ips <ip,ip,...>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
+(-a|--address <address>) (-n|--mnemonic <seed_phrase>) (-s|[--pass_phrase]) (-y|--encrypted_file <file_num 0-999>) \
+(-w|--wallet_file <filename>) (-h|--headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key]) (-j[--use_tpm]) \
+(-u|--http_server <ip:port>) (-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -238,6 +243,12 @@ static void print_usage() {
     printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -b scan\n\n");
     printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use TPM:\n");
     printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -j -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use master key:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -k -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use master key, use TPM:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -k -j -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", show debug info, wait for new blocks, enable http server:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -u \"0.0.0.0:8080\" -b scan\n\n");
     }
 
 
@@ -285,6 +296,181 @@ void handle_sigint() {
     exit(0);
 }
 
+/**
+ * This function is called when an http request is received
+ * It handles the request and sends a response
+ *
+ * @param req the request
+ * @param arg the client
+ *
+ * @return Nothing.
+ */
+
+void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
+    dogecoin_spv_client* client = (dogecoin_spv_client*)arg;
+    dogecoin_wallet* wallet = (dogecoin_wallet*)client->sync_transaction_ctx;
+    if (!wallet) {
+        evhttp_send_error(req, HTTP_INTERNAL, "Internal Server Error");
+        return;
+    }
+
+    const struct evhttp_uri* uri = evhttp_request_get_evhttp_uri(req);
+    const char* path = evhttp_uri_get_path(uri);
+
+    struct evbuffer *evb = NULL;
+    evb = evbuffer_new();
+    if (!evb) {
+        evhttp_send_error(req, HTTP_INTERNAL, "Internal Server Error");
+        return;
+    }
+
+    if (strcmp(path, "/getBalance") == 0) {
+        int64_t balance = dogecoin_wallet_get_balance(wallet);
+        char balance_str[32] = {0};
+        koinu_to_coins_str(balance, balance_str);
+        evbuffer_add_printf(evb, "Wallet balance: %s\n", balance_str);
+    } else if (strcmp(path, "/getAddresses") == 0) {
+        vector* addresses = vector_new(10, dogecoin_free);
+        dogecoin_wallet_get_addresses(wallet, addresses);
+        for (unsigned int i = 0; i < addresses->len; i++) {
+            char* address = vector_idx(addresses, i);
+            evbuffer_add_printf(evb, "address: %s\n", address);
+        }
+        vector_free(addresses, true);
+    } else if (strcmp(path, "/getTransactions") == 0) {
+        char wallet_total[21];
+        dogecoin_mem_zero(wallet_total, 21);
+        uint64_t wallet_total_u64 = 0;
+
+        if (HASH_COUNT(utxos) > 0) {
+            dogecoin_utxo* utxo;
+            dogecoin_utxo* tmp;
+            HASH_ITER(hh, utxos, utxo, tmp) {
+                if (!utxo->spendable) {
+                    // For spent UTXOs
+                    evbuffer_add_printf(evb, "%s\n", "----------------------");
+                    evbuffer_add_printf(evb, "txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof utxo->txid));
+                    evbuffer_add_printf(evb, "vout:           %d\n", utxo->vout);
+                    evbuffer_add_printf(evb, "address:        %s\n", utxo->address);
+                    evbuffer_add_printf(evb, "script_pubkey:  %s\n", utxo->script_pubkey);
+                    evbuffer_add_printf(evb, "amount:         %s\n", utxo->amount);
+                    evbuffer_add_printf(evb, "confirmations:  %d\n", utxo->confirmations);
+                    evbuffer_add_printf(evb, "spendable:      %d\n", utxo->spendable);
+                    evbuffer_add_printf(evb, "solvable:       %d\n", utxo->solvable);
+                    wallet_total_u64 += coins_to_koinu_str(utxo->amount);
+                }
+            }
+        }
+
+        // Convert and print totals for spent UTXOs.
+        koinu_to_coins_str(wallet_total_u64, wallet_total);
+        evbuffer_add_printf(evb, "Spent Balance: %s\n", wallet_total);
+    } else if (strcmp(path, "/getUTXOs") == 0) {
+        char wallet_total[21];
+        dogecoin_mem_zero(wallet_total, 21);
+        uint64_t wallet_total_u64_unspent = 0, wallet_total_u64_spent = 0;
+
+        dogecoin_utxo* utxo;
+        dogecoin_utxo* tmp;
+
+        HASH_ITER(hh, wallet->utxos, utxo, tmp) {
+            if (utxo->spendable) {
+                // For unspent UTXOs
+                evbuffer_add_printf(evb, "----------------------\n");
+                evbuffer_add_printf(evb, "Unspent UTXO:\n");
+                evbuffer_add_printf(evb, "txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof(utxo->txid)));
+                evbuffer_add_printf(evb, "vout:           %d\n", utxo->vout);
+                evbuffer_add_printf(evb, "address:        %s\n", utxo->address);
+                evbuffer_add_printf(evb, "script_pubkey:  %s\n", utxo->script_pubkey);
+                evbuffer_add_printf(evb, "amount:         %s\n", utxo->amount);
+                evbuffer_add_printf(evb, "spendable:      %d\n", utxo->spendable);
+                evbuffer_add_printf(evb, "solvable:       %d\n", utxo->solvable);
+                wallet_total_u64_unspent += coins_to_koinu_str(utxo->amount);
+            }
+        }
+
+        // Convert and print totals for unspent UTXOs.
+        koinu_to_coins_str(wallet_total_u64_unspent, wallet_total);
+        evbuffer_add_printf(evb, "Total Unspent: %s\n", wallet_total);
+    } else if (strcmp(path, "/getWallet") == 0) {
+        // Get the wallet file
+        FILE* file = wallet->dbfile;
+        if (file == NULL) {
+            evhttp_send_error(req, HTTP_NOTFOUND, "Wallet file not found");
+            evbuffer_free(evb);
+            return;
+        }
+
+        // Get the size of the wallet file
+        fseek(file, 0, SEEK_END);
+        long file_size = ftell(file);
+        rewind(file);
+
+        // Read the wallet file into a buffer
+        char* buffer = malloc(file_size);
+        if (buffer == NULL) {
+            fclose(file);
+            evhttp_send_error(req, HTTP_INTERNAL, "Internal Server Error");
+            evbuffer_free(evb);
+            return;
+        }
+        fread(buffer, 1, file_size, file);
+
+        // Add the buffer to the response buffer
+        evbuffer_add(evb, buffer, file_size);
+
+        // Set the Content-Type header to "application/octet-stream" for binary data
+        evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "application/octet-stream");
+
+        // Clean up
+        free(buffer);
+    } else if (strcmp(path, "/getHeaders") == 0) {
+        // Get the headers file
+        dogecoin_headers_db* headers_db = (dogecoin_headers_db *)(client->headers_db_ctx);
+        FILE* file = headers_db->headers_tree_file;
+        if (file == NULL) {
+            evhttp_send_error(req, HTTP_NOTFOUND, "Headers file not found");
+            evbuffer_free(evb);
+            return;
+        }
+
+        // Get the size of the headers file
+        fseek(file, 0, SEEK_END);
+        long file_size = ftell(file);
+        rewind(file);
+
+        // Read the headers file into a buffer
+        char* buffer = malloc(file_size);
+        if (buffer == NULL) {
+            fclose(file);
+            evhttp_send_error(req, HTTP_INTERNAL, "Internal Server Error");
+            evbuffer_free(evb);
+            return;
+        }
+        fread(buffer, 1, file_size, file);
+
+        // Add the buffer to the response buffer
+        evbuffer_add(evb, buffer, file_size);
+
+        // Set the Content-Type header to "application/octet-stream" for binary data
+        evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "application/octet-stream");
+
+        // Clean up
+        free(buffer);
+    } else if (strcmp(path, "/getChaintip") == 0) {
+        dogecoin_blockindex* tip = client->headers_db->getchaintip(client->headers_db_ctx);
+        evbuffer_add_printf(evb, "Chain tip: %d\n", tip->height);
+    } else {
+        evhttp_send_error(req, HTTP_NOTFOUND, "Not Found");
+        evbuffer_free(evb);
+        return;
+    }
+
+    evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain");
+    evhttp_send_reply(req, HTTP_OK, "OK", evb);
+    evbuffer_free(evb);
+}
+
 int main(int argc, char* argv[]) {
     int ret = 0;
     int long_index = 0;
@@ -307,6 +493,7 @@ int main(int argc, char* argv[]) {
     dogecoin_bool encrypted = false;
     dogecoin_bool master_key = false;
     dogecoin_bool tpm = false;
+    char* http_server = NULL;
     int file_num = NO_FILE;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
@@ -317,7 +504,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:u:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -374,6 +561,9 @@ int main(int argc, char* argv[]) {
                 case 'w':
                     name = optarg;
                     break;
+                case 'u':
+                    http_server = optarg;
+                    break;
                 case 'z':
                     have_decl_daemon = true;
                     break;
@@ -389,7 +579,10 @@ int main(int argc, char* argv[]) {
 
     if (strcmp(data, "scan") == 0) {
         dogecoin_ecc_start();
-        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes);
+        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes, http_server);
+        if (http_server) {
+            evhttp_set_gencb(client->nodegroup->http_server, dogecoin_http_request_cb, client);
+        }
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
         signal(SIGINT, handle_sigint);

@@ -58,6 +58,7 @@
 #include <event2/util.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <event2/http.h>
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
@@ -73,6 +74,44 @@
 static const int DOGECOIN_PERIODICAL_NODE_TIMER_S = 3;
 static const int DOGECOIN_PING_INTERVAL_S = 120;
 static const int DOGECOIN_CONNECT_TIMEOUT_S = 10;
+
+/**
+ * Initializes the HTTP server part of the node group.
+ *
+ * @param group The node group containing the nodes and event base.
+ * @param bindaddr The address on which the HTTP server listens.
+ * @param port The port number on which the HTTP server listens.
+ */
+void dogecoin_http_server_init(dogecoin_node_group* group, const char* bindaddr, int port) {
+    assert(group != NULL);
+    assert(group->event_base != NULL);
+
+    group->http_server = evhttp_new(group->event_base);
+    if (!group->http_server) {
+        fprintf(stderr, "Could not create a new HTTP server.\n");
+        exit(1);
+    }
+
+    if (evhttp_bind_socket(group->http_server, bindaddr, port) != 0) {
+        fprintf(stderr, "Could not bind HTTP server to port %d.\n", port);
+        exit(1);
+    }
+
+    printf("HTTP server initialized on port %d\n", port);
+}
+
+/**
+ * Shuts down the HTTP server.
+ *
+ * @param group The node group containing the nodes and event base.
+ */
+void dogecoin_http_server_shutdown(dogecoin_node_group* group) {
+    assert(group != NULL);
+    assert(group->http_server != NULL);
+
+    evhttp_free(group->http_server);
+    group->http_server = NULL;
+}
 
 /**
  * This function is used to print debug messages to the log file
@@ -452,6 +491,7 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
     node_group->handshake_done_cb = NULL;
     node_group->log_write_cb = net_write_log_null;
     node_group->desired_amount_connected_nodes = 8;
+    node_group->http_server = NULL;
 
     return node_group;
 }
@@ -466,6 +506,10 @@ void dogecoin_node_group_shutdown(dogecoin_node_group *group) {
     for (; i < group->nodes->len; i++) {
         dogecoin_node* node = vector_idx(group->nodes, i);
         dogecoin_node_disconnect(node);
+    }
+
+    if (group->http_server) {
+        dogecoin_http_server_shutdown(group);
     }
 }
 
