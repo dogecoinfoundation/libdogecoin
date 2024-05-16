@@ -104,7 +104,7 @@ void test_reorg() {
     unlink(headersfile);
 
     // Initialize SPV client
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false, 8, NULL);
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, false, false, false, 8, NULL);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
@@ -568,6 +568,17 @@ void test_reorg() {
     dogecoin_block_header_free(header3_fork);
     dogecoin_block_header_free(header4_fork);
     dogecoin_block_header_free(header5_fork);
+    dogecoin_spv_client_free(client);
+    remove_all_hashes();
+    remove_all_maps();
+
+    // Re-initialize SPV client and load the headers database
+    client = dogecoin_spv_client_new(chain, false, false, false, false, 8, NULL);
+    client->header_message_processed = test_spv_header_message_processed;
+    client->sync_completed = test_spv_sync_completed;
+    dogecoin_spv_client_load(client, headersfile, false);
+
+    // Cleanup
     dogecoin_spv_client_free(client);
     remove_all_hashes();
     remove_all_maps();
