@@ -60,6 +60,9 @@ LIBDOGECOIN_API dogecoin_hdnode* getHDNodeAndExtKeyByPath(const char* masterkey,
 /* generate an extended hd public/private child address */
 LIBDOGECOIN_API int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outaddress, bool outprivkey);
 
+/* generate an extended hd public/private child address as a P2PKH */
+LIBDOGECOIN_API int getDerivedHDAddressAsP2PKH(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outp2pkh);
+
 /* generate an extended hd public/private child address with a more flexible derived path */
 LIBDOGECOIN_API int getDerivedHDAddressByPath(const char* masterkey, const char* derived_path, char* outaddress);
 

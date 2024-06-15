@@ -491,6 +491,36 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
 }
 
 /**
+ * @brief This function generates a derived child address from a masterkey using
+ * a BIP44 standardized static, non hardened path comprised of an account, a change or
+ * receiving address and an address index.
+ *
+ * @param masterkey The master key from which children are derived from.
+ * @param account The account that the derived address would belong to.
+ * @param ischange Boolean value representing either a change or receiving address.
+ * @param addressindex The index of the receiving/change address per account.
+ * @param outp2pkh The derived address in P2PSH form.
+ *
+ * @return 1 if a derived address was successfully generated, 0 otherwise.
+ */
+int getDerivedHDAddressAsP2PKH(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outp2pkh) {
+        if (!masterkey) {
+            debug_print("%s", "no extended key\n");
+            return false;
+        }
+
+        char derived_path[DERIVED_PATH_STRINGLEN];
+        int derived_path_size = snprintf(derived_path, sizeof(derived_path), "m/44'/3'/%u'/%u/%u", account, ischange, addressindex);
+
+        if (derived_path_size >= (int)sizeof(derived_path)) {
+            debug_print("%s", "derivation path overflow\n");
+            return false;
+        }
+
+        return getDerivedHDAddressByPath(masterkey, derived_path, outp2pkh);
+}
+
+/**
  * @brief This function generates a new dogecoin address from a mnemonic by the slip44 key path.
  *
  * @param account The BIP44 account to generate the derived address.
