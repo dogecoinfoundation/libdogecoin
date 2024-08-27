@@ -38,6 +38,7 @@
 
 extern void test_address();
 extern void test_aes();
+extern void test_arith_uint256();
 extern void test_base58();
 extern void test_base64();
 extern void test_bip32();
@@ -115,6 +116,7 @@ int main()
 
     u_run_test(test_address);
     u_run_test(test_aes);
+    u_run_test(test_arith_uint256);
     u_run_test(test_base58);
     u_run_test(test_base64);
     u_run_test(test_bip32);

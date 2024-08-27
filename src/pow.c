@@ -30,7 +30,7 @@
 #include <dogecoin/pow.h>
 
 dogecoin_bool uint256_cmp(const uint256 a, const uint256 b) {
-    for (int i = 0; i <= 31; i++) {
+    for (int i = 31; i >= 0; i--) {
         if (a[i] > b[i]) {
             return true;
         } else if (a[i] < b[i]) {
@@ -44,16 +44,16 @@ dogecoin_bool check_pow(uint256* hash, unsigned int nbits, const dogecoin_chainp
     dogecoin_bool f_negative, f_overflow;
     arith_uint256* target = init_arith_uint256();
     target = set_compact(target, nbits, &f_negative, &f_overflow);
-    swap_bytes((uint8_t*)target, sizeof (arith_uint256));
     uint8_t* target_uint256 = dogecoin_malloc(sizeof(uint256));
     memcpy(target_uint256, target, sizeof(arith_uint256));
-    if (f_negative || (const uint8_t*)target == 0 || f_overflow || uint256_cmp(target_uint256, params->pow_limit)) {
+    if (f_negative || arith_uint256_is_zero(target) || f_overflow || uint256_cmp(target_uint256, params->pow_limit)) {
         printf("%d:%s: f_negative: %d target == 0: %d f_overflow: %d\n",
         __LINE__, __func__, f_negative, (const uint8_t*)target == 0, f_overflow);
         dogecoin_free(target);
         dogecoin_free(target_uint256);
         return false;
     }
+    swap_bytes((uint8_t*)hash, sizeof(uint256));
     if (uint256_cmp((const uint8_t*)hash, target_uint256)) {
         char* rtn_str = utils_uint8_to_hex((const uint8_t*)hash, 32);
         char hash_str[65] = "";
@@ -75,9 +75,6 @@ dogecoin_bool check_pow(uint256* hash, unsigned int nbits, const dogecoin_chainp
 
     arith_uint256* one = init_arith_uint256();
     one->pn[0] = 1; // Set the lowest word to 1
-
-    swap_bytes((uint8_t*)neg_target, sizeof(arith_uint256));
-    swap_bytes((uint8_t*)target, sizeof(arith_uint256));
 
     // hashes = ~target / (target + 1)
     arith_uint256* target_plus_one = add_arith_uint256(target, one);

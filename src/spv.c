@@ -355,7 +355,7 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
                     utils_uint256_sethex((char *)checkpoint[i].hash, (uint8_t *)hash);
                     vector_add(blocklocators, (void *)hash);
                     if (!client->headers_db->has_checkpoint_start(client->headers_db_ctx)) {
-                        client->headers_db->set_checkpoint_start(client->headers_db_ctx, *hash, checkpoint[i].height);
+                        client->headers_db->set_checkpoint_start(client->headers_db_ctx, *hash, checkpoint[i].height, (uint8_t*)client->chainparams->minimumchainwork);
                     }
                 }
             }
