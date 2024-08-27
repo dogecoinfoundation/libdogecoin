@@ -38,6 +38,7 @@ noinst_HEADERS = \
     include/dogecoin/blockchain.h \
     include/dogecoin/buffer.h \
     include/dogecoin/byteswap.h \
+    include/dogecoin/chacha20.h \
     include/dogecoin/chainparams.h \
     include/dogecoin/common.h \
     include/dogecoin/cstr.h \
@@ -86,6 +87,7 @@ libdogecoin_la_SOURCES = \
     src/bip44.c \
     src/block.c \
     src/buffer.c \
+    src/chacha20.c \
     src/chainparams.c \
     src/cstr.c \
     src/ctaes.c \
@@ -189,6 +191,7 @@ tests_SOURCES = \
     test/bip44_tests.c \
     test/block_tests.c \
     test/buffer_tests.c \
+    test/chacha20_tests.c \
     test/cstr_tests.c \
     test/ecc_tests.c \
     test/hash_tests.c \

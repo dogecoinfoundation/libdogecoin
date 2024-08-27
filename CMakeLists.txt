@@ -216,6 +216,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/bip44.c
     src/block.c
     src/buffer.c
+    src/chacha20.c
     src/cstr.c
     src/ctaes.c
     src/ecc.c
@@ -310,6 +311,7 @@ IF(USE_TESTS)
         test/bip44_tests.c
         test/block_tests.c
         test/buffer_tests.c
+        test/chacha20_tests.c
         test/cstr_tests.c
         test/ecc_tests.c
         test/hash_tests.c

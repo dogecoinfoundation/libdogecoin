@@ -1,7 +1,7 @@
 /**********************************************************************
- * Copyright (c) 2023 bluezr                                          *
- * Copyright (c) 2023 edtubbs                                         *
- * Copyright (c) 2023 The Dogecoin Foundation                         *
+ * Copyright (c) 2024 bluezr                                          *
+ * Copyright (c) 2024 edtubbs                                         *
+ * Copyright (c) 2024 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -46,6 +46,7 @@ extern void test_bip39();
 extern void test_bip44();
 extern void test_block_header();
 extern void test_buffer();
+extern void test_chacha20();
 extern void test_cstr();
 extern void test_ecc();
 extern void test_hash();
@@ -126,6 +127,7 @@ int main()
 #endif
     u_run_test(test_block_header);
     u_run_test(test_buffer);
+    u_run_test(test_chacha20);
     u_run_test(test_cstr);
     u_run_test(test_ecc);
     u_run_test(test_hash);
