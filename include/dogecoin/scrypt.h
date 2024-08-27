@@ -23,6 +23,9 @@ extern void (*scrypt_1024_1_1_256_sp_detected)(const char *input, char *output, 
 #define scrypt_1024_1_1_256_sp(input, output, scratchpad) scrypt_1024_1_1_256_sp_generic((input), (output), (scratchpad))
 #endif
 
+#ifdef __DragonFly__
+#include <sys/endian.h>
+#else
 static inline uint32_t le32dec(const void *pp)
 {
         const uint8_t *p = (uint8_t const *)pp;
@@ -38,4 +41,5 @@ static inline void le32enc(void *pp, uint32_t x)
         p[2] = (x >> 16) & 0xff;
         p[3] = (x >> 24) & 0xff;
 }
+#endif
 #endif
