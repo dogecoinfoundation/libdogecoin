@@ -134,6 +134,32 @@ void test_address()
     u_assert_int_eq(res, true);
     u_assert_str_eq(extout, "dgub8wfrZMXz8ojFcPziSubEoQ65sB4PYPyYTMo3PqFwf2Vx5zZ6ia17Nk2Py25c3dvq1e7ZnfBrurCS5wuagzRoBCXhJ2NeGU54NBytvuUuRyA");
 
+    /* ckd p2pkh generation */
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 0, false, 0, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "DCm7oSg95sxwn3sWxYUDHgKKbB2mDmuR3B");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 0, true, 0, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "D91jVi3CVGhRmyt83fhMdL4UJWtDuiTZET");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 0, false, 0, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "DCm7oSg95sxwn3sWxYUDHgKKbB2mDmuR3B");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 0, true, 0, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "D91jVi3CVGhRmyt83fhMdL4UJWtDuiTZET");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 1, false, 1, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "D5Se361tds246n9Bm6diMQwkg7PfQrME65");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 1, true, 1, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "DD5ztaSL3pscXYL6XXcRFTvbdghKppsKDn");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 1, false, 1, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "D5Se361tds246n9Bm6diMQwkg7PfQrME65");
+    res = getDerivedHDAddressAsP2PKH(masterkey_main_ext, 1, true, 1, extout);
+    u_assert_int_eq(res, true);
+    u_assert_str_eq(extout, "DD5ztaSL3pscXYL6XXcRFTvbdghKppsKDn");
+
     // hardened paths (unabstracted as this is called by getDerivedHDAddress)
     res = getDerivedHDKeyByPath(masterkey_main_ext, "m/44'/3'/0'/0/0", extout, true);
     u_assert_int_eq(res, true);
