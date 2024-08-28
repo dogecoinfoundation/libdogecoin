@@ -40,6 +40,7 @@
 #include <win/wingetopt.h>
 #endif
 
+#include <ctype.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -389,6 +390,10 @@ int main(int argc, char* argv[]) {
                     break;
                 case 'u':
                     http_server = optarg;
+                    if (!isdigit(http_server[0])) {
+                        printf("Please add the ip and port after -u and try again. e.g. '-u 0.0.0.0:8080'\n");
+                        exit(EXIT_FAILURE);
+                    }
                     break;
                 case 'z':
                     have_decl_daemon = true;
