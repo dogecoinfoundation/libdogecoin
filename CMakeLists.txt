@@ -392,10 +392,15 @@ IF(WITH_WALLET)
 ENDIF()
 
 IF(WITH_NET)
+    INSTALL(FILES
+        include/dogecoin/rest.h
+        DESTINATION include/dogecoin
+    )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
         src/headersdb_file.c
         src/net.c
         src/protocol.c
+        src/rest.c
         src/spv.c
     )
 

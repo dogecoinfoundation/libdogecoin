@@ -281,12 +281,14 @@ noinst_HEADERS += \
     include/dogecoin/headersdb_file.h \
     include/dogecoin/protocol.h \
     include/dogecoin/net.h \
+    include/dogecoin/rest.h \
     include/dogecoin/spv.h
 
 libdogecoin_la_SOURCES += \
     src/headersdb_file.c \
     src/net.c \
     src/protocol.c \
+    src/rest.c \
     src/spv.c
 
 libdogecoin_la_LIBADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
