@@ -43,7 +43,6 @@ fi
 if [ -d "`pwd`/.libs" ]; then
     rm -rf "`pwd`/.libs"
     make clean
-    make clean-local
 fi
 
 if has_param '--host' "$@"; then

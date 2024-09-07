@@ -51,7 +51,6 @@ if [[ "$TARGET_HOST_TRIPLET" == "" && "$ALL_HOST_TRIPLETS" != "" ]]; then
             FILE=Makefile
             if test -f "$FILE"; then
                 make clean
-                make clean-local
             fi
             CLEAN=1
         fi

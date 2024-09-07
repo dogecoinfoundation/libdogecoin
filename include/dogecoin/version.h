@@ -39,7 +39,7 @@ LIBDOGECOIN_BEGIN_DECL
 //! These need to be macros, as version.c's voodoo requires it
 #define _PKG_VERSION_MAJOR 0
 #define _PKG_VERSION_MINOR 1
-#define _PKG_VERSION_BUILD 3
+#define _PKG_VERSION_BUILD 4
 #define _LIB_VERSION_REVISION 0
 
 static const int CLIENT_VERSION =
