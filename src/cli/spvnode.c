@@ -191,6 +191,7 @@ static struct option long_options[] = {
         {"use_tpm", no_argument, NULL, 'j'},
         {"master_key", no_argument, NULL, 'k'},
         {"http_server", required_argument, NULL, 'u'},
+        {"output_to_file", no_argument, NULL, 'g'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -209,7 +210,7 @@ static void print_usage() {
     printf("Usage: spvnode (-c|continuous) (-i|--ips <ip,ip,...>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
 (-a|--address <address>) (-n|--mnemonic <seed_phrase>) (-s|[--pass_phrase]) (-y|--encrypted_file <file_num 0-999>) \
 (-w|--wallet_file <filename>) (-h|--headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key]) (-j[--use_tpm]) \
-(-u|--http_server <ip:port>) (-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
+(-u|--http_server <ip:port>) (-g [--output_to_file]) (-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -320,6 +321,8 @@ int main(int argc, char* argv[]) {
     dogecoin_bool encrypted = false;
     dogecoin_bool master_key = false;
     dogecoin_bool tpm = false;
+    dogecoin_bool output_to_file = false;
+    FILE *log_file = NULL;
     char* http_server = NULL;
     int file_num = NO_FILE;
 
@@ -331,7 +334,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:u:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:u:w:h:a:lbpzkjg:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -395,6 +398,9 @@ int main(int argc, char* argv[]) {
                         exit(EXIT_FAILURE);
                     }
                     break;
+                case 'g':
+                    output_to_file = true;
+                    break;
                 case 'z':
                     have_decl_daemon = true;
                     break;
@@ -408,6 +414,15 @@ int main(int argc, char* argv[]) {
             }
         }
 
+    if (output_to_file) {
+        // Open a file in write mode to log stdout
+        log_file = freopen("output.log", "a+", stdout);
+
+        if (log_file == NULL) {
+            perror("Failed to redirect stdout");
+            return 1;
+        }
+    }
     if (strcmp(data, "scan") == 0) {
         dogecoin_ecc_start();
         dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes, http_server);
@@ -429,6 +444,10 @@ int main(int argc, char* argv[]) {
                 }
             dogecoin_spv_client_free(client);
             dogecoin_ecc_stop();
+            if (output_to_file) {
+                // Close the log file
+                fclose(log_file);
+            }
             return EXIT_FAILURE;
         }
         // clear and free the passphrase
@@ -609,5 +628,11 @@ int main(int argc, char* argv[]) {
         printf("Invalid command (use -?)\n");
         ret = EXIT_FAILURE;
         }
+
+    if (output_to_file) {
+        // Close the log file
+        fclose(log_file);
+    }
+
     return ret;
     }

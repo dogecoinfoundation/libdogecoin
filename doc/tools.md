@@ -370,6 +370,7 @@ To utilize checkpoints for faster initial sync, apply the -p flag:
 | `-w`, `--wallet_file` | Wallet File | Yes | Specify wallet file: `./spvnode -w "./wallet.db" scan` |
 | `-h`, `--headers_file` | Headers File | Yes | Specify headers DB file: `./spvnode -h "./headers.db" scan` |
 | `-l`, `--no_prompt` | No Prompt | No | Load wallet and headers without prompt: `./spvnode -l scan` |
+| `-g`, `--output_to_file` | Redirect Output | No | Redirect output to output.log: `./spvnode -g scan` |
 | `-y`, `--encrypted_file` | Encrypted File | Yes | Use encrypted file: `./spvnode -y 0 scan` |
 | `-j`, `--use_tpm` | Use TPM | No | Utilize TPM for decryption: `./spvnode -j scan` |
 | `-k`, `--master_key` | Master Key | No | Use master key decryption: `./spvnode -k scan` |
