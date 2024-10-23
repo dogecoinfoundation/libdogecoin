@@ -61,7 +61,7 @@ jobs:
             run-tests: true
             run-container: true
             packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
-            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow OPTEE=yes V=1"
             config-opts: "LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd --enable-optee CFLAGS=-U_FORTIFY_SOURCE"
             goal: install
           - name: aarch64-android
@@ -97,7 +97,7 @@ jobs:
             run-tests: true
             run-container: true
             packages: python3-dev python3-dbg python
-            dep-opts: "DEBUG=1 SPEED=slow V=1"
+            dep-opts: "DEBUG=1 SPEED=slow OE=yes V=1"
             config-opts: "--enable-openenclave --enable-test-passwd CFLAGS=-U_FORTIFY_SOURCE"
             goal: install
           - name: x86_64-macos

@@ -7,6 +7,8 @@ NO_QT ?=
 NO_WALLET ?=
 NO_UPNP ?=
 MULTIPROCESS ?=
+OPTEE ?=
+OE ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
 BUILD = $(shell ./config.guess)

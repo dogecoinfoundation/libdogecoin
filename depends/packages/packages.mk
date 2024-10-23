@@ -1,4 +1,4 @@
-packages:=libevent libunistring libyubikey libusb ykpers
+packages:=libevent libunistring
 native_packages := native_ccache
 
 wallet_packages=
@@ -14,4 +14,12 @@ ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 darwin_native_packages+= native_clang
 endif
 
+endif
+
+ifneq ($(OPTEE),)
+packages+= libyubikey libusb ykpers
+endif
+
+ifneq ($(OE),)
+packages+= libyubikey libusb ykpers
 endif
