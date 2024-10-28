@@ -5,6 +5,7 @@ name: CI
 on:
   push:
     branches: [ "*-dev-*"]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "*" ]
 
@@ -557,26 +558,26 @@ jobs:
           MACOS_CODE_CERT_TEAM_ID: ${{ secrets.LIBDOGECOIN_DEV_APPLE_TEAM_ID }}
           MACOS_EXECUTABLE_PATH: bin/spvnode
         run: |
-          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
+          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime --verbose "$MACOS_EXECUTABLE_PATH"
 
       - name: Sign such (x86_64-macos)
         env:
           MACOS_CODE_CERT_TEAM_ID: ${{ secrets.LIBDOGECOIN_DEV_APPLE_TEAM_ID }}
           MACOS_EXECUTABLE_PATH: bin/such
         run: |
-          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
+          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime --verbose "$MACOS_EXECUTABLE_PATH"
 
       - name: Sign sendtx (x86_64-macos)
         env:
           MACOS_CODE_CERT_TEAM_ID: ${{ secrets.LIBDOGECOIN_DEV_APPLE_TEAM_ID }}
           MACOS_EXECUTABLE_PATH: bin/sendtx
         run: |
-          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime "$MACOS_EXECUTABLE_PATH"
+          /usr/bin/codesign --force --keychain ~/Library/Keychains/build.keychain -s $MACOS_CODE_CERT_TEAM_ID --deep --options=runtime --verbose "$MACOS_EXECUTABLE_PATH"
 
-      - name: Upload artifacts (i686-win)
+      - name: Upload artifacts (x86_64-macos)
         uses: actions/upload-artifact@v4
         with:
-          name: libdogecoin-${{ github.sha }}-i686-win-signed
+          name: libdogecoin-${{ github.sha }}-x86_64-macos-signed
           path: |
             bin/**
             docs/**
