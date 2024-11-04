@@ -67,7 +67,7 @@ Below is a list of all the commands and the flags that they require. As a remind
 | p2pkh                     | -k                     | -t   | Generates a p2pkh address derived from the public key specified. Include the testnet flag if it was generated from testnet. |
 | bip32_extended_master_key | None                   | -t   | Generate an extended master private key from a secp256k1 context for either mainnet or testnet. |
 | bip32maintotest           | -p                     | None | Convert a mainnet private key into an equivalent testnet key. |
-| derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified private key using the specified derivation path.
+| derive_child_keys         | -p, -m                 | -t   | Generates a child key derived from the specified public or private key using the specified derivation path.
 | generate_mnemonic         | None                   | -e, -y, -w, -b | Generates a 24-word english seed phrase randomly or from optional hex entropy. |
 | list_encryption_keys_in_tpm | None                 | None | List the encryption keys in the TPM. |
 | decrypt_master_key | -y   | -j | Decrypt the master key with the TPM or SW. |
@@ -134,6 +134,16 @@ Below are some examples on how to use the `such` tool in practice.
     > depth:               1
     > child index:         -2147483647
     > p2pkh address:       DFqonEEA56VE8zEGvhXNgjiPT3PaPFNQQu
+
+##### Derive public child key (second child key at level 2 in this case, non-hardened)
+
+    ./such -c derive_child_keys -m m/1 -p dgub8sdBNNzYwKo1KKQcQoJXMDwEg3fgX52aY2aSuSGMXepn71kMtZoN7BVwWp7JT582EDT8djTpCMx7Nd62nJ8u8xNmszEXrmsHWf6XQccjiLg
+    > ext key:             dgub8q9VuPpS4NijK4e7Cc7WaKGD6QHjUB3YkJi83imYVvBRGjrKwPcNFjNcmNt2UnEuhFmKhcmo8aRQABUhq55H3ackUBGj3nJDTMpcP6ALoiN
+    > extended pubkey:     dgub8q9VuPpS4NijK4e7Cc7WaKGD6QHjUB3YkJi83imYVvBRGjrKwPcNFjNcmNt2UnEuhFmKhcmo8aRQABUhq55H3ackUBGj3nJDTMpcP6ALoiN
+    > pubkey hex:          02cbfea5f5cf7d28b9111e92f05356a39a64f19247e539b428ef91e70a6900ae71
+    > depth:               2
+    > child index:         1
+    > p2pkh address:       D7M52mS3ZTrPXgRmfjpV5pPSG2E2TsfZAi
 
 #### Generate a random BIP39 seed phrase
 #### See "Seed phrases" in address.md, for additional guidance

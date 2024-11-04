@@ -655,7 +655,7 @@ static void print_usage()
     printf("mnemonic_to_key (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
     printf("mnemonic_to_addresses (requires -n <seed_phrase> or -y <file_num>, -j (use_tpm), -o <account_int>, -g <change_level>, -i <address_index> and -a, all optional),\n");
     printf("print_keys (requires -p <private key hex>),\n");
-    printf("derive_child_keys (requires -m <custom path> -p <private key>),\n");
+    printf("derive_child_keys (requires -m <custom path> -p <public or private key>),\n");
     printf("sign (-x <raw hex tx> -s <script pubkey> -i <input index> -h <sighash type> -p <private key>),\n");
     printf("comp2der (-s <compact signature>),\n");
     printf("bip32maintotest (-p <extended hd master key>),\n");
