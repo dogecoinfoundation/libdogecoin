@@ -87,6 +87,18 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
     CFLAGS="$saved_CFLAGS"
   ])
 
+AC_ARG_WITH([armv8-crypto],
+  [AS_HELP_STRING([--with-armv8-crypto],
+  [Build with armv8 crypto (default is no)])],
+  [armv8_crypto=$withval],
+  [armv8_crypto=no])
+
+AC_ARG_WITH([armv82-crypto],
+  [AS_HELP_STRING([--with-armv82-crypto],
+  [Build with armv8.2 crypto sha512 (default is no)])],
+  [armv82_crypto=$withval],
+  [armv82_crypto=no])
+
 AC_ARG_ENABLE([intel-avx2],
   [AS_HELP_STRING([--enable-intel-avx2],
   [Build with Intel AVX2 implementation (default is no)])],
@@ -215,6 +227,26 @@ if test x$use_scrypt_sse2 = xyes; then
   CFLAGS="$CFLAGS -msse4.2"
 fi
 
+if test x$armv8_crypto = xyes; then
+  AC_MSG_CHECKING([whether to build with armv8 crypto])
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(USE_ARMV8, 1, [Define this symbol if armv8 crypto works])
+  CPPFLAGS="$CPPFLAGS -march=armv8-a+crypto"
+fi
+
+if test x$armv82_crypto = xyes; then
+  CPPFLAGS="$CPPFLAGS -march=armv8.2-a+crypto+sha3"
+  AC_MSG_CHECKING([whether to build with armv8.2-a crypto])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <arm_neon.h>]], [[uint64x2_t x; x = vsha512su0q_u64(x, x);]])],
+                  [AC_DEFINE(USE_ARMV82, 1, [Define this symbol if armv8.2 crypto works])
+                   CFLAGS="$CFLAGS -march=armv8.2-a+crypto+sha3"]
+                   AC_MSG_RESULT(yes),
+                  [AC_MSG_WARN([sha512 missing, using armv8-a crypto without sha512])
+                   AC_DEFINE(USE_ARMV8, 1, [Define this symbol if armv8 crypto works])
+                   CFLAGS=${CFLAGS/"-march=armv8.2-a+crypto+shqa3"/}
+                   CFLAGS+="-march=armv8-a+crypto"])
+fi
+
 if test "x$with_bench" = xyes; then
   AC_DEFINE_UNQUOTED([WITH_BENCH],[1],[Define to 1 to enable bench compilation])
 fi
@@ -301,6 +333,8 @@ AM_CONDITIONAL([USE_SSE2], [test "x$use_scrypt_sse2" = "xyes"])
 AM_CONDITIONAL([USE_OPENENCLAVE], [test "x$use_openenclave" = "xyes"])
 AM_CONDITIONAL([USE_OPTEE], [test "x$use_optee" = "xyes"])
 AM_CONDITIONAL([USE_YUBIKEY], [test "x$use_yubikey" = "xyes"])
+AM_CONDITIONAL([USE_ARMV8], [test "x$armv8_crypto" = "xyes"])
+AM_CONDITIONAL([USE_ARMV82], [test "x$armv82_crypto" = "xyes"])
 AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
 AC_SUBST(LIB_VERSION_REVISION, _LIB_VERSION_REVISION)
 AC_SUBST(LIB_VERSION_AGE, _LIB_VERSION_AGE)
@@ -323,6 +357,9 @@ echo
 echo "  Intel AVX2      = $use_intel_avx2"
 echo "  Intel SSE       = $use_intel_sse"
 echo "  SSE2 Scrypt     = $use_scrypt_sse2"
+echo "  ARMv8 crypto    = $armv8_crypto"
+echo "  ARMv8.2 crypto  = $armv82_crypto"
+echo
 echo "  test password   = $test_passwd"
 if test "x$test_passwd" = xyes; then
 echo "                    $PASSWD_STR"

@@ -29,6 +29,8 @@ SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
 SET(USE_AVX2 FALSE CACHE BOOL "enable intel avx2")
 SET(USE_SSE FALSE CACHE BOOL "enable intel sse")
 SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
+SET(USE_ARMV8 FALSE CACHE BOOL "enable armv8 crypto")
+SET(USE_ARMV82 FALSE CACHE BOOL "enable armv8.2 crypto")
 SET(USE_TPM2 TRUE CACHE BOOL "enable tpm2")
 SET(USE_OPENENCLAVE TRUE CACHE BOOL "enable openenclave")
 SET(USE_YUBIKEY FALSE CACHE BOOL "enable yubikey")
@@ -173,6 +175,37 @@ ENDIF()
 IF(USE_SSE2)
     ADD_DEFINITIONS(-DUSE_SSE2=1)
 ENDIF()
+IF(USE_ARMV8)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
+
+    ADD_DEFINITIONS(-DUSE_ARMV8=1)
+ENDIF()
+IF(USE_ARMV82)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8.2-a+crypto+sha3")
+    message(STATUS "Checking whether to build with armv8.2-a crypto")
+
+    include(CheckCXXSourceCompiles)
+    set(CMAKE_REQUIRED_FLAGS "-march=armv8.2-a+crypto+sha3")
+    check_cxx_source_compiles("
+        #include <arm_neon.h>
+        int main() {
+            uint64x2_t x;
+            x = vsha512su0q_u64(x, x);
+            return 0;
+        }
+    " ARMV82_CRYPTO_WORKS)
+
+    if (ARMV82_CRYPTO_WORKS)
+        add_definitions(-DUSE_ARMV82)
+        message(STATUS "yes")
+    else()
+        message(WARNING "sha512 missing, using armv8-a crypto without sha512")
+        string(REPLACE "-march=armv8.2-a+crypto+sha3" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
+    endif()
+
+    ADD_DEFINITIONS(-DUSE_ARMV82=1)
+ENDIF()
 IF(USE_TPM2)
     ADD_DEFINITIONS(-DUSE_TPM2=1)
 ENDIF()
@@ -201,6 +234,8 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS "  USE_AVX2       = ${USE_AVX2}")
 MESSAGE(STATUS "  USE_SSE        = ${USE_SSE}")
 MESSAGE(STATUS "  USE_SSE2       = ${USE_SSE2}")
+MESSAGE(STATUS "  USE_ARMV8      = ${USE_ARMV8}")
+MESSAGE(STATUS "  USE_ARMV82     = ${USE_ARMV82}")
 MESSAGE(STATUS "  USE_TPM2       = ${USE_TPM2}")
 MESSAGE(STATUS "  TEST_PASSWD    = ${TEST_PASSWD}")
 IF(TEST_PASSWD)
