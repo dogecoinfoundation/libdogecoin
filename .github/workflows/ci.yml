@@ -370,6 +370,9 @@ jobs:
               "x86_64-linux-openenclave" | "aarch64-linux-optee" | "x86_64-nixos"):
               if ([ "${{ matrix.name }}" == "aarch64-linux-optee" ]); then
                 make install
+                if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+                  printf "%s" "${{ secrets.DEFAULT_TA_PEM }}" > rsa_private.pem
+                fi
                 docker pull jforissier/optee_os_ci:qemu_check
                 docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash -c "\
                     # Set up the environment and build the OP-TEE SDK
@@ -383,6 +386,9 @@ jobs:
                     repo init -u https://github.com/edtubbs/manifest.git -m nanopc-t6.xml -b nanopc-t6 && \
                     export FORCE_UNSAFE_CONFIGURE=1 && \
                     repo sync -j\"$(getconf _NPROCESSORS_ONLN)\" && \
+                    if [[ "${{ github.ref }}" == refs/tags/* ]]; then \
+                      mv /src/rsa_private.pem /src/optee/optee_os/keys/default_ta.pem; \
+                    fi && \
                     patch -F 4 /src/optee/build/common.mk < /src/src/optee/common.mk.patch && \
                     patch /src/optee/build/kconfigs/qemu.conf < /src/src/optee/qemu.conf.patch && \
                     patch /src/optee/linux/arch/arm64/boot/dts/rockchip/rk3588-nanopi6-common.dtsi < /src/src/optee/rk3588-nanopi6-common.dtsi.patch && \
@@ -490,6 +496,10 @@ jobs:
               elif ([ "${{ matrix.name }}" == "x86_64-linux-openenclave" ]); then
                 make install && \
                 mkdir -p src/openenclave/build && \
+                if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+                  printf "%s" "${{ secrets.OE_PRIVATE_PEM }}" > src/openenclave/build/private.pem && \
+                  openssl rsa -pubout -in src/openenclave/build/private.pem -out src/openenclave/build/public.pem; \
+                fi && \
                 docker run -v $PWD:/src -w /src ubuntu:20.04 bash -c "\
                   # Install dependencies
                   export DEBIAN_FRONTEND=noninteractive && \
