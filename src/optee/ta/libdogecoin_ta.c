@@ -214,6 +214,9 @@ int fclose(void *stream)
 // Maximum size of managed credentials (shared secret, password)
 #define MAX_MANAGED_CREDS_SIZE  1024
 
+// Maximum size of a delegate name
+#define MAX_DELEGATE_NAME_SIZE  256
+
 uint32_t get_totp(const char* shared_secret, uint64_t timestamp) {
     uint8_t hmac[SHA1_DIGEST_LENGTH];
     uint8_t time_bytes[8];
@@ -423,6 +426,18 @@ static TEE_Result generate_and_store_mnemonic(uint32_t param_types, TEE_Param pa
     char mnemonic_and_creds[MAX_MNEMONIC_SIZE + MAX_MANAGED_CREDS_SIZE] = {0};
     snprintf(mnemonic_and_creds, sizeof(mnemonic_and_creds), "%s,%s", mnemonic, managed_creds);
 
+    // Split the managed credentials into shared secret and password
+    char* saveptr;
+    char* shared_secret = strtok_r(managed_creds, ",", &saveptr);
+    char* stored_password = strtok_r(NULL, ",", &saveptr);
+
+    // Check if the shared secret or password is present
+    if (!shared_secret && !stored_password) {
+        EMSG("Shared secret or password required");
+        dogecoin_ecc_stop();
+        return TEE_ERROR_BAD_PARAMETERS;
+    }
+
     dogecoin_ecc_stop();
 
     // Create a persistent object to store the mnemonic and managed credentials
@@ -509,28 +524,31 @@ static TEE_Result generate_extended_public_key(uint32_t param_types, TEE_Param p
     char* shared_secret = strtok_r(NULL, ",", &saveptr);
     char* stored_password = strtok_r(NULL, ",", &saveptr);
 
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        EMSG("Password or auth token required");
+        return TEE_ERROR_SECURITY;
+    }
+
     // Verify that the password is part of the managed credentials, if supplied
     if ((password_size > 0 && password && stored_password && strcmp(password, stored_password)) ||
-        (password_size == 0 && stored_password && strcmp(stored_password, "none") != 0) ||
-        (password_size > 0 && !password && stored_password && strcmp(stored_password, "none") != 0)) {
+        (password_size == 0 && stored_password && strcmp(stored_password, "|") != 0) ||
+        (password_size > 0 && !password && stored_password && strcmp(stored_password, "|") != 0)) {
         EMSG("Password verification failed");
         return TEE_ERROR_SECURITY;
     }
 
-    // Verify TOTP using the managed credentials
-    TEE_Time current_time;
-    TEE_GetREETime(&current_time);
-    uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
+    // If a shared secret is present, then perform TOTP verification
+    if (strcmp(shared_secret, "|") != 0) {
+        // Verify TOTP using the managed credentials
+        TEE_Time current_time;
+        TEE_GetREETime(&current_time);
+        uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
 
-    char totp_str[AUTH_TOKEN_LEN + 1];
-    snprintf(totp_str, sizeof(totp_str), "%06u", totp);
-
-    char auth_token_str[AUTH_TOKEN_LEN + 1];
-    snprintf(auth_token_str, sizeof(auth_token_str), "%06u", auth_token);
-
-    if (strcmp(totp_str, auth_token_str) != 0) {
-        EMSG("TOTP verification failed");
-        return TEE_ERROR_SECURITY;
+        if (auth_token != totp) {
+            EMSG("TOTP verification failed");
+            return TEE_ERROR_SECURITY;
+        }
     }
 
     SEED seed;
@@ -544,7 +562,11 @@ static TEE_Result generate_extended_public_key(uint32_t param_types, TEE_Param p
     char key_path_out[KEYPATHMAXLEN];
     getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
 
-    deriveBIP44ExtendedPublicKey(master_key, NULL, NULL, NULL, key_path, pubkey, key_path_out);
+    if (!deriveBIP44ExtendedPublicKey(master_key, NULL, NULL, NULL, key_path, pubkey, key_path_out)) {
+        dogecoin_ecc_stop();
+        EMSG("Failed to derive extended public key");
+        return TEE_ERROR_GENERIC;
+    }
 
     dogecoin_ecc_stop();
 
@@ -607,28 +629,31 @@ static TEE_Result generate_address(uint32_t param_types, TEE_Param params[4]) {
     char* shared_secret = strtok_r(NULL, ",", &saveptr);
     char* stored_password = strtok_r(NULL, ",", &saveptr);
 
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        EMSG("Password or auth token required");
+        return TEE_ERROR_SECURITY;
+    }
+
     // Verify that the password is part of the managed credentials, if supplied
     if ((password_size > 0 && password && stored_password && strcmp(password, stored_password)) ||
-        (password_size == 0 && stored_password && strcmp(stored_password, "none") != 0) ||
-        (password_size > 0 && !password && stored_password && strcmp(stored_password, "none") != 0)) {
+        (password_size == 0 && stored_password && strcmp(stored_password, "|") != 0) ||
+        (password_size > 0 && !password && stored_password && strcmp(stored_password, "|") != 0)) {
         EMSG("Password verification failed");
         return TEE_ERROR_SECURITY;
     }
 
-    // Verify TOTP using the managed credentials
-    TEE_Time current_time;
-    TEE_GetREETime(&current_time);
-    uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
+    // If a shared secret is present, then perform TOTP verification
+    if (strcmp(shared_secret, "|") != 0) {
+        // Verify TOTP using the managed credentials
+        TEE_Time current_time;
+        TEE_GetREETime(&current_time);
+        uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
 
-    char totp_str[AUTH_TOKEN_LEN + 1];
-    snprintf(totp_str, sizeof(totp_str), "%06u", totp);
-
-    char auth_token_str[AUTH_TOKEN_LEN + 1];
-    snprintf(auth_token_str, sizeof(auth_token_str), "%06u", auth_token);
-
-    if (strcmp(totp_str, auth_token_str) != 0) {
-        EMSG("TOTP verification failed");
-        return TEE_ERROR_SECURITY;
+        if (auth_token != totp) {
+            EMSG("TOTP verification failed");
+            return TEE_ERROR_SECURITY;
+        }
     }
 
     SEED seed;
@@ -707,28 +732,31 @@ static TEE_Result sign_message_with_private_key(uint32_t param_types, TEE_Param 
     char* shared_secret = strtok_r(NULL, ",", &saveptr2);
     char* stored_password = strtok_r(NULL, ",", &saveptr2);
 
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        EMSG("Password or auth token required");
+        return TEE_ERROR_SECURITY;
+    }
+
     // Verify that the password is part of the managed credentials, if supplied
     if ((password_size > 0 && password && stored_password && strcmp(password, stored_password)) ||
-        (password_size == 0 && stored_password && strcmp(stored_password, "none") != 0) ||
-        (password_size > 0 && !password && stored_password && strcmp(stored_password, "none") != 0)) {
+        (password_size == 0 && stored_password && strcmp(stored_password, "|") != 0) ||
+        (password_size > 0 && !password && stored_password && strcmp(stored_password, "|") != 0)) {
         EMSG("Password verification failed");
         return TEE_ERROR_SECURITY;
     }
 
-    // Verify TOTP using the managed credentials
-    TEE_Time current_time;
-    TEE_GetREETime(&current_time);
-    uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
+    // If a shared secret is present, then perform TOTP verification
+    if (strcmp(shared_secret, "|") != 0) {
+        // Verify TOTP using the managed credentials
+        TEE_Time current_time;
+        TEE_GetREETime(&current_time);
+        uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
 
-    char totp_str[AUTH_TOKEN_LEN + 1];
-    snprintf(totp_str, sizeof(totp_str), "%06u", totp);
-
-    char auth_token_str[AUTH_TOKEN_LEN + 1];
-    snprintf(auth_token_str, sizeof(auth_token_str), "%06u", auth_token);
-
-    if (strcmp(totp_str, auth_token_str) != 0) {
-        EMSG("TOTP verification failed");
-        return TEE_ERROR_SECURITY;
+        if (auth_token != totp) {
+            EMSG("TOTP verification failed");
+            return TEE_ERROR_SECURITY;
+        }
     }
 
     SEED seed;
@@ -745,7 +773,6 @@ static TEE_Result sign_message_with_private_key(uint32_t param_types, TEE_Param 
     char privkeywif[PRIVKEYWIFLEN];
     size_t wiflen = PRIVKEYWIFLEN;
     const dogecoin_chainparams* chain = chain_from_b58_prefix(master_key);
-
     dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(master_key, key_path, outaddress, true);
     dogecoin_privkey_encode_wif((const dogecoin_key*)hdnode->private_key, chain, privkeywif, &wiflen);
 
@@ -823,28 +850,31 @@ static TEE_Result sign_transaction_with_private_key(uint32_t param_types, TEE_Pa
     char* shared_secret = strtok_r(NULL, ",", &saveptr2);
     char* stored_password = strtok_r(NULL, ",", &saveptr2);
 
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        EMSG("Password or auth token required");
+        return TEE_ERROR_SECURITY;
+    }
+
     // Verify that the password is part of the managed credentials, if supplied
     if ((password_size > 0 && password && stored_password && strcmp(password, stored_password)) ||
-        (password_size == 0 && stored_password && strcmp(stored_password, "none") != 0) ||
-        (password_size > 0 && !password && stored_password && strcmp(stored_password, "none") != 0)) {
+        (password_size == 0 && stored_password && strcmp(stored_password, "|") != 0) ||
+        (password_size > 0 && !password && stored_password && strcmp(stored_password, "|") != 0)) {
         EMSG("Password verification failed");
         return TEE_ERROR_SECURITY;
     }
 
-    // Verify TOTP using the managed credentials
-    TEE_Time current_time;
-    TEE_GetREETime(&current_time);
-    uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
+    // If a shared secret is present, then perform TOTP verification
+    if (strcmp(shared_secret, "|") != 0) {
+        // Verify TOTP using the managed credentials
+        TEE_Time current_time;
+        TEE_GetREETime(&current_time);
+        uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
 
-    char totp_str[AUTH_TOKEN_LEN + 1];
-    snprintf(totp_str, sizeof(totp_str), "%06u", totp);
-
-    char auth_token_str[AUTH_TOKEN_LEN + 1];
-    snprintf(auth_token_str, sizeof(auth_token_str), "%06u", auth_token);
-
-    if (strcmp(totp_str, auth_token_str) != 0) {
-        EMSG("TOTP verification failed");
-        return TEE_ERROR_SECURITY;
+        if (auth_token != totp) {
+            EMSG("TOTP verification failed");
+            return TEE_ERROR_SECURITY;
+        }
     }
 
     SEED seed;
@@ -922,7 +952,7 @@ static TEE_Result delegate_key(uint32_t param_types, TEE_Param params[4]) {
                              TEE_DATA_FLAG_ACCESS_WRITE_META | TEE_DATA_FLAG_OVERWRITE;
 
     char *delegate_key = params[0].memref.buffer;
-    const char *account = (const char *)params[1].memref.buffer;
+    const char *key_path = (const char *)params[1].memref.buffer;
     uint32_t auth_token = params[2].value.a;
     char *delegate_creds = params[3].memref.buffer;
 
@@ -960,6 +990,12 @@ static TEE_Result delegate_key(uint32_t param_types, TEE_Param params[4]) {
     char* delegate_password = strtok_r(delegate_creds, ",", &saveptr2);
     char* password = strtok_r(NULL, ",", &saveptr2);
 
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        EMSG("Password or auth token required");
+        return TEE_ERROR_SECURITY;
+    }
+
     // Verify flag for delegate key creation
     if (!flags || strcmp(flags, "delegate") != 0) {
         EMSG("Delegate key creation flag not set");
@@ -973,45 +1009,26 @@ static TEE_Result delegate_key(uint32_t param_types, TEE_Param params[4]) {
     }
 
     // Verify delegate password was provided
-    if (strcmp(delegate_password, "none") == 0) {
+    if (strcmp(delegate_password, "|") == 0) {
         EMSG("Delegate password not provided");
         return TEE_ERROR_BAD_PARAMETERS;
     }
 
-    // Verify TOTP using the managed credentials
-    TEE_Time current_time;
-    TEE_GetREETime(&current_time);
-    uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
+    // If a shared secret is present, then perform TOTP verification
+    if (strcmp(shared_secret, "|") != 0) {
+        // Verify TOTP using the managed credentials
+        TEE_Time current_time;
+        TEE_GetREETime(&current_time);
+        uint32_t totp = get_totp(shared_secret, current_time.seconds / TOTP_TIME_STEP);
 
-    char totp_str[AUTH_TOKEN_LEN + 1];
-    snprintf(totp_str, sizeof(totp_str), "%06u", totp);
-
-    char auth_token_str[AUTH_TOKEN_LEN + 1];
-    snprintf(auth_token_str, sizeof(auth_token_str), "%06u", auth_token);
-
-    if (strcmp(totp_str, auth_token_str) != 0) {
-        EMSG("TOTP verification failed");
-        return TEE_ERROR_SECURITY;
+        if (auth_token != totp) {
+            EMSG("TOTP verification failed");
+            return TEE_ERROR_SECURITY;
+        }
     }
-
-    // Store the delegate credentials and mnemonic with the account number as the ID
-    char delegate_object_data[MAX_MNEMONIC_SIZE + MAX_MANAGED_CREDS_SIZE];
-    snprintf(delegate_object_data, sizeof(delegate_object_data), "%s,%s", mnemonic, delegate_creds);
-
-    char delegate_object_id[64];
-    snprintf(delegate_object_id, sizeof(delegate_object_id), "delegate_%s", account);
-
-    res = TEE_CreatePersistentObject(TEE_STORAGE_PRIVATE, delegate_object_id, strlen(delegate_object_id),
-                                     obj_data_flag, TEE_HANDLE_NULL, delegate_object_data, strlen(delegate_object_data), &object);
-    if (res != TEE_SUCCESS) {
-        EMSG("Failed to create persistent delegate object, res=0x%08x", res);
-        return res;
-    }
-
-    TEE_CloseObject(object);
 
     // Derive the private child key
-    char key_path[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
+    char key_path_out[BIP44_KEY_PATH_MAX_LENGTH + 1] = "";
     SEED seed;
     dogecoin_seed_from_mnemonic((const char*)mnemonic, delegate_password, seed);
 
@@ -1023,10 +1040,26 @@ static TEE_Result delegate_key(uint32_t param_types, TEE_Param params[4]) {
     char privkey[HDKEYLEN];
     getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
 
-    deriveBIP44ExtendedKey(master_key, NULL, NULL, NULL, account, privkey, key_path);
+    deriveBIP44ExtendedKey(master_key, NULL, NULL, NULL, key_path, privkey, key_path_out);
     strncpy(delegate_key, privkey, HDKEYLEN);
 
     dogecoin_ecc_stop();
+
+    // Store the delegate credentials and mnemonic with the account number as the ID
+    char delegate_object_data[HDKEYLEN + MAX_MANAGED_CREDS_SIZE];
+    snprintf(delegate_object_data, sizeof(delegate_object_data), "%s,%s", privkey, delegate_creds);
+
+    char delegate_object_id[MAX_DELEGATE_NAME_SIZE];
+    snprintf(delegate_object_id, sizeof(delegate_object_id), "%s", key_path_out);
+
+    res = TEE_CreatePersistentObject(TEE_STORAGE_PRIVATE, delegate_object_id, strlen(delegate_object_id),
+                                     obj_data_flag, TEE_HANDLE_NULL, delegate_object_data, strlen(delegate_object_data), &object);
+    if (res != TEE_SUCCESS) {
+        EMSG("Failed to create persistent delegate object, res=0x%08x", res);
+        return res;
+    }
+
+    TEE_CloseObject(object);
 
     EMSG("Delegate key generated and stored successfully");
 
@@ -1050,8 +1083,8 @@ static TEE_Result export_delegate_key(uint32_t param_types, TEE_Param params[4])
     char *exported_key = params[0].memref.buffer;
 
     // Open the delegate persistent object
-    char delegate_object_id[64];
-    snprintf(delegate_object_id, sizeof(delegate_object_id), "delegate_%s", key_path);
+    char delegate_object_id[MAX_DELEGATE_NAME_SIZE];
+    snprintf(delegate_object_id, sizeof(delegate_object_id), "%s", key_path);
 
     EMSG("Exporting delegate key");
 
@@ -1074,7 +1107,7 @@ static TEE_Result export_delegate_key(uint32_t param_types, TEE_Param params[4])
 
     // Split the delegate object data into mnemonic and stored delegate credentials
     char* saveptr;
-    char* mnemonic = strtok_r(delegate_object_data, ",", &saveptr);
+    char* privkey = strtok_r(delegate_object_data, ",", &saveptr);
     char* stored_delegate_password = strtok_r(NULL, ",", &saveptr);
 
     // Verify that the password is the same as the stored delegate password
@@ -1085,22 +1118,7 @@ static TEE_Result export_delegate_key(uint32_t param_types, TEE_Param params[4])
         return TEE_ERROR_SECURITY;
     }
 
-    SEED seed;
-    dogecoin_seed_from_mnemonic((const char*)mnemonic, password, seed);
-
-    set_rng(&TEE_GenerateRandom);
-
-    dogecoin_ecc_start();
-
-    char master_key[HDKEYLEN];
-    char privkey[HDKEYLEN];
-    char key_path_out[KEYPATHMAXLEN];
-    getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
-
-    deriveBIP44ExtendedKey(master_key, NULL, NULL, NULL, key_path, privkey, key_path_out);
     strncpy(exported_key, privkey, HDKEYLEN);
-
-    dogecoin_ecc_stop();
 
     EMSG("Delegate key exported successfully");
 

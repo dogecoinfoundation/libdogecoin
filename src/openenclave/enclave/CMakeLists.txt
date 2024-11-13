@@ -30,12 +30,15 @@ if (LVI_MITIGATION MATCHES ControlFlow)
   # Link against LVI-mitigated libraries.
   target_link_libraries(
     enclave openenclave::oeenclave-lvi-cfg
+    $<TARGET_OBJECTS:openenclave::oeseal_gcmaes>
     openenclave::oecrypto${OE_CRYPTO_LIB}-lvi-cfg
     "libdogecoin.a" "libevent_core.a" "libunistring.a"
     openenclave::oelibc-lvi-cfg)
 else ()
   target_link_libraries(
-    enclave openenclave::oeenclave openenclave::oecrypto${OE_CRYPTO_LIB}
+    enclave openenclave::oeenclave
+    $<TARGET_OBJECTS:openenclave::oeseal_gcmaes>
+    openenclave::oecrypto${OE_CRYPTO_LIB}
     "libdogecoin.a" "libevent_core.a" "libunistring.a"
     openenclave::oelibc)
 

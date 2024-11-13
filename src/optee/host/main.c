@@ -182,9 +182,9 @@ TEEC_Result generate_mnemonic(struct test_ctx *ctx, const char *shared_secret, c
 
     // Prepare the managed credentials as "<shared_secret>,<password>,<flags>"
     snprintf(managed_creds, sizeof(managed_creds), "%s,%s,%s",
-             shared_secret ? shared_secret : "none",
-             password ? password : "none",
-             flags ? flags : "none");
+             shared_secret ? shared_secret : "|",
+             password ? password : "|",
+             flags ? flags : "|");
 
     // Prepare the operation
     memset(&op, 0, sizeof(op));
@@ -242,7 +242,7 @@ TEEC_Result generate_mnemonic(struct test_ctx *ctx, const char *shared_secret, c
     return res;
 }
 
-TEEC_Result generate_address_ta(struct test_ctx *ctx, const char* account, const char* address_index, const char* change_level, uint32_t auth_token, const char* password, char *address, size_t *address_len)
+TEEC_Result generate_address_ta(struct test_ctx *ctx, const char* custom_path, const char* account, const char* address_index, const char* change_level, uint32_t auth_token, const char* password, char *address, size_t *address_len)
 {
     TEEC_Operation op;
     uint32_t origin;
@@ -257,8 +257,8 @@ TEEC_Result generate_address_ta(struct test_ctx *ctx, const char* account, const
 
     op.params[0].tmpref.buffer = address;
     op.params[0].tmpref.size = *address_len;
-    op.params[1].tmpref.buffer = key_path;
-    op.params[1].tmpref.size = strlen(key_path) + 1;
+    op.params[1].tmpref.buffer = (void *)((custom_path != NULL) ? custom_path : key_path);
+    op.params[1].tmpref.size = strlen(op.params[1].tmpref.buffer) + 1;
     op.params[2].value.a = auth_token;
     op.params[3].tmpref.buffer = (void *)password;
     op.params[3].tmpref.size = password ? strlen(password) + 1 : 0;
@@ -289,7 +289,7 @@ TEEC_Result generate_address_ta(struct test_ctx *ctx, const char* account, const
     return res;
 }
 
-TEEC_Result generate_extended_public_key_ta(struct test_ctx *ctx, const char* account, const char* change_level, uint32_t auth_token, const char* password, char *pubkey, size_t *pubkey_len)
+TEEC_Result generate_extended_public_key_ta(struct test_ctx *ctx, const char* custom_path, const char* account, const char* change_level, uint32_t auth_token, const char* password, char *pubkey, size_t *pubkey_len)
 {
     TEEC_Operation op;
     uint32_t origin;
@@ -304,8 +304,8 @@ TEEC_Result generate_extended_public_key_ta(struct test_ctx *ctx, const char* ac
 
     op.params[0].tmpref.buffer = pubkey;
     op.params[0].tmpref.size = *pubkey_len;
-    op.params[1].tmpref.buffer = key_path;
-    op.params[1].tmpref.size = strlen(key_path) + 1;
+    op.params[1].tmpref.buffer = (void *)((custom_path != NULL) ? custom_path : key_path);
+    op.params[1].tmpref.size = strlen(op.params[1].tmpref.buffer) + 1;
     op.params[2].value.a = auth_token;
     op.params[3].tmpref.buffer = (void *)password;
     op.params[3].tmpref.size = password ? strlen(password) + 1 : 0;
@@ -336,7 +336,7 @@ TEEC_Result generate_extended_public_key_ta(struct test_ctx *ctx, const char* ac
     return res;
 }
 
-TEEC_Result sign_message_ta(struct test_ctx *ctx, const char* account, const char* address_index, const char* change_level, uint32_t auth_token, const char* password, char *message, char *signature, size_t *signature_len)
+TEEC_Result sign_message_ta(struct test_ctx *ctx, const char* custom_path, const char* account, const char* address_index, const char* change_level, uint32_t auth_token, const char* password, char *message, char *signature, size_t *signature_len)
 {
     TEEC_Operation op;
     uint32_t origin;
@@ -344,7 +344,11 @@ TEEC_Result sign_message_ta(struct test_ctx *ctx, const char* account, const cha
 
     // Construct key path from account, change_level, and address_index
     char key_path[KEYPATHMAXLEN];
-    snprintf(key_path, sizeof(key_path), "m/44'/3'/%s'/%s/%s,%s", account, change_level, address_index, password);
+    if (custom_path && strlen(custom_path) > 0) {
+        snprintf(key_path, sizeof(key_path), "%s,%s", custom_path, password);
+    } else {
+        snprintf(key_path, sizeof(key_path), "m/44'/3'/%s'/%s/%s,%s", account, change_level, address_index, password);
+    }
 
     memset(&op, 0, sizeof(op));
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT,
@@ -387,7 +391,7 @@ TEEC_Result sign_message_ta(struct test_ctx *ctx, const char* account, const cha
     return res;
 }
 
-TEEC_Result sign_transaction_ta(struct test_ctx *ctx, const char* account, const char* address_index, const char* change_level, uint32_t auth_token, const char* password, char *raw_tx, size_t raw_tx_len, char *signed_tx, size_t *signed_tx_len)
+TEEC_Result sign_transaction_ta(struct test_ctx *ctx, const char* custom_path, const char* account, const char* address_index, const char* change_level, uint32_t auth_token, const char* password, char *raw_tx, size_t raw_tx_len, char *signed_tx, size_t *signed_tx_len)
 {
     TEEC_Operation op;
     uint32_t origin;
@@ -395,7 +399,11 @@ TEEC_Result sign_transaction_ta(struct test_ctx *ctx, const char* account, const
 
     // Construct key path from account, change_level, and address_index
     char key_path[KEYPATHMAXLEN];
-    snprintf(key_path, sizeof(key_path), "m/44'/3'/%s'/%s/%s,%s", account, change_level, address_index, password);
+    if (custom_path && strlen(custom_path) > 0) {
+        snprintf(key_path, sizeof(key_path), "%s,%s", custom_path, password);
+    } else {
+        snprintf(key_path, sizeof(key_path), "m/44'/3'/%s'/%s/%s,%s", account, change_level, address_index, password);
+    }
 
     memset(&op, 0, sizeof(op));
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT,
@@ -438,7 +446,7 @@ TEEC_Result sign_transaction_ta(struct test_ctx *ctx, const char* account, const
     return res;
 }
 
-TEEC_Result delegate_key_ta(struct test_ctx *ctx, const char* account, uint32_t auth_token, const char* delegate_password, const char *password, char *delegate_key)
+TEEC_Result delegate_key_ta(struct test_ctx *ctx, const char* custom_path, const char* account, uint32_t auth_token, const char* delegate_password, const char *password, char *delegate_key)
 {
     TEEC_Operation op;
     uint32_t origin;
@@ -461,8 +469,8 @@ TEEC_Result delegate_key_ta(struct test_ctx *ctx, const char* account, uint32_t 
 
     op.params[0].tmpref.buffer = delegate_key;
     op.params[0].tmpref.size = HDKEYLEN;
-    op.params[1].tmpref.buffer = (void *)key_path;
-    op.params[1].tmpref.size = strlen(key_path) + 1;
+    op.params[1].tmpref.buffer = (void *)((custom_path != NULL) ? custom_path : key_path);
+    op.params[1].tmpref.size = strlen(op.params[1].tmpref.buffer) + 1;
     op.params[2].value.a = auth_token;
     op.params[3].tmpref.buffer = (void *)delegate_creds;
     op.params[3].tmpref.size = strlen(delegate_creds) + 1;
@@ -480,7 +488,7 @@ TEEC_Result delegate_key_ta(struct test_ctx *ctx, const char* account, uint32_t 
     return res;
 }
 
-TEEC_Result export_delegate_key_ta(struct test_ctx *ctx, const char* account, const char *password, char *exported_key) {
+TEEC_Result export_delegate_key_ta(struct test_ctx *ctx, const char* custom_path, const char* account, const char *password, char *exported_key) {
     TEEC_Operation op;
     uint32_t origin;
     TEEC_Result res;
@@ -495,8 +503,8 @@ TEEC_Result export_delegate_key_ta(struct test_ctx *ctx, const char* account, co
 
     op.params[0].tmpref.buffer = exported_key;
     op.params[0].tmpref.size = HDKEYLEN;
-    op.params[1].tmpref.buffer = (void *)key_path;
-    op.params[1].tmpref.size = strlen(key_path) + 1;
+    op.params[1].tmpref.buffer = (void *)((custom_path != NULL) ? custom_path : key_path);
+    op.params[1].tmpref.size = strlen(op.params[1].tmpref.buffer) + 1;
     op.params[3].tmpref.buffer = (void *)password;
     op.params[3].tmpref.size = password ? strlen(password) + 1 : 0;
 
@@ -525,23 +533,26 @@ static struct option long_options[] = {
     {"password", required_argument, NULL, 'p'},
     {"delegate_password", required_argument, NULL, 'd'},
     {"auth_token", required_argument, NULL, 'a'},
-    {"prompt", no_argument, NULL, 'u'},
     {"flags", required_argument, NULL, 'f'},
+    {"custom_path", required_argument, NULL, 'h'},
+    {"yubikey", no_argument, NULL, 'z'},
     {NULL, 0, NULL, 0}
 };
 
 static void print_usage()
 {
-    printf("Usage: such -c <cmd> (-o <account>) (-l <change_level>) (-i <address_index>) (-m <message>) (-t <transaction>) \
-(-n <mnemonic_input>) (-s <shared_secret>) (-e <entropy_size>) (-a <auth_token>) (-p/-d <password/delegate_password> or -u <for prompt>) (-f <flags>)\n");
+    printf("Usage: optee_libdogecoin -c <cmd> (-o|-account_int <account_int>) (-i|-input_index <input index>) (-l|-change_level <change level>) \
+(-m|-message <message>) (-t|-transaction <transaction>) (-n|-mnemonic_input <mnemonic input>) (-s|-shared_secret <shared secret>) \
+(-e|-entropy_size <entropy size>) (-a|-auth_token <auth token>) (-p|-password <password>) (-d|-delegate_password <delegate password>) \
+(-h|custom_path <custom_path>) (-f|flags <flags>) (-z|yubikey)\n");
     printf("Available commands:\n");
-    printf("  generate_mnemonic (optional -n <mnemonic_input> -s <shared_secret> -e <entropy_size> -p <password> or -u <for prompt> -f <flags>)\n");
-    printf("  generate_address (requires -o <account> -l <change_level> -i <address_index>, optional -a <auth_token> -p <password> or -u <for prompt>)\n");
-    printf("  generate_extended_public_key (requires -o <account> -l <change_level>, optional -a <auth_token> -p <password> or -u <for prompt>)\n");
-    printf("  sign_message (requires -o <account> -l <change_level> -i <address_index> -m <message>, optional -a <auth_token> -p <password> or -u <for prompt>)\n");
-    printf("  sign_transaction (requires -o <account> -l <change_level> -i <address_index> -t <transaction>, optional -a <auth_token> -p <password> or -u <for prompt>)\n");
-    printf("  delegate_key (requires -o <account> -d <delegate_password> or -u <for prompt>, optional -a <auth_token> -p <password>)\n");
-    printf("  export_delegate_key (requires -o <account> -d <delegate_password> or -u <for prompt>)\n");
+    printf("  generate_mnemonic (optional -n <mnemonic_input> -s <shared_secret> -e <entropy_size> -p <password> -f <flags>)\n");
+    printf("  generate_extended_public_key (requires -o <account> -l <change_level>, optional -h <custom_path> -a <auth_token> -p <password> -z)\n");
+    printf("  generate_address (requires -o <account> -l <change_level> -i <address_index>, optional -h <custom_path> -a <auth_token> -p <password> -z)\n");
+    printf("  sign_message (requires -o <account> -l <change_level> -i <address_index> -m <message>, optional -h <custom_path> -a <auth_token> -p <password> -z)\n");
+    printf("  sign_transaction (requires -o <account> -l <change_level> -i <address_index> -t <transaction>, optional -h <custom_path> -a <auth_token> -p <password> -z)\n");
+    printf("  delegate_key (requires -o <account> -d <delegate_password>, optional -h <custom_path> -a <auth_token> -p <password> -z)\n");
+    printf("  export_delegate_key (requires -o <account> -d <delegate_password>, optional -h <custom_path>)\n");
 }
 
 #define TIME_STEP 30
@@ -648,6 +659,7 @@ int main(int argc, const char* argv[])
     int long_index = 0;
     char* cmd = 0;
     uint32_t auth_token = 0;
+    const char* custom_path = NULL;
     const char* account = NULL;
     const char* address_index = NULL;
     const char* change_level = NULL;
@@ -658,10 +670,10 @@ int main(int argc, const char* argv[])
     char* mnemonic = NULL;
     char* entropy_size = NULL;
     char* delegate_password = NULL;
-    dogecoin_bool prompt = false;
+    dogecoin_bool yubikey = false;
     char* flags = "";
 
-    while ((opt = getopt_long_only(argc, argv, "c:o:l:i:m:t:n:s:e:p:d:a:f:u", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "c:o:l:i:m:t:n:s:e:p:d:a:f:h:z", long_options, &long_index)) != -1) {
         switch (opt) {
             case 'c':
                 cmd = optarg;
@@ -693,9 +705,6 @@ int main(int argc, const char* argv[])
             case 'd':
                 delegate_password = optarg;
                 break;
-            case 'u':
-                prompt = true;
-                break;
             case 'e':
                 entropy_size = optarg;
                 break;
@@ -704,6 +713,12 @@ int main(int argc, const char* argv[])
                 break;
             case 'f':
                 flags = optarg;
+                break;
+            case 'h':
+                custom_path = optarg;
+                break;
+            case 'z':
+                yubikey = true;
                 break;
             default:
                 print_usage();
@@ -720,13 +735,14 @@ int main(int argc, const char* argv[])
     printf("Prepare session with the TA\n");
     prepare_tee_session(&ctx);
 
-    if (!yk_init()) {
+    YK_KEY *yk = NULL;
+    if (!yk_init() && yubikey) {
         fprintf(stderr, "Failed to initialize YubiKey\n");
-    }
-
-    YK_KEY *yk = yk_open_first_key();
-    if (!yk) {
-        fprintf(stderr, "Failed to open YubiKey\n");
+    } else if (yubikey) {
+        yk = yk_open_first_key();
+        if (!yk) {
+            fprintf(stderr, "Failed to open YubiKey\n");
+        }
     }
 
     if (strcmp(cmd, "generate_seed") == 0) {
@@ -746,46 +762,71 @@ int main(int argc, const char* argv[])
     } else if (strcmp(cmd, "generate_mnemonic") == 0) {
         printf("- Generate and encrypt a mnemonic\n");
 
-        if (!shared_secret) {
-            shared_secret = getpass("Enter shared secret (hex, 40 characters): ");
+        if (yubikey) {
             if (!shared_secret) {
-                fprintf(stderr, "Failed to read shared secret\n");
+                shared_secret = getpass("Enter shared secret for TOTP (hex, 40 characters) or press enter to generate one: ");
+                if (!shared_secret) {
+                    fprintf(stderr, "Failed to read shared secret\n");
+                 goto exit;
+                }
+            }
+
+            if (strlen(shared_secret) == 0) {
+                printf("Shared secret not provided, generating one...\n");
+                // Generate random 20 bytes (40 hex characters)
+                unsigned char random_bytes[TOTP_SECRET_HEX_SIZE / 2];
+                dogecoin_random_bytes(random_bytes, sizeof(random_bytes), 0);
+
+                shared_secret = malloc(TOTP_SECRET_HEX_SIZE + 1);
+                if (!shared_secret) {
+                    fprintf(stderr, "Failed to allocate memory for shared secret\n");
+                    goto exit;
+                }
+
+                utils_bin_to_hex(random_bytes, sizeof(random_bytes), shared_secret);
+                shared_secret[TOTP_SECRET_HEX_SIZE] = '\0';
+                printf("Generated shared secret: %s\n", shared_secret);
+            }
+
+            // Check if there is an existing configuration in slot 1
+            YK_STATUS *status = ykds_alloc();
+            if (yk) {
+                if (!yk_get_status(yk, status)) {
+                    fprintf(stderr, "Failed to get YubiKey status\n");
+                }
+            }
+
+            // Check if slot 1 has a configuration
+            if (yk && (ykds_touch_level(status) & CONFIG1_VALID) == CONFIG1_VALID) {
+                char response;
+                printf("Slot 1 already has a configuration. Do you want to overwrite it? (y/N): ");
+                scanf(" %c", &response);
+                if (response != 'y' && response != 'Y') {
+                    printf("Aborted by user\n");
+                    ykds_free(status);
+                    goto exit;
+                }
+            }
+
+            ykds_free(status);
+
+            if (yk) {
+                set_totp_secret(yk, shared_secret, SLOT_CONFIG);
+            }
+        }
+
+        if (!password && !shared_secret) {
+            password = getpass("Enter management password: ");
+            if (strlen(password) == 0) {
+                fprintf(stderr, "Password cannot be empty\n");
                 goto exit;
             }
-        }
-
-        if (!password && prompt) {
-            password = getpass("Enter management password (or press enter for none): ");
-            if (!password) {
-                fprintf(stderr, "Failed to read password\n");
+            printf("\n");
+            if (strcmp (password, getpass("Confirm password: ")) != 0) {
+                fprintf(stderr, "Password mismatch\n");
                 goto exit;
             }
-        }
-
-        // Check if there is an existing configuration in slot 1
-        YK_STATUS *status = ykds_alloc();
-        if (yk) {
-            if (!yk_get_status(yk, status)) {
-                fprintf(stderr, "Failed to get YubiKey status\n");
-            }
-        }
-
-        // Check if slot 1 has a configuration
-        if (yk && (ykds_touch_level(status) & CONFIG1_VALID) == CONFIG1_VALID) {
-            char response;
-            printf("Slot 1 already has a configuration. Do you want to overwrite it? (y/N): ");
-            scanf(" %c", &response);
-            if (response != 'y' && response != 'Y') {
-                printf("Aborted by user\n");
-                ykds_free(status);
-                goto exit;
-            }
-        }
-
-        ykds_free(status);
-
-        if (yk) {
-            set_totp_secret(yk, shared_secret, SLOT_CONFIG);
+            printf("\n");
         }
 
         TEEC_Result res = generate_mnemonic(&ctx, shared_secret, password, flags, mnemonic, entropy_size);
@@ -796,20 +837,20 @@ int main(int argc, const char* argv[])
         char address[35];
         size_t address_len = sizeof(address);
 
-        if (!password && prompt) {
-            password = getpass("Enter management password (or press enter for none): ");
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
             if (!password) {
                 fprintf(stderr, "Failed to read password\n");
                 goto exit;
             }
         }
 
-        if (auth_token == 0) {
+        if (auth_token == 0 && yubikey) {
             auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
         }
         printf("Auth token: %u\n", auth_token);
 
-        TEEC_Result res = generate_address_ta(&ctx, account, address_index, change_level, auth_token, password, address, &address_len);
+        TEEC_Result res = generate_address_ta(&ctx, custom_path, account, address_index, change_level, auth_token, password, address, &address_len);
         if (res != TEEC_SUCCESS)
             errx(1, "Failed to generate address");
         else
@@ -819,20 +860,20 @@ int main(int argc, const char* argv[])
         char pubkey[HDKEYLEN];
         size_t pubkey_len = sizeof(pubkey);
 
-        if (!password && prompt) {
-            password = getpass("Enter management password (or press enter for none): ");
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
             if (!password) {
                 fprintf(stderr, "Failed to read password\n");
                 goto exit;
             }
         }
 
-        if (auth_token == 0) {
+        if (auth_token == 0 && yubikey) {
             auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
         }
         printf("Auth token: %u\n", auth_token);
 
-        TEEC_Result res = generate_extended_public_key_ta(&ctx, account, change_level, auth_token, password, pubkey, &pubkey_len);
+        TEEC_Result res = generate_extended_public_key_ta(&ctx, custom_path, account, change_level, auth_token, password, pubkey, &pubkey_len);
         if (res != TEEC_SUCCESS)
             errx(1, "Failed to generate public extended key");
         else
@@ -842,20 +883,20 @@ int main(int argc, const char* argv[])
         char signature[2048] = {0};
         size_t signature_len = sizeof(signature);
 
-        if (!password && prompt) {
-            password = getpass("Enter management password (or press enter for none): ");
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
             if (!password) {
                 fprintf(stderr, "Failed to read password\n");
                 goto exit;
             }
         }
 
-        if (auth_token == 0) {
+        if (auth_token == 0 && yubikey) {
             auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
         }
         printf("Auth token: %u\n", auth_token);
 
-        TEEC_Result res = sign_message_ta(&ctx, account, address_index, change_level, auth_token, password, message ? message : "This is a test message.", signature, &signature_len);
+        TEEC_Result res = sign_message_ta(&ctx, custom_path, account, address_index, change_level, auth_token, password, message ? message : "This is a test message", signature, &signature_len);
         if (res != TEEC_SUCCESS)
             errx(1, "Failed to sign the message");
         else
@@ -909,20 +950,20 @@ int main(int argc, const char* argv[])
         printf("Raw transaction created: %s\n", raw_tx);
         printf("Raw transaction length: %zu\n", strlen(raw_tx));
 
-        if (!password && prompt) {
-            password = getpass("Enter management password (or press enter for none): ");
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
             if (!password) {
                 fprintf(stderr, "Failed to read password\n");
                 goto exit;
             }
         }
 
-        if (auth_token == 0) {
+        if (auth_token == 0 && yubikey) {
             auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
         }
         printf("Auth token: %u\n", auth_token);
 
-        TEEC_Result res = sign_transaction_ta(&ctx, account, address_index, change_level, auth_token, password, (transaction != NULL) ? transaction : raw_tx, strlen((transaction != NULL) ? transaction : raw_tx) + 1, signed_tx, &signed_tx_len);
+        TEEC_Result res = sign_transaction_ta(&ctx, custom_path, account, address_index, change_level, auth_token, password, (transaction != NULL) ? transaction : raw_tx, strlen((transaction != NULL) ? transaction : raw_tx) + 1, signed_tx, &signed_tx_len);
         if (res != TEEC_SUCCESS)
             errx(1, "Failed to sign the transaction");
         else
@@ -931,7 +972,7 @@ int main(int argc, const char* argv[])
         printf("- Delegate a key\n");
         char delegate_key[HDKEYLEN];
 
-        if (!delegate_password && prompt) {
+        if (!delegate_password) {
             delegate_password = getpass("Enter delegate password: ");
             if (!delegate_password) {
                 fprintf(stderr, "Failed to read delegate password\n");
@@ -939,20 +980,20 @@ int main(int argc, const char* argv[])
             }
         }
 
-        if (!password && prompt) {
-            password = getpass("Enter management password (or press enter for none): ");
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
             if (!password) {
                 fprintf(stderr, "Failed to read password\n");
                 goto exit;
             }
         }
 
-        if (auth_token == 0) {
+        if (auth_token == 0 && yubikey) {
             auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
         }
         printf("Auth token: %u\n", auth_token);
 
-        TEEC_Result res = delegate_key_ta(&ctx, account, auth_token, delegate_password, password, delegate_key);
+        TEEC_Result res = delegate_key_ta(&ctx, custom_path, account, auth_token, delegate_password, password, delegate_key);
         if (res != TEEC_SUCCESS)
             errx(1, "Failed to delegate the key");
         else
@@ -961,7 +1002,7 @@ int main(int argc, const char* argv[])
         printf("- Export a delegated key\n");
         char exported_key[HDKEYLEN];
 
-        if (!delegate_password && prompt) {
+        if (!delegate_password) {
             delegate_password = getpass("Enter delegate password: ");
             if (!delegate_password) {
                 fprintf(stderr, "Failed to read delegate password\n");
@@ -969,7 +1010,7 @@ int main(int argc, const char* argv[])
             }
         }
 
-        TEEC_Result res = export_delegate_key_ta(&ctx, account, delegate_password, exported_key);
+        TEEC_Result res = export_delegate_key_ta(&ctx, custom_path, account, delegate_password, exported_key);
         if (res != TEEC_SUCCESS)
             errx(1, "Failed to export the delegated key");
         else
