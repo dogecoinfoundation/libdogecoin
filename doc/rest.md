@@ -12,6 +12,7 @@
     - [GET /getWallet](#get-getwallet)
     - [GET /getHeaders](#get-getheaders)
     - [GET /getChaintip](#get-getchaintip)
+    - [GET /getTimestamp](#get-gettimestamp)
 
 ## Abstract
 
@@ -286,6 +287,40 @@ curl http://localhost:<port>/getChaintip
 
 ```
 Chain tip: 3500000
+```
+
+---
+
+## GET **/getTimestamp**
+
+Retrieves the current timestamp of the SPV node.
+
+#### **Request**
+
+- **Method:** `GET`
+- **URL:** `/getTimestamp`
+
+#### **Response**
+
+- **Content-Type:** `text/plain`
+- **Body:**
+
+  ```
+  Timestamp: <timestamp>
+  ```
+
+  Where `<timestamp>` is the current date and local time of the SPV node.
+
+#### **Example**
+
+  ```bash
+  curl http://localhost:<port>/getTimestamp
+  ```
+
+#### **Sample Response**
+
+```
+2024-10-26 15:30:00
 ```
 
 ---

@@ -33,6 +33,7 @@
 #include <dogecoin/spv.h>
 #include <dogecoin/wallet.h>
 
+#define TIMESTAMP_MAX_LEN 32
 
 /**
  * This function is called when an http request is received
@@ -151,7 +152,7 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
             return;
         }
         size_t result = fread(buffer, 1, file_size, file);
-        if (result != file_size) {
+        if (result != (size_t)file_size) {
             free(buffer);
             evbuffer_free(evb);
             evhttp_send_error(req, HTTP_INTERNAL, "Failed to read wallet file");
@@ -189,7 +190,7 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
             return;
         }
         size_t result = fread(buffer, 1, file_size, file);
-        if (result != file_size) {
+        if (result !=  (size_t)file_size) {
             free(buffer);
             evbuffer_free(evb);
             evhttp_send_error(req, HTTP_INTERNAL, "Failed to read headers file");
@@ -207,6 +208,13 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
     } else if (strcmp(path, "/getChaintip") == 0) {
         dogecoin_blockindex* tip = client->headers_db->getchaintip(client->headers_db_ctx);
         evbuffer_add_printf(evb, "Chain tip: %d\n", tip->height);
+    } else if (strcmp(path, "/getTimestamp") == 0) {
+        dogecoin_blockindex* tip = client->headers_db->getchaintip(client->headers_db_ctx);
+        char s[TIMESTAMP_MAX_LEN];
+        time_t t = tip->header.timestamp;
+        struct tm *p = localtime(&t);
+        strftime(s, sizeof(s), "%F %T", p);
+        evbuffer_add_printf(evb, "%s\n", s);
     } else {
         evhttp_send_error(req, HTTP_NOTFOUND, "Not Found");
         evbuffer_free(evb);
