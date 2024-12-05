@@ -215,6 +215,14 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
         struct tm *p = localtime(&t);
         strftime(s, sizeof(s), "%F %T", p);
         evbuffer_add_printf(evb, "%s\n", s);
+    } else if (strcmp(path, "/getLastBlockInfo") == 0) {
+        uint64_t size = client->last_block_size;
+        uint64_t tx_count = client->last_block_tx_count;
+        uint64_t total_tx_size = client->last_block_total_tx_size;
+
+        evbuffer_add_printf(evb, "Block size: %lu\n", size);
+        evbuffer_add_printf(evb, "Tx count: %lu\n", tx_count);
+        evbuffer_add_printf(evb, "Total tx size: %lu\n", total_tx_size);
     } else {
         evhttp_send_error(req, HTTP_NOTFOUND, "Not Found");
         evbuffer_free(evb);

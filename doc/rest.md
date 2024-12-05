@@ -13,14 +13,13 @@
     - [GET /getHeaders](#get-getheaders)
     - [GET /getChaintip](#get-getchaintip)
     - [GET /getTimestamp](#get-gettimestamp)
+    - [GET /getLastBlockInfo](#get-getlastblockinfo)
 
 ## Abstract
 
 This document describes the REST API endpoints exposed by the Libdogecoin SPV node. The API provides access to wallet information, such as balance, addresses, transactions, UTXOs, as well as wallet and blockchain data like wallet files, headers, and the chain tip. The API is designed to facilitate interaction with the Libdogecoin SPV node programmatically.
 
 ## Endpoints
-
----
 
 ### GET **/getBalance**
 
@@ -291,7 +290,7 @@ Chain tip: 3500000
 
 ---
 
-## GET **/getTimestamp**
+### GET **/getTimestamp**
 
 Retrieves the current timestamp of the SPV node.
 
@@ -321,6 +320,49 @@ Retrieves the current timestamp of the SPV node.
 
 ```
 2024-10-26 15:30:00
+```
+
+---
+
+### GET **/getLastBlockInfo**
+
+Retrieves information about the last block processed by the SPV node.
+
+#### **Request**
+
+- **Method:** `GET`
+
+- **URL:** `/getLastBlockInfo`
+
+#### **Response**
+
+- **Content-Type:** `text/plain`
+
+- **Body:**
+
+  ```
+  Block size: <last_block_size>
+  Tx count: <last_block_tx_count>
+  Total tx size: <last_block_total_tx_size>
+  ```
+
+  Where:
+  - `<last_block_size>` is the size of the last block in bytes.
+  - `<last_block_tx_count>` is the number of transactions in the last block.
+  - `<last_block_total_tx_size>` is the total size of transactions in the last block.
+
+#### **Example**
+
+```bash
+curl http://localhost:<port>/getLastBlockInfo
+```
+
+#### **Sample Response**
+
+```
+Block size: 4130
+Tx count: 11
+Total tx size: 3355
 ```
 
 ---
