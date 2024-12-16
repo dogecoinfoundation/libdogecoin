@@ -740,6 +740,8 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
                         memcpy_safe(utxo->address, p2pkh_from_script_pubkey, P2PKHLEN);
                         // set amount of utxo:
                         koinu_to_coins_str(tx_out->value, utxo->amount);
+                        // set the height of the utxo:
+                        utxo->height = wtx->height;
                         // finally add utxo to rbtree:
                         dogecoin_btree_tfind(utxo, &wallet->unspent_rbtree, dogecoin_utxo_compare);
                         add_dogecoin_utxo(utxo);
@@ -749,8 +751,18 @@ void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx) {
             vector_free(addrs, true);
         }
     }
+
+    // update the wallet with the new utxos:
+    wallet->utxos = utxos;
 }
 
+void dogecoin_wallet_utxos_update_confirmations(int height) {
+    dogecoin_utxo* utxo;
+    dogecoin_utxo* tmp;
+    HASH_ITER(hh, utxos, utxo, tmp) {
+        utxo->confirmations = height - utxo->height + 1;
+    }
+}
 void dogecoin_wallet_add_wtx_intern_move(dogecoin_wallet *wallet, const dogecoin_wtx *wtx) {
     // check if wtx already exists
     dogecoin_wtx* checkwtx = dogecoin_btree_tfind(wtx, &wallet->wtxes_rbtree, dogecoin_wtx_compare);
@@ -991,8 +1003,6 @@ dogecoin_bool dogecoin_wallet_load(dogecoin_wallet* wallet, const char* file_pat
             }
         }
     }
-
-    wallet->utxos = utxos;
 
     return true;
 }
@@ -1519,6 +1529,7 @@ void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *tx, unsigned int 
         dogecoin_wallet_scrape_utxos(wallet, wtx);
         dogecoin_wallet_add_wtx_move(wallet, wtx);
     }
+    dogecoin_wallet_utxos_update_confirmations(pindex->height);
 }
 
 dogecoin_wallet* dogecoin_wallet_read(char* address) {
