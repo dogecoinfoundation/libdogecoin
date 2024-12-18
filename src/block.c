@@ -72,6 +72,13 @@ dogecoin_bool check(void *ctx, uint256_t* hash, uint32_t chainid, dogecoin_chain
     uint256_t* chain_merkle_root = check_merkle_branch(hash, chain_merkle_branch, block->aux_merkle_index);
     vector_free(chain_merkle_branch, true);
 
+    // Check that there is at least one input in the parent coinbase transaction
+    if (block->parent_coinbase->vin->len == 0) {
+        printf("Aux POW coinbase has no inputs\n");
+        dogecoin_free(chain_merkle_root);
+        return false;
+    }
+
     // Convert the root hash to a human-readable format (hex)
     unsigned char vch_roothash[64]; // Make sure it's large enough to hold the hash
     memcpy(vch_roothash, hash_to_string((uint8_t*)chain_merkle_root), 64); // Copy the data
