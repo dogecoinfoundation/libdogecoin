@@ -198,13 +198,22 @@ void test_net_basics_plus_download_block()
 {
 
     vector *ips = vector_new(10, free);
-    const dogecoin_dns_seed seed = dogecoin_chainparams_test.dnsseeds[0];
-
-    dogecoin_get_peers_from_dns(seed.domain, ips, dogecoin_chainparams_test.default_port, AF_INET);
-    unsigned int i;
-    for (i = 0; i < ips->len; i++)
-    {
-        debug_print("dns seed ip %d: %s\n", i, (char *)vector_idx(ips, i));
+    unsigned int seed_index;
+    /* dogecoin_chainparams has up to 8 dns seeds */
+    for (seed_index = 0; seed_index < 8; seed_index++) {
+        const dogecoin_dns_seed seed = dogecoin_chainparams_test.dnsseeds[seed_index];
+        if (strlen(seed.domain) == 0) {
+            continue;
+        }
+        dogecoin_get_peers_from_dns(seed.domain, ips, dogecoin_chainparams_test.default_port, AF_INET);
+        unsigned int i;
+        for (i = 0; i < ips->len; i++) {
+            debug_print("dns seed ip %d: %s\n", i, (char *)vector_idx(ips, i));
+        }
+        /* exit if we get peers from a seed */
+        if (ips->len > 0) {
+            break;
+        }
     }
     vector_free(ips, true);
 
