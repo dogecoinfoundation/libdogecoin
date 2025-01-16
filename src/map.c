@@ -33,8 +33,8 @@
 /**
  * @brief This function instantiates a new working hash,
  * but does not add it to the hash table.
- * 
- * @return A pointer to the new working hash. 
+ *
+ * @return A pointer to the new working hash.
  */
 hash* new_hash() {
     hash* h = (struct hash*)dogecoin_calloc(1, sizeof *h);
@@ -47,9 +47,9 @@ hash* new_hash() {
 /**
  * @brief This function takes a pointer to an existing working
  * hash object and adds it to the hash table.
- * 
+ *
  * @param map The pointer to the working hash.
- * 
+ *
  * @return Nothing.
  */
 void add_hash(hash *x) {
@@ -67,7 +67,7 @@ void add_hash(hash *x) {
  * @brief This function creates a new map, places it in
  * the hash table, and returns the index of the new map,
  * starting from 1 and incrementing each subsequent call.
- * 
+ *
  * @return The index of the new map.
  */
 int start_hash() {
@@ -79,9 +79,9 @@ int start_hash() {
 /**
  * @brief This function takes an index and returns the working
  * hash associated with that index in the hash table.
- * 
+ *
  * @param index The index of the target working hash.
- * 
+ *
  * @return The pointer to the working hash associated with
  * the provided index.
  */
@@ -93,7 +93,7 @@ hash* find_hash(int index) {
 
 hash* zero_hash(int index) {
     hash* hash = find_hash(index);
-    dogecoin_mem_zero(hash->data.u8, sizeof(uint256));
+    dogecoin_mem_zero(hash->data.u8, sizeof(uint256_t));
     return hash;
 }
 
@@ -113,8 +113,8 @@ void print_hash(int index) {
 /**
  * @brief This function counts the number of working
  * hashes currently in the hash table.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 void count_hashes() {
     int temp = HASH_COUNT(hashes);
@@ -129,9 +129,9 @@ char* get_hash_by_index(int index) {
 /**
  * @brief This function removes the specified working hash
  * from the hash table and frees the hashes in memory.
- * 
+ *
  * @param map The pointer to the hash to remove.
- * 
+ *
  * @return Nothing.
  */
 void remove_hash(hash *hash) {
@@ -143,8 +143,8 @@ void remove_hash(hash *hash) {
 /**
  * @brief This function removes all working hashes from
  * the hash table.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 void remove_all_hashes() {
     struct hash *hash;
@@ -158,8 +158,8 @@ void remove_all_hashes() {
 /**
  * @brief This function instantiates a new working map,
  * but does not add it to the hash table.
- * 
- * @return A pointer to the new working map. 
+ *
+ * @return A pointer to the new working map.
  */
 map* new_map() {
     map* m = (struct map*)dogecoin_calloc(1, sizeof *m);
@@ -174,7 +174,7 @@ map* new_map() {
  * @brief This function creates a new map, places it in
  * the hash table, and returns the index of the new map,
  * starting from 1 and incrementing each subsequent call.
- * 
+ *
  * @return The index of the new map.
  */
 int start_map() {
@@ -186,9 +186,9 @@ int start_map() {
 /**
  * @brief This function takes a pointer to an existing working
  * map object and adds it to the hash table.
- * 
+ *
  * @param map The pointer to the working map.
- * 
+ *
  * @return Nothing.
  */
 void add_map(map* map_external) {
@@ -205,9 +205,9 @@ void add_map(map* map_external) {
 /**
  * @brief This function takes an index and returns the working
  * map associated with that index in the hash table.
- * 
+ *
  * @param index The index of the target working map.
- * 
+ *
  * @return The pointer to the working map associated with
  * the provided index.
  */
@@ -220,9 +220,9 @@ map* find_map(int index) {
 /**
  * @brief This function removes the specified working map
  * from the hash table and frees the maps in memory.
- * 
+ *
  * @param map The pointer to the map to remove.
- * 
+ *
  * @return Nothing.
  */
 void remove_map(map *map) {
@@ -233,8 +233,8 @@ void remove_map(map *map) {
 /**
  * @brief This function removes all working maps from
  * the hash table.
- * 
- * @return Nothing. 
+ *
+ * @return Nothing.
  */
 void remove_all_maps() {
     struct map *map;

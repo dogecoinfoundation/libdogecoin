@@ -33,30 +33,30 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-typedef struct vector {
+typedef struct vector_t {
     void** data;  /* array of pointers */
     size_t len;   /* array element count */
     size_t alloc; /* allocated array elements */
 
     void (*elem_free_f)(void*);
-} vector;
+} vector_t;
 
 #define vector_idx(vec, idx) vec->data[idx]
 
-LIBDOGECOIN_API vector* vector_new(size_t res, void (*free_f)(void*));
-LIBDOGECOIN_API void vector_free(vector* vec, dogecoin_bool free_array);
+LIBDOGECOIN_API vector_t* vector_new(size_t res, void (*free_f)(void*));
+LIBDOGECOIN_API void vector_free(vector_t* vec, dogecoin_bool free_array);
 
-LIBDOGECOIN_API dogecoin_bool vector_add(vector* vec, void* data);
-LIBDOGECOIN_API dogecoin_bool vector_remove(vector* vec, void* data);
-LIBDOGECOIN_API void vector_remove_idx(vector* vec, size_t idx);
-LIBDOGECOIN_API void vector_remove_range(vector* vec, size_t idx, size_t len);
-LIBDOGECOIN_API dogecoin_bool vector_resize(vector* vec, size_t newsz);
+LIBDOGECOIN_API dogecoin_bool vector_add(vector_t* vec, void* data);
+LIBDOGECOIN_API dogecoin_bool vector_remove(vector_t* vec, void* data);
+LIBDOGECOIN_API void vector_remove_idx(vector_t* vec, size_t idx);
+LIBDOGECOIN_API void vector_remove_range(vector_t* vec, size_t idx, size_t len);
+LIBDOGECOIN_API dogecoin_bool vector_resize(vector_t* vec, size_t newsz);
 
-LIBDOGECOIN_API ssize_t vector_find(vector* vec, void* data);
+LIBDOGECOIN_API ssize_t vector_find(vector_t* vec, void* data);
 
 /* serialization functions */
-LIBDOGECOIN_API dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* written);
-LIBDOGECOIN_API dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_t* read);
+LIBDOGECOIN_API dogecoin_bool serializeVector(vector_t* vec, char* out, size_t outlen, size_t* written);
+LIBDOGECOIN_API dogecoin_bool deserializeVector(vector_t* vec, const char* in, size_t inlen, size_t* read);
 
 LIBDOGECOIN_END_DECL
 

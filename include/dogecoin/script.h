@@ -24,7 +24,7 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- 
+
 */
 
 #ifndef __LIBDOGECOIN_SCRIPT_H__
@@ -219,19 +219,19 @@ dogecoin_bool dogecoin_script_copy_without_op_codeseperator(const cstring* scrip
 LIBDOGECOIN_API dogecoin_script_op* dogecoin_script_op_new();
 LIBDOGECOIN_API void dogecoin_script_op_free(dogecoin_script_op* script_op);
 void dogecoin_script_op_free_cb(void* data);
-dogecoin_bool dogecoin_script_get_ops(const cstring* script_in, vector* ops_out);
+dogecoin_bool dogecoin_script_get_ops(const cstring* script_in, vector_t* ops_out);
 
-LIBDOGECOIN_API enum dogecoin_tx_out_type dogecoin_script_classify_ops(const vector* ops);
-LIBDOGECOIN_API enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector* data_out);
+LIBDOGECOIN_API enum dogecoin_tx_out_type dogecoin_script_classify_ops(const vector_t* ops);
+LIBDOGECOIN_API enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector_t* data_out);
 
 LIBDOGECOIN_API enum opcodetype dogecoin_encode_op_n(const int n);
 LIBDOGECOIN_API void dogecoin_script_append_op(cstring* script_in, enum opcodetype op);
 LIBDOGECOIN_API void dogecoin_script_append_pushdata(cstring* script_in, const unsigned char* data, const size_t datalen);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_multisig(cstring* script_in, const unsigned int required_signatures, const vector* pubkeys_chars);
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2pkh(cstring* script, const uint160 hash160);
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160 hash160);
-LIBDOGECOIN_API dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160 scripthash);
+LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_multisig(cstring* script_in, const unsigned int required_signatures, const vector_t* pubkeys_chars);
+LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2pkh(cstring* script, const uint160_t hash160);
+LIBDOGECOIN_API dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160_t hash160);
+LIBDOGECOIN_API dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160_t scripthash);
 
 LIBDOGECOIN_API const char* dogecoin_tx_out_type_to_str(const enum dogecoin_tx_out_type type);
 

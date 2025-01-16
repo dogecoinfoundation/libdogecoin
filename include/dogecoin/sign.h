@@ -1,6 +1,6 @@
 /*
  The MIT License (MIT)
- 
+
  Copyright (c) 2023 bluezr, edtubbs
  Copyright (c) 2023 The Dogecoin Foundation
 
@@ -30,7 +30,7 @@
 LIBDOGECOIN_BEGIN_DECL
 
 /* double sha256 hash a message */
-LIBDOGECOIN_API void hash_message(char* msg, uint256 message_bytes);
+LIBDOGECOIN_API void hash_message(char* msg, uint256_t message_bytes);
 
 /* sign a message with a private key */
 LIBDOGECOIN_API char* sign_message(char* privkey, char* msg);

@@ -31,17 +31,17 @@
 
 
 /**
- * @brief This function creates a new vector object
+ * @brief This function creates a new vector_t object
  * and initializes it to 0.
  *
- * @param res The size of memory to allocate for the vector's contents.
- * @param free_f The function that will be called when a vector element is freed.
+ * @param res The size of memory to allocate for the vector_t's contents.
+ * @param free_f The function that will be called when a vector_t element is freed.
  *
- * @return A pointer to the new vector object.
+ * @return A pointer to the new vector_t object.
  */
-vector* vector_new(size_t res, void (*free_f)(void*))
+vector_t* vector_new(size_t res, void (*free_f)(void*))
 {
-    vector* vec = dogecoin_calloc(1, sizeof(vector));
+    vector_t* vec = dogecoin_calloc(1, sizeof(vector_t));
     if (!vec)
         return NULL;
 
@@ -61,16 +61,16 @@ vector* vector_new(size_t res, void (*free_f)(void*))
 
 
 /**
- * @brief This function frees all of a vector's elements,
+ * @brief This function frees all of a vector_t's elements,
  * calling the function associated with its free operation
- * set during vector creation. The vector object itself
+ * set during vector_t creation. The vector_t object itself
  * is not freed.
  *
- * @param vec The pointer to the vector to be freed.
+ * @param vec The pointer to the vector_t to be freed.
  *
  * @return Nothing.
  */
-static void vector_free_data(vector* vec)
+static void vector_free_data(vector_t* vec)
 {
     if (!vec->data)
         return;
@@ -92,15 +92,15 @@ static void vector_free_data(vector* vec)
 
 
 /**
- * @brief This function frees an entire vector
+ * @brief This function frees an entire vector_t
  * object and all of its elements if specified.
  *
- * @param vec The pointer to the vector to be freed.
- * @param free_array The flag denoting whether to free the vector's elements.
+ * @param vec The pointer to the vector_t to be freed.
+ * @param free_array The flag denoting whether to free the vector_t's elements.
  *
  * @return Nothing.
  */
-void vector_free(vector* vec, dogecoin_bool free_array)
+void vector_free(vector_t* vec, dogecoin_bool free_array)
 {
     if (!vec) {
         return;
@@ -116,15 +116,15 @@ void vector_free(vector* vec, dogecoin_bool free_array)
 
 
 /**
- * @brief This function grows the vector by doubling
+ * @brief This function grows the vector_t by doubling
  * in size until it is larger than the size specified.
  *
- * @param vec The pointer to the vector to be grown.
- * @param min_sz The minimum size the vector must be grown to.
+ * @param vec The pointer to the vector_t to be grown.
+ * @param min_sz The minimum size the vector_t must be grown to.
  *
- * @return 1 if the vector is grown successfully, 0 if it reaches the max size allowed.
+ * @return 1 if the vector_t is grown successfully, 0 if it reaches the max size allowed.
  */
-static dogecoin_bool vector_grow(vector* vec, size_t min_sz)
+static dogecoin_bool vector_grow(vector_t* vec, size_t min_sz)
 {
     size_t new_alloc = vec->alloc;
     while (new_alloc < min_sz) {
@@ -148,14 +148,14 @@ static dogecoin_bool vector_grow(vector* vec, size_t min_sz)
 
 /**
  * @brief This function finds and returns the first element
- * in the vector whose data matches the data specified.
+ * in the vector_t whose data matches the data specified.
  *
- * @param vec The pointer to the vector to search.
+ * @param vec The pointer to the vector_t to search.
  * @param data The data to match.
  *
- * @return The index of the data if it exists in the vector, -1 otherwise.
+ * @return The index of the data if it exists in the vector_t, -1 otherwise.
  */
-ssize_t vector_find(vector* vec, void* data)
+ssize_t vector_find(vector_t* vec, void* data)
 {
     if (vec && vec->len) {
         size_t i;
@@ -172,14 +172,14 @@ ssize_t vector_find(vector* vec, void* data)
 
 /**
  * @brief This function adds an element to an existing
- * vector, growing it by one if necessary.
+ * vector_t, growing it by one if necessary.
  *
- * @param vec The pointer to the vector to add to.
- * @param data The data to be added into the vector.
+ * @param vec The pointer to the vector_t to add to.
+ * @param data The data to be added into the vector_t.
  *
  * @return 1 if the element was added successfully, 0 otherwise.
  */
-dogecoin_bool vector_add(vector* vec, void* data)
+dogecoin_bool vector_add(vector_t* vec, void* data)
 {
     if (vec->len == vec->alloc) {
         if (!vector_grow(vec, vec->len + 1)) {
@@ -195,15 +195,15 @@ dogecoin_bool vector_add(vector* vec, void* data)
 
 /**
  * @brief This function deletes a range of consecutive
- * elements from the specified vector.
+ * elements from the specified vector_t.
  *
- * @param vec The pointer to the vector to edit.
+ * @param vec The pointer to the vector_t to edit.
  * @param pos The index of the first item to remove.
  * @param len The number of consecutive elements to remove.
  *
  * @return Nothing.
  */
-void vector_remove_range(vector* vec, size_t pos, size_t len)
+void vector_remove_range(vector_t* vec, size_t pos, size_t len)
 {
     if (!vec || ((pos + len) > vec->len)) {
         return;
@@ -223,12 +223,12 @@ void vector_remove_range(vector* vec, size_t pos, size_t len)
 
 /**
  * @brief This function removes a single element from
- * the specified vector.
+ * the specified vector_t.
  *
- * @param vec The pointer to the vector to edit.
+ * @param vec The pointer to the vector_t to edit.
  * @param pos The index of the element to remove.
  */
-void vector_remove_idx(vector* vec, size_t pos)
+void vector_remove_idx(vector_t* vec, size_t pos)
 {
     vector_remove_range(vec, pos, 1);
 }
@@ -239,12 +239,12 @@ void vector_remove_idx(vector* vec, size_t pos)
  * matches the data specified and removes it if it
  * exists.
  *
- * @param vec The pointer to the vector to edit.
+ * @param vec The pointer to the vector_t to edit.
  * @param data The data to match.
  *
  * @return 1 if the element was removed successfully, 0 if the data was not found.
  */
-dogecoin_bool vector_remove(vector* vec, void* data)
+dogecoin_bool vector_remove(vector_t* vec, void* data)
 {
     ssize_t idx = vector_find(vec, data);
     if (idx < 0) {
@@ -257,18 +257,18 @@ dogecoin_bool vector_remove(vector* vec, void* data)
 
 
 /**
- * @brief This function resizes the vector to be newsz
- * elements long. If the new size is bigger, the vector
+ * @brief This function resizes the vector_t to be newsz
+ * elements long. If the new size is bigger, the vector_t
  * is grown and the new elements are left empty. If the
- * new size is smaller, vector elements will be truncated.
+ * new size is smaller, vector_t elements will be truncated.
  * If the new size is the same, do nothing.
  *
- * @param vec The pointer to the vector to resize.
- * @param newsz The new desired size of the vector.
+ * @param vec The pointer to the vector_t to resize.
+ * @param newsz The new desired size of the vector_t.
  *
- * @return 1 if the vector was resized successfully, 0 otherwise.
+ * @return 1 if the vector_t was resized successfully, 0 otherwise.
  */
-dogecoin_bool vector_resize(vector* vec, size_t newsz)
+dogecoin_bool vector_resize(vector_t* vec, size_t newsz)
 {
     size_t i;
 
@@ -306,16 +306,16 @@ dogecoin_bool vector_resize(vector* vec, size_t newsz)
 }
 
 /**
- * @brief This function serializes a vector into a string.
+ * @brief This function serializes a vector_t into a string.
  *
- * @param vec The vector to serialize.
+ * @param vec The vector_t to serialize.
  * @param out The output buffer.
  * @param outlen The length of the output buffer.
  * @param written The number of bytes written to the output buffer.
  *
- * @return 1 if the vector was serialized successfully, 0 otherwise.
+ * @return 1 if the vector_t was serialized successfully, 0 otherwise.
  */
-dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* written) {
+dogecoin_bool serializeVector(vector_t* vec, char* out, size_t outlen, size_t* written) {
     if (!out || !outlen || !vec || !written) {
         return false;
     }
@@ -341,16 +341,16 @@ dogecoin_bool serializeVector(vector* vec, char* out, size_t outlen, size_t* wri
 }
 
 /**
- * @brief This function deserializes a string into a vector.
+ * @brief This function deserializes a string into a vector_t.
  *
- * @param vec The vector to deserialize into.
+ * @param vec The vector_t to deserialize into.
  * @param in The input buffer.
  * @param inlen The length of the input buffer.
  * @param read The number of bytes read from the input buffer.
  *
- * @return 1 if the vector was deserialized successfully, 0 otherwise.
+ * @return 1 if the vector_t was deserialized successfully, 0 otherwise.
  */
-dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_t* read) {
+dogecoin_bool deserializeVector(vector_t* vec, const char* in, size_t inlen, size_t* read) {
     if (!in || inlen > MAX_SERIALIZE_SIZE || !vec || !read) {
         return false;
     }
@@ -370,7 +370,7 @@ dogecoin_bool deserializeVector(vector* vec, const char* in, size_t inlen, size_
         }
 
         if (!vector_add(vec, str)) {
-            free(str); // Free the string if adding to the vector fails
+            free(str); // Free the string if adding to the vector_t fails
             return false;
         }
 

@@ -58,23 +58,23 @@ dogecoin_headers_db *dogecoin_headers_db_new(const dogecoin_chainparams* chainpa
 void dogecoin_headers_db_free(dogecoin_headers_db *db);
 dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *filename, dogecoin_bool prompt);
 dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, struct const_buffer *buf, dogecoin_bool load_process, dogecoin_bool *connected);
-void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector *blocklocators);
-dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256 hash);
+void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector_t *blocklocators);
+dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256_t hash);
 dogecoin_blockindex * dogecoin_headersdb_getchaintip(dogecoin_headers_db* db);
 dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db);
 dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db);
-void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256 hash, uint32_t height, uint256 chainwork);
+void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256_t hash, uint32_t height, uint256_t chainwork);
 
 static const dogecoin_headers_db_interface dogecoin_headers_db_interface_file = {
     (void* (*)(const dogecoin_chainparams*, dogecoin_bool))dogecoin_headers_db_new,
     (void (*)(void *))dogecoin_headers_db_free,
     (dogecoin_bool (*)(void *, const char *, dogecoin_bool))dogecoin_headers_db_load,
-    (void (*)(void* , vector *))dogecoin_headers_db_fill_block_locator,
+    (void (*)(void* , vector_t *))dogecoin_headers_db_fill_block_locator,
     (dogecoin_blockindex *(*)(void* , struct const_buffer *, dogecoin_bool , dogecoin_bool *))dogecoin_headers_db_connect_hdr,
     (dogecoin_blockindex* (*)(void *))dogecoin_headersdb_getchaintip,
     (dogecoin_bool (*)(void *))dogecoin_headersdb_disconnect_tip,
     (dogecoin_bool (*)(void *))dogecoin_headersdb_has_checkpoint_start,
-    (void (*)(void *, uint256, uint32_t, uint256))dogecoin_headersdb_set_checkpoint_start
+    (void (*)(void *, uint256_t, uint32_t, uint256_t))dogecoin_headersdb_set_checkpoint_start
 };
 
 LIBDOGECOIN_END_DECL

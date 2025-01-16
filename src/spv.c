@@ -333,14 +333,14 @@ static dogecoin_bool dogecoin_net_spv_node_timer_callback(dogecoin_node *node, u
 }
 
 /**
- * Fill up the blocklocators vector with the blocklocators from the headers database
+ * Fill up the blocklocators vector_t with the blocklocators from the headers database
  *
  * @param client the spv client
- * @param blocklocators a vector of block hashes that we want to scan from
+ * @param blocklocators a vector_t of block hashes that we want to scan from
  *
  * @return The blocklocators are being returned.
  */
-void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *blocklocators) {
+void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector_t *blocklocators) {
     int64_t min_timestamp = client->oldest_item_of_interest - BLOCK_GAP_TO_DEDUCT_TO_START_SCAN_FROM * BLOCKS_DELTA_IN_S; /* ensure we going back ~300 blocks */
     if (client->headers_db->getchaintip(client->headers_db_ctx)->height == 0) {
         if (client->use_checkpoints && client->oldest_item_of_interest > BLOCK_GAP_TO_DEDUCT_TO_START_SCAN_FROM * BLOCKS_DELTA_IN_S) {
@@ -351,7 +351,7 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
             int i;
             for (i = length - 1; i >= 0; i--) {
                 if (checkpoint[i].timestamp < min_timestamp) {
-                    uint256 *hash = dogecoin_calloc(1, sizeof(uint256));
+                    uint256_t *hash = dogecoin_calloc(1, sizeof(uint256_t));
                     utils_uint256_sethex((char *)checkpoint[i].hash, (uint8_t *)hash);
                     vector_add(blocklocators, (void *)hash);
                     if (!client->headers_db->has_checkpoint_start(client->headers_db_ctx)) {
@@ -361,8 +361,8 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
             }
             if (blocklocators->len > 0) return; // return if we could fill up the blocklocator with checkpoints
         }
-        uint256 *hash = dogecoin_calloc(1, sizeof(uint256));
-        memcpy_safe(hash, &client->chainparams->genesisblockhash, sizeof(uint256));
+        uint256_t *hash = dogecoin_calloc(1, sizeof(uint256_t));
+        memcpy_safe(hash, &client->chainparams->genesisblockhash, sizeof(uint256_t));
         vector_add(blocklocators, (void *)hash);
         client->nodegroup->log_write_cb("Setting blocklocator with genesis block\n");
     } else {
@@ -380,7 +380,7 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
 void dogecoin_net_spv_node_request_headers_or_blocks(dogecoin_node *node, dogecoin_bool blocks)
 {
     // request next headers
-    vector *blocklocators = vector_new(1, free);
+    vector_t *blocklocators = vector_new(1, free);
 
     dogecoin_net_spv_fill_block_locator((dogecoin_spv_client *)node->nodegroup->ctx, blocklocators);
 

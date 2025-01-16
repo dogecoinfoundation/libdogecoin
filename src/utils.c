@@ -305,7 +305,7 @@ signed char utils_hex_digit(char c)
  */
 void utils_uint256_sethex(char* psz, uint8_t* out)
 {
-    dogecoin_mem_zero(out, sizeof(uint256));
+    dogecoin_mem_zero(out, sizeof(uint256_t));
 
     // skip leading space
     while ((unsigned int)*psz == ' ' || (unsigned int)(*psz - 0x09) < 5u) {
@@ -324,7 +324,7 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
         }
     psz--;
     unsigned char* p1 = (unsigned char*)out;
-    unsigned char* pend = p1 + sizeof(uint256);
+    unsigned char* pend = p1 + sizeof(uint256_t);
     while (psz >= pbegin && p1 < pend) {
         *p1 = utils_hex_digit(*psz--);
         if (psz >= pbegin) {
@@ -334,9 +334,9 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
         }
     }
 
-uint256* uint256S(const char *str)
+uint256_t* uint256S(const char *str)
 {
-    return (uint256*)utils_hex_to_uint8(str);
+    return (uint256_t*)utils_hex_to_uint8(str);
 }
 
 unsigned char* parse_hex(const char* psz)

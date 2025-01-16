@@ -54,7 +54,7 @@ static const unsigned int DOGECOIN_P2P_HDRSZ = 24; //(4 + 12 + 4 + 4)  magic, co
 
 DISABLE_WARNING_PUSH
 DISABLE_WARNING(-Wunused-variable)
-static uint256 NULLHASH = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint256_t NULLHASH = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 enum service_bits {
     // Nothing
@@ -128,7 +128,7 @@ typedef struct dogecoin_p2p_msg_hdr_ {
 
 typedef struct dogecoin_p2p_inv_msg_ {
     uint32_t type;
-    uint256 hash;
+    uint256_t hash;
 } dogecoin_p2p_inv_msg;
 
 typedef struct dogecoin_p2p_address_ {
@@ -189,7 +189,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_versio
 /* =================================== */
 
 /* sets an inv message-element*/
-LIBDOGECOIN_API void dogecoin_p2p_msg_inv_init(dogecoin_p2p_inv_msg* msg, uint32_t type, uint256 hash);
+LIBDOGECOIN_API void dogecoin_p2p_msg_inv_init(dogecoin_p2p_inv_msg* msg, uint32_t type, uint256_t hash);
 
 /* serialize a p2p "inv" message to an existing cstring */
 LIBDOGECOIN_API void dogecoin_p2p_msg_inv_ser(dogecoin_p2p_inv_msg* msg, cstring* buf);
@@ -234,10 +234,10 @@ LIBDOGECOIN_API cstring* dogecoin_p2p_message_new(const unsigned char netmagic[4
 /* =================================== */
 
 /* creates a getheader message */
-LIBDOGECOIN_API void dogecoin_p2p_msg_getheaders(vector* blocklocators, uint256 hashstop, cstring* str_out);
+LIBDOGECOIN_API void dogecoin_p2p_msg_getheaders(vector_t* blocklocators, uint256_t hashstop, cstring* str_out);
 
 /* directly deserialize a getheaders message to blocklocators, hashstop */
-LIBDOGECOIN_API dogecoin_bool dogecoin_p2p_deser_msg_getheaders(vector* blocklocators, uint256 hashstop, struct const_buffer* buf);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2p_deser_msg_getheaders(vector_t* blocklocators, uint256_t hashstop, struct const_buffer* buf);
 
 LIBDOGECOIN_END_DECL
 

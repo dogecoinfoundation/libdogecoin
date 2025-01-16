@@ -56,7 +56,7 @@ struct dogecoin_node_;
 typedef struct dogecoin_node_group_ {
     void* ctx; /* flexible context usefull in conjunction with the callbacks */
     struct event_base* event_base;
-    vector* nodes; /* the groups nodes */
+    vector_t* nodes; /* the groups nodes */
     char clientstr[1024];
     int desired_amount_connected_nodes;
     const dogecoin_chainparams* chainparams;
@@ -90,7 +90,7 @@ typedef struct dogecoin_node_ {
     uint64_t lastping;
     uint64_t time_started_con;
     uint64_t time_last_request;
-    uint256 last_requested_inv;
+    uint256_t last_requested_inv;
 
     cstring* recvBuffer;
     uint64_t nonce;
@@ -172,7 +172,7 @@ LIBDOGECOIN_API void dogecoin_node_connection_state_changed(dogecoin_node* node)
 /* =================================== */
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *group, const char *ips);
-LIBDOGECOIN_API size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
+LIBDOGECOIN_API size_t dogecoin_get_peers_from_dns(const char* seed, vector_t* ips_out, int port, int family);
 
 struct broadcast_ctx {
     const dogecoin_tx* tx;

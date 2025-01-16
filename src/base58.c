@@ -127,7 +127,7 @@ int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b5
 
 int dogecoin_b58check(const void* bin, size_t binsz, const char* base58str)
 {
-    uint256 buf[32];
+    uint256_t buf[32];
     dogecoin_mem_zero(buf, 32);
     const uint8_t* binc = bin;
     unsigned i = 0;
@@ -200,7 +200,7 @@ size_t dogecoin_base58_encode_check(const uint8_t* data, size_t datalen, char* s
     if (datalen > 128) {
         return 0;
     }
-    size_t buf_size = datalen + sizeof(uint256);
+    size_t buf_size = datalen + sizeof(uint256_t);
     uint8_t* buf = dogecoin_uint8_vla(buf_size);
     uint8_t* hash = buf + datalen;
     memcpy_safe(buf, data, datalen);
@@ -243,20 +243,20 @@ size_t dogecoin_base58_decode_check(const char* str, uint8_t* data, size_t datal
     return ret;
 }
 
-dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char *addrout, size_t len) {
-    uint8_t hash160[sizeof(uint160)+1];
+dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160_t hashin, const dogecoin_chainparams* chain, char *addrout, size_t len) {
+    uint8_t hash160[sizeof(uint160_t)+1];
     hash160[0] = chain->b58prefix_pubkey_address;
-    memcpy_safe(hash160 + 1, hashin, sizeof(uint160));
+    memcpy_safe(hash160 + 1, hashin, sizeof(uint160_t));
 
-    return (dogecoin_base58_encode_check(hash160, sizeof(uint160)+1, addrout, len) > 0);
+    return (dogecoin_base58_encode_check(hash160, sizeof(uint160_t)+1, addrout, len) > 0);
 }
 
-dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout,
+dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160_t hashin, const dogecoin_chainparams* chain, char* addrout,
                                     size_t len)
 {
-    uint8_t hash160[sizeof(uint160) + 1];
+    uint8_t hash160[sizeof(uint160_t) + 1];
     hash160[0] = chain->b58prefix_script_address;
-    memcpy_safe(hash160 + 1, hashin, sizeof(uint160));
+    memcpy_safe(hash160 + 1, hashin, sizeof(uint160_t));
 
-    return (dogecoin_base58_encode_check(hash160, sizeof(uint160) + 1, addrout, len) > 0);
+    return (dogecoin_base58_encode_check(hash160, sizeof(uint160_t) + 1, addrout, len) > 0);
 }

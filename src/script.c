@@ -24,7 +24,7 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- 
+
 */
 
 
@@ -39,12 +39,12 @@
 
 
 /**
- * @brief This function copies a script without the 
+ * @brief This function copies a script without the
  * OP_CODESEPARATOR opcode.
- * 
+ *
  * @param script_in The pointer to the cstring which holds the script to be copied.
  * @param script_out The pointer to the cstring to hold the script to be created.
- * 
+ *
  * @return 1 if copied successfully, 0 otherwise.
  */
 dogecoin_bool dogecoin_script_copy_without_op_codeseperator(const cstring* script_in, cstring* script_out)
@@ -110,7 +110,7 @@ err_out:
 /**
  * @brief This function allocates the memory for a new
  * dogecoin_script_op object.
- * 
+ *
  * @return A pointer to the new script operation.
  */
 dogecoin_script_op* dogecoin_script_op_new()
@@ -125,9 +125,9 @@ dogecoin_script_op* dogecoin_script_op_new()
 /**
  * @brief This function frees the pointer to a dogecoin_script_op
  * object and sets the pointer to NULL.
- * 
+ *
  * @param script_op The pointer to the script operation to be freed.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_script_op_free(dogecoin_script_op* script_op)
@@ -145,9 +145,9 @@ void dogecoin_script_op_free(dogecoin_script_op* script_op)
  * @brief This function casts data from a channel buffer to
  * a dogecoin_script_op object and then frees it by calling
  * dogecoin_script_op_free().
- * 
+ *
  * @param data The pointer to the data that must be cast.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_script_op_free_cb(void* data)
@@ -161,14 +161,14 @@ void dogecoin_script_op_free_cb(void* data)
 
 /**
  * @brief This function converts a cstring script into a
- * vector of dogecoin_script_op objects.
- * 
+ * vector_t of dogecoin_script_op objects.
+ *
  * @param script_in The pointer to the cstring holding the script to be parsed.
- * @param ops_out The pointer to a vector that will store the parsed script operations.
- * 
+ * @param ops_out The pointer to a vector_t that will store the parsed script operations.
+ *
  * @return 1 if converted successfully, 0 otherwise.
  */
-dogecoin_bool dogecoin_script_get_ops(const cstring* script_in, vector* ops_out)
+dogecoin_bool dogecoin_script_get_ops(const cstring* script_in, vector_t* ops_out)
 {
     if (script_in->len == 0)
         return false; /* EOF */
@@ -232,12 +232,12 @@ err_out:
 
 
 /**
- * @brief This function checks whether an opcode is a 
+ * @brief This function checks whether an opcode is a
  * pushdata opcode.
- * 
+ *
  * @param op The opcode to check.
- * 
- * @return 1 if opcode is a pushdata opcode, 0 otherwise. 
+ *
+ * @return 1 if opcode is a pushdata opcode, 0 otherwise.
  */
 static inline dogecoin_bool dogecoin_script_is_pushdata(const enum opcodetype op)
 {
@@ -246,12 +246,12 @@ static inline dogecoin_bool dogecoin_script_is_pushdata(const enum opcodetype op
 
 
 /**
- * @brief This function checks whether the opcode of a 
+ * @brief This function checks whether the opcode of a
  * given script operation matches the specified opcode.
- * 
+ *
  * @param op The pointer to the script operation whose opcode will be checked.
  * @param opcode The reference opcode.
- * 
+ *
  * @return 1 if the opcodes match, 0 otherwise.
  */
 static dogecoin_bool dogecoin_script_is_op(const dogecoin_script_op* op, enum opcodetype opcode)
@@ -261,14 +261,14 @@ static dogecoin_bool dogecoin_script_is_op(const dogecoin_script_op* op, enum op
 
 
 /**
- * @brief This function checks whether a given script 
- * operation pushes a pubkey to the stack. This is 
+ * @brief This function checks whether a given script
+ * operation pushes a pubkey to the stack. This is
  * true if the script operation has a pushdata opcode
  * and that its data is the same length as a compressed
  * or uncompressed EC key.
- * 
+ *
  * @param op The pointer to the script operation to be checked.
- * 
+ *
  * @return 1 if the script resembles the pubkey template, 0 otherwise.
  */
 static dogecoin_bool dogecoin_script_is_op_pubkey(const dogecoin_script_op* op)
@@ -287,11 +287,11 @@ static dogecoin_bool dogecoin_script_is_op_pubkey(const dogecoin_script_op* op)
 /**
  * @brief This function checks whether the given script
  * operation pushes a pubkey hash to the stack. This is
- * true if the script operation has a pushdata opcode 
+ * true if the script operation has a pushdata opcode
  * and that its data is 20 bytes in size.
- * 
+ *
  * @param op The pointer to the script operation to be checked.
- * 
+ *
  * @return 1 if the script resembles the pubkey hash template, 0 otherwise.
  */
 static dogecoin_bool dogecoin_script_is_op_pubkeyhash(const dogecoin_script_op* op)
@@ -307,21 +307,21 @@ static dogecoin_bool dogecoin_script_is_op_pubkeyhash(const dogecoin_script_op* 
 /**
  * @brief This function checks whether the script matches
  * the template for a pubkey script, which is composed of
- * a push pubkey operation followed by an OP_CHECKSIG. 
+ * a push pubkey operation followed by an OP_CHECKSIG.
  * The pubkey is then loaded into data_out.
- * 
- * @param ops The pointer to a vector storing script data to be checked.
- * @param data_out The pointer to a vector which will hold the pubkey data.
- * 
+ *
+ * @param ops The pointer to a vector_t storing script data to be checked.
+ * @param data_out The pointer to a vector_t which will hold the pubkey data.
+ *
  * @return 1 if the script is the correct format, 0 otherwise.
  */
-dogecoin_bool dogecoin_script_is_pubkey(const vector* ops, vector* data_out)
+dogecoin_bool dogecoin_script_is_pubkey(const vector_t* ops, vector_t* data_out)
 {
     if ((ops->len == 2) &&
         dogecoin_script_is_op(vector_idx(ops, 1), OP_CHECKSIG) &&
         dogecoin_script_is_op_pubkey(vector_idx(ops, 0))) {
         if (data_out) {
-            //copy the full pubkey (33 or 65) in case of a non empty vector
+            //copy the full pubkey (33 or 65) in case of a non empty vector_t
             const dogecoin_script_op* op = vector_idx(ops, 0);
             uint8_t* buffer = dogecoin_calloc(1, op->datalen);
             memcpy_safe(buffer, op->data, op->datalen);
@@ -335,16 +335,16 @@ dogecoin_bool dogecoin_script_is_pubkey(const vector* ops, vector* data_out)
 /**
  * @brief This function checks whether the script matches
  * the template for a pubkey hash script, which is composed
- * of an OP_DUP, an OP_HASH160, a push pubkey hash operation, 
+ * of an OP_DUP, an OP_HASH160, a push pubkey hash operation,
  * an OP_EQUALVERIFY, and an OP_CHECKSIG, in that order. The
  * pubkey hash is then loaded into data_out.
- * 
- * @param ops The pointer to a vector storing script data to be checked.
- * @param data_out The pointer to a vector where script data will be copied to.
- * 
+ *
+ * @param ops The pointer to a vector_t storing script data to be checked.
+ * @param data_out The pointer to a vector_t where script data will be copied to.
+ *
  * @return 1 if the script is a valid pubkey hash, 0 otherwise.
  */
-dogecoin_bool dogecoin_script_is_pubkeyhash(const vector* ops, vector* data_out)
+dogecoin_bool dogecoin_script_is_pubkeyhash(const vector_t* ops, vector_t* data_out)
 {
     if ((ops->len == 5) &&
         dogecoin_script_is_op(vector_idx(ops, 0), OP_DUP) &&
@@ -353,10 +353,10 @@ dogecoin_bool dogecoin_script_is_pubkeyhash(const vector* ops, vector* data_out)
         dogecoin_script_is_op(vector_idx(ops, 3), OP_EQUALVERIFY) &&
         dogecoin_script_is_op(vector_idx(ops, 4), OP_CHECKSIG)) {
         if (data_out) {
-            //copy the data (hash160) in case of a non empty vector
+            //copy the data (hash160) in case of a non empty vector_t
             const dogecoin_script_op* op = vector_idx(ops, 2);
-            uint8_t* buffer = dogecoin_calloc(1, sizeof(uint160));
-            memcpy_safe(buffer, op->data, sizeof(uint160));
+            uint8_t* buffer = dogecoin_calloc(1, sizeof(uint160_t));
+            memcpy_safe(buffer, op->data, sizeof(uint160_t));
             vector_add(data_out, buffer);
         }
         return true;
@@ -370,23 +370,23 @@ dogecoin_bool dogecoin_script_is_pubkeyhash(const vector* ops, vector* data_out)
  * the template for a script hash, which is composed of an
  * OP_HASH160, a push pubkey hash operation, and an OP_EQUAL,
  * in that order. The script hash is then loaded into data_out.
- * 
- * @param ops The pointer to the vector storing script data to be checked.
- * @param data_out The pointer to a vector where script data will be copied to.
- * 
+ *
+ * @param ops The pointer to the vector_t storing script data to be checked.
+ * @param data_out The pointer to a vector_t where script data will be copied to.
+ *
  * @return 1 if the script is a script hash, 0 otherwise.
  */
-dogecoin_bool dogecoin_script_is_scripthash(const vector* ops, vector* data_out)
+dogecoin_bool dogecoin_script_is_scripthash(const vector_t* ops, vector_t* data_out)
 {
     if ((ops->len == 3) &&
         dogecoin_script_is_op(vector_idx(ops, 0), OP_HASH160) &&
         dogecoin_script_is_op_pubkeyhash(vector_idx(ops, 1)) &&
         dogecoin_script_is_op(vector_idx(ops, 2), OP_EQUAL)) {
         if (data_out) {
-            //copy the data (hash160) in case of a non empty vector
+            //copy the data (hash160) in case of a non empty vector_t
             const dogecoin_script_op* op = vector_idx(ops, 1);
-            uint8_t* buffer = dogecoin_calloc(1, sizeof(uint160));
-            memcpy_safe(buffer, op->data, sizeof(uint160));
+            uint8_t* buffer = dogecoin_calloc(1, sizeof(uint160_t));
+            memcpy_safe(buffer, op->data, sizeof(uint160_t));
             vector_add(data_out, buffer);
         }
 
@@ -399,9 +399,9 @@ dogecoin_bool dogecoin_script_is_scripthash(const vector* ops, vector* data_out)
 /**
  * @brief The function checks whether the script operation
  * has an opcode label of less than or equal to 16.
- * 
+ *
  * @param op The pointer to the operation to be checked.
- * 
+ *
  * @return 1 if it has a small int opcode, 0 otherwise.
  */
 static dogecoin_bool dogecoin_script_is_op_smallint(const dogecoin_script_op* op)
@@ -413,17 +413,17 @@ static dogecoin_bool dogecoin_script_is_op_smallint(const dogecoin_script_op* op
 
 /**
  * @brief This function checks whether a script is a multisig
- * script, which is true if the vector is composed of between 
- * 3 and 19 scripts (inclusive), the first operation has a small 
- * int opcode, the second-to-last operation has a small int 
- * opcode, the last operation is OP_CHECKMULTISIG, and all 
+ * script, which is true if the vector_t is composed of between
+ * 3 and 19 scripts (inclusive), the first operation has a small
+ * int opcode, the second-to-last operation has a small int
+ * opcode, the last operation is OP_CHECKMULTISIG, and all
  * operations in between push pubkeys to the stack.
- * 
- * @param ops The pointer to the vector storing the script.
- * 
+ *
+ * @param ops The pointer to the vector_t storing the script.
+ *
  * @return 1 if the script is a multisig script, 0 otherwise.
  */
-dogecoin_bool dogecoin_script_is_multisig(const vector* ops)
+dogecoin_bool dogecoin_script_is_multisig(const vector_t* ops)
 {
     if ((ops->len < 3) || (ops->len > (16 + 3)) ||
         !dogecoin_script_is_op_smallint(vector_idx(ops, 0)) ||
@@ -443,12 +443,12 @@ dogecoin_bool dogecoin_script_is_multisig(const vector* ops)
 /**
  * @brief This function classifies a script as one of four
  * types: pubkey, pubkey hash, script hash, or multisig.
- * 
- * @param ops The pointer to the vector storing the script.
- * 
+ *
+ * @param ops The pointer to the vector_t storing the script.
+ *
  * @return The type of script.
  */
-enum dogecoin_tx_out_type dogecoin_script_classify_ops(const vector* ops)
+enum dogecoin_tx_out_type dogecoin_script_classify_ops(const vector_t* ops)
 {
     if (dogecoin_script_is_pubkeyhash(ops, NULL))
         return DOGECOIN_TX_PUBKEYHASH;
@@ -466,21 +466,21 @@ enum dogecoin_tx_out_type dogecoin_script_classify_ops(const vector* ops)
 /**
  * @brief This function takes a cstring representation of
  * a script, classifies it as one of the four script types
- * and loads the script data into data_out if it is not a 
+ * and loads the script data into data_out if it is not a
  * multisig script.
- * 
+ *
  * @param script The pointer to the cstring script to be parsed and classified.
- * @param data_out The pointer to the vector that will contain the parsed scripts.
- * 
+ * @param data_out The pointer to the vector_t that will contain the parsed scripts.
+ *
  * @return The script type.
  */
-enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector* data_out)
+enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector_t* data_out)
 {
-    //INFO: could be speed up by not forming a vector
+    //INFO: could be speed up by not forming a vector_t
     //      and directly parse the script cstring
 
     enum dogecoin_tx_out_type tx_out_type = DOGECOIN_TX_NONSTANDARD;
-    vector* ops = vector_new(10, dogecoin_script_op_free_cb);
+    vector_t* ops = vector_new(10, dogecoin_script_op_free_cb);
     dogecoin_script_get_ops(script, ops);
 
     if (dogecoin_script_is_pubkeyhash(ops, data_out))
@@ -500,9 +500,9 @@ enum dogecoin_tx_out_type dogecoin_script_classify(const cstring* script, vector
 /**
  * @brief This function takes an int and translates it to a
  * small int opcode if it is between 0 and 16, inclusive.
- * 
+ *
  * @param n The number of the desired small int opcode.
- * 
+ *
  * @return The small int opcode.
  */
 enum opcodetype dogecoin_encode_op_n(const int n)
@@ -518,10 +518,10 @@ enum opcodetype dogecoin_encode_op_n(const int n)
  * @brief This function takes an existing script in cstring
  * form and appends another script operation to it. No data
  * is pushed to the stack.
- * 
+ *
  * @param script_in The pointer to the cstring containing the script.
  * @param op The opcode to append.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_script_append_op(cstring* script_in, enum opcodetype op)
@@ -534,11 +534,11 @@ void dogecoin_script_append_op(cstring* script_in, enum opcodetype op)
  * @brief This function takes an existing script in cstring
  * form and appends an operation to push a specified buffer
  * of data to the stack.
- * 
+ *
  * @param script_in The pointer to the cstring containing the script.
  * @param data The buffer to be pushed in the push operation.
  * @param datalen The size in bytes of the buffer.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_script_append_pushdata(cstring* script_in, const unsigned char* data, const size_t datalen)
@@ -561,17 +561,17 @@ void dogecoin_script_append_pushdata(cstring* script_in, const unsigned char* da
 }
 
 /**
- * @brief This function takes a vector of dogecoin_pubkeys
- * and builds a multisig script which pushes all pubkeys 
+ * @brief This function takes a vector_t of dogecoin_pubkeys
+ * and builds a multisig script which pushes all pubkeys
  * to the stack and checks that each one is valid.
- * 
+ *
  * @param script_in The pointer to the cstring where the new multisig script will be built.
  * @param required_signatures The number of required signatures.
- * @param pubkeys_chars The pointer to the vector of pubkey push operations to combine into the multisig.
- * 
+ * @param pubkeys_chars The pointer to the vector_t of pubkey push operations to combine into the multisig.
+ *
  * @return 1 if the script was built successfully, 0 if more than 16 pubkeys are given.
  */
-dogecoin_bool dogecoin_script_build_multisig(cstring* script_in, const unsigned int required_signatures, const vector* pubkeys_chars)
+dogecoin_bool dogecoin_script_build_multisig(cstring* script_in, const unsigned int required_signatures, const vector_t* pubkeys_chars)
 {
     cstr_resize(script_in, 0); //clear script
 
@@ -600,15 +600,15 @@ dogecoin_bool dogecoin_script_build_multisig(cstring* script_in, const unsigned 
  * @brief This function builds a pay-to-public-key-hash script
  * which duplicates the value at the top of the stack (a public
  * key), hashes this value, checks that this hash equals the
- * given uint160 object, and verifies the signature. This script
+ * given uint160_t object, and verifies the signature. This script
  * is then loaded into the cstring script_in.
- * 
+ *
  * @param script_in The pointer to the cstring where the p2pkh script will be built.
  * @param hash160 The hash160 of a public key.
- * 
+ *
  * @return 1 if the p2pkh script was built successfully.
  */
-dogecoin_bool dogecoin_script_build_p2pkh(cstring* script_in, const uint160 hash160)
+dogecoin_bool dogecoin_script_build_p2pkh(cstring* script_in, const uint160_t hash160)
 {
     cstr_resize(script_in, 0); //clear script
 
@@ -616,7 +616,7 @@ dogecoin_bool dogecoin_script_build_p2pkh(cstring* script_in, const uint160 hash
     dogecoin_script_append_op(script_in, OP_HASH160);
 
 
-    dogecoin_script_append_pushdata(script_in, (unsigned char*)hash160, sizeof(uint160));
+    dogecoin_script_append_pushdata(script_in, (unsigned char*)hash160, sizeof(uint160_t));
     dogecoin_script_append_op(script_in, OP_EQUALVERIFY);
     dogecoin_script_append_op(script_in, OP_CHECKSIG);
 
@@ -627,19 +627,19 @@ dogecoin_bool dogecoin_script_build_p2pkh(cstring* script_in, const uint160 hash
 /**
  * @brief This function builds a pay-to-script-hash script
  * which hashes the value on the top of the stack (script
- * data) and ensures that this equals the uint160 object given. 
+ * data) and ensures that this equals the uint160_t object given.
  * The script is then loaded into the cstring script_in.
- * 
+ *
  * @param script_in The pointer to the cstring where the p2sh script will be built.
  * @param hash160 The hash160 of a public key.
- * 
+ *
  * @return 1 if the p2sh script was built successfully.
  */
-dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160 hash160)
+dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160_t hash160)
 {
     cstr_resize(script_in, 0); //clear script
     dogecoin_script_append_op(script_in, OP_HASH160);
-    dogecoin_script_append_pushdata(script_in, (unsigned char*)hash160, sizeof(uint160));
+    dogecoin_script_append_pushdata(script_in, (unsigned char*)hash160, sizeof(uint160_t));
     dogecoin_script_append_op(script_in, OP_EQUAL);
 
     return true;
@@ -647,20 +647,20 @@ dogecoin_bool dogecoin_script_build_p2sh(cstring* script_in, const uint160 hash1
 
 
 /**
- * @brief This function takes a script, computes its hash, 
- * and returns it as a uint160 object.
- * 
+ * @brief This function takes a script, computes its hash,
+ * and returns it as a uint160_t object.
+ *
  * @param script_in The pointer to the cstring which holds the script.
- * @param scripthash The uint160 object that will hold the hash of the script.
- * 
+ * @param scripthash The uint160_t object that will hold the hash of the script.
+ *
  * @return 1 if the script was hashed correctly, 0 if a null cstring was provided.
  */
-dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160 scripthash)
+dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160_t scripthash)
 {
     if (!script_in) {
         return false;
     }
-    uint256 hash;
+    uint256_t hash;
     dogecoin_hash_sngl_sha256((const unsigned char*)script_in->str, script_in->len, hash);
     rmd160(hash, sizeof(hash), scripthash);
 
@@ -671,9 +671,9 @@ dogecoin_bool dogecoin_script_get_scripthash(const cstring* script_in, uint160 s
 /**
  * @brief This function takes a script type and translates
  * it into string format.
- * 
+ *
  * @param type The type of script.
- * 
+ *
  * @return The string representation of the script.
  */
 const char* dogecoin_tx_out_type_to_str(const enum dogecoin_tx_out_type type)

@@ -63,7 +63,7 @@ LIBDOGECOIN_API volatile void* dogecoin_mem_zero(volatile void* dst, size_t len)
 
 LIBDOGECOIN_API uint8_t* dogecoin_uint8_vla(size_t size);
 LIBDOGECOIN_API uint32_t* dogecoin_uint32_vla(size_t size);
-LIBDOGECOIN_API uint256* dogecoin_uint256_vla(size_t size);
+LIBDOGECOIN_API uint256_t* dogecoin_uint256_vla(size_t size);
 LIBDOGECOIN_API char* dogecoin_char_vla(size_t size);
 LIBDOGECOIN_API char* dogecoin_string_vla(size_t size);
 LIBDOGECOIN_API unsigned char* dogecoin_uchar_vla(size_t size);

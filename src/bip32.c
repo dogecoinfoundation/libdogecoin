@@ -362,9 +362,9 @@ void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogeco
  *
  * @return Nothing.
  */
-void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160 hash160_out)
+void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160_t hash160_out)
 {
-    uint256 hashout;
+    uint256_t hashout;
     dogecoin_hash_sngl_sha256(node->public_key, DOGECOIN_ECKEY_COMPRESSED_LENGTH, hashout);
     rmd160(hashout, sizeof(hashout), hash160_out);
 }
@@ -384,7 +384,7 @@ void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160 hash160_ou
  */
 void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize)
 {
-    uint8_t hash160[sizeof(uint160) + 1];
+    uint8_t hash160[sizeof(uint160_t) + 1];
     hash160[0] = chain->b58prefix_pubkey_address;
     dogecoin_hdnode_get_hash160(node, hash160 + 1);
     dogecoin_base58_encode_check(hash160, sizeof(hash160), str, strsize);

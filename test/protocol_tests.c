@@ -57,7 +57,7 @@ void test_protocol()
     dogecoin_p2p_inv_msg inv_msg, inv_msg_check;
     dogecoin_mem_zero(&inv_msg, sizeof(inv_msg));
 
-    uint256 hash = {0};
+    uint256_t hash = {0};
 
     dogecoin_p2p_msg_inv_init(&inv_msg, 1, hash);
     dogecoin_p2p_msg_inv_ser(&inv_msg, inv_msg_cstr);
@@ -100,8 +100,8 @@ void test_protocol()
     cstr_free(version_msg_cstr, true);
 
     /* getheaders */
-    uint256 genesis_hash = {0x00, 0x00, 0x00, 0x00, 0x00, 0x19, 0xd6, 0x68, 0x9c, 0x08, 0x5a, 0xe1, 0x65, 0x83, 0x1e, 0x93, 0x4f, 0xf7, 0x63, 0xae, 0x46, 0xa2, 0xa6, 0xc1, 0x72, 0xb3, 0xf1, 0xb6, 0x0a, 0x8c, 0xe2, 0x6f};
-    vector *blocklocators = vector_new(1, NULL);
+    uint256_t genesis_hash = {0x00, 0x00, 0x00, 0x00, 0x00, 0x19, 0xd6, 0x68, 0x9c, 0x08, 0x5a, 0xe1, 0x65, 0x83, 0x1e, 0x93, 0x4f, 0xf7, 0x63, 0xae, 0x46, 0xa2, 0xa6, 0xc1, 0x72, 0xb3, 0xf1, 0xb6, 0x0a, 0x8c, 0xe2, 0x6f};
+    vector_t *blocklocators = vector_new(1, NULL);
     vector_add(blocklocators, genesis_hash);
     cstring *getheader_msg = cstr_new_sz(256);
     dogecoin_p2p_msg_getheaders(blocklocators, NULL, getheader_msg);
@@ -115,8 +115,8 @@ void test_protocol()
     u_assert_uint32_eq(hdr.data_len, getheader_msg->len);
 
 
-    uint256 hashstop_check;
-    vector *blocklocators_check = vector_new(1, free);
+    uint256_t hashstop_check;
+    vector_t *blocklocators_check = vector_new(1, free);
     dogecoin_p2p_deser_msg_getheaders(blocklocators_check, hashstop_check, &buf);
     u_assert_mem_eq(NULLHASH, hashstop_check, sizeof(hashstop_check));
     uint8_t *hash_loc_0 = vector_idx(blocklocators_check, 0);

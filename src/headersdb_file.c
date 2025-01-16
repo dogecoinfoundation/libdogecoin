@@ -59,7 +59,7 @@ int dogecoin_header_compare(const void *l, const void *r)
     uint8_t *hashB = (uint8_t *)lr->hash;
 
     unsigned int i;
-    for (i = 0; i < sizeof(uint256); i++) {
+    for (i = 0; i < sizeof(uint256_t); i++) {
         uint8_t iA = hashA[i];
         uint8_t iB = hashB[i];
         if (iA > iB)
@@ -223,9 +223,9 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
 
                 //load all
 
-                uint256 hash;
+                uint256_t hash;
                 uint32_t height;
-                uint256 chainwork;
+                uint256_t chainwork;
                 deser_u256(hash, &cbuf_all);
                 deser_u32(&height, &cbuf_all);
                 deser_u256(chainwork, &cbuf_all);
@@ -258,7 +258,7 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
                         connected_headers_count++;
                     }
                 }
-                memcpy(db->chaintip->chainwork, chainwork, sizeof(uint256));
+                memcpy(db->chaintip->chainwork, chainwork, sizeof(uint256_t));
             }
         }
     }
@@ -336,7 +336,7 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
     if (connect_at != NULL) {
         // Check the proof of work
         if (!is_auxpow(blockindex->header.version)) {
-            uint256 hash = {0};
+            uint256_t hash = {0};
             cstring* s = cstr_new_sz(64);
             dogecoin_block_header_serialize(s, (const dogecoin_block_header*) &blockindex->header);
             dogecoin_block_header_scrypt_hash(s, &hash);
@@ -475,12 +475,12 @@ dogecoin_blockindex * dogecoin_headers_db_connect_hdr(dogecoin_headers_db* db, s
 
 /**
  * The function iterates through the chain tip and adds the hash of each block to the blocklocators
- * vector
+ * vector_t
  *
  * @param db the database object
- * @param blocklocators a vector of block hashes
+ * @param blocklocators a vector_t of block hashes
  */
-void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector *blocklocators)
+void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector_t *blocklocators)
 {
     dogecoin_blockindex *scan_tip = db->chaintip;
     if (scan_tip->height > 0)
@@ -489,8 +489,8 @@ void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector *blo
         for(; i<10;i++)
         {
             //TODO: try to share memory and avoid heap allocation
-            uint256 *hash = dogecoin_calloc(1, sizeof(uint256));
-            memcpy_safe(hash, scan_tip->hash, sizeof(uint256));
+            uint256_t *hash = dogecoin_calloc(1, sizeof(uint256_t));
+            memcpy_safe(hash, scan_tip->hash, sizeof(uint256_t));
             vector_add(blocklocators, (void *)hash);
 
             if (scan_tip->prev)
@@ -509,11 +509,11 @@ void dogecoin_headers_db_fill_block_locator(dogecoin_headers_db* db, vector *blo
  *
  * @return A pointer to the blockindex.
  */
-dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256 hash) {
+dogecoin_blockindex * dogecoin_headersdb_find(dogecoin_headers_db* db, uint256_t hash) {
     if (db->use_binary_tree)
     {
         dogecoin_blockindex *blockindex = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
-        memcpy_safe(blockindex->hash, hash, sizeof(uint256));
+        memcpy_safe(blockindex->hash, hash, sizeof(uint256_t));
         dogecoin_blockindex *blockindex_f = dogecoin_btree_tfind(blockindex, &db->tree_root, dogecoin_header_compare); /* read */
         if (blockindex_f) {
             blockindex_f = *(dogecoin_blockindex **)blockindex_f;
@@ -576,10 +576,10 @@ dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db) {
  * @param height The height of the block that this is a checkpoint for.
  * @param chainwork The chainwork of the block that this is a checkpoint for.
  */
-void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256 hash, uint32_t height, uint256 chainwork) {
+void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256_t hash, uint32_t height, uint256_t chainwork) {
     db->chainbottom = dogecoin_calloc(1, sizeof(dogecoin_blockindex));
     db->chainbottom->height = height;
-    memcpy_safe(db->chainbottom->hash, hash, sizeof(uint256));
-    memcpy_safe(db->chainbottom->chainwork, chainwork, sizeof(uint256));
+    memcpy_safe(db->chainbottom->hash, hash, sizeof(uint256_t));
+    memcpy_safe(db->chainbottom->chainwork, chainwork, sizeof(uint256_t));
     db->chaintip = db->chainbottom;
 }

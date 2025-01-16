@@ -67,7 +67,7 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
         koinu_to_coins_str(balance, balance_str);
         evbuffer_add_printf(evb, "Wallet balance: %s\n", balance_str);
     } else if (strcmp(path, "/getAddresses") == 0) {
-        vector* addresses = vector_new(10, dogecoin_free);
+        vector_t* addresses = vector_new(10, dogecoin_free);
         dogecoin_wallet_get_addresses(wallet, addresses);
         for (unsigned int i = 0; i < addresses->len; i++) {
             char* address = vector_idx(addresses, i);

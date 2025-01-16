@@ -83,7 +83,7 @@ void postcmd(struct dogecoin_node_ *node, dogecoin_p2p_msg_hdr *hdr, struct cons
     if (strcmp(hdr->command, "block") == 0)
     {
         dogecoin_block_header header;
-        uint256 chainwork;
+        uint256_t chainwork;
         if (!dogecoin_block_header_deserialize(&header, buf, node->nodegroup->chainparams, &chainwork)) return;
 
         uint32_t vsize;
@@ -129,10 +129,10 @@ void postcmd(struct dogecoin_node_ *node, dogecoin_p2p_msg_hdr *hdr, struct cons
         /* send getblock command */
 
         /* request some headers (from the genesis block) */
-        vector *blocklocators = vector_new(1, NULL);
-        uint256 from_hash;
+        vector_t *blocklocators = vector_new(1, NULL);
+        uint256_t from_hash;
         utils_uint256_sethex("c7e47980df148701d04fb81a84acce85d8fb3556c7b1ff1cd021023b7c9f9593", from_hash); // height 428694
-        uint256 stop_hash;
+        uint256_t stop_hash;
         utils_uint256_sethex("1910002ddc9705c0799236589b91304404f45728f805bac7c94fc42ac0db1248", stop_hash); // height 428695
 
         vector_add(blocklocators, from_hash);
@@ -175,7 +175,7 @@ void handshake_done(struct dogecoin_node_ *node)
     }
 
     // request some headers (from the genesis block)
-    vector *blocklocators = vector_new(1, NULL);
+    vector_t *blocklocators = vector_new(1, NULL);
     vector_add(blocklocators, (void *)node->nodegroup->chainparams->genesisblockhash);
 
     cstring *getheader_msg = cstr_new_sz(256);
@@ -197,7 +197,7 @@ void handshake_done(struct dogecoin_node_ *node)
 void test_net_basics_plus_download_block()
 {
 
-    vector *ips = vector_new(10, free);
+    vector_t *ips = vector_new(10, free);
     unsigned int seed_index;
     /* dogecoin_chainparams has up to 8 dns seeds */
     for (seed_index = 0; seed_index < 8; seed_index++) {

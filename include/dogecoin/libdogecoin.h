@@ -54,7 +54,7 @@ typedef struct dogecoin_chainparams_ {
     uint32_t b58prefix_bip32_privkey;
     uint32_t b58prefix_bip32_pubkey;
     const unsigned char netmagic[4];
-    uint256 genesisblockhash;
+    uint256_t genesisblockhash;
     int default_port;
     dogecoin_dns_seed dnsseeds[8];
 } dogecoin_chainparams;
@@ -196,7 +196,7 @@ void dogecoin_hdnode_fill_public_key(dogecoin_hdnode* node);
 void dogecoin_hdnode_serialize_public(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 void dogecoin_hdnode_serialize_private(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 
-void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160 hash160_out);
+void dogecoin_hdnode_get_hash160(const dogecoin_hdnode* node, uint160_t hash160_out);
 void dogecoin_hdnode_get_p2pkh_address(const dogecoin_hdnode* node, const dogecoin_chainparams* chain, char* str, size_t strsize);
 dogecoin_bool dogecoin_hdnode_get_pub_hex(const dogecoin_hdnode* node, char* str, size_t* strsize);
 dogecoin_bool dogecoin_hdnode_deserialize(const char* str, const dogecoin_chainparams* chain, dogecoin_hdnode* node);
@@ -527,24 +527,24 @@ int verify_message(char* sig, char* msg, char* address);
 --------------------------------------------------------------------------
 */
 
-typedef struct vector {
+typedef struct vector_t {
     void** data;  /* array of pointers */
     size_t len;   /* array element count */
     size_t alloc; /* allocated array elements */
 
     void (*elem_free_f)(void*);
-} vector;
+} vector_t;
 
 #define vector_idx(vec, idx) vec->data[idx]
 
-vector* vector_new(size_t res, void (*free_f)(void*));
-void vector_free(vector* vec, dogecoin_bool free_array);
-dogecoin_bool vector_add(vector* vec, void* data);
-dogecoin_bool vector_remove(vector* vec, void* data);
-void vector_remove_idx(vector* vec, size_t idx);
-void vector_remove_range(vector* vec, size_t idx, size_t len);
-dogecoin_bool vector_resize(vector* vec, size_t newsz);
-ssize_t vector_find(vector* vec, void* data);
+vector_t* vector_new(size_t res, void (*free_f)(void*));
+void vector_free(vector_t* vec, dogecoin_bool free_array);
+dogecoin_bool vector_add(vector_t* vec, void* data);
+dogecoin_bool vector_remove(vector_t* vec, void* data);
+void vector_remove_idx(vector_t* vec, size_t idx);
+void vector_remove_range(vector_t* vec, size_t idx, size_t len);
+dogecoin_bool vector_resize(vector_t* vec, size_t newsz);
+ssize_t vector_find(vector_t* vec, void* data);
 
 
 /* Wallet API
@@ -552,7 +552,7 @@ ssize_t vector_find(vector* vec, void* data);
 */
 
 int dogecoin_unregister_watch_address_with_node(char* address);
-int dogecoin_get_utxo_vector(char* address, vector* utxos);
+int dogecoin_get_utxo_vector(char* address, vector_t* utxos);
 uint8_t* dogecoin_get_utxos(char* address);
 unsigned int dogecoin_get_utxos_length(char* address);
 char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);

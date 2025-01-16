@@ -223,9 +223,9 @@ void test_wallet_basics()
     wallet_addr = dogecoin_wallet_next_addr(wallet);
 
     //now it should be equal
-    u_assert_mem_eq(wallet_addr->pubkeyhash, wallet_addr2->pubkeyhash, sizeof(uint160));
+    u_assert_mem_eq(wallet_addr->pubkeyhash, wallet_addr2->pubkeyhash, sizeof(uint160_t));
 
-    vector *addrs = vector_new(1, free);
+    vector_t *addrs = vector_new(1, free);
     dogecoin_wallet_get_addresses(wallet, addrs);
     u_assert_int_eq(addrs->len, 3);
     u_assert_str_eq(addrs->data[0],"DHprgyNMcy3Ct9zVbJCrezYywxTBDWPL3v");

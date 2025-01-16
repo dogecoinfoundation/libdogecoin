@@ -40,7 +40,7 @@
  *
  * @return True.
  */
-dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256* hash) {
+dogecoin_bool dogecoin_block_header_scrypt_hash(cstring* s, uint256_t* hash) {
     char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
 #if defined(USE_SSE2)
     scrypt_1024_1_1_256_sp_sse2((const char*)s->str, (char *) hash, scratchpad);
@@ -64,7 +64,7 @@ dogecoin_bool is_legacy(uint32_t version) {
         || (version == 2 && get_chainid(version) == 0);
 }
 
-dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* params, uint256* chainwork) {
+dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* params, uint256_t* chainwork) {
     /* Except for legacy blocks with full version 1, ensure that
        the chain ID is correct.  Legacy blocks are not allowed since
        the merge-mining start, which is checked in AcceptBlockHeader
@@ -80,7 +80,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
     /* If there is no auxpow, just check the block hash.  */
     if (!block->header->auxpow->is) {
 
-        uint256 hash = {0};
+        uint256_t hash = {0};
         cstring* s = cstr_new_sz(64);
         dogecoin_block_header_serialize(s, block->header);
         dogecoin_block_header_scrypt_hash(s, &hash);
@@ -95,7 +95,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
     }
 
     /* We have auxpow.  Check it.  */
-    uint256 block_header_hash;
+    uint256_t block_header_hash;
     dogecoin_block_header_hash(block->header, block_header_hash);
     uint32_t chainid = get_chainid(block->header->version);
     if (!block->header->auxpow->check(block, &block_header_hash, chainid, params)) {
@@ -103,7 +103,7 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
         return false;
     }
 
-    uint256 parent_hash;
+    uint256_t parent_hash;
     cstring* s2 = cstr_new_sz(64);
     dogecoin_block_header_serialize(s2, block->parent_header);
     dogecoin_block_header_scrypt_hash(s2, &parent_hash);
