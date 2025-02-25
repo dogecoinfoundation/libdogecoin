@@ -3,7 +3,7 @@
  The MIT License (MIT)
  Copyright (c) 2023 bluezr
  Copyright (c) 2023 edtubbs
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -134,6 +134,7 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 #define PRIVKEYHEXLEN DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1
 #define PUBKEYHEXLEN 67
 #define PUBKEYHASHLEN 41
+#define SCRIPTPUBKEYLEN 51 // 40 + 6 + 4 + 1
 #define KEYPATHMAXLEN 256
 
 /* Constants for transaction */

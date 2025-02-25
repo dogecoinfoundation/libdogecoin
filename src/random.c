@@ -203,10 +203,11 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     errno = ENOSYS;
     return -1;
 #else
-#ifdef USE_OPENENCLAVE
+#if USE_OPENENCLAVE || USE_OPTEE
     if (rng_ptr != NULL)
         if (rng_ptr(buf, len) == 0)
             return true;
+
 #endif
 
     (void)update_seed; //unused
@@ -221,7 +222,7 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     }
 #endif
 
-void random_seed(struct fast_random_context* this) 
+void random_seed(struct fast_random_context* this)
 {
     dogecoin_random_init();
     uint256 seed;
@@ -240,7 +241,7 @@ void fill_byte_buffer(struct fast_random_context* this)
     this->bytebuf_size = sizeof(this->bytebuf);
 }
 
-uint256* rand256(struct fast_random_context* this) 
+uint256* rand256(struct fast_random_context* this)
 {
     if (this->bytebuf_size < 32) {
         fill_byte_buffer(this);
@@ -252,7 +253,7 @@ uint256* rand256(struct fast_random_context* this)
 }
 
 /** Generate a random 64-bit integer. */
-uint64_t rand64(struct fast_random_context* this) 
+uint64_t rand64(struct fast_random_context* this)
 {
     if (this->requires_seed) random_seed(this);
     unsigned char buf[8];

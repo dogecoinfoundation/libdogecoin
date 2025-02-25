@@ -30,8 +30,9 @@ SET(USE_AVX2 FALSE CACHE BOOL "enable intel avx2")
 SET(USE_SSE FALSE CACHE BOOL "enable intel sse")
 SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
 SET(USE_TPM2 TRUE CACHE BOOL "enable tpm2")
-SET(USE_OPENENCLAVE FALSE CACHE BOOL "enable openenclave")
-SET(TEST_PASSWD FALSE CACHE BOOL "enable test password")
+SET(USE_OPENENCLAVE TRUE CACHE BOOL "enable openenclave")
+SET(USE_YUBIKEY FALSE CACHE BOOL "enable yubikey")
+SET(TEST_PASSWD TRUE CACHE BOOL "enable test password")
 string(RANDOM LENGTH 12 ALPHABET abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 PASSWD_STR)
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
 
@@ -74,7 +75,26 @@ IF(WITH_NET)
         FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
         FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)
     ELSE()
-        FIND_LIBRARY(LIBEVENT event REQUIRED)
+        # build libevent
+        execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/src/libevent/build)
+        execute_process(COMMAND cmake ..
+            -DCMAKE_C_FLAGS=-U_FORTIFY_SOURCE
+            -DEVENT__DISABLE_OPENSSL=ON
+            -DEVENT__DISABLE_SAMPLES=ON
+            -DEVENT__LIBRARY_TYPE=STATIC
+            -DEVENT__DISABLE_TESTS=ON
+            -DEVENT__DISABLE_THREAD_SUPPORT=OFF
+            -DEVENT__DISABLE_MM_REPLACEMENT=ON
+            -DEVENT__DISABLE_REGRESS=ON
+            -DEVENT__DISABLE_BENCHMARK=ON
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
+        execute_process(COMMAND cmake --build .
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
+        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/build/include" DESTINATION "${PROJECT_SOURCE_DIR}")
+        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include/event2" DESTINATION "${PROJECT_SOURCE_DIR}/include")
+        find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
+        find_path(LIBEVENT_INCLUDE_DIR event-config.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
+        FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
         FIND_LIBRARY(LIBUNISTRING unistring REQUIRED)
     ENDIF()
 ENDIF()
@@ -159,6 +179,10 @@ ENDIF()
 IF(USE_OPENENCLAVE)
     ADD_DEFINITIONS(-DUSE_OPENENCLAVE=1)
 ENDIF()
+IF(USE_YUBIKEY)
+    FIND_LIBRARY(LIBYKPIV NAMES ykpiv REQUIRED HINTS /usr/lib/x86_64-linux-gnu)
+    ADD_DEFINITIONS(-DUSE_YUBIKEY=1)
+ENDIF()
 IF(TEST_PASSWD)
     ADD_DEFINITIONS(-DTEST_PASSWD=1)
     ADD_DEFINITIONS(-DPASSWD_STR="${PASSWD_STR}")
@@ -184,6 +208,7 @@ MESSAGE(STATUS "                   ${PASSWD_STR}")
 ENDIF()
 MESSAGE(STATUS "")
 MESSAGE(STATUS "  openenclave    = ${USE_OPENENCLAVE}")
+MESSAGE(STATUS "  yubikey        = ${USE_YUBIKEY}")
 MESSAGE(STATUS "")
 message(STATUS "  library type   = ${library_type}")
 MESSAGE(STATUS "")
@@ -325,6 +350,7 @@ IF(USE_TESTS)
         test/rmd160_tests.c
         test/scrypt_tests.c
         test/serialize_tests.c
+        test/sha1_tests.c
         test/sha2_tests.c
         test/signmsg_tests.c
         test/tpm_tests.c
@@ -335,10 +361,16 @@ IF(USE_TESTS)
         test/utils_tests.c
         test/vector_tests.c
 )
-IF (WIN32 AND USE_TPM2)
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt crypt32)
+IF (USE_YUBIKEY)
+    SET(LIBS ${LIBDOGECOIN_NAME} ${LIBUNISTRING} ${LIBYKPIV})
 ELSE()
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+    SET(LIBS ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+ENDIF()
+
+IF (WIN32 AND USE_TPM2)
+    TARGET_LINK_LIBRARIES(tests ${LIBS} tbs ncrypt crypt32)
+ELSE()
+    TARGET_LINK_LIBRARIES(tests ${LIBS})
 ENDIF()
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
     # move test/wordlist to build
@@ -405,9 +437,9 @@ IF(WITH_NET)
     )
 
     IF(WIN32 AND USE_TPM2)
-        TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING} tbs ncrypt crypt32)
+        TARGET_LINK_LIBRARIES(${LIBS} ${LIBEVENT} ${LIBEVENT_PTHREADS} tbs ncrypt crypt32)
     ELSE()
-        TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
+        TARGET_LINK_LIBRARIES(${LIBS} ${LIBEVENT} ${LIBEVENT_PTHREADS})
     ENDIF()
     IF(USE_TESTS)
         TARGET_SOURCES(tests ${visibility}
@@ -428,9 +460,9 @@ IF(WITH_TOOLS)
     ADD_EXECUTABLE(such src/cli/such.c)
     INSTALL(TARGETS such RUNTIME)
     IF (WIN32 AND USE_TPM2)
-        TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt crypt32)
+        TARGET_LINK_LIBRARIES(such ${LIBS} tbs ncrypt crypt32)
     ELSE()
-        TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+        TARGET_LINK_LIBRARIES(such ${LIBS})
     ENDIF()
     TARGET_INCLUDE_DIRECTORIES(such ${visibility} src)
 

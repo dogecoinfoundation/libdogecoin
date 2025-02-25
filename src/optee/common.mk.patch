@@ -1,0 +1,18 @@
+--- a common.mk
++++ b common.mk
+@@ -274,4 +274,6 @@
+ BR2_PER_PACKAGE_DIRECTORIES ?= y
++BR2_PACKAGE_LIBUSB ?= y
++BR2_PACKAGE_USBUTILS ?= y
+ BR2_PACKAGE_LIBOPENSSL ?= y
+ BR2_PACKAGE_MMC_UTILS ?= y
+ BR2_PACKAGE_OPENSSL ?= y
+@@ -442,7 +444,7 @@
+ # QEMU / QEMUv8
+ ################################################################################
+ QEMU_CONFIGURE_PARAMS_COMMON = --cc="$(CCACHE)gcc" --extra-cflags="-Wno-error" \
+-			       --disable-docs
++			       --disable-docs --enable-libusb
+ QEMU_EXTRA_ARGS +=\
+ 	-object rng-random,filename=/dev/urandom,id=rng0 \
+ 	-device virtio-rng-pci,rng=rng0,max-bytes=1024,period=1000

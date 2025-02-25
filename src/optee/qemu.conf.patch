@@ -1,0 +1,7 @@
+--- a qemu.conf
++++ b qemu.conf
+@@ -13,3 +13,4 @@
+ CONFIG_TRUSTED_KEYS=y
+ CONFIG_ENCRYPTED_KEYS=y
+ CONFIG_ARM_FFA_TRANSPORT=y
++CONFIG_USB_HID=n

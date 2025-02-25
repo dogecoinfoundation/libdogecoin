@@ -461,6 +461,7 @@ int get_root_seed(const char *pass, const char *passphrase, SEED seed) {
  */
 
 int get_custom_words(const char *filepath, char* wordlist[]) {
+#ifndef USE_OPTEE /* OPTEE does not support file I/O */
     int i = 0;
     FILE * fp;
     char word[1024];
@@ -501,6 +502,11 @@ int get_custom_words(const char *filepath, char* wordlist[]) {
     }
 
     return 0;
+#else
+    (void)filepath;
+    (void)wordlist;
+    return -1;
+#endif
 }
 
 /*
@@ -724,7 +730,7 @@ int dogecoin_generate_mnemonic (const ENTROPY_SIZE entropy_size, const char* lan
     if (entropy_size != NULL) {
 
         /* load custom word file into memory if path is valid */
-	if (filepath != NULL) {
+	    if (filepath != NULL) {
             if (get_custom_words (filepath, (char **) wordlist) == -1) {
 
                 /* Free memory for custom words */

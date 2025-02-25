@@ -259,12 +259,26 @@ int main() {
 	printf("Master public key: %s\n", master_public_key);
 
 	// Derive an extended normal (non-hardened) public key
-	char extkeypath[KEYPATHMAXLEN] = "m/0/0/0/0/0";
+	char extkeypath[KEYPATHMAXLEN] = "m/44'/3'/0'";
 	char extpubkey[HDKEYLEN] = {0};
-	getHDNodeAndExtKeyByPath(master_public_key, extkeypath, extpubkey, false);
-	printf("Keypath: %s\nExtended public key: %s\n", extkeypath, extpubkey);
-	if (strcmp(extpubkey, "dgub8wcWPRxhthgZYftisbirNJ5Ae3navJCCEfd6SzyL5SK44GC4tok3BGkNWbhrM4KeJ8o9ZAkXiVdLTnUyzz89ah1izJjWTo5pv7eboGtzktJ") != 0) {
+	dogecoin_hdnode* node_bypath = getHDNodeAndExtKeyByPath(masterkey, extkeypath, extpubkey, false);
+	printf("(Account) Extended public key: %s\n", extpubkey);
+	if (strcmp(extpubkey, "dgub8rUhDtD3YFGZTUphBfpBbzvFxSMKQXYLzg87Me2ta78r2SdVLmypBUkkxrrn9RTnchsyiJSkHZyLWxD13ibBiXtuFWktBoDaGaZjQUBLNLs") != 0) {
 			printf("extpubkey does not match!\n");
+	}
+	dogecoin_hdnode_free(node_bypath);
+
+	// Derive an address from the extended public key
+	char derived_address2[P2PKHLEN];
+	if (getDerivedHDAddressFromAcctPubKey(extpubkey, 0, BIP44_CHANGE_EXTERNAL, derived_address2, false) == 0) {
+		printf("(Account) Extended public key: %s\n", extpubkey);
+		if (strcmp(extpubkey, "dgub8rUhDtD3YFGZTUphBfpBbzvFxSMKQXYLzg87Me2ta78r2SdVLmypBUkkxrrn9RTnchsyiJSkHZyLWxD13ibBiXtuFWktBoDaGaZjQUBLNLs") != 0) {
+			printf("extpubkey does not match!\n");
+		}
+		printf("Derived address 0: %s\n", derived_address2);
+	} else {
+		printf("Error occurred.\n");
+		return -1;
 	}
 
 	// BASIC TRANSACTION FORMATION EXAMPLE
@@ -273,8 +287,8 @@ int main() {
 	char *external_p2pkh_addr = 	"nbGfXLskPh7eM1iG5zz5EfDkkNTo9TRmde";
 	char *hash_2_doge = 			"b4455e7b7b7acb51fb6feba7a2702c42a5100f61f61abafa31851ed6ae076074";
 	char *hash_10_doge = 			"42113bdc65fc2943cf0359ea1a24ced0b6b0b5290db4c63a3329c6601c4616e2";
-        char myscriptpubkey [PUBKEYHASHLEN];
-        dogecoin_p2pkh_address_to_pubkey_hash (str, myscriptpubkey);
+	char myscriptpubkey [PUBKEYHASHLEN];
+	dogecoin_p2pkh_address_to_pubkey_hash (str, myscriptpubkey);
 
 	// build transaction
 	int idx = start_transaction();
@@ -313,6 +327,15 @@ int main() {
 		printf("Error occurred.\n");
 		return -1;
 	}
+
+	printf("Transaction hex: %s\n", get_raw_transaction(idx));
+	printf("Transaction hex length: %ld\n", strlen(get_raw_transaction(idx)));
+	printf("Transaction unsigned hex: %s\n", get_raw_transaction(idx2));
+	printf("Transaction unsigned hex length: %ld\n", strlen(get_raw_transaction(idx2)));
+	printf("str: %s\n", str);
+	printf("my script pubkey: %s\n", myscriptpubkey);
+	printf("my script pubkey length: %ld\n", strlen(myscriptpubkey));
+	printf("privkeywif: %s\n", wifstr);
 
 	// sign transaction
 	if (sign_transaction(idx, myscriptpubkey, wifstr)) {

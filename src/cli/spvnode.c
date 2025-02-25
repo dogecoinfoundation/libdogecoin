@@ -506,6 +506,7 @@ int main(int argc, char* argv[]) {
             printf("done\n");
             printf("Discover peers...\n");
             dogecoin_spv_client_discover_peers(client, ips);
+
             printf("Connecting to the p2p network...\n");
             dogecoin_spv_client_runloop(client);
             dogecoin_spv_client_free(client);

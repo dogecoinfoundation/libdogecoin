@@ -3,7 +3,7 @@
 
  Copyright (c) 2022 bluezr
  Copyright (c) 2023 edtubbs
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -94,6 +94,9 @@ LIBDOGECOIN_API int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t acco
 
 /* generates a new dogecoin address from a encrypted master (HD) key and a slip44 key path */
 LIBDOGECOIN_API int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet, const int file_num);
+
+/* generates a new dogecoin address from an account extended public key and a slip44 key path */
+LIBDOGECOIN_API int getDerivedHDAddressFromAcctPubKey(const char* ext_pubkey, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet);
 
 LIBDOGECOIN_END_DECL
 

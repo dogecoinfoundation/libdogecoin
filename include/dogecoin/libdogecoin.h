@@ -100,6 +100,9 @@ void dogecoin_ecc_stop(void);
 //#define PUBKEYHASHLEN 40 //should be 40 for pubkeyhash.  Internally this is cited as 41 for strings that represent it because +stringterm.
 #define PUBKEYHASHLEN 41
 
+//#define SCRIPTPUBKEYLEN 50 //should be 50 for pubkeyhash.  Internally this is cited as 51 for strings that represent it because +stringterm.
+#define SCRIPTPUBKEYLEN 51
+
 //#define KEYPATHMAXLEN 255 // Maximum length of key path string.  Internally this is cited as 256 for strings that represent it because +stringterm.
 #define KEYPATHMAXLEN 256
 
@@ -288,6 +291,7 @@ dogecoin_bool deriveBIP44ExtendedPublicKey(
 /* utilities */
 uint8_t* utils_hex_to_uint8(const char* str);
 char* utils_uint8_to_hex(const uint8_t* bin, size_t l);
+char* getpass(const char *prompt);
 
 /* Advanced API functions for mnemonic seedphrase generation
 --------------------------------------------------------------------------
@@ -329,6 +333,10 @@ int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index
 #define MAX_FILES 1000
 #define TEST_FILE 999
 
+/* Encrypted BLOB */
+#define MAX_ENCRYPTED_BLOB_SIZE 2048
+typedef uint8_t ENCRYPTED_BLOB[MAX_ENCRYPTED_BLOB_SIZE];
+
 /* Encrypt a BIP32 seed with the TPM */
 dogecoin_bool dogecoin_encrypt_seed_with_tpm (const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite);
 
@@ -350,6 +358,27 @@ dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* out, const int f
 /* Generate a 256-bit random english mnemonic with the TPM */
 dogecoin_bool generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);
 
+/* Encrypt a BIP32 seed with software */
+dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite, const char* test_password, ENCRYPTED_BLOB* encrypted_blob_out, size_t* encrypted_blob_size);
+
+/* Decrypt a BIP32 seed with software */
+dogecoin_bool dogecoin_decrypt_seed_with_sw (SEED seed, const int file_num, const char* test_password, ENCRYPTED_BLOB encrypted_blob);
+
+/* Generate a BIP39 mnemonic and encrypt it with software */
+dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words, const char* test_password, ENCRYPTED_BLOB* encrypted_blob_out, size_t* encrypted_blob_size);
+
+/* Decrypt a BIP39 mnemonic with software */
+dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemonic, const int file_num, const char* test_password, ENCRYPTED_BLOB encrypted_blob);
+
+/* Generate a BIP32 HD node and encrypt it with software */
+dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite, const char* test_password, ENCRYPTED_BLOB* encrypted_blob_out, size_t* encrypted_blob_size);
+
+/* Decrypt a BIP32 HD node object with software */
+dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int file_num, const char* test_password, ENCRYPTED_BLOB encrypted_blob);
+
+/* Generate a 256-bit random english mnemonic with software */
+dogecoin_bool generateRandomEnglishMnemonicSW(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, uint8_t** encrypted_mnemonic_out, size_t* encrypted_mnemonic_size);
+
 /* generates a new dogecoin address from an encrypted seed and a slip44 key path */
 int getDerivedHDAddressFromEncryptedSeed(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const dogecoin_bool is_testnet, const int file_num);
 
@@ -358,6 +387,9 @@ int getDerivedHDAddressFromEncryptedMnemonic(const uint32_t account, const uint3
 
 /* generates a new dogecoin address from an encrypted HD node and a slip44 key path */
 int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet, const int file_num);
+
+/* generates a new dogecoin address from an encrypted seed and a custom key path */
+int getDerivedHDAddressFromAcctPubKey(const char* ext_pubkey, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet);
 
 /* Transaction creation functions - builds a dogecoin transaction
 ----------------------------------------------------------------
@@ -440,6 +472,7 @@ uint64_t coins_to_koinu_str(char* coins);
 */
 char* dogecoin_char_vla(size_t size);
 void dogecoin_free(void* ptr);
+volatile void* dogecoin_mem_zero(volatile void* dst, size_t len);
 
 
 /* Advanced API for signing arbitrary messages
@@ -524,5 +557,20 @@ char* dogecoin_get_utxo_txid_str(char* address, unsigned int index);
 uint8_t* dogecoin_get_utxo_txid(char* address, unsigned int index);
 uint64_t dogecoin_get_balance(char* address);
 char* dogecoin_get_balance_str(char* address);
-uint64_t dogecoin_get_balance(char* address);
-char* dogecoin_get_balance_str(char* address);
+
+/* Random API
+--------------------------------------------------------------------------
+*/
+
+dogecoin_bool dogecoin_random_bytes(uint8_t* buf, uint32_t len, const uint8_t update_seed);
+
+/* Crypto API
+--------------------------------------------------------------------------
+*/
+
+#define SHA1_DIGEST_LENGTH 20
+#define SHA256_DIGEST_LENGTH 32
+
+void hmac_sha1(const uint8_t* key, const size_t keylen, const uint8_t* msg, const size_t msglen, uint8_t* hmac);
+
+void sha256_raw(const uint8_t*, size_t, uint8_t[SHA256_DIGEST_LENGTH]);

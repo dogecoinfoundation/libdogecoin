@@ -27,7 +27,9 @@ jobs:
         name:
           - armhf-linux
           - aarch64-linux
+          - aarch64-linux-optee
           - aarch64-android
+          - x86_64-nixos
           - x86_64-linux-dbg
           - x86_64-linux-openenclave
           - x86_64-macos
@@ -53,6 +55,15 @@ jobs:
             config-opts: "LIBS='-levent_pthreads' --enable-static --disable-shared --enable-test-passwd"
             run-tests: true
             goal: install
+          - name: aarch64-linux-optee
+            host: aarch64-linux-gnu
+            os: ubuntu-20.04
+            run-tests: true
+            run-container: true
+            packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
+            dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
+            config-opts: "LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd --enable-optee CFLAGS=-U_FORTIFY_SOURCE"
+            goal: install
           - name: aarch64-android
             host: aarch64-linux-android
             os: ubuntu-20.04
@@ -63,6 +74,15 @@ jobs:
             goal: install
             android-ndk: android-ndk-r25c-linux
             android-ndk-shasum: "769ee342ea75f80619d985c2da990c48b3d8eaf45f48783a2d48870d04b46108"
+          - name: x86_64-nixos
+            host: x86_64-pc-linux-gnu
+            os: ubuntu-20.04
+            packages: docker.io
+            dep-opts: "SPEED=slow V=1"
+            config-opts: "--enable-static --disable-shared --enable-test-passwd"
+            run-tests: true
+            run-container: true
+            goal: install
           - name: x86_64-linux-dbg
             host: x86_64-pc-linux-gnu
             os: ubuntu-20.04
@@ -75,9 +95,10 @@ jobs:
             host: x86_64-pc-linux-gnu
             os: ubuntu-20.04
             run-tests: true
+            run-container: true
             packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
-            config-opts: "--enable-debug --enable-openenclave --enable-test-passwd CFLAGS=-U_FORTIFY_SOURCE"
+            config-opts: "--enable-openenclave --enable-test-passwd CFLAGS=-U_FORTIFY_SOURCE"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin15
@@ -177,7 +198,7 @@ jobs:
                 source ~/.bashrc
             else
               sudo apt-get update
-              DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin libevent-dev build-essential curl python3 valgrind ${{ matrix.packages }}
+              DEBIAN_FRONTEND=noninteractive sudo apt-get install -y autoconf automake libtool-bin build-essential curl python3 valgrind ${{ matrix.packages }}
             fi
           fi
         shell: bash
@@ -263,15 +284,15 @@ jobs:
         run: |
           build_dir=./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
           mkdir -p $build_dir/bin $build_dir/docs $build_dir/examples $build_dir/include $build_dir/lib $build_dir/test/ $build_dir/test/wordlist
-          if [ "${{ matrix.host }}" == "x86_64-pc-windows-msvc" ]; then
+          if ([ "${{ matrix.host }}" == "x86_64-pc-windows-msvc" ]); then
             cmake -B $build_dir
             cmake --build $build_dir
           else
             make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
             if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
-            cp spvnode.exe such.exe sendtx.exe $build_dir/bin/
+              cp spvnode.exe such.exe sendtx.exe $build_dir/bin/
             else
-            cp spvnode such sendtx $build_dir/bin/
+              cp spvnode such sendtx $build_dir/bin/
             fi
           cp doc/*.md $build_dir/docs/
           cp contrib/examples/example.c $build_dir/examples/
@@ -294,40 +315,14 @@ jobs:
               "armhf-linux")
               qemu-arm -E LD_LIBRARY_PATH=/usr/arm-linux-gnueabihf/lib/ /usr/arm-linux-gnueabihf/lib/ld-linux-armhf.so.3 ./tests
               ;;
-              "aarch64-linux")
+              "aarch64-linux" | "aarch64-linux-optee")
               qemu-aarch64 -E LD_LIBRARY_PATH=/usr/aarch64-linux-gnu/lib/ /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 ./tests
               ;;
-              "x86_64-linux-dbg")
+              "x86_64-linux-dbg" | "x86_64-linux-openenclave" | "x86_64-nixos")
               make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
               python3 tooltests.py
               sudo ./rpctest/fetch.py --host x86_64-linux-gnu
               sudo rm /usr/local/bin/dogecoind
-              ;;
-              "x86_64-linux-openenclave")
-              make check -j"$(getconf _NPROCESSORS_ONLN)" V=1
-              python3 tooltests.py
-              sudo make install
-
-              echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
-              wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
-
-              echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" | sudo tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list
-              wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-
-              echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main" | sudo tee /etc/apt/sources.list.d/msprod.list
-              wget -qO - https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-
-              sudo apt update
-
-              sudo apt -y install clang-11 libssl-dev gdb libsgx-enclave-common libsgx-quote-ex libprotobuf17 libsgx-dcap-ql libsgx-dcap-ql-dev az-dcap-client open-enclave
-              sudo apt -y install dkms
-              source /opt/openenclave/share/openenclave/openenclaverc
-              cd src/openenclave
-              mkdir build
-              cd build
-              cmake ..
-              make
-              make simulate
               ;;
               "aarch64-android"):
               wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip
@@ -366,12 +361,198 @@ jobs:
               ;;
             esac
 
+      - name: run container
+        if: ${{ matrix.run-container }}
+        shell: bash
+        run: |
+            case "${{ matrix.name }}" in
+              "x86_64-linux-openenclave" | "aarch64-linux-optee" | "x86_64-nixos"):
+              if ([ "${{ matrix.name }}" == "aarch64-linux-optee" ]); then
+                make install
+                docker pull jforissier/optee_os_ci:qemu_check
+                docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash -c "\
+                    # Set up the environment and build the OP-TEE SDK
+                    set -e && \
+                    apt update && \
+                    apt -y upgrade && \
+                    apt -y install netcat libusb-1.0-0-dev swig python2 python3-dev python3-setuptools e2tools && \
+                    curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo && chmod a+x /bin/repo && \
+                    mkdir -p optee && \
+                    cd optee && \
+                    repo init -u https://github.com/edtubbs/manifest.git -m nanopc-t6.xml -b nanopc-t6 && \
+                    export FORCE_UNSAFE_CONFIGURE=1 && \
+                    repo sync -j\"$(getconf _NPROCESSORS_ONLN)\" && \
+                    patch -F 4 /src/optee/build/common.mk < /src/src/optee/common.mk.patch && \
+                    patch /src/optee/build/kconfigs/qemu.conf < /src/src/optee/qemu.conf.patch && \
+                    patch /src/optee/linux/arch/arm64/boot/dts/rockchip/rk3588-nanopi6-common.dtsi < /src/src/optee/rk3588-nanopi6-common.dtsi.patch && \
+                    patch /src/optee/u-boot/include/configs/nanopi6.h < /src/src/optee/nanopi6.h.patch && \
+                    cd build && \
+                    make toolchains -j\"$(getconf _NPROCESSORS_ONLN)\" && \
+                    export CFG_TEE_CORE_LOG_LEVEL=0 && \
+                    export CFG_ATTESTATION_PTA=y && \
+                    export CFG_ATTESTATION_PTA_KEY_SIZE=1024 && \
+                    export CFG_WITH_USER_TA=y && \
+
+                    # Generate subkeys
+                    openssl genrsa -out /src/optee/optee_test/ta/top_level_subkey.pem && \
+                    openssl genrsa -out /src/optee/optee_test/ta/mid_level_subkey.pem && \
+                    openssl genrsa -out /src/optee/optee_test/ta/identity_subkey2.pem && \
+
+                    # Sign the top-level subkey with the root key
+                    /src/optee/optee_os/scripts/sign_encrypt.py sign-subkey \
+                        --uuid f04fa996-148a-453c-b037-1dcfbad120a6 \
+                        --key /src/optee/optee_os/keys/default_ta.pem --in /src/optee/optee_test/ta/top_level_subkey.pem \
+                        --out /src/optee/optee_test/ta/top_level_subkey.bin --max-depth 4 --name-size 64 \
+                        --subkey-version 1 && \
+
+                    # Generate UUID for the mid-level subkey
+                    /src/optee/optee_os/scripts/sign_encrypt.py subkey-uuid --in /src/optee/optee_test/ta/top_level_subkey.bin \
+                        --name mid_level_subkey && \
+
+                    # Sign the mid-level subkey with the top-level subkey
+                    /src/optee/optee_os/scripts/sign_encrypt.py sign-subkey \
+                        --uuid 1a5948c5-1aa0-518c-86f4-be6f6a057b16 \
+                        --key /src/optee/optee_test/ta/top_level_subkey.pem --subkey /src/optee/optee_test/ta/top_level_subkey.bin \
+                        --name-size 64 --subkey-version 1 \
+                        --name mid_level_subkey \
+                        --in /src/optee/optee_test/ta/mid_level_subkey.pem --out /src/optee/optee_test/ta/mid_level_subkey.bin && \
+
+                    # Generate UUID for subkey1_ta
+                    /src/optee/optee_os/scripts/sign_encrypt.py subkey-uuid --in /src/optee/optee_test/ta/mid_level_subkey.bin \
+                        --name subkey1_ta && \
+
+                    # Sign the identity subkey2 with the root key
+                    /src/optee/optee_os/scripts/sign_encrypt.py sign-subkey \
+                        --uuid a720ccbb-51da-417d-b82e-e5445d474a7a \
+                        --key /src/optee/optee_os/keys/default_ta.pem --in /src/optee/optee_test/ta/identity_subkey2.pem \
+                        --out /src/optee/optee_test/ta/identity_subkey2.bin --max-depth 0 --name-size 0 \
+                        --subkey-version 1 && \
+
+                    # Build and test the OP-TEE OS and client
+                    make -j\"$(getconf _NPROCESSORS_ONLN)\" && \
+                    cd /src && \
+                    git clone https://github.com/OP-TEE/optee_client.git && \
+                    cd optee_client && \
+                    mkdir -p build && \
+                    cd build && \
+                    export PATH=/src/optee/toolchains/aarch64/bin:$PATH && \
+                    export CC=aarch64-linux-gnu-gcc && \
+                    cmake .. -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc -DCMAKE_INSTALL_PREFIX=/src/optee/toolchains/aarch64 && \
+                    make -j\"$(getconf _NPROCESSORS_ONLN)\" VERBOSE=1 && \
+                    make install"
+                docker run --privileged -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash -c "\
+                    export PATH=/src/optee/toolchains/aarch64/bin:$PATH && \
+                    export CC=aarch64-linux-gnu-gcc && \
+
+                    # Run the libdogecoin TA
+                    cd /src/src/optee/host && \
+                    make -j"$(getconf _NPROCESSORS_ONLN)" \
+                      CROSS_COMPILE=aarch64-linux-gnu- \
+                      LDFLAGS=\"-L/src/optee/toolchains/aarch64/lib -L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
+                      CFLAGS=\"-I/src/optee/toolchains/aarch64/include -I/src/src/optee/ta/include -I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/ykpers-1 -I/src/depends/aarch64-linux-gnu/include/dogecoin\" && \
+
+                    # Build the Trusted Application
+                    cd ../ta && \
+                    make -j"$(getconf _NPROCESSORS_ONLN)" \
+                      CROSS_COMPILE=aarch64-linux-gnu- \
+                      LDFLAGS=\"-L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
+                      CFLAGS=\"-I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/dogecoin\" \
+                      PLATFORM=vexpress-qemu_armv8a \
+                      TA_DEV_KIT_DIR=/src/optee/optee_os/out/arm/export-ta_arm64 && \
+
+                    # Create symbolic links and prepare image
+                    mkdir -p /src/optee/out/bin && \
+                    cd /src/optee/out/bin && \
+                    ln -sf ../../linux/arch/arm64/boot/Image Image && \
+                    ln -sf ../../trusted-firmware-a/build/qemu/release/bl1.bin bl1.bin && \
+                    ln -sf ../../trusted-firmware-a/build/qemu/release/bl2.bin bl2.bin && \
+                    ln -sf ../../trusted-firmware-a/build/qemu/release/bl31.bin bl31.bin && \
+                    ln -sf ../../optee_os/out/arm/core/tee-header_v2.bin bl32.bin && \
+                    ln -sf ../../optee_os/out/arm/core/tee-pager_v2.bin bl32_extra1.bin && \
+                    ln -sf ../../optee_os/out/arm/core/tee-pageable_v2.bin bl32_extra2.bin && \
+                    ln -sf ../../edk2/Build/ArmVirtQemuKernel-AARCH64/RELEASE_GCC5/FV/QEMU_EFI.fd bl33.bin && \
+                    ln -sf ../../out-br/images/rootfs.cpio.gz rootfs.cpio.gz && \
+                    dd if=/dev/zero of=/src/optee/out/bin/libdogecoin.img bs=1M count=32 && \
+                    mkfs.ext4 /src/optee/out/bin/libdogecoin.img && \
+                    mkdir -p /src/optee/out-br/mnt && \
+                    mount -o loop /src/optee/out/bin/libdogecoin.img /src/optee/out-br/mnt && \
+                    cp /src/src/optee/ta/*.ta /src/optee/out-br/mnt && \
+                    cp /src/src/optee/host/optee_libdogecoin /src/optee/out-br/mnt && \
+                    cp /src/spvnode /src/optee/out-br/mnt && \
+                    cp /src/sendtx /src/optee/out-br/mnt && \
+                    cp /src/such /src/optee/out-br/mnt && \
+                    cp /src/tests /src/optee/out-br/mnt && \
+                    cp /src/bench /src/optee/out-br/mnt && \
+                    mkdir -p /src/optee/out-br/mnt/data/tee && \
+                    umount /src/optee/out-br/mnt && \
+                    exit"
+              elif ([ "${{ matrix.name }}" == "x86_64-linux-openenclave" ]); then
+                make install && \
+                mkdir -p src/openenclave/build && \
+                docker run -v $PWD:/src -w /src ubuntu:20.04 bash -c "\
+                  # Install dependencies
+                  export DEBIAN_FRONTEND=noninteractive && \
+                  apt-get update && \
+                  apt-get install -y wget gnupg2 cmake && \
+                  cd /src/src/openenclave && \
+                  echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
+                  wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add - && \
+                  echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list && \
+                  wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+                  echo 'deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main' | tee /etc/apt/sources.list.d/msprod.list && \
+                  wget -qO - https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+                  apt update && \
+                  apt -y install clang-11 libssl-dev gdb libsgx-enclave-common libsgx-quote-ex libprotobuf17 libsgx-dcap-ql libsgx-dcap-ql-dev az-dcap-client open-enclave && \
+                  apt -y install dkms && \
+
+                  # Build OpenEnclave
+                  source /opt/openenclave/share/openenclave/openenclaverc && \
+                  cd build && cmake .. && make && make simulate"
+              elif ([ "${{ matrix.name }}" == "x86_64-nixos" ]); then
+                docker run -v "$(pwd)":/src -w /src --rm -i ghcr.io/nixos/nix:latest /bin/sh -c "\
+                  nix-shell -p gnumake gcc stdenv autoconf automake libtool 'pkg-config' openssl python3 libevent libunistring \
+                  --run ' \
+                  ./autogen.sh && \
+                  ./configure --prefix=/src/depends/${{ matrix.host }} ${{ matrix.config-opts }} HOST=${{ matrix.host }} || ( cat config.log && false) && \
+                  make && \
+                  make check'"
+                fi
+              ;;
+            esac
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: libdogecoin-${{ github.sha }}-${{ matrix.name }}
+          path: ${{ github.workspace }}/build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
+
+      - name: Upload OP-TEE artifacts
+        if: matrix.name == 'aarch64-linux-optee'
+        uses: actions/upload-artifact@v4
+        with:
+          name: libdogecoin-${{ github.sha }}-optee-artifacts
           path: |
-            ${{ github.workspace }}/build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
+            ${{ github.workspace }}/optee/linux/arch/arm64/boot/Image
+            ${{ github.workspace }}/optee/trusted-firmware-a/build/qemu/release/bl1.bin
+            ${{ github.workspace }}/optee/trusted-firmware-a/build/qemu/release/bl2.bin
+            ${{ github.workspace }}/optee/trusted-firmware-a/build/qemu/release/bl31.bin
+            ${{ github.workspace }}/optee/optee_os/out/arm/core/tee-header_v2.bin
+            ${{ github.workspace }}/optee/optee_os/out/arm/core/tee-pager_v2.bin
+            ${{ github.workspace }}/optee/optee_os/out/arm/core/tee-pageable_v2.bin
+            ${{ github.workspace }}/optee/edk2/Build/ArmVirtQemuKernel-AARCH64/RELEASE_GCC5/FV/QEMU_EFI.fd
+            ${{ github.workspace }}/optee/out-br/images/rootfs.cpio.gz
+            ${{ github.workspace }}/src/optee/ta/*.ta
+            ${{ github.workspace }}/src/optee/host/optee_libdogecoin
+            ${{ github.workspace }}/optee/out/*
+
+      - name: Upload OpenEnclave artifacts
+        if: matrix.name == 'x86_64-linux-openenclave'
+        uses: actions/upload-artifact@v4
+        with:
+          name: libdogecoin-${{ github.sha }}-openenclave-artifacts
+          path: |
+            ${{ github.workspace }}/src/openenclave/build/host/host
+            ${{ github.workspace }}/src/openenclave/build/enclave/enclave.signed
 
   sign-x86_64-win:
     needs: build

@@ -446,7 +446,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             }
             // decrypt encrypted mnemonic with software
             if (!tpmSuccess) {
-                if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num, NULL)) {
+                if (!dogecoin_decrypt_mnemonic_with_sw(mnemonic, file_num, NULL, NULL)) {
                     showError("Decrypting mnemonic from software failed\n");
                     dogecoin_wallet_free(wallet);
                     return NULL;
@@ -473,7 +473,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
             }
             // decrypt encrypted master key with software
             if (!tpmSuccess) {
-                if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num, NULL)) {
+                if (!dogecoin_decrypt_hdnode_with_sw(&node, file_num, NULL, NULL)) {
                     showError("Decrypting master key from software failed\n");
                     dogecoin_wallet_free(wallet);
                     return NULL;
@@ -505,7 +505,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                         if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                             bool overwrite = (buffer[0] == 'Y' || buffer[0] == 'y');
                             // encrypt seed for storage with software
-                            if (dogecoin_encrypt_seed_with_sw(seed, sizeof(seed), file_id, overwrite, NULL) == false) {
+                            if (dogecoin_encrypt_seed_with_sw(seed, sizeof(seed), file_id, overwrite, NULL, NULL, NULL)) {
                                 dogecoin_wallet_free(wallet);
                                 return NULL;
                             }

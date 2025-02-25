@@ -1,0 +1,24 @@
+--- a/nanopi6.h
++++ b/nanopi6.h
+@@ -31,20 +31,10 @@
+ 	"stderr=serial,vidconsole\0"
+
+ #define RKIMG_DET_BOOTDEV \
+-	"rkimg_bootdev=" \
+-	"if mmc dev 1 && rkimgtest mmc 1; then " \
+-		"setenv devtype mmc; setenv devnum 1; echo Boot from SDcard;" \
+-	"elif mmc dev 0; then " \
+-		"setenv devtype mmc; setenv devnum 0;" \
+-	"elif rksfc dev 1; then " \
+-		"setenv devtype spinor; setenv devnum 1;" \
+-	"fi; \0"
++	"bootcmd=setenv bootdev unknown; setenv kernel_addr_gz 0xa2080000; setenv fdt_addr_r 0x08300000; setenv kernel /boot/Image.gz; setenv fdtfile rk3588-nanopi6-rev01.dtb; for d in 1 0; do test ${bootdev} = unknown && echo .. Looking for ${kernel} in mmc ${d}:5 && test -e mmc ${d}:5 ${kernel} && setenv bootdev ${d} && echo .. Found; done; if test ${bootdev} = unknown; then echo .. Kernel not found; else echo .. Loading kernel; ext2load mmc ${bootdev}:5 ${kernel_addr_gz} ${kernel}; unzip ${kernel_addr_gz} ${kernel_addr_r}; echo .. Loading DTB: mmc ${bootdev}:5 ${fdtfile}; ext2load mmc ${bootdev}:5 ${fdt_addr_r} /boot/${fdtfile}; echo .. Booting kernel; booti ${kernel_addr_r} - ${fdt_addr_r}; fi; \0"
+
+ #define RKIMG_BOOTCOMMAND \
+-	"boot_fit;" \
+-	"boot_android ${devtype} ${devnum};" \
+-	"bootrkp;" \
+-	"run distro_bootcmd;"
++	"run bootcmd;"
+
+ #define CONFIG_BOOTCOMMAND		RKIMG_BOOTCOMMAND
