@@ -213,7 +213,7 @@ The SDK has several components and requires over 10GB of disk space to build. Th
 
 This command builds the latest SDK and client for NanoPC-T6 (nanopc-t6.xml).  When complete, the image will be located in `/doge/libdogecoin/optee/out/nanopc-t6.img`. Burn this image to an SD card to boot the NanoPC-T6. Connect an Ethernet cable, USB keyboard and HDMI to the NanoPC-T6 and power it on. The default IP address is configured using DHCP. Login as root via ssh (e.g. `ssh root@192.168.137.19`) or using the HDMI console.
 
-`LINUX_MODULES=y` is used to build the Linux kernel modules. The `CFG_TEE_CORE_LOG_LEVEL=0` environment variable sets the log level to 0 (no logging). The `CFG_ATTESTATION_PTA=y` environment variable enables the attestation PTA. The `CFG_ATTESTATION_PTA_KEY_SIZE=1024` environment variable sets the attestation PTA key size to 1024 bits. The `CFG_WITH_USER_TA=y` environment variable enables user TAs.
+`LINUX_MODULES=y` is used to build the Linux kernel modules. The `CFG_TEE_CORE_LOG_LEVEL=0` environment variable sets the log level to 0 (no logging). The `CFG_ATTESTATION_PTA=y` environment variable enables the attestation PTA. The `CFG_ATTESTATION_PTA_KEY_SIZE=1024` environment variable sets the attestation PTA key size to 1024 bits. The `CFG_WITH_USER_TA=y` environment variable enables user TAs. The `CFG_WITH_SOFTWARE_PRNG=n` environment variable enables the hardware PRNG.
 
 An RSA private key is generated and overwrites the default Trusted Application (TA) key. This key is used to sign the enclave binaries during development. In the Continuous Integration (CI) environment, an Actions secret is used. Subkeys are generated for testing purposes but are not used to sign the enclave binaries.
 
@@ -238,6 +238,7 @@ docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash 
     export CFG_ATTESTATION_PTA=y && \
     export CFG_ATTESTATION_PTA_KEY_SIZE=1024 && \
     export CFG_WITH_USER_TA=y && \
+    export CFG_WITH_SOFTWARE_PRNG=n && \
 
     # Generate RSA private key and overwrite the default TA key
     openssl genpkey -algorithm RSA -out rsa_private.pem -pkeyopt rsa_keygen_bits:2048 && \
@@ -376,6 +377,8 @@ docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash 
 
 This command builds the OP-TEE Libdogecoin Key Manager Enclave for QEMU ARMv8 or NanoPC-T6. The enclave is built using the OP-TEE SDK and client. The enclave binary is located in `/doge/libdogecoin/optee/out/bin/libdogecoin.img`.
 
+Note that libdogecoin is built twice: once for the host and once for OP-TEE. The host build is used to build the host application, while the OP-TEE build is used to build the enclave. The CFLAGS=-Wp,-D_FORTIFY_SOURCE=0 flag is used to disable fortify source checks, which are not supported by OP-TEE.
+
 ```sh
 docker run --privileged -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash -c "\
     # Set up the environment and build libdogecoin
@@ -401,7 +404,8 @@ docker run --privileged -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_che
 
     # Build libdogecoin for OP-TEE
     cd /src/ && \
-    ./configure --prefix=/src/depends/aarch64-linux-gnu LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd --enable-optee CFLAGS=-U_FORTIFY_SOURCE HOST=aarch64-linux-gnu && \
+    make -j 4 -C depends CFLAGS=-Wp,-D_FORTIFY_SOURCE=0 HOST=aarch64-linux-gnu && \
+    ./configure --prefix=/src/depends/aarch64-linux-gnu LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd --enable-optee CFLAGS=-Wp,-D_FORTIFY_SOURCE=0 HOST=aarch64-linux-gnu && \
     make -j 4 && \
     make install && \
 
@@ -409,6 +413,7 @@ docker run --privileged -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_che
     cd /src/src/optee/ta && \
     make -j 4 \
       CROSS_COMPILE=aarch64-linux-gnu- \
+      LIBDIR=/src/depends/aarch64-linux-gnu/lib \
       LDFLAGS=\"-L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
       CFLAGS=\"-I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/dogecoin\" \
       PLATFORM=vexpress-qemu_armv8a \
@@ -544,7 +549,7 @@ docker run --device /dev/sgx_enclave:/dev/sgx_enclave --device /dev/sgx_provisio
   # Build libdogecoin for Enclave
   make -j 4 -C depends HOST=x86_64-pc-linux-gnu && \
   ./autogen.sh && \
-  ./configure --prefix=/src/depends/x86_64-pc-linux-gnu --enable-openenclave --enable-test-passwd CFLAGS=-U_FORTIFY_SOURCE && \
+  ./configure --prefix=/src/depends/x86_64-pc-linux-gnu --enable-openenclave --enable-test-passwd CFLAGS=-Wp,-D_FORTIFY_SOURCE=0 && \
   make && \
   make install && \
 

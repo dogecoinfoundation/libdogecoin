@@ -673,7 +673,7 @@ int main(int argc, const char* argv[])
     dogecoin_bool yubikey = false;
     char* flags = "";
 
-    while ((opt = getopt_long_only(argc, argv, "c:o:l:i:m:t:n:s:e:p:d:a:f:h:z", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, (char *const *)argv, "c:o:l:i:m:t:n:s:e:p:d:a:f:h:z", long_options, &long_index)) != -1) {
         switch (opt) {
             case 'c':
                 cmd = optarg;
