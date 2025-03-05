@@ -79,14 +79,14 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
         dogecoin_mem_zero(wallet_total, 21);
         uint64_t wallet_total_u64 = 0;
 
-        if (HASH_COUNT(utxos) > 0) {
+        if (HASH_COUNT(wallet->utxos) > 0) {
             dogecoin_utxo* utxo;
             dogecoin_utxo* tmp;
-            HASH_ITER(hh, utxos, utxo, tmp) {
+            HASH_ITER(hh, wallet->utxos, utxo, tmp) {
                 if (!utxo->spendable) {
                     // For spent UTXOs
                     evbuffer_add_printf(evb, "%s\n", "----------------------");
-                    evbuffer_add_printf(evb, "txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof utxo->txid));
+                    evbuffer_add_printf(evb, "txid:           %s\n", utils_uint8_to_hex(utxo->txid, sizeof(utxo->txid)));
                     evbuffer_add_printf(evb, "vout:           %d\n", utxo->vout);
                     evbuffer_add_printf(evb, "address:        %s\n", utxo->address);
                     evbuffer_add_printf(evb, "script_pubkey:  %s\n", utxo->script_pubkey);
@@ -146,15 +146,15 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
         // Read the wallet file into a buffer
         char* buffer = malloc(file_size);
         if (buffer == NULL) {
-            fclose(file);
             evhttp_send_error(req, HTTP_INTERNAL, "Internal Server Error");
             evbuffer_free(evb);
             return;
         }
         size_t result = fread(buffer, 1, file_size, file);
-        if (!result) {
-            evbuffer_free(evb);
+        if (result != file_size) {
             free(buffer);
+            evbuffer_free(evb);
+            evhttp_send_error(req, HTTP_INTERNAL, "Failed to read wallet file");
             return;
         }
 
@@ -184,15 +184,15 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
         // Read the headers file into a buffer
         char* buffer = malloc(file_size);
         if (buffer == NULL) {
-            fclose(file);
             evhttp_send_error(req, HTTP_INTERNAL, "Internal Server Error");
             evbuffer_free(evb);
             return;
         }
         size_t result = fread(buffer, 1, file_size, file);
-        if (!result) {
-            evbuffer_free(evb);
+        if (result != file_size) {
             free(buffer);
+            evbuffer_free(evb);
+            evhttp_send_error(req, HTTP_INTERNAL, "Failed to read headers file");
             return;
         }
 
@@ -213,7 +213,12 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
         return;
     }
 
-    evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain");
+    // Set Content-Type header if not already set
+    struct evkeyvalq* headers = evhttp_request_get_output_headers(req);
+    if (!evhttp_find_header(headers, "Content-Type")) {
+        evhttp_add_header(headers, "Content-Type", "text/plain");
+    }
+
     evhttp_send_reply(req, HTTP_OK, "OK", evb);
     evbuffer_free(evb);
 }
