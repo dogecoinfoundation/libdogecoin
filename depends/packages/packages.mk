@@ -15,3 +15,7 @@ darwin_native_packages+= native_clang
 endif
 
 endif
+
+ifneq ($(host_os),mingw32)
+packages+=libunistring
+endif
