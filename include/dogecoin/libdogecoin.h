@@ -291,6 +291,8 @@ dogecoin_bool deriveBIP44ExtendedPublicKey(
 /* utilities */
 uint8_t* utils_hex_to_uint8(const char* str);
 char* utils_uint8_to_hex(const uint8_t* bin, size_t l);
+void utils_hex_to_bin(const char* str, unsigned char* out, size_t inLen, size_t* outLen);
+void utils_bin_to_hex(unsigned char* bin_in, size_t inlen, char* hex_out);
 char* getpass(const char *prompt);
 
 /* Advanced API functions for mnemonic seedphrase generation

@@ -91,23 +91,27 @@ static struct option long_options[] =
     {"mnemonic_input", required_argument, NULL, 'n'},
     {"shared_secret", required_argument, NULL, 's'},
     {"entropy_size", required_argument, NULL, 'e'},
+    {"auth_token", required_argument, NULL, 'a'},
+    {"password", required_argument, NULL, 'p'},
+    {"custom_path", required_argument, NULL, 'h'},
+    {"yubikey", no_argument, NULL, 'z'},
     {NULL, 0, NULL, 0}
 };
 
 static void print_usage()
 {
-    printf("Usage: host -c <cmd> (-o|-account_int <account_int>) (-i|-input_index <input index>) (-l|-change_level <change level>) \
+    printf("Usage: host/host enclave/enclave.signed -c <cmd> (-o|-account_int <account_int>) (-i|-input_index <input index>) (-l|-change_level <change level>) \
 (-m|-message <message>) (-t|-transaction <transaction>) (-n|-mnemonic_input <mnemonic input>) (-s|-shared_secret <shared secret>) \
-(-e|-entropy_size <entropy size>)\n");
+(-e|-entropy_size <entropy size>) (-a|-auth_token <auth token>) (-p|-password <password>) (-h|custom_path <custom path>) (-z|yubikey)\n");
     printf("Available commands:\n");
-    printf("  generate_mnemonic (optional -n <mnemonic_input> -s <shared_secret> -e <entropy_size>)\n");
-    printf("  generate_extended_public_key (requires -o <account_int> -i <input_index> -l <change_level>\n");
-    printf("  generate_address (requires -o <account_int> -i <input_index> -l <change_level>)\n");
-    printf("  sign_message (requires -o <account_int> -i <input_index> -l <change_level> -m <message>)\n");
-    printf("  sign_transaction (requires -o <account_int> -i <input_index> -l <change_level> -t <transaction>)\n");
+    printf("  generate_mnemonic (optional -n <mnemonic_input> -s <shared_secret> -e <entropy_size> -p <password> -z)\n");
+    printf("  generate_extended_public_key (requires -o <account_int> -l <change_level>) (optional -h <custom_path> -a <auth_token> or -p <password> -z)\n");
+    printf("  generate_address (requires -o <account_int> -i <input_index> -l <change_level>) (optional -h <custom_path> -a <auth_token> or -p <password> -z)\n");
+    printf("  sign_message (requires -o <account_int> -i <input_index> -l <change_level> -m <message>) (optional -h <custom_path> -a <auth_token> or -p <password> -z)\n");
+    printf("  sign_transaction (requires -o <account_int> -i <input_index> -l <change_level> -t <transaction>) (optional -h <custom_path> -a <auth_token> or -p <password> -z)\n");
 }
 
-void write_encrypted_file(const char* filename, const uint8_t* data, size_t data_size)
+void write_encrypted_file(const char* filename, const data_t* enc_blob)
 {
     FILE* file = fopen(filename, "wb");
     if (file == NULL)
@@ -115,32 +119,49 @@ void write_encrypted_file(const char* filename, const uint8_t* data, size_t data
         fprintf(stderr, "Failed to open file %s for writing\n", filename);
         return;
     }
-    size_t written = fwrite(data, 1, data_size, file);
-    if (written != data_size)
+    size_t written = fwrite(enc_blob->data, 1, enc_blob->size, file);
+    if (written != enc_blob->size)
     {
         fprintf(stderr, "Failed to write data to file %s\n", filename);
     }
     fclose(file);
 }
 
-void read_encrypted_file(const char* filename, uint8_t* data, size_t* data_size)
+void read_encrypted_file(const char* filename, data_t* enc_blob)
 {
     FILE* file = fopen(filename, "rb");
     if (file == NULL)
     {
         fprintf(stderr, "Failed to open file %s for reading\n", filename);
-        *data_size = 0;
+        enc_blob->data = NULL;
+        enc_blob->size = 0;
         return;
     }
-    *data_size = fread(data, 1, *data_size, file);
-    if (*data_size == 0)
+    fseek(file, 0, SEEK_END);
+    enc_blob->size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    enc_blob->data = (uint8_t*)malloc(enc_blob->size);
+    if (enc_blob->data == NULL)
     {
-        fprintf(stderr, "Failed to read data from file %s\n", filename);
+        fprintf(stderr, "Memory allocation failed\n");
+        fclose(file);
+        enc_blob->size = 0;
+        return;
+    }
+
+    size_t read_size = fread(enc_blob->data, 1, enc_blob->size, file);
+    if (read_size != enc_blob->size)
+    {
+        fprintf(stderr, "Failed to read complete data from file %s\n", filename);
+        free(enc_blob->data);
+        enc_blob->data = NULL;
+        enc_blob->size = 0;
     }
     fclose(file);
 }
 
-void set_totp_secret(YK_KEY *yk, const char *secret) {
+void set_totp_secret(YK_KEY *yk, const char *secret, const uint8_t slot) {
     YKP_CONFIG *cfg = ykp_alloc();
     YK_STATUS *st = ykds_alloc();
 
@@ -168,7 +189,7 @@ void set_totp_secret(YK_KEY *yk, const char *secret) {
     core_config->cfgFlags &= ~CFGFLAG_CHAL_BTN_TRIG; // Disable button press
     core_config->extFlags |= EXTFLAG_SERIAL_API_VISIBLE;
 
-    if (!ykp_configure_command(cfg, SLOT_CONFIG)) {
+    if (!ykp_configure_command(cfg, slot)) {
         fprintf(stderr, "Internal error: couldn't configure command\n");
         ykp_free_config(cfg);
         ykds_free(st);
@@ -207,7 +228,7 @@ void set_totp_secret(YK_KEY *yk, const char *secret) {
     ykds_free(st);
 }
 
-uint32_t get_totp_from_yubikey(YK_KEY *yk) {
+uint32_t get_totp_from_yubikey(YK_KEY *yk, uint8_t yk_cmd) {
     unsigned int t_counter = (unsigned int)time(NULL) / 30;
     unsigned char challenge[8];
     for (int i = 7; i >= 0; i--) {
@@ -221,9 +242,9 @@ uint32_t get_totp_from_yubikey(YK_KEY *yk) {
     }
 
     unsigned char response[SHA1_MAX_BLOCK_SIZE];
-    if (!yk_challenge_response(yk, SLOT_CHAL_HMAC1, true, sizeof(challenge), challenge, sizeof(response), response)) {
+    if (!yk_challenge_response(yk, yk_cmd, true, sizeof(challenge), challenge, sizeof(response), response)) {
         fprintf(stderr, "Failed to generate TOTP code\n");
-       return 0;
+        return 0;
     }
 
     unsigned int offset = response[19] & 0xf;
@@ -271,21 +292,24 @@ int main(int argc, char* argv[])
     int opt = 0;
     int long_index = 0;
     char* cmd = 0;
-    uint32_t* account = NULL;
-    uint32_t* input_index = NULL;
-    const char* change_level = NULL;
+    uint32_t auth_token = 0;
+    uint32_t account = 0;
+    uint32_t input_index = 0;
+    char* change_level = NULL;
+    char* custom_path = NULL;
     char* message = "This is a test message";
     char* transaction = NULL;
     char* shared_secret = NULL;
     char* mnemonic_in = NULL;
     char* entropy_size = NULL;
+    char* password = NULL;
+    bool yubikey = false;
 
     // Allocate memory for encrypted blobs
-    uint8_t* encrypted_blob = malloc(MAX_ENCRYPTED_BLOB_SIZE);
-    size_t blob_size = MAX_ENCRYPTED_BLOB_SIZE;
+    data_t encrypted_blob = {NULL, 0};
 
     // Parse remaining CLI options
-    while ((opt = getopt_long_only(remaining_argc, remaining_argv, "c:o:i:l:m:t:n:s:e:", long_options, &long_index)) != -1)
+    while ((opt = getopt_long_only(remaining_argc, remaining_argv, "c:o:i:l:m:t:n:s:e:p:a:h:z", long_options, &long_index)) != -1)
     {
         switch (opt)
         {
@@ -293,12 +317,10 @@ int main(int argc, char* argv[])
                 cmd = optarg;
                 break;
             case 'o':
-                account = (uint32_t*)malloc(sizeof(uint32_t));
-                *account = (uint32_t)strtol(optarg, NULL, 10);
+                account = (uint32_t)strtol(optarg, NULL, 10);
                 break;
             case 'i':
-                input_index = (uint32_t*)malloc(sizeof(uint32_t));
-                *input_index = (uint32_t)strtol(optarg, NULL, 10);
+                input_index = (uint32_t)strtol(optarg, NULL, 10);
                 break;
             case 'l':
                 change_level = optarg;
@@ -318,6 +340,18 @@ int main(int argc, char* argv[])
             case 'e':
                 entropy_size = optarg;
                 break;
+            case 'p':
+                password = optarg;
+                break;
+            case 'a':
+                auth_token = (uint32_t)strtol(optarg, NULL, 10);
+                break;
+            case 'h':
+                custom_path = optarg;
+                break;
+            case 'z':
+                yubikey = true;
+                break;
             default:
                 print_usage();
                 exit(EXIT_SUCCESS);
@@ -330,13 +364,14 @@ int main(int argc, char* argv[])
         exit(EXIT_SUCCESS);
     }
 
-    if (!yk_init()) {
+    YK_KEY *yk = NULL;
+    if (!yk_init() && yubikey) {
         fprintf(stderr, "Failed to initialize YubiKey\n");
-    }
-
-    YK_KEY *yk = yk_open_first_key();
-    if (!yk) {
-        fprintf(stderr, "Failed to open YubiKey\n");
+    } else if (yubikey) {
+        yk = yk_open_first_key();
+        if (!yk) {
+            fprintf(stderr, "Failed to open YubiKey\n");
+        }
     }
 
     if (strcmp(cmd, "run_example") == 0)
@@ -351,53 +386,88 @@ int main(int argc, char* argv[])
     else if (strcmp(cmd, "generate_master_key") == 0)
     {
         printf("- Generate a master key\n");
-        result = enclave_libdogecoin_generate_master_key(enclave, &encrypted_blob, &blob_size);
+        result = enclave_libdogecoin_generate_master_key(enclave, &encrypted_blob);
         if (result != OE_OK)
         {
             fprintf(stderr, "Failed to generate a master key: result=%u (%s)\n", result, oe_result_str(result));
         }
         else
         {
-            write_encrypted_file(MASTER_TEE_FILE_NAME, encrypted_blob, blob_size);
+            write_encrypted_file(MASTER_TEE_FILE_NAME, &encrypted_blob);
         }
     }
     else if (strcmp(cmd, "generate_mnemonic") == 0)
     {
         printf("- Generate and encrypt a mnemonic\n");
-        if (!shared_secret) {
-            shared_secret = getpass("Enter shared secret (hex, 40 characters): ");
+        if (yubikey) {
             if (!shared_secret) {
-                fprintf(stderr, "Failed to read shared secret\n");
-                goto exit;
+                shared_secret = getpass("Enter shared secret for TOTP (hex, 40 characters) or press enter to generate one: ");
+                if (!shared_secret) {
+                    fprintf(stderr, "Failed to read shared secret\n");
+                 goto exit;
+                }
+            }
+
+            if (strlen(shared_secret) == 0) {
+                printf("Shared secret not provided, generating one...\n");
+                // Generate random 20 bytes (40 hex characters)
+                unsigned char random_bytes[TOTP_SECRET_HEX_SIZE / 2];
+                dogecoin_random_bytes(random_bytes, sizeof(random_bytes), 0);
+
+                shared_secret = malloc(TOTP_SECRET_HEX_SIZE + 1);
+                if (!shared_secret) {
+                    fprintf(stderr, "Failed to allocate memory for shared secret\n");
+                    goto exit;
+                }
+
+                utils_bin_to_hex(random_bytes, sizeof(random_bytes), shared_secret);
+                shared_secret[TOTP_SECRET_HEX_SIZE] = '\0';
+                printf("Generated shared secret: %s\n", shared_secret);
+            }
+
+            // Check if there is an existing configuration in slot 1
+            YK_STATUS *status = ykds_alloc();
+            if (yk) {
+                if (!yk_get_status(yk, status)) {
+                    fprintf(stderr, "Failed to get YubiKey status\n");
+                }
+            }
+
+            // Check if slot 1 has a configuration
+            if (yk && (ykds_touch_level(status) & CONFIG1_VALID) == CONFIG1_VALID) {
+                char response;
+                printf("Slot 1 already has a configuration. Do you want to overwrite it? (y/N): ");
+                scanf(" %c", &response);
+                if (response != 'y' && response != 'Y') {
+                    printf("Aborted by user\n");
+                    ykds_free(status);
+                    goto exit;
+                }
+            }
+
+            ykds_free(status);
+
+            if (yk) {
+                set_totp_secret(yk, shared_secret, SLOT_CONFIG);
             }
         }
 
-        // Check if there is an existing configuration in slot 1
-        YK_STATUS *status = ykds_alloc();
-        if (yk && !yk_get_status(yk, status)) {
-            fprintf(stderr, "Failed to get YubiKey status\n");
-        }
-
-        // Check if slot 1 has a configuration
-        if (yk && (ykds_touch_level(status) & CONFIG1_VALID) == CONFIG1_VALID) {
-            char response;
-            printf("Slot 1 already has a configuration. Do you want to overwrite it? (y/N): ");
-            scanf(" %c", &response);
-            if (response != 'y' && response != 'Y') {
-                printf("Aborted by user\n");
-                ykds_free(status);
+        if (!password && !shared_secret) {
+            password = getpass("Enter management password: ");
+            if (strlen(password) == 0) {
+                fprintf(stderr, "Password cannot be empty\n");
                 goto exit;
             }
-        }
-
-        ykds_free(status);
-
-        if (yk) {
-            set_totp_secret(yk, shared_secret);
+            printf("\n");
+            if (strcmp (password, getpass("Confirm password: ")) != 0) {
+                fprintf(stderr, "Password mismatch\n");
+                goto exit;
+            }
+            printf("\n");
         }
 
         MNEMONIC mnemonic = {0};
-        result = enclave_libdogecoin_generate_mnemonic(enclave, &encrypted_blob, &blob_size, mnemonic, shared_secret, mnemonic_in, entropy_size);
+        result = enclave_libdogecoin_generate_mnemonic(enclave, &encrypted_blob, mnemonic, shared_secret, mnemonic_in, entropy_size, password);
         if (result != OE_OK)
         {
             fprintf(stderr, "Failed to generate and encrypt a mnemonic: result=%u (%s)\n", result, oe_result_str(result));
@@ -410,32 +480,36 @@ int main(int argc, char* argv[])
                 fprintf(stderr, "ERROR: Failed to create directory\n");
                 return false;
             }
-            write_encrypted_file(MNEMONIC_TEE_FILE_NAME, encrypted_blob, blob_size);
+            write_encrypted_file(MNEMONIC_TEE_FILE_NAME, &encrypted_blob);
         }
         dogecoin_mem_zero(mnemonic, strlen(mnemonic));
     }
     else if (strcmp(cmd, "generate_extended_public_key") == 0)
     {
         printf("- Generate a public key\n");
-        uint8_t pubkeyhex[128];
-        uint32_t auth_token = get_totp_from_yubikey(yk);
+        uint8_t pubkeyhex[128] = {0};
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
+            if (!password) {
+                fprintf(stderr, "Failed to read password\n");
+                goto exit;
+            }
+        }
+
+        if (auth_token == 0 && yubikey) {
+            auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
+        }
         printf("Auth token: %u\n", auth_token);
-        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, encrypted_blob, &blob_size);
-        if (blob_size == 0)
+        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, &encrypted_blob);
+        if (encrypted_blob.size == 0)
         {
             fprintf(stderr, "Failed to read encrypted mnemonic from file\n");
             ret = 0;
             goto exit;
         }
-        // verify account and change_level are set
-        if (!account || !change_level)
-        {
-            fprintf(stderr, "Account and change level must be set\n");
-            ret = 0;
-            goto exit;
-        }
-        result = enclave_libdogecoin_generate_extended_public_key(enclave, encrypted_blob, blob_size, (char*)pubkeyhex, account, change_level, auth_token);
-        if (strlen(pubkeyhex) == 0)
+
+        result = enclave_libdogecoin_generate_extended_public_key(enclave, &encrypted_blob, custom_path, (char*)pubkeyhex, account, change_level, auth_token, password);
+        if (result != OE_OK)
         {
             fprintf(stderr, "Failed to generate public key: result=%u (%s)\n", result, oe_result_str(result));
         }
@@ -447,24 +521,28 @@ int main(int argc, char* argv[])
     else if (strcmp(cmd, "generate_address") == 0)
     {
         printf("- Generate address\n");
-        char addresses[P2PKHLEN * NUM_ADDRESSES];
-        uint32_t auth_token = get_totp_from_yubikey(yk);
+        char addresses[P2PKHLEN * NUM_ADDRESSES] = {0};
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
+            if (!password) {
+                fprintf(stderr, "Failed to read password\n");
+                goto exit;
+            }
+        }
+
+        if (auth_token == 0 && yubikey) {
+            auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
+        }
         printf("Auth token: %u\n", auth_token);
-        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, encrypted_blob, &blob_size);
-        if (blob_size == 0)
+        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, &encrypted_blob);
+        if (encrypted_blob.size == 0)
         {
             fprintf(stderr, "Failed to read encrypted mnemonic from file\n");
             ret = 0;
             goto exit;
         }
-        // verify account, input_index and change_level are set
-        if (!account || !input_index || !change_level)
-        {
-            fprintf(stderr, "Account, input index and change level must be set\n");
-            ret = 0;
-            goto exit;
-        }
-        result = enclave_libdogecoin_generate_address(enclave, encrypted_blob, blob_size, addresses, *account, *input_index, change_level, NUM_ADDRESSES, auth_token);
+
+        result = enclave_libdogecoin_generate_address(enclave, &encrypted_blob, custom_path, addresses, account, input_index, change_level, NUM_ADDRESSES, auth_token, password);
         if (result != OE_OK)
         {
             fprintf(stderr, "Failed to generate addresses: result=%u (%s)\n", result, oe_result_str(result));
@@ -478,24 +556,28 @@ int main(int argc, char* argv[])
     {
         printf("- Sign a message\n");
         uint8_t signature[2048] = {0};
-        uint32_t auth_token = get_totp_from_yubikey(yk);
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
+            if (!password) {
+                fprintf(stderr, "Failed to read password\n");
+                goto exit;
+            }
+        }
+
+        if (auth_token == 0 && yubikey) {
+            auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
+        }
         printf("Auth token: %u\n", auth_token);
-        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, encrypted_blob, &blob_size);
-        if (blob_size == 0)
+        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, &encrypted_blob);
+        if (encrypted_blob.size == 0)
         {
             fprintf(stderr, "Failed to read encrypted mnemonic from file\n");
             ret = 0;
             goto exit;
         }
-        // verify account, input_index and change_level are set
-        if (!account || !input_index || !change_level)
-        {
-            fprintf(stderr, "Account, input index and change level must be set\n");
-            ret = 0;
-            goto exit;
-        }
+
         printf ("Signing message: %s\n", message);
-        result = enclave_libdogecoin_sign_message(enclave, encrypted_blob, blob_size, message, (char*)signature, *account, *input_index, change_level, auth_token);
+        result = enclave_libdogecoin_sign_message(enclave, &encrypted_blob, custom_path, message, (char*)signature, account, input_index, change_level, auth_token, password);
         if (result != OE_OK)
         {
             fprintf(stderr, "Failed to sign the message: result=%u (%s)\n", result, oe_result_str(result));
@@ -508,22 +590,24 @@ int main(int argc, char* argv[])
     else if (strcmp(cmd, "sign_transaction") == 0)
     {
         printf("- Sign a transaction\n");
-        char raw_tx[1024];
-        char signed_tx[4096];
-        uint32_t auth_token = get_totp_from_yubikey(yk);
-        printf("Auth token: %u\n", auth_token);
-        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, encrypted_blob, &blob_size);
-        if (blob_size == 0)
-        {
-            fprintf(stderr, "Failed to read encrypted mnemonic from file\n");
-            ret = 0;
-            goto exit;
+        char raw_tx[1024] = {0};
+        char signed_tx[4096] = {0};
+        if (!password && !yubikey && auth_token == 0) {
+            password = getpass("Enter management password: ");
+            if (!password) {
+                fprintf(stderr, "Failed to read password\n");
+                goto exit;
+            }
         }
 
-        // verify account, input_index and change_level are set
-        if (!account || !input_index || !change_level)
+        if (auth_token == 0 && yubikey) {
+            auth_token = get_totp_from_yubikey(yk, SLOT_CHAL_HMAC1);
+        }
+        printf("Auth token: %u\n", auth_token);
+        read_encrypted_file(MNEMONIC_TEE_FILE_NAME, &encrypted_blob);
+        if (encrypted_blob.size == 0)
         {
-            fprintf(stderr, "Account, input index and change level must be set\n");
+            fprintf(stderr, "Failed to read encrypted mnemonic from file\n");
             ret = 0;
             goto exit;
         }
@@ -587,7 +671,7 @@ int main(int argc, char* argv[])
         printf("Raw transaction created: %s\n", raw_tx);
         printf("Raw transaction length: %zu\n", strlen(raw_tx));
 
-        result = enclave_libdogecoin_sign_transaction(enclave, encrypted_blob, blob_size, transaction != NULL ? transaction : raw_tx, signed_tx, *account, *input_index, change_level, auth_token);
+        result = enclave_libdogecoin_sign_transaction(enclave, &encrypted_blob, custom_path, transaction != NULL ? transaction : raw_tx, signed_tx, account, input_index, change_level, auth_token, password);
         if (result != OE_OK)
         {
             fprintf(stderr, "Failed to sign the transaction: result=%u (%s)\n", result, oe_result_str(result));
@@ -612,14 +696,6 @@ exit:
     }
     if (shared_secret) {
         dogecoin_mem_zero(shared_secret, strlen(shared_secret));
-    }
-    if (account)
-    {
-        free(account);
-    }
-    if (input_index)
-    {
-        free(input_index);
     }
     if (yk)
     {

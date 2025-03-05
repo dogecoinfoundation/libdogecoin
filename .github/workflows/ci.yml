@@ -370,6 +370,9 @@ jobs:
               "x86_64-linux-openenclave" | "aarch64-linux-optee" | "x86_64-nixos"):
               if ([ "${{ matrix.name }}" == "aarch64-linux-optee" ]); then
                 make install
+                if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+                  printf "%s" "${{ secrets.DEFAULT_TA_PEM }}" > rsa_private.pem
+                fi
                 docker pull jforissier/optee_os_ci:qemu_check
                 docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash -c "\
                     # Set up the environment and build the OP-TEE SDK
@@ -380,13 +383,13 @@ jobs:
                     curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo && chmod a+x /bin/repo && \
                     mkdir -p optee && \
                     cd optee && \
-                    repo init -u https://github.com/edtubbs/manifest.git -m nanopc-t6.xml -b nanopc-t6 && \
+                    repo init -u https://github.com/OP-TEE/manifest.git -m nanopc-t6.xml -b master && \
                     export FORCE_UNSAFE_CONFIGURE=1 && \
                     repo sync -j\"$(getconf _NPROCESSORS_ONLN)\" && \
+                    if [[ "${{ github.ref }}" == refs/tags/* ]]; then \
+                      mv /src/rsa_private.pem /src/optee/optee_os/keys/default_ta.pem; \
+                    fi && \
                     patch -F 4 /src/optee/build/common.mk < /src/src/optee/common.mk.patch && \
-                    patch /src/optee/build/kconfigs/qemu.conf < /src/src/optee/qemu.conf.patch && \
-                    patch /src/optee/linux/arch/arm64/boot/dts/rockchip/rk3588-nanopi6-common.dtsi < /src/src/optee/rk3588-nanopi6-common.dtsi.patch && \
-                    patch /src/optee/u-boot/include/configs/nanopi6.h < /src/src/optee/nanopi6.h.patch && \
                     cd build && \
                     make toolchains -j\"$(getconf _NPROCESSORS_ONLN)\" && \
                     export CFG_TEE_CORE_LOG_LEVEL=0 && \
@@ -445,21 +448,27 @@ jobs:
                     export PATH=/src/optee/toolchains/aarch64/bin:$PATH && \
                     export CC=aarch64-linux-gnu-gcc && \
 
-                    # Run the libdogecoin TA
-                    cd /src/src/optee/host && \
-                    make -j"$(getconf _NPROCESSORS_ONLN)" \
-                      CROSS_COMPILE=aarch64-linux-gnu- \
-                      LDFLAGS=\"-L/src/optee/toolchains/aarch64/lib -L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
-                      CFLAGS=\"-I/src/optee/toolchains/aarch64/include -I/src/src/optee/ta/include -I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/ykpers-1 -I/src/depends/aarch64-linux-gnu/include/dogecoin\" && \
-
                     # Build the Trusted Application
-                    cd ../ta && \
+                    cd /src/src/optee/ta && \
                     make -j"$(getconf _NPROCESSORS_ONLN)" \
                       CROSS_COMPILE=aarch64-linux-gnu- \
                       LDFLAGS=\"-L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
                       CFLAGS=\"-I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/dogecoin\" \
                       PLATFORM=vexpress-qemu_armv8a \
                       TA_DEV_KIT_DIR=/src/optee/optee_os/out/arm/export-ta_arm64 && \
+
+                    # Build libdogecoin for Host
+                    cd /src/ && \
+                    ./configure --prefix=/src/depends/aarch64-linux-gnu LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd HOST=aarch64-linux-gnu && \
+                    make -j 4 && \
+                    make install && \
+
+                    # Run the libdogecoin TA
+                    cd /src/src/optee/host && \
+                    make -j"$(getconf _NPROCESSORS_ONLN)" \
+                      CROSS_COMPILE=aarch64-linux-gnu- \
+                      LDFLAGS=\"-L/src/optee/toolchains/aarch64/lib -L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
+                      CFLAGS=\"-I/src/optee/toolchains/aarch64/include -I/src/src/optee/ta/include -I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/ykpers-1 -I/src/depends/aarch64-linux-gnu/include/dogecoin\" && \
 
                     # Create symbolic links and prepare image
                     mkdir -p /src/optee/out/bin && \
@@ -490,6 +499,14 @@ jobs:
               elif ([ "${{ matrix.name }}" == "x86_64-linux-openenclave" ]); then
                 make install && \
                 mkdir -p src/openenclave/build && \
+                make -j 4 -C depends HOST=x86_64-pc-linux-gnu/host && \
+                ./configure --prefix=${{ github.workspace }}/depends/x86_64-pc-linux-gnu/host --enable-test-passwd && \
+                make && \
+                make install && \
+                if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+                  printf "%s" "${{ secrets.OE_PRIVATE_PEM }}" > src/openenclave/build/private.pem && \
+                  openssl rsa -pubout -in src/openenclave/build/private.pem -out src/openenclave/build/public.pem; \
+                fi && \
                 docker run -v $PWD:/src -w /src ubuntu:20.04 bash -c "\
                   # Install dependencies
                   export DEBIAN_FRONTEND=noninteractive && \
