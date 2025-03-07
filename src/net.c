@@ -833,21 +833,29 @@ dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *g
     if (ips == NULL) {
         /* === DNS QUERY === */
         vector* ips_dns = vector_new(10, free);
-        const dogecoin_dns_seed seed = group->chainparams->dnsseeds[0];
-        if (strlen(seed.domain) == 0) {
-            return false;
-        }
-        /* todo: make sure we have enough peers, eventually */
-        dogecoin_get_peers_from_dns(seed.domain, ips_dns, group->chainparams->default_port, AF_INET);
-        unsigned int i;
-        for (i = 0; i < ips_dns->len; i++) {
-            char* ip = (char*)vector_idx(ips_dns, i);
+        unsigned int seed_index;
+        /* dogecoin_chainparams has up to 8 dns seeds */
+        for (seed_index = 0; seed_index < 8; seed_index++) {
+            const dogecoin_dns_seed seed = group->chainparams->dnsseeds[seed_index];
+            if (strlen(seed.domain) == 0) {
+                continue;
+            }
+            /* todo: make sure we have enough peers, eventually */
+            dogecoin_get_peers_from_dns(seed.domain, ips_dns, group->chainparams->default_port, AF_INET);
+            unsigned int i;
+            for (i = 0; i < ips_dns->len; i++) {
+                char* ip = (char*)vector_idx(ips_dns, i);
 
-            /* create a node */
-            dogecoin_node* node = dogecoin_node_new();
-            if (dogecoin_node_set_ipport(node, ip) > 0) {
-                /* add the node to the group */
-                dogecoin_node_group_add_node(group, node);
+                /* create a node */
+                dogecoin_node* node = dogecoin_node_new();
+                if (dogecoin_node_set_ipport(node, ip) > 0) {
+                    /* add the node to the group */
+                    dogecoin_node_group_add_node(group, node);
+                }
+            }
+            /* exit if we get peers from a seed */
+            if (ips_dns->len > 0) {
+                break;
             }
         }
         vector_free(ips_dns, true);
