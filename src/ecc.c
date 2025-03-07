@@ -87,7 +87,7 @@ dogecoin_bool dogecoin_ecc_verify_pubkey(const uint8_t* public_key, dogecoin_boo
     return true;
 }
 
-dogecoin_bool dogecoin_ecc_sign(const uint8_t* private_key, const uint256 hash, unsigned char* sigder, size_t* outlen)
+dogecoin_bool dogecoin_ecc_sign(const uint8_t* private_key, const uint256_t hash, unsigned char* sigder, size_t* outlen)
 {
     assert(secp256k1_ctx);
     secp256k1_ecdsa_signature sig;
@@ -98,7 +98,7 @@ dogecoin_bool dogecoin_ecc_sign(const uint8_t* private_key, const uint256 hash, 
     return 1;
 }
 
-dogecoin_bool dogecoin_ecc_sign_compact(const uint8_t* private_key, const uint256 hash, unsigned char* sigcomp, size_t* outlen)
+dogecoin_bool dogecoin_ecc_sign_compact(const uint8_t* private_key, const uint256_t hash, unsigned char* sigcomp, size_t* outlen)
 {
     assert(secp256k1_ctx);
     secp256k1_ecdsa_signature sig;
@@ -110,7 +110,7 @@ dogecoin_bool dogecoin_ecc_sign_compact(const uint8_t* private_key, const uint25
     return 1;
 }
 
-dogecoin_bool dogecoin_ecc_sign_compact_recoverable(const uint8_t* private_key, const uint256 hash, unsigned char* sigrec, size_t* outlen, int* recid)
+dogecoin_bool dogecoin_ecc_sign_compact_recoverable(const uint8_t* private_key, const uint256_t hash, unsigned char* sigrec, size_t* outlen, int* recid)
 {
     assert(secp256k1_ctx);
     secp256k1_ecdsa_recoverable_signature sig;
@@ -122,7 +122,7 @@ dogecoin_bool dogecoin_ecc_sign_compact_recoverable(const uint8_t* private_key, 
     return 1;
 }
 
-dogecoin_bool dogecoin_ecc_sign_compact_recoverable_fcomp(const uint8_t* private_key, const uint256 hash, unsigned char* sigrec, size_t* outlen, int* recid, bool fCompressed)
+dogecoin_bool dogecoin_ecc_sign_compact_recoverable_fcomp(const uint8_t* private_key, const uint256_t hash, unsigned char* sigrec, size_t* outlen, int* recid, bool fCompressed)
 {
     assert(secp256k1_ctx);
     secp256k1_ecdsa_recoverable_signature sig;
@@ -134,7 +134,7 @@ dogecoin_bool dogecoin_ecc_sign_compact_recoverable_fcomp(const uint8_t* private
     return true;
 }
 
-dogecoin_bool dogecoin_recover_pubkey(const unsigned char* sigrec, const uint256 hash, const int recid, uint8_t* public_key, size_t* outlen)
+dogecoin_bool dogecoin_recover_pubkey(const unsigned char* sigrec, const uint256_t hash, const int recid, uint8_t* public_key, size_t* outlen)
 {
     assert(secp256k1_ctx);
     secp256k1_pubkey pubkey;
@@ -148,7 +148,7 @@ dogecoin_bool dogecoin_recover_pubkey(const unsigned char* sigrec, const uint256
     return 1;
 }
 
-dogecoin_bool dogecoin_ecc_recover_pubkey(const unsigned char* sigrec, const uint256 hash, const int recid, uint8_t* public_key, size_t* outlen)
+dogecoin_bool dogecoin_ecc_recover_pubkey(const unsigned char* sigrec, const uint256_t hash, const int recid, uint8_t* public_key, size_t* outlen)
 {
     assert(secp256k1_ctx);
     secp256k1_pubkey pubkey;
@@ -162,7 +162,7 @@ dogecoin_bool dogecoin_ecc_recover_pubkey(const unsigned char* sigrec, const uin
     return 1;
 }
 
-dogecoin_bool dogecoin_ecc_verify_sig(const uint8_t* public_key, dogecoin_bool compressed, const uint256 hash, unsigned char* sigder, size_t siglen)
+dogecoin_bool dogecoin_ecc_verify_sig(const uint8_t* public_key, dogecoin_bool compressed, const uint256_t hash, unsigned char* sigder, size_t siglen)
 {
     assert(secp256k1_ctx);
     secp256k1_ecdsa_signature sig;
@@ -174,7 +174,7 @@ dogecoin_bool dogecoin_ecc_verify_sig(const uint8_t* public_key, dogecoin_bool c
     return secp256k1_ecdsa_verify(secp256k1_ctx, &sig, hash, &pubkey);
 }
 
-dogecoin_bool dogecoin_ecc_verify_sigcmp(const uint8_t* public_key, dogecoin_bool compressed, const uint256 hash, unsigned char* sigcmp)
+dogecoin_bool dogecoin_ecc_verify_sigcmp(const uint8_t* public_key, dogecoin_bool compressed, const uint256_t hash, unsigned char* sigcmp)
 {
     assert(secp256k1_ctx);
     secp256k1_ecdsa_signature sig;

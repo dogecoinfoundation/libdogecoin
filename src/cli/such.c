@@ -1032,7 +1032,7 @@ int main(int argc, char* argv[])
         cstring* script = cstr_new_buf(script_data, outlen);
         free(script_data);
 
-        uint256 sighash;
+        uint256_t sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, inputindex, sighashtype, sighash);
 

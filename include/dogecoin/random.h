@@ -46,15 +46,15 @@ typedef struct fast_random_context {
     void (*random_seed)(struct fast_random_context* this);
     void (*fill_byte_buffer)(struct fast_random_context* this);
     void (*fill_bit_buffer)(struct fast_random_context* this);
-    uint256* (*rand256)(struct fast_random_context* this);
+    uint256_t* (*rand256)(struct fast_random_context* this);
     uint64_t (*rand64)(struct fast_random_context* this);
     uint64_t (*randbits)(struct fast_random_context* this, int bits);
     uint32_t (*rand32)(struct fast_random_context* this);
     dogecoin_bool (*randbool)(struct fast_random_context* this);
 } fast_random_context;
 
-struct fast_random_context* init_fast_random_context(dogecoin_bool f_deterministic, const uint256* seed);
-uint256* rand256(struct fast_random_context* this);
+struct fast_random_context* init_fast_random_context(dogecoin_bool f_deterministic, const uint256_t* seed);
+uint256_t* rand256(struct fast_random_context* this);
 uint64_t rand64(struct fast_random_context* this);
 void free_fast_random_context(struct fast_random_context* this);
 

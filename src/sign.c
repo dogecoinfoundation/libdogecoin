@@ -38,7 +38,7 @@
 
 const char* msg_magic = "Dogecoin Signed Message:\n";
 
-void hash_message(char* msg, uint256 message_bytes) {
+void hash_message(char* msg, uint256_t message_bytes) {
     size_t msg_magic_len = strlen(msg_magic), msg_len = strlen(msg);
     char* tmp_msg = dogecoin_char_vla(msg_magic_len + msg_len + 7);
     tmp_msg[0] = msg_magic_len;
@@ -61,7 +61,7 @@ void hash_message(char* msg, uint256 message_bytes) {
 char* sign_message(char* privkey, char* msg) {
     if (!privkey || !msg) return false;
 
-    uint256 message_bytes;
+    uint256_t message_bytes;
     hash_message(msg, message_bytes);
 
     size_t compact_signature_length = 65;
@@ -102,7 +102,7 @@ char* sign_message(char* privkey, char* msg) {
 int verify_message(char* sig, char* msg, char* address) {
     if (!(sig || msg || address)) return false;
 
-    uint256 message_bytes;
+    uint256_t message_bytes;
     hash_message(msg, message_bytes);
 
     size_t encoded_length = strlen((const char*)sig);

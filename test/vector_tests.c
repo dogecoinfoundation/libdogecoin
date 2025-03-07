@@ -31,7 +31,7 @@ void test_vector()
     dogecoin_bool res;
     char str0[] = "string";
     char str1[] = "rumba";
-    vector* vec = vector_new(10, NULL);
+    vector_t* vec = vector_new(10, NULL);
     assert(vec != NULL);
     assert(vec->len == 0);
     assert(vec->alloc > 0);

@@ -44,7 +44,7 @@ LIBDOGECOIN_BEGIN_DECL
 static const unsigned char pch_merged_mining_header[] = { 0xfa, 0xbe, 'm', 'm' };
 
 int get_expected_index(uint32_t nNonce, int nChainId, unsigned h);
-uint256* check_merkle_branch(uint256* hash, const vector* merkle_branch, int index);
+uint256_t* check_merkle_branch(uint256_t* hash, const vector_t* merkle_branch, int index);
 
 LIBDOGECOIN_END_DECL
 

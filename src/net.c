@@ -769,17 +769,17 @@ int dogecoin_node_parse_message(dogecoin_node* node, dogecoin_p2p_msg_hdr* hdr, 
 }
 
 /**
- * Given a seed DNS name, return a vector of IP addresses and ports.
+ * Given a seed DNS name, return a vector_t of IP addresses and ports.
  * (utility function to get peers (ips/port as char*) from a seed)
  *
  * @param seed The seed DNS name.
- * @param ips_out A vector of strings.
+ * @param ips_out A vector_t of strings.
  * @param port The port to connect to.
  * @param family The address family of the socket. AF_INET or AF_INET6.
  *
  * @return size_t
  */
-size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family)
+size_t dogecoin_get_peers_from_dns(const char* seed, vector_t* ips_out, int port, int family)
 {
     if (!seed || !ips_out || (family != AF_INET && family != AF_INET6) || port > 99999) {
         return 0;
@@ -832,7 +832,7 @@ size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, 
 dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *group, const char *ips) {
     if (ips == NULL) {
         /* === DNS QUERY === */
-        vector* ips_dns = vector_new(10, free);
+        vector_t* ips_dns = vector_new(10, free);
         unsigned int seed_index;
         /* dogecoin_chainparams has up to 8 dns seeds */
         for (seed_index = 0; seed_index < 8; seed_index++) {
@@ -935,7 +935,7 @@ void broadcast_handshake_done(struct dogecoin_node_* node) {
     dogecoin_p2p_inv_msg inv_msg;
     dogecoin_mem_zero(&inv_msg, sizeof(inv_msg));
 
-    uint256 hash;
+    uint256_t hash;
     dogecoin_tx_hash(ctx->tx, hash);
     dogecoin_p2p_msg_inv_init(&inv_msg, DOGECOIN_INV_TYPE_TX, hash);
 
@@ -984,7 +984,7 @@ void broadcast_post_cmd(struct dogecoin_node_* node, dogecoin_p2p_msg_hdr* hdr, 
     if (strcmp(hdr->command, DOGECOIN_MSG_INV) == 0) {
         /* hash the tx */
         /* TODO: cache the hash */
-        uint256 hash;
+        uint256_t hash;
         dogecoin_tx_hash(ctx->tx, hash);
 
         uint32_t vsize;
@@ -1079,7 +1079,7 @@ dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx*
 
     dogecoin_node_group_add_peers_by_ip_or_seed(group, ips);
 
-    uint256 txhash;
+    uint256_t txhash;
     dogecoin_tx_hash(tx, txhash);
     char hexout[sizeof(txhash) * 2 + 1];
     utils_bin_to_hex(txhash, sizeof(txhash), hexout);

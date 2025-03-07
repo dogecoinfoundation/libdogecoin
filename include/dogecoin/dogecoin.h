@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(HAVE_CONFIG_H)
+#if defined(HAVE_CONFIG_H) && !defined(USE_LIB)
 #include <config/libdogecoin-config.h>
 #endif
 
@@ -147,8 +147,8 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 LIBDOGECOIN_BEGIN_DECL
 
 /* Data array types */
-typedef uint8_t uint256[32];
-typedef uint8_t uint160[20];
+typedef uint8_t uint256_t[32];
+typedef uint8_t uint160_t[20];
 typedef uint8_t SEED[MAX_SEED_SIZE];
 
 static const int WIDTH = 0x0000100/32;

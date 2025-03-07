@@ -100,7 +100,7 @@ arith_uint256* set_compact(arith_uint256* hash, uint32_t compact, dogecoin_bool 
     return hash;
 }
 
-arith_uint256* uint_to_arith(const uint256* a)
+arith_uint256* uint_to_arith(const uint256_t* a)
 {
     static arith_uint256 b;
     memcpy_safe(b.pn, a, sizeof(b.pn));
@@ -108,8 +108,8 @@ arith_uint256* uint_to_arith(const uint256* a)
 }
 
 uint8_t* arith_to_uint256(const arith_uint256* a) {
-    static uint256 b = {0};
-    memcpy_safe(b, a->pn, sizeof(uint256));
+    static uint256_t b = {0};
+    memcpy_safe(b, a->pn, sizeof(uint256_t));
     return &b[0];
 }
 

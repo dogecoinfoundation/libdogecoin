@@ -16,8 +16,8 @@ The `dogecoin_tx` structure describes a dogecoin transaction in reply to getdata
 ```
 typedef struct dogecoin_tx_ {
     int32_t version;
-    vector* vin;
-    vector* vout;
+    vector_t* vin;
+    vector_t* vout;
     uint32_t locktime;
 } dogecoin_tx;
 ```
@@ -51,7 +51,7 @@ The `dogecoin_tx_outpoint` structure represented above as `prevout` consists of 
 `include/dogecoin/tx.h`:
 ```
 typedef struct dogecoin_tx_outpoint_ {
-    uint256 hash;
+    uint256_t hash;
     uint32_t n;
 } dogecoin_tx_outpoint;
 ```
@@ -88,7 +88,7 @@ OP_DUP OP_HASH160    Bytes to push
 ```
 ##### **Note: scriptSig is in the input of the spending transaction and scriptPubKey is in the output of the previously unspent i.e. "available" transaction.**
 
-Here is how each word is processed: 
+Here is how each word is processed:
 | Stack      | Script | Description |
 | ----------- | ----------- | - |
 | Empty | `<sig> <pubKey>` OP_DUP OP_HASH160 `<pubKeyHash>` OP_EQUALVERIFY OP_CHECKSIG | scriptSig and scriptPubKey are combined. |

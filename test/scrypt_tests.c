@@ -10,7 +10,7 @@ void test_scrypt() {
 #if defined(USE_SSE2)
     scrypt_detect_sse2();
 #endif
-    uint256 scrypthash;
+    uint256_t scrypthash;
     char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
     int i = 0;
     for (; i < HASHCOUNT; i++) {

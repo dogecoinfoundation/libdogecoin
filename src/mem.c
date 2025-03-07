@@ -43,7 +43,7 @@ static dogecoin_mem_mapper current_mem_mapper = {dogecoin_malloc_internal, dogec
 /**
  * @brief This function sets the current memory mapper
  * to the default memory mapper.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_mem_set_mapper_default()
@@ -55,9 +55,9 @@ void dogecoin_mem_set_mapper_default()
 /**
  * @brief This function sets the current memory mapper
  * to the specified mapper.
- * 
+ *
  * @param mapper The mapper to be used.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_mem_set_mapper(const dogecoin_mem_mapper mapper)
@@ -67,12 +67,12 @@ void dogecoin_mem_set_mapper(const dogecoin_mem_mapper mapper)
 
 
 /**
- * @brief This function calls dogecoin_malloc_internal() using 
+ * @brief This function calls dogecoin_malloc_internal() using
  * the current memory mapper.
- * 
+ *
  * @param size The size of the memory block to be allocated.
- * 
- * @return A pointer to the allocated memory. 
+ *
+ * @return A pointer to the allocated memory.
  */
 void* dogecoin_malloc(size_t size)
 {
@@ -83,11 +83,11 @@ void* dogecoin_malloc(size_t size)
 /**
  * @brief This function calls dogecoin_calloc_internal() using
  * the current memory mapper.
- * 
+ *
  * @param count The number of elements to allocate.
  * @param size The size of each element.
- * 
- * @return A pointer to the allocated memory. 
+ *
+ * @return A pointer to the allocated memory.
  */
 void* dogecoin_calloc(size_t count, size_t size)
 {
@@ -98,10 +98,10 @@ void* dogecoin_calloc(size_t count, size_t size)
 /**
  * @brief This function calls dogecoin_realloc_internal() using
  * the current memory mapper.
- * 
+ *
  * @param ptr The pointer to the old memory block.
  * @param size The size of the new memory block to be reallocated.
- * 
+ *
  * @return A pointer to the reallocated memory.
  */
 void* dogecoin_realloc(void* ptr, size_t size)
@@ -113,9 +113,9 @@ void* dogecoin_realloc(void* ptr, size_t size)
 /**
  * @brief This function calls dogecoin_free_internal() using
  * the current memory mapper.
- * 
+ *
  * @param ptr The pointer to the memory block to be freed.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_free(void* ptr)
@@ -126,10 +126,10 @@ void dogecoin_free(void* ptr)
 
 /**
  * @brief This function allocates a memory block.
- * 
+ *
  * @param size The size of the memory block to be allocated.
- * 
- * @return A pointer to the allocated memory. 
+ *
+ * @return A pointer to the allocated memory.
  */
 void* dogecoin_malloc_internal(size_t size)
 {
@@ -149,11 +149,11 @@ void* dogecoin_malloc_internal(size_t size)
 /**
  * @brief This function allocates memory and initializes all
  * bytes to zero.
- * 
+ *
  * @param count The number of elements to allocate.
  * @param size The size of each element.
- * 
- * @return A pointer to the allocated memory. 
+ *
+ * @return A pointer to the allocated memory.
  */
 void* dogecoin_calloc_internal(size_t count, size_t size)
 {
@@ -173,10 +173,10 @@ void* dogecoin_calloc_internal(size_t count, size_t size)
 /**
  * @brief This function resizes the memory block pointed to
  * by ptr which was previously allocated.
- * 
+ *
  * @param ptr The pointer to the old memory block.
  * @param size The size of the new memory block to be reallocated.
- * 
+ *
  * @return A pointer to the reallocated memory.
  */
 void* dogecoin_realloc_internal(void* ptr, size_t size)
@@ -196,9 +196,9 @@ void* dogecoin_realloc_internal(void* ptr, size_t size)
 
 /**
  * @brief This function frees previously allocated memory.
- * 
+ *
  * @param ptr The pointer to the memory block to be freed.
- * 
+ *
  * @return Nothing.
  */
 void dogecoin_free_internal(void* ptr)
@@ -222,21 +222,21 @@ errno_t memset_safe(volatile void *v, rsize_t smax, int c, rsize_t n) {
   if (v == NULL) return EINVAL;
   if (smax > RSIZE_MAX) return EINVAL;
   if (n > smax) return EINVAL;
- 
+
   volatile unsigned char *p = v;
   while (smax-- && n--) {
     *p++ = c;
   }
- 
+
   return 0;
 }
 
 /**
  * "memset_safe() is a secure version of memset()."
- * 
+ *
  * The memset_safe() function is a secure version of memset() that fills the memory pointed to by dst with
  * zeros
- * 
+ *
  * @param dst The destination buffer to be zeroed.
  * @param len The length of the memory block to zero.
  */
@@ -260,9 +260,9 @@ uint32_t* dogecoin_uint32_vla(size_t size)
     return outarray;
 }
 
-uint256* dogecoin_uint256_vla(size_t size) {
-    uint256* outarray;
-    outarray = (uint256*)dogecoin_malloc(size * sizeof(uint256));
+uint256_t* dogecoin_uint256_vla(size_t size) {
+    uint256_t* outarray;
+    outarray = (uint256_t*)dogecoin_malloc(size * sizeof(uint256_t));
     return outarray;
 }
 

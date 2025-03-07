@@ -292,7 +292,7 @@ int add_utxo(int txindex, char* hex_utxo_txid, int vout) {
     // instantiate empty dogecoin_tx_in object to set previous output txid and output n:
     dogecoin_tx_in* tx_in = dogecoin_tx_in_new();
 
-    // add prevout hash to tx_in->prevout.hash in prep of adding to tx->transaction-vin vector
+    // add prevout hash to tx_in->prevout.hash in prep of adding to tx->transaction-vin vector_t
     utils_uint256_sethex((char *)hex_utxo_txid, (uint8_t *)tx_in->prevout.hash);
 
     // set index of utxo we want to spend
@@ -518,7 +518,7 @@ int sign_raw_transaction(int inputindex, char* incomingrawtx, char* scripthex, i
     utils_hex_to_bin(scripthex, script_data, strlen(scripthex), &outlength);
     cstring* script = cstr_new_buf(script_data, outlength);
 
-    uint256 sighash;
+    uint256_t sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
     free(script_data);
 

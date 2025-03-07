@@ -487,7 +487,7 @@ int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, do
             }
         }
     }
-    
+
     unsigned int i;
     for (i = 0; i < vlen; i++) {
         dogecoin_tx_in* tx_in = dogecoin_tx_in_new();
@@ -625,7 +625,7 @@ void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx)
  *
  * @return Nothing.
  */
-void dogecoin_tx_hash(const dogecoin_tx* tx, uint256 hashout)
+void dogecoin_tx_hash(const dogecoin_tx* tx, uint256_t hashout)
 {
     cstring* txser = cstr_new_sz(1024);
     dogecoin_tx_serialize(txser, tx);
@@ -749,7 +749,7 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src)
  *
  * @return Nothing.
  */
-void dogecoin_tx_prevout_hash(const dogecoin_tx* tx, uint256 hash)
+void dogecoin_tx_prevout_hash(const dogecoin_tx* tx, uint256_t hash)
 {
     cstring* s = cstr_new_sz(512);
     unsigned int i;
@@ -774,7 +774,7 @@ void dogecoin_tx_prevout_hash(const dogecoin_tx* tx, uint256 hash)
  *
  * @return Nothing.
  */
-void dogecoin_tx_sequence_hash(const dogecoin_tx* tx, uint256 hash)
+void dogecoin_tx_sequence_hash(const dogecoin_tx* tx, uint256_t hash)
 {
     cstring* s = cstr_new_sz(512);
     unsigned int i;
@@ -797,7 +797,7 @@ void dogecoin_tx_sequence_hash(const dogecoin_tx* tx, uint256 hash)
  *
  * @return Nothing.
  */
-void dogecoin_tx_outputs_hash(const dogecoin_tx* tx, uint256 hash)
+void dogecoin_tx_outputs_hash(const dogecoin_tx* tx, uint256_t hash)
 {
     if (!tx->vout || !hash) return;
     cstring* s = cstr_new_sz(512);
@@ -825,7 +825,7 @@ void dogecoin_tx_outputs_hash(const dogecoin_tx* tx, uint256 hash)
  *
  * @return 1 if signature hash is generated successfully, 0 otherwise.
  */
-dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256 hash)
+dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256_t hash)
 {
     if (in_num >= tx_to->vin->len || !tx_to->vout) {
         return false;
@@ -1008,7 +1008,7 @@ dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainp
  *
  * @return 1 if the output is added successfully.
  */
-dogecoin_bool dogecoin_tx_add_p2pkh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160 hash160)
+dogecoin_bool dogecoin_tx_add_p2pkh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160_t hash160)
 {
     dogecoin_tx_out* tx_out = dogecoin_tx_out_new();
     tx_out->script_pubkey = cstr_new_sz(1024);
@@ -1029,7 +1029,7 @@ dogecoin_bool dogecoin_tx_add_p2pkh_hash160_out(dogecoin_tx* tx, int64_t amount,
  *
  * @return 1 if the output is added successfully.
  */
-dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160 hash160)
+dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160_t hash160)
 {
     dogecoin_tx_out* tx_out = dogecoin_tx_out_new();
     tx_out->script_pubkey = cstr_new_sz(1024);
@@ -1053,7 +1053,7 @@ dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, 
  */
 dogecoin_bool dogecoin_tx_add_p2pkh_out(dogecoin_tx* tx, int64_t amount, const dogecoin_pubkey* pubkey)
 {
-    uint160 hash160;
+    uint160_t hash160;
     dogecoin_pubkey_get_hash160(pubkey, hash160);
     return dogecoin_tx_add_p2pkh_hash160_out(tx, amount, hash160);
 }
@@ -1164,14 +1164,14 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
 
     cstring* script_sign = cstr_new_cstr(script); //copy the script because we may modify it
     dogecoin_tx_in* tx_in = vector_idx(tx_in_out->vin, inputindex);
-    vector* script_pushes = vector_new(1, free);
+    vector_t* script_pushes = vector_new(1, free);
 
     enum dogecoin_tx_out_type type = dogecoin_script_classify(script, script_pushes);
     if (type == DOGECOIN_TX_PUBKEYHASH && script_pushes->len == 1) {
         // check if given private key matches the script
-        uint160 hash160;
+        uint160_t hash160;
         dogecoin_pubkey_get_hash160(&pubkey, hash160);
-        uint160* hash160_in_script = vector_idx(script_pushes, 0);
+        uint160_t* hash160_in_script = vector_idx(script_pushes, 0);
         if (memcmp(hash160_in_script, hash160, sizeof(hash160)) != 0) {
             res = DOGECOIN_SIGN_NO_KEY_MATCH; //sign anyways
         }
@@ -1181,7 +1181,7 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
     }
     vector_free(script_pushes, true);
 
-    uint256 sighash;
+    uint256_t sighash;
     dogecoin_mem_zero(sighash, sizeof(sighash));
     if (!dogecoin_tx_sighash(tx_in_out, script_sign, inputindex, sighashtype, sighash)) {
         cstr_free(script_sign, true);

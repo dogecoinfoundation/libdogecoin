@@ -43,14 +43,14 @@ LIBDOGECOIN_BEGIN_DECL
 
 typedef struct _auxpow {
     dogecoin_bool is;
-    dogecoin_bool (*check)(void* ctx, uint256* hash, uint32_t chainid, dogecoin_chainparams* params);
+    dogecoin_bool (*check)(void* ctx, uint256_t* hash, uint32_t chainid, dogecoin_chainparams* params);
     void *ctx;
 } auxpow;
 
 typedef struct dogecoin_block_header_ {
     int32_t version;
-    uint256 prev_block;
-    uint256 merkle_root;
+    uint256_t prev_block;
+    uint256_t merkle_root;
     uint32_t timestamp;
     uint32_t bits;
     uint32_t nonce;
@@ -60,12 +60,12 @@ typedef struct dogecoin_block_header_ {
 typedef struct dogecoin_auxpow_block_ {
     dogecoin_block_header* header;
     dogecoin_tx* parent_coinbase;
-    uint256 parent_hash;
+    uint256_t parent_hash;
     uint8_t parent_merkle_count;
-    uint256* parent_coinbase_merkle;
+    uint256_t* parent_coinbase_merkle;
     uint32_t parent_merkle_index;
     uint8_t aux_merkle_count;
-    uint256* aux_merkle_branch;
+    uint256_t* aux_merkle_branch;
     uint32_t aux_merkle_index;
     dogecoin_block_header* parent_header;
 } dogecoin_auxpow_block;
@@ -74,11 +74,11 @@ LIBDOGECOIN_API dogecoin_block_header* dogecoin_block_header_new();
 LIBDOGECOIN_API void dogecoin_block_header_free(dogecoin_block_header* header);
 LIBDOGECOIN_API dogecoin_auxpow_block* dogecoin_auxpow_block_new();
 LIBDOGECOIN_API void dogecoin_auxpow_block_free(dogecoin_auxpow_block* block);
-LIBDOGECOIN_API int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf, const dogecoin_chainparams *params, uint256* chainwork);
-LIBDOGECOIN_API int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer, const dogecoin_chainparams *params, uint256* chainwork);
+LIBDOGECOIN_API int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf, const dogecoin_chainparams *params, uint256_t* chainwork);
+LIBDOGECOIN_API int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer, const dogecoin_chainparams *params, uint256_t* chainwork);
 LIBDOGECOIN_API void dogecoin_block_header_serialize(cstring* s, const dogecoin_block_header* header);
 LIBDOGECOIN_API void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_block_header* src);
-LIBDOGECOIN_API dogecoin_bool dogecoin_block_header_hash(dogecoin_block_header* header, uint256 hash);
+LIBDOGECOIN_API dogecoin_bool dogecoin_block_header_hash(dogecoin_block_header* header, uint256_t hash);
 
 LIBDOGECOIN_END_DECL
 

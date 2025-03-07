@@ -47,9 +47,9 @@ static const uint8_t DOGECOIN_IPV4_PREFIX[12] = {0x00, 0x00, 0x00, 0x00, 0x00, 0
 
 /**
  * If the first 12 bytes of the IP address are the same as the DOGECOIN_IPV4_PREFIX.
- * 
+ *
  * @param ipaddr the IP address in network byte order
- * 
+ *
  * @return static inline dogecoin_bool (uint8_t)
  */
 static inline dogecoin_bool is_ipv4_mapped(const unsigned char* ipaddr)
@@ -59,7 +59,7 @@ static inline dogecoin_bool is_ipv4_mapped(const unsigned char* ipaddr)
 
 /**
  * Initialize a dogecoin_p2p_address struct
- * 
+ *
  * @param addr the address structure to initialize
  */
 void dogecoin_p2p_address_init(dogecoin_p2p_address* addr)
@@ -69,12 +69,12 @@ void dogecoin_p2p_address_init(dogecoin_p2p_address* addr)
 
 /**
  * Create a new cstring object with the header information for a dogecoin p2p message
- * 
+ *
  * @param netmagic The magic number is a 4-byte value that identifies the network.
  * @param command The command string.
  * @param data The data to be sent.
  * @param data_len The length of the data payload.
- * 
+ *
  * @return A cstring object.
  */
 cstring* dogecoin_p2p_message_new(const unsigned char netmagic[4], const char* command, const void* data, uint32_t data_len)
@@ -96,7 +96,7 @@ cstring* dogecoin_p2p_message_new(const unsigned char netmagic[4], const char* c
     cstr_append_buf(s, &data_len_le, 4);
 
     /* data checksum (first 4 bytes of the double sha256 hash of the pl) */
-    uint256 msghash;
+    uint256_t msghash;
     dogecoin_hash(data, data_len, msghash);
     cstr_append_buf(s, &msghash[0], 4);
 
@@ -109,11 +109,11 @@ cstring* dogecoin_p2p_message_new(const unsigned char netmagic[4], const char* c
 
 /**
  * Deserialize an address
- * 
+ *
  * @param protocol_version The version of the protocol the node is using.
  * @param addr the address object to be filled in
  * @param buf The buffer to deserialize from.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 dogecoin_bool dogecoin_p2p_deser_addr(unsigned int protocol_version, dogecoin_p2p_address* addr, struct const_buffer* buf)
@@ -135,7 +135,7 @@ dogecoin_bool dogecoin_p2p_deser_addr(unsigned int protocol_version, dogecoin_p2
 
 /**
  * Serialize a dogecoin_p2p_address struct to a cstring
- * 
+ *
  * @param protover The protocol version.
  * @param addr The address to serialize.
  * @param s The cstring to serialize to.
@@ -152,7 +152,7 @@ void dogecoin_p2p_ser_addr(unsigned int protover, const dogecoin_p2p_address* ad
 
 /**
  * Convert a sockaddr to a dogecoin_p2p_address
- * 
+ *
  * @param addr The address to convert.
  * @param addr_out the address to be filled in
  */
@@ -173,10 +173,10 @@ void dogecoin_addr_to_p2paddr(struct sockaddr* addr, dogecoin_p2p_address* addr_
 
 /**
  * Convert a dogecoin_p2p_address struct to a sockaddr struct
- * 
+ *
  * @param p2p_addr the p2p_address struct to convert
  * @param addr_out The address to write the result to.
- * 
+ *
  * @return a pointer to a dogecoin_p2p_address structure.
  */
 void dogecoin_p2paddr_to_addr(dogecoin_p2p_address* p2p_addr, struct sockaddr* addr_out)
@@ -198,7 +198,7 @@ void dogecoin_p2paddr_to_addr(dogecoin_p2p_address* p2p_addr, struct sockaddr* a
 
 /**
  * Initialize a dogecoin_p2p_version_msg struct with the given parameters
- * 
+ *
  * @param msg the message object
  * @param addrFrom The address of the node that sent the message.
  * @param addrTo The address to which the message is being sent.
@@ -229,7 +229,7 @@ void dogecoin_p2p_msg_version_init(dogecoin_p2p_version_msg* msg, const dogecoin
 
 /**
  * It serializes a dogecoin_p2p_version_msg object into a cstring
- * 
+ *
  * @param msg the message object
  * @param buf the buffer to serialize into
  */
@@ -248,10 +248,10 @@ void dogecoin_p2p_msg_version_ser(dogecoin_p2p_version_msg* msg, cstring* buf)
 
 /**
  * Deserialize a version message
- * 
+ *
  * @param msg the message object to be filled
  * @param buf the buffer to deserialize from
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_version_msg* msg, struct const_buffer* buf)
@@ -300,12 +300,12 @@ dogecoin_bool dogecoin_p2p_msg_version_deser(dogecoin_p2p_version_msg* msg, stru
 
 /**
  * Initialize a dogecoin_p2p_inv_msg object
- * 
+ *
  * @param msg The message object to initialize.
  * @param type The type of the inventory message.
  * @param hash The hash of the item being advertised.
  */
-void dogecoin_p2p_msg_inv_init(dogecoin_p2p_inv_msg* msg, uint32_t type, uint256 hash)
+void dogecoin_p2p_msg_inv_init(dogecoin_p2p_inv_msg* msg, uint32_t type, uint256_t hash)
 {
     msg->type = type;
     memcpy_safe(&msg->hash, hash, DOGECOIN_HASH_LENGTH);
@@ -313,7 +313,7 @@ void dogecoin_p2p_msg_inv_init(dogecoin_p2p_inv_msg* msg, uint32_t type, uint256
 
 /**
  * Serialize a dogecoin_p2p_inv_msg to a cstring.
- * 
+ *
  * @param msg The message object to serialize.
  * @param buf The buffer to serialize into.
  */
@@ -325,10 +325,10 @@ void dogecoin_p2p_msg_inv_ser(dogecoin_p2p_inv_msg* msg, cstring* buf)
 
 /**
  * Deserialize a dogecoin_p2p_inv_msg from a const_buffer
- * 
+ *
  * @param msg The message object to be filled in.
  * @param buf The buffer to deserialize from.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 dogecoin_bool dogecoin_p2p_msg_inv_deser(dogecoin_p2p_inv_msg* msg, struct const_buffer* buf)
@@ -343,19 +343,19 @@ dogecoin_bool dogecoin_p2p_msg_inv_deser(dogecoin_p2p_inv_msg* msg, struct const
 
 /**
  * This function serializes a getheaders message
- * 
- * @param blocklocators a vector of block hashes
+ *
+ * @param blocklocators a vector_t of block hashes
  * @param hashstop The hash of the last block in the chain that we want to download.
  * @param s the serialized message
  */
-void dogecoin_p2p_msg_getheaders(vector* blocklocators, uint256 hashstop, cstring* s)
+void dogecoin_p2p_msg_getheaders(vector_t* blocklocators, uint256_t hashstop, cstring* s)
 {
     unsigned int i;
 
     ser_u32(s, DOGECOIN_PROTOCOL_VERSION);
     ser_varlen(s, blocklocators->len);
     for (i = 0; i < blocklocators->len; i++) {
-        uint256 *hash = vector_idx(blocklocators, i);
+        uint256_t *hash = vector_idx(blocklocators, i);
         ser_bytes(s, hash, DOGECOIN_HASH_LENGTH);
     }
     if (hashstop)
@@ -366,14 +366,14 @@ void dogecoin_p2p_msg_getheaders(vector* blocklocators, uint256 hashstop, cstrin
 
 /**
  * Deserialize a getheaders message
- * 
- * @param blocklocators a vector of block hashes
+ *
+ * @param blocklocators a vector_t of block hashes
  * @param hashstop The hash of the last block that we want to request.
  * @param buf the buffer to deserialize from
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
-dogecoin_bool dogecoin_p2p_deser_msg_getheaders(vector* blocklocators, uint256 hashstop, struct const_buffer* buf)
+dogecoin_bool dogecoin_p2p_deser_msg_getheaders(vector_t* blocklocators, uint256_t hashstop, struct const_buffer* buf)
 {
     int32_t version;
     uint32_t vsize;
@@ -383,7 +383,7 @@ dogecoin_bool dogecoin_p2p_deser_msg_getheaders(vector* blocklocators, uint256 h
         return false;
     vector_resize(blocklocators, vsize);
     for (unsigned int i = 0; i < vsize; i++) {
-        uint256 *hash = dogecoin_malloc(DOGECOIN_HASH_LENGTH);
+        uint256_t *hash = dogecoin_malloc(DOGECOIN_HASH_LENGTH);
         if (!deser_u256(*hash, buf)) {
             dogecoin_free(hash);
             return false;
@@ -397,7 +397,7 @@ dogecoin_bool dogecoin_p2p_deser_msg_getheaders(vector* blocklocators, uint256 h
 
 /**
  * Deserialize the dogecoin_p2p_msg_hdr structure
- * 
+ *
  * @param hdr The dogecoin_p2p_msg_hdr struct that we're deserializing into.
  * @param buf The buffer to deserialize from.
  */
