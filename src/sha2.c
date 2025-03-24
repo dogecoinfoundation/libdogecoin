@@ -189,6 +189,8 @@ typedef uint64_t sha2_word64; /* Exactly 8 bytes */
 static void sha512_last(sha512_context*);
 static void sha256_transform(sha256_context*, const sha2_word32*);
 static void sha512_transform(sha512_context*, const sha2_word64*);
+static void sha256_transform_armv8(uint32_t* s, const unsigned char* chunk);
+static void sha512_transform_armv82(uint64_t* s, const unsigned char* chunk);
 
 /*** SHA-XYZ EXTERN FUNCTION DEFINITIONS ******************************/
 /* NOTE: These functions are assembled from Intel's MB IPSEC library
@@ -222,8 +224,48 @@ const sha2_word32 sha1_initial_hash_value[SHA1_DIGEST_LENGTH / sizeof(sha2_word3
 	0xc3d2e1f0UL
 };
 
+#if defined(__arm__) || defined(__aarch32__) || defined(__arm64__) || defined(__aarch64__) || defined(_M_ARM)
+# if defined(__GNUC__)
+#  include <stdint.h>
+# endif
+# if defined(__ARM_NEON) || defined(_MSC_VER) || defined(__GNUC__)
+#  include <arm_neon.h>
+# endif
+/** Apple Clang **/
+# if defined(__APPLE__) && defined(__apple_build_version__)
+#  include <sys/sysctl.h>
+# endif
+/** GCC and LLVM Clang, but not Apple Clang */
+# if defined(__GNUC__) && !defined(__apple_build_version__)
+#  if defined(__ARM_ACLE) || defined(__ARM_FEATURE_CRYPTO)
+#   include <arm_acle.h>
+#  endif
+# endif
+#endif
+
 /* Hash constant words K for SHA-256: */
-#if !(defined(USE_AVX2) || defined(USE_SSE))
+static const uint32_t K[] =
+{
+    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
+    0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
+    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
+    0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
+    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
+    0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
+    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
+    0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
+    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
+    0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
+    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
+    0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
+    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
+    0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
+    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
+    0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
+};
+
+/* Hash constant words K for SHA-256: */
+#if !(defined(USE_AVX2) || defined(USE_SSE) || defined(USE_ARMV8) || defined(USE_ARMV82))
 static const sha2_word32 K256[64] = {
     0x428a2f98UL,
     0x71374491UL,
@@ -900,6 +942,8 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
     sha256_block_avx(data, context->state);
 #elif defined(USE_SSE) /* Use SSE-optimized SHA-256 transform */
     sha256_block_sse(data, context->state);
+#elif defined(USE_ARMV8) || defined(USE_ARMV82) /* Use ARMv8-optimized SHA-256 transform */
+    sha256_transform_armv8(context->state, (const unsigned char *)data);
 #else
     sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word32 T1, T2, *W256;
@@ -974,6 +1018,167 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
     context->state[6] += g;
     context->state[7] += h;
 #endif /* USE_AVX || USE_SSE */
+}
+
+/** Perform one SHA-256 transformation, processing a 64-byte chunk. (ARMv8) */
+static void sha256_transform_armv8(uint32_t* s, const unsigned char* chunk)
+{
+#if defined(USE_ARMV8) || defined(USE_ARMV82)
+
+    uint32x4_t STATE0, STATE1, ABEF_SAVE, CDGH_SAVE;
+    uint32x4_t MSG0, MSG1, MSG2, MSG3;
+    uint32x4_t TMP0, TMP1, TMP2;
+
+    /** Load state */
+    STATE0 = vld1q_u32(&s[0]);
+    STATE1 = vld1q_u32(&s[4]);
+
+    /** Save state */
+    ABEF_SAVE = STATE0;
+    CDGH_SAVE = STATE1;
+
+    /** Load message */
+    MSG0 = vld1q_u32((const uint32_t *)(chunk +  0));
+    MSG1 = vld1q_u32((const uint32_t *)(chunk + 16));
+    MSG2 = vld1q_u32((const uint32_t *)(chunk + 32));
+    MSG3 = vld1q_u32((const uint32_t *)(chunk + 48));
+
+    /** Reverse for little endian */
+    MSG0 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG0)));
+    MSG1 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG1)));
+    MSG2 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG2)));
+    MSG3 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG3)));
+
+    TMP0 = vaddq_u32(MSG0, vld1q_u32(&K[0x00]));
+
+    /** Rounds 0-3 */
+    MSG0 = vsha256su0q_u32(MSG0, MSG1);
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG1, vld1q_u32(&K[0x04]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+    MSG0 = vsha256su1q_u32(MSG0, MSG2, MSG3);
+
+    /** Rounds 4-7 */
+    MSG1 = vsha256su0q_u32(MSG1, MSG2);
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG2, vld1q_u32(&K[0x08]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+    MSG1 = vsha256su1q_u32(MSG1, MSG3, MSG0);
+
+    /** Rounds 8-11 */
+    MSG2 = vsha256su0q_u32(MSG2, MSG3);
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG3, vld1q_u32(&K[0x0c]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+    MSG2 = vsha256su1q_u32(MSG2, MSG0, MSG1);
+
+    /** Rounds 12-15 */
+    MSG3 = vsha256su0q_u32(MSG3, MSG0);
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG0, vld1q_u32(&K[0x10]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+    MSG3 = vsha256su1q_u32(MSG3, MSG1, MSG2);
+
+    /** Rounds 16-19 */
+    MSG0 = vsha256su0q_u32(MSG0, MSG1);
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG1, vld1q_u32(&K[0x14]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+    MSG0 = vsha256su1q_u32(MSG0, MSG2, MSG3);
+
+    /** Rounds 20-23 */
+    MSG1 = vsha256su0q_u32(MSG1, MSG2);
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG2, vld1q_u32(&K[0x18]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+    MSG1 = vsha256su1q_u32(MSG1, MSG3, MSG0);
+
+    /** Rounds 24-27 */
+    MSG2 = vsha256su0q_u32(MSG2, MSG3);
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG3, vld1q_u32(&K[0x1c]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+    MSG2 = vsha256su1q_u32(MSG2, MSG0, MSG1);
+
+    /** Rounds 28-31 */
+    MSG3 = vsha256su0q_u32(MSG3, MSG0);
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG0, vld1q_u32(&K[0x20]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+    MSG3 = vsha256su1q_u32(MSG3, MSG1, MSG2);
+
+    /** Rounds 32-35 */
+    MSG0 = vsha256su0q_u32(MSG0, MSG1);
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG1, vld1q_u32(&K[0x24]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+    MSG0 = vsha256su1q_u32(MSG0, MSG2, MSG3);
+
+    /** Rounds 36-39 */
+    MSG1 = vsha256su0q_u32(MSG1, MSG2);
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG2, vld1q_u32(&K[0x28]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+    MSG1 = vsha256su1q_u32(MSG1, MSG3, MSG0);
+
+    /** Rounds 40-43 */
+    MSG2 = vsha256su0q_u32(MSG2, MSG3);
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG3, vld1q_u32(&K[0x2c]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+    MSG2 = vsha256su1q_u32(MSG2, MSG0, MSG1);
+
+    /** Rounds 44-47 */
+    MSG3 = vsha256su0q_u32(MSG3, MSG0);
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG0, vld1q_u32(&K[0x30]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+    MSG3 = vsha256su1q_u32(MSG3, MSG1, MSG2);
+
+    /** Rounds 48-51 */
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG1, vld1q_u32(&K[0x34]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+
+    /** Rounds 52-55 */
+    TMP2 = STATE0;
+    TMP0 = vaddq_u32(MSG2, vld1q_u32(&K[0x38]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+
+    /** Rounds 56-59 */
+    TMP2 = STATE0;
+    TMP1 = vaddq_u32(MSG3, vld1q_u32(&K[0x3c]));
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP0);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
+
+    /** Rounds 60-63 */
+    TMP2 = STATE0;
+    STATE0 = vsha256hq_u32(STATE0, STATE1, TMP1);
+    STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP1);
+
+    /** Combine state */
+    STATE0 = vaddq_u32(STATE0, ABEF_SAVE);
+    STATE1 = vaddq_u32(STATE1, CDGH_SAVE);
+
+
+    /** Save state */
+    vst1q_u32(&s[0], STATE0);
+    vst1q_u32(&s[4], STATE1);
+#endif
 }
 
 #endif /* SHA2_UNROLL_TRANSFORM */
@@ -1190,12 +1395,234 @@ static void sha512_transform(sha512_context* context, const sha2_word64* data)
 
 #else /* SHA2_UNROLL_TRANSFORM */
 
+#ifdef USE_ARMV82
+
+/* ----------------------------------------------------------------------
+ * Hardware-accelerated implementation of SHA-512 using Arm NEON.
+ */
+
+typedef struct sha512_neon_core sha512_neon_core;
+struct sha512_neon_core {
+    uint64x2_t ab, cd, ef, gh;
+};
+
+static inline uint64x2_t sha512_neon_load_input(const uint8_t *p)
+{
+    return vreinterpretq_u64_u8(vrev64q_u8(vld1q_u8(p)));
+}
+
+static inline uint64x2_t sha512_neon_schedule_update(
+    uint64x2_t m8, uint64x2_t m7, uint64x2_t m4, uint64x2_t m3, uint64x2_t m1)
+{
+    /*
+     * vsha512su0q_u64() takes words from a long way back in the
+     * schedule and performs the sigma_0 half of the computation of
+     * the next two 64-bit message-schedule words.
+     *
+     * vsha512su1q_u64() combines the result of that with the sigma_1
+     * steps, to output the finished version of those two words. The
+     * total amount of input data it requires fits nicely into three
+     * 128-bit vector registers, but one of those registers is
+     * misaligned compared to the 128-bit chunks that the message
+     * schedule is stored in. So we use vextq_u64 to make one of its
+     * input words out of the second half of m4 and the first half of
+     * m3.
+     */
+    return vsha512su1q_u64(vsha512su0q_u64(m8, m7), m1, vextq_u64(m4, m3, 1));
+}
+
+static inline void sha512_neon_round2(
+    unsigned round_index, uint64x2_t schedule_words,
+    uint64x2_t *ab, uint64x2_t *cd, uint64x2_t *ef, uint64x2_t *gh)
+{
+    /*
+     * vsha512hq_u64 performs the Sigma_1 and Ch half of the
+     * computation of two rounds of SHA-512 (including feeding back
+     * one of the outputs from the first of those half-rounds into the
+     * second one).
+     *
+     * vsha512h2q_u64 combines the result of that with the Sigma_0 and
+     * Maj steps, and outputs one 128-bit vector that replaces the gh
+     * piece of the input hash state, and a second that updates cd by
+     * addition.
+     *
+     * Similarly to vsha512su1q_u64 above, some of the input registers
+     * expected by these instructions are misaligned by 64 bits
+     * relative to the chunks we've divided the hash state into, so we
+     * have to start by making 'de' and 'fg' words out of our input
+     * cd,ef,gh, using vextq_u64.
+     *
+     * Also, one of the inputs to vsha512hq_u64 is expected to contain
+     * the results of summing gh + two round constants + two words of
+     * message schedule, but the two words of the message schedule
+     * have to be the opposite way round in the vector register from
+     * the way that vsha512su1q_u64 output them. Hence, there's
+     * another vextq_u64 in here that swaps the two halves of the
+     * initial_sum vector register.
+     *
+     * (This also means that I don't have to prepare a specially
+     * reordered version of the sha512_round_constants[] array: as
+     * long as I'm unavoidably doing a swap at run time _anyway_, I
+     * can load from the normally ordered version of that array, and
+     * just take care to fold in that data _before_ the swap rather
+     * than after.)
+     */
+
+    /* Load two round constants, with the first one in the low half */
+    uint64x2_t round_constants = vld1q_u64(
+        K512 + round_index);
+
+    /* Add schedule words to round constants */
+    uint64x2_t initial_sum = vaddq_u64(schedule_words, round_constants);
+
+    /* Swap that sum around so the word used in the first of the two
+     * rounds is in the _high_ half of the vector, matching where h
+     * lives in the gh vector */
+    uint64x2_t swapped_initial_sum = vextq_u64(initial_sum, initial_sum, 1);
+
+    /* Add gh to that, now that they're matching ways round */
+    uint64x2_t sum = vaddq_u64(swapped_initial_sum, *gh);
+
+    /* Make the misaligned de and fg words */
+    uint64x2_t de = vextq_u64(*cd, *ef, 1);
+    uint64x2_t fg = vextq_u64(*ef, *gh, 1);
+
+    /* Now we're ready to put all the pieces together. The output from
+     * vsha512h2q_u64 can be used directly as the new gh, and the
+     * output from vsha512hq_u64 is simultaneously the intermediate
+     * value passed to h2 and the thing you have to add on to cd. */
+    uint64x2_t intermed = vsha512hq_u64(sum, fg, de);
+    *gh = vsha512h2q_u64(intermed, *cd, *ab);
+    *cd = vaddq_u64(*cd, intermed);
+}
+
+static inline void sha512_neon_block(sha512_neon_core *core, const uint8_t *p)
+{
+    uint64x2_t s0, s1, s2, s3, s4, s5, s6, s7;
+
+    uint64x2_t ab = core->ab, cd = core->cd, ef = core->ef, gh = core->gh;
+
+    s0 = sha512_neon_load_input(p + 16*0);
+    sha512_neon_round2(0, s0, &ab, &cd, &ef, &gh);
+    s1 = sha512_neon_load_input(p + 16*1);
+    sha512_neon_round2(2, s1, &gh, &ab, &cd, &ef);
+    s2 = sha512_neon_load_input(p + 16*2);
+    sha512_neon_round2(4, s2, &ef, &gh, &ab, &cd);
+    s3 = sha512_neon_load_input(p + 16*3);
+    sha512_neon_round2(6, s3, &cd, &ef, &gh, &ab);
+    s4 = sha512_neon_load_input(p + 16*4);
+    sha512_neon_round2(8, s4, &ab, &cd, &ef, &gh);
+    s5 = sha512_neon_load_input(p + 16*5);
+    sha512_neon_round2(10, s5, &gh, &ab, &cd, &ef);
+    s6 = sha512_neon_load_input(p + 16*6);
+    sha512_neon_round2(12, s6, &ef, &gh, &ab, &cd);
+    s7 = sha512_neon_load_input(p + 16*7);
+    sha512_neon_round2(14, s7, &cd, &ef, &gh, &ab);
+    s0 = sha512_neon_schedule_update(s0, s1, s4, s5, s7);
+    sha512_neon_round2(16, s0, &ab, &cd, &ef, &gh);
+    s1 = sha512_neon_schedule_update(s1, s2, s5, s6, s0);
+    sha512_neon_round2(18, s1, &gh, &ab, &cd, &ef);
+    s2 = sha512_neon_schedule_update(s2, s3, s6, s7, s1);
+    sha512_neon_round2(20, s2, &ef, &gh, &ab, &cd);
+    s3 = sha512_neon_schedule_update(s3, s4, s7, s0, s2);
+    sha512_neon_round2(22, s3, &cd, &ef, &gh, &ab);
+    s4 = sha512_neon_schedule_update(s4, s5, s0, s1, s3);
+    sha512_neon_round2(24, s4, &ab, &cd, &ef, &gh);
+    s5 = sha512_neon_schedule_update(s5, s6, s1, s2, s4);
+    sha512_neon_round2(26, s5, &gh, &ab, &cd, &ef);
+    s6 = sha512_neon_schedule_update(s6, s7, s2, s3, s5);
+    sha512_neon_round2(28, s6, &ef, &gh, &ab, &cd);
+    s7 = sha512_neon_schedule_update(s7, s0, s3, s4, s6);
+    sha512_neon_round2(30, s7, &cd, &ef, &gh, &ab);
+    s0 = sha512_neon_schedule_update(s0, s1, s4, s5, s7);
+    sha512_neon_round2(32, s0, &ab, &cd, &ef, &gh);
+    s1 = sha512_neon_schedule_update(s1, s2, s5, s6, s0);
+    sha512_neon_round2(34, s1, &gh, &ab, &cd, &ef);
+    s2 = sha512_neon_schedule_update(s2, s3, s6, s7, s1);
+    sha512_neon_round2(36, s2, &ef, &gh, &ab, &cd);
+    s3 = sha512_neon_schedule_update(s3, s4, s7, s0, s2);
+    sha512_neon_round2(38, s3, &cd, &ef, &gh, &ab);
+    s4 = sha512_neon_schedule_update(s4, s5, s0, s1, s3);
+    sha512_neon_round2(40, s4, &ab, &cd, &ef, &gh);
+    s5 = sha512_neon_schedule_update(s5, s6, s1, s2, s4);
+    sha512_neon_round2(42, s5, &gh, &ab, &cd, &ef);
+    s6 = sha512_neon_schedule_update(s6, s7, s2, s3, s5);
+    sha512_neon_round2(44, s6, &ef, &gh, &ab, &cd);
+    s7 = sha512_neon_schedule_update(s7, s0, s3, s4, s6);
+    sha512_neon_round2(46, s7, &cd, &ef, &gh, &ab);
+    s0 = sha512_neon_schedule_update(s0, s1, s4, s5, s7);
+    sha512_neon_round2(48, s0, &ab, &cd, &ef, &gh);
+    s1 = sha512_neon_schedule_update(s1, s2, s5, s6, s0);
+    sha512_neon_round2(50, s1, &gh, &ab, &cd, &ef);
+    s2 = sha512_neon_schedule_update(s2, s3, s6, s7, s1);
+    sha512_neon_round2(52, s2, &ef, &gh, &ab, &cd);
+    s3 = sha512_neon_schedule_update(s3, s4, s7, s0, s2);
+    sha512_neon_round2(54, s3, &cd, &ef, &gh, &ab);
+    s4 = sha512_neon_schedule_update(s4, s5, s0, s1, s3);
+    sha512_neon_round2(56, s4, &ab, &cd, &ef, &gh);
+    s5 = sha512_neon_schedule_update(s5, s6, s1, s2, s4);
+    sha512_neon_round2(58, s5, &gh, &ab, &cd, &ef);
+    s6 = sha512_neon_schedule_update(s6, s7, s2, s3, s5);
+    sha512_neon_round2(60, s6, &ef, &gh, &ab, &cd);
+    s7 = sha512_neon_schedule_update(s7, s0, s3, s4, s6);
+    sha512_neon_round2(62, s7, &cd, &ef, &gh, &ab);
+    s0 = sha512_neon_schedule_update(s0, s1, s4, s5, s7);
+    sha512_neon_round2(64, s0, &ab, &cd, &ef, &gh);
+    s1 = sha512_neon_schedule_update(s1, s2, s5, s6, s0);
+    sha512_neon_round2(66, s1, &gh, &ab, &cd, &ef);
+    s2 = sha512_neon_schedule_update(s2, s3, s6, s7, s1);
+    sha512_neon_round2(68, s2, &ef, &gh, &ab, &cd);
+    s3 = sha512_neon_schedule_update(s3, s4, s7, s0, s2);
+    sha512_neon_round2(70, s3, &cd, &ef, &gh, &ab);
+    s4 = sha512_neon_schedule_update(s4, s5, s0, s1, s3);
+    sha512_neon_round2(72, s4, &ab, &cd, &ef, &gh);
+    s5 = sha512_neon_schedule_update(s5, s6, s1, s2, s4);
+    sha512_neon_round2(74, s5, &gh, &ab, &cd, &ef);
+    s6 = sha512_neon_schedule_update(s6, s7, s2, s3, s5);
+    sha512_neon_round2(76, s6, &ef, &gh, &ab, &cd);
+    s7 = sha512_neon_schedule_update(s7, s0, s3, s4, s6);
+    sha512_neon_round2(78, s7, &cd, &ef, &gh, &ab);
+
+    core->ab = vaddq_u64(core->ab, ab);
+    core->cd = vaddq_u64(core->cd, cd);
+    core->ef = vaddq_u64(core->ef, ef);
+    core->gh = vaddq_u64(core->gh, gh);
+}
+#endif
+
+/** Perform one SHA-512 transformation, processing a 128-byte chunk. (ARMv8.2) */
+static void sha512_transform_armv82(uint64_t* s, const unsigned char* chunk)
+{
+#ifdef USE_ARMV82
+    sha512_neon_core core;
+
+    core.ab = vld1q_u64(s);
+    core.cd = vld1q_u64(s+2);
+    core.ef = vld1q_u64(s+4);
+    core.gh = vld1q_u64(s+6);
+
+    // Perform SHA512 one block (ARMv8.2)
+    sha512_neon_block(&core, chunk);
+
+    s[0] = vgetq_lane_u64 (core.ab, 0);
+    s[1] = vgetq_lane_u64 (core.ab, 1);
+    s[2] = vgetq_lane_u64 (core.cd, 0);
+    s[3] = vgetq_lane_u64 (core.cd, 1);
+    s[4] = vgetq_lane_u64 (core.ef, 0);
+    s[5] = vgetq_lane_u64 (core.ef, 1);
+    s[6] = vgetq_lane_u64 (core.gh, 0);
+    s[7] = vgetq_lane_u64 (core.gh, 1);
+#endif
+}
+
 static void sha512_transform(sha512_context* context, const sha2_word64* data)
 {
 #ifdef USE_AVX2 /* Use AVX-optimized SHA-512 transform */
     sha512_block_avx(data, context->state);
 #elif defined(USE_SSE) /* Use SSE-optimized SHA-512 transform */
     sha512_block_sse(data, context->state);
+#elif defined(USE_ARMV82) /* Use ARMv8.2 SHA-512 transform */
+    sha512_transform_armv82(context->state, (const unsigned char*)data);
 #else
     sha2_word64 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word64 T1, T2, *W512 = (sha2_word64*)context->buffer;
