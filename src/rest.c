@@ -121,6 +121,7 @@ void dogecoin_http_request_cb(struct evhttp_request *req, void *arg) {
                 evbuffer_add_printf(evb, "address:        %s\n", utxo->address);
                 evbuffer_add_printf(evb, "script_pubkey:  %s\n", utxo->script_pubkey);
                 evbuffer_add_printf(evb, "amount:         %s\n", utxo->amount);
+                evbuffer_add_printf(evb, "confirmations:  %d\n", utxo->confirmations);
                 evbuffer_add_printf(evb, "spendable:      %d\n", utxo->spendable);
                 evbuffer_add_printf(evb, "solvable:       %d\n", utxo->solvable);
                 wallet_total_u64_unspent += coins_to_koinu_str(utxo->amount);

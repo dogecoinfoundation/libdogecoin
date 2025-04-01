@@ -59,6 +59,7 @@ typedef struct dogecoin_utxo_ {
     char script_pubkey[SCRIPT_PUBKEY_STRINGLEN];
     char amount[KOINU_STRINGLEN];
     int confirmations;
+    int height;
     dogecoin_bool spendable;
     dogecoin_bool solvable;
     UT_hash_handle hh;
@@ -125,6 +126,7 @@ LIBDOGECOIN_API void remove_dogecoin_utxo(dogecoin_utxo* utxo);
 LIBDOGECOIN_API void remove_all_utxos();
 LIBDOGECOIN_API void dogecoin_wallet_utxo_free(dogecoin_utxo* utxo);
 LIBDOGECOIN_API void dogecoin_wallet_scrape_utxos(dogecoin_wallet* wallet, dogecoin_wtx* wtx);
+LIBDOGECOIN_API void dogecoin_wallet_utxos_update_confirmations(int height);
 /** ------------------------------------ */
 
 /** wallet addr functions */

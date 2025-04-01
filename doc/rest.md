@@ -167,6 +167,7 @@ Retrieves all unspent transaction outputs (UTXOs) associated with the wallet.
   address:        <address>
   script_pubkey:  <script_pubkey>
   amount:         <amount>
+  confirmations:  <confirmations>
   spendable:      <spendable>
   solvable:       <solvable>
   ...
@@ -191,6 +192,7 @@ vout:           1
 address:        DQe1QeG4FxhEgvfuvGfC7oL5G2G87huuxU
 script_pubkey:  76a9145d6a7f3b4ebbaee4e2d8c10eafbf1ccbc9c0a88ac
 amount:         75.00000000
+confirmations:  100
 spendable:      1
 solvable:       1
 Total Unspent: 75.00000000
