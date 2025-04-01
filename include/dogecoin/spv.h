@@ -54,6 +54,9 @@ typedef struct dogecoin_spv_client_
     dogecoin_bool called_sync_completed;
     void *headers_db_ctx;
     const dogecoin_headers_db_interface *headers_db;
+    uint64_t last_block_size;
+    uint64_t last_block_tx_count;
+    uint64_t last_block_total_tx_size;
 
     /* callbacks */
     /* ========= */
