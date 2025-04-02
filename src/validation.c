@@ -95,14 +95,6 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
     }
 
     /* We have auxpow.  Check it.  */
-    uint256_t block_header_hash;
-    dogecoin_block_header_hash(block->header, block_header_hash);
-    uint32_t chainid = get_chainid(block->header->version);
-    if (!block->header->auxpow->check(block, &block_header_hash, chainid, params)) {
-        printf("%s:%d:%s : AUX POW is not valid : %s\n", __FILE__, __LINE__, __func__, strerror(errno));
-        return false;
-    }
-
     uint256_t parent_hash;
     cstring* s2 = cstr_new_sz(64);
     dogecoin_block_header_serialize(s2, block->parent_header);
@@ -110,6 +102,14 @@ dogecoin_bool check_auxpow(dogecoin_auxpow_block* block, dogecoin_chainparams* p
     cstr_free(s2, true);
     if (!check_pow(&parent_hash, block->header->bits, params, chainwork)) {
         printf("%s:%d:%s : AUX proof of work failed: %s\n", __FILE__, __LINE__, __func__, strerror(errno));
+        return false;
+    }
+
+    uint256_t block_header_hash;
+    dogecoin_block_header_hash(block->header, block_header_hash);
+    uint32_t chainid = get_chainid(block->header->version);
+    if (!block->header->auxpow->check(block, &block_header_hash, chainid, params)) {
+        printf("%s:%d:%s : AUX POW is not valid : %s\n", __FILE__, __LINE__, __func__, strerror(errno));
         return false;
     }
 
