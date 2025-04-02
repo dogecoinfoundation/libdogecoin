@@ -244,6 +244,7 @@ const sha2_word32 sha1_initial_hash_value[SHA1_DIGEST_LENGTH / sizeof(sha2_word3
 #endif
 
 /* Hash constant words K for SHA-256: */
+#if defined(USE_ARMV8) || defined(USE_ARMV82)
 static const uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -263,6 +264,7 @@ static const uint32_t K[] =
     0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
     0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
 };
+#endif
 
 /* Hash constant words K for SHA-256: */
 #if !(defined(USE_AVX2) || defined(USE_SSE) || defined(USE_ARMV8) || defined(USE_ARMV82))
@@ -1021,10 +1023,9 @@ static void sha256_transform(sha256_context* context, const sha2_word32* data)
 }
 
 /** Perform one SHA-256 transformation, processing a 64-byte chunk. (ARMv8) */
+#if defined(USE_ARMV8) || defined(USE_ARMV82)
 static void sha256_transform_armv8(uint32_t* s, const unsigned char* chunk)
 {
-#if defined(USE_ARMV8) || defined(USE_ARMV82)
-
     uint32x4_t STATE0, STATE1, ABEF_SAVE, CDGH_SAVE;
     uint32x4_t MSG0, MSG1, MSG2, MSG3;
     uint32x4_t TMP0, TMP1, TMP2;
@@ -1178,8 +1179,8 @@ static void sha256_transform_armv8(uint32_t* s, const unsigned char* chunk)
     /** Save state */
     vst1q_u32(&s[0], STATE0);
     vst1q_u32(&s[4], STATE1);
-#endif
 }
+#endif
 
 #endif /* SHA2_UNROLL_TRANSFORM */
 
@@ -1591,9 +1592,9 @@ static inline void sha512_neon_block(sha512_neon_core *core, const uint8_t *p)
 #endif
 
 /** Perform one SHA-512 transformation, processing a 128-byte chunk. (ARMv8.2) */
+#ifdef USE_ARMV82
 static void sha512_transform_armv82(uint64_t* s, const unsigned char* chunk)
 {
-#ifdef USE_ARMV82
     sha512_neon_core core;
 
     core.ab = vld1q_u64(s);
@@ -1612,8 +1613,8 @@ static void sha512_transform_armv82(uint64_t* s, const unsigned char* chunk)
     s[5] = vgetq_lane_u64 (core.ef, 1);
     s[6] = vgetq_lane_u64 (core.gh, 0);
     s[7] = vgetq_lane_u64 (core.gh, 1);
-#endif
 }
+#endif
 
 static void sha512_transform(sha512_context* context, const sha2_word64* data)
 {
