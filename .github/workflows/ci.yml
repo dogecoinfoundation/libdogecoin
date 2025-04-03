@@ -584,12 +584,19 @@ jobs:
 
       - name: Import certificate (x86_64-win)
         run: |
+          $rootData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_ROOT_DATA }}"
+          $rootBytes = [Convert]::FromBase64String($rootData)
+          [IO.File]::WriteAllBytes("./root.cer", $rootBytes)
+          Import-Certificate -FilePath ./root.cer -CertStoreLocation Cert:\LocalMachine\Root
+
           $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
           $certBytes = [Convert]::FromBase64String($certData)
           [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
           $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
-          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $password
+
           Remove-Item ./mycert.pfx
+          Remove-Item ./root.cer
         shell: pwsh
 
       - name: Sign spvnode.exe (x86_64-win)
@@ -638,11 +645,16 @@ jobs:
 
       - name: Import certificate (x86_64-win)
         run: |
+          $rootData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_ROOT_DATA }}"
+          $rootBytes = [Convert]::FromBase64String($rootData)
+          [IO.File]::WriteAllBytes("./root.cer", $rootBytes)
+          Import-Certificate -FilePath ./root.cer -CertStoreLocation Cert:\LocalMachine\Root
+
           $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
           $certBytes = [Convert]::FromBase64String($certData)
           [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
           $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
-          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $password
           Remove-Item ./mycert.pfx
         shell: pwsh
 
@@ -687,11 +699,16 @@ jobs:
 
       - name: Import certificate (i686-win)
         run: |
+          $rootData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_ROOT_DATA }}"
+          $rootBytes = [Convert]::FromBase64String($rootData)
+          [IO.File]::WriteAllBytes("./root.cer", $rootBytes)
+          Import-Certificate -FilePath ./root.cer -CertStoreLocation Cert:\LocalMachine\Root
+
           $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
           $certBytes = [Convert]::FromBase64String($certData)
           [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
           $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
-          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $password
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $password
           Remove-Item ./mycert.pfx
         shell: pwsh
 
