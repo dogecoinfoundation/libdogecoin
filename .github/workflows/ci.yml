@@ -63,7 +63,7 @@ jobs:
             run-container: true
             packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
-            config-opts: "LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd --enable-optee CFLAGS=-U_FORTIFY_SOURCE"
+            config-opts: "LIBS=-levent_pthreads --enable-static --disable-shared --enable-test-passwd --enable-optee CFLAGS=-Wp,-D_FORTIFY_SOURCE=0"
             goal: install
           - name: aarch64-android
             host: aarch64-linux-android
@@ -99,7 +99,7 @@ jobs:
             run-container: true
             packages: python3-dev python3-dbg python
             dep-opts: "DEBUG=1 SPEED=slow V=1"
-            config-opts: "--enable-openenclave --enable-test-passwd CFLAGS=-U_FORTIFY_SOURCE"
+            config-opts: "--enable-openenclave --enable-test-passwd CFLAGS=-Wp,-D_FORTIFY_SOURCE=0"
             goal: install
           - name: x86_64-macos
             host: x86_64-apple-darwin15
@@ -396,6 +396,7 @@ jobs:
                     export CFG_ATTESTATION_PTA=y && \
                     export CFG_ATTESTATION_PTA_KEY_SIZE=1024 && \
                     export CFG_WITH_USER_TA=y && \
+                    export CFG_WITH_SOFTWARE_PRNG=n && \
 
                     # Generate subkeys
                     openssl genrsa -out /src/optee/optee_test/ta/top_level_subkey.pem && \
@@ -452,6 +453,7 @@ jobs:
                     cd /src/src/optee/ta && \
                     make -j"$(getconf _NPROCESSORS_ONLN)" \
                       CROSS_COMPILE=aarch64-linux-gnu- \
+                      LIBDIR=/src/depends/aarch64-linux-gnu/lib \
                       LDFLAGS=\"-L/src/depends/aarch64-linux-gnu/lib -ldogecoin -lunistring\" \
                       CFLAGS=\"-I/src/depends/aarch64-linux-gnu/include -I/src/depends/aarch64-linux-gnu/include/dogecoin\" \
                       PLATFORM=vexpress-qemu_armv8a \
