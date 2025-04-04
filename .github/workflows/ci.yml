@@ -37,6 +37,8 @@ jobs:
           # - arm64-macos
           - x86_64-win
           - x86_64-win-native
+          - x86_64-win-native-rel
+          - x86_64-win-native-notpm
           - i686-win
           - i686-linux
         include:
@@ -146,6 +148,26 @@ jobs:
             config-opts: ""
             run-tests: false
             goal: install
+          - name: x86_64-win-native-rel
+            host: x86_64-pc-windows-msvc
+            os: windows-latest
+            packages: cmake
+            postinstall: |
+              choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+            dep-opts: "CROSS_COMPILE='no' SPEED=slow V=1"
+            config-opts: ""
+            run-tests: false
+            goal: install
+          - name: x86_64-win-native-notpm
+            host: x86_64-pc-windows-msvc
+            os: windows-latest
+            packages: cmake
+            postinstall: |
+              choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+            dep-opts: "CROSS_COMPILE='no' SPEED=slow V=1"
+            config-opts: ""
+            run-tests: false
+            goal: install
           - name: i686-win
             host: i686-w64-mingw32
             arch: i386
@@ -191,7 +213,7 @@ jobs:
 
       - name: install packages
         run: |
-          if ([ "${{ matrix.name }}" != "x86_64-win-native" ]); then
+          if ([ "${{ matrix.host }}" != "x86_64-pc-windows-msvc" ]); then
             if ([ "${{ matrix.name }}" == "x86_64-macos" ] || [ "${{ matrix.name }}" == "arm64-macos" ]); then
                 brew update
                 brew install automake coreutils ${{ matrix.packages }}
@@ -285,9 +307,15 @@ jobs:
         run: |
           build_dir=./build/libdogecoin-${{ github.sha }}-${{ matrix.name }}
           mkdir -p $build_dir/bin $build_dir/docs $build_dir/examples $build_dir/include $build_dir/lib $build_dir/test/ $build_dir/test/wordlist
-          if ([ "${{ matrix.host }}" == "x86_64-pc-windows-msvc" ]); then
-            cmake -B $build_dir
+          if ([ "${{ matrix.name }}" == "x86_64-win-native" ]); then
+            cmake -B $build_dir -DBUILD_SHARED_LIBS=1
             cmake --build $build_dir
+          elif ([ "${{ matrix.name }}" == "x86_64-win-native-rel" ]); then
+            cmake -B $build_dir -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release
+            cmake --build $build_dir --config Release
+          elif ([ "${{ matrix.name }}" == "x86_64-win-native-notpm" ]); then
+            cmake -B $build_dir -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release USE_TPM2=FALSE
+            cmake --build $build_dir --config Release
           else
             make -j"$(getconf _NPROCESSORS_ONLN)" SPEED=slow V=1
             if ([ "${{ matrix.name }}" == "x86_64-win" ] || [ "${{ matrix.name }}" == "i686-win" ]); then
@@ -687,6 +715,113 @@ jobs:
           name: libdogecoin-${{ github.sha }}-x86_64-win-native-signed
           path: |
             Debug/**
+            test/**
+
+  sign-x86_64-win-native-rel:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-native-rel
+
+      - name: Import certificate (x86_64-win)
+        run: |
+          $rootData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_ROOT_DATA }}"
+          $rootBytes = [Convert]::FromBase64String($rootData)
+          [IO.File]::WriteAllBytes("./root.cer", $rootBytes)
+          Import-Certificate -FilePath ./root.cer -CertStoreLocation Cert:\LocalMachine\Root
+
+          $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
+          $certBytes = [Convert]::FromBase64String($certData)
+          [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
+          $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $password
+          Remove-Item ./mycert.pfx
+        shell: pwsh
+
+      - name: Sign spvnode.exe (x86_64-win-native-rel)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Release/spvnode.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign such.exe (x86_64-win-native-rel)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Release/such.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign sendtx.exe (x86_64-win-native-rel)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Release/sendtx.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Upload artifacts (x86_64-win-native-rel)
+        uses: actions/upload-artifact@v4
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-native-rel-signed
+          path: |
+            Release/**
+            test/**
+
+  sign-x86_64-win-native-notpm:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-native-notpm
+
+      - name: Import certificate (x86_64-win)
+        run: |
+          $rootData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_ROOT_DATA }}"
+          $rootBytes = [Convert]::FromBase64String($rootData)
+          [IO.File]::WriteAllBytes("./root.cer", $rootBytes)
+          Import-Certificate -FilePath ./root.cer -CertStoreLocation Cert:\LocalMachine\Root
+          $certData = "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}"
+          $certBytes = [Convert]::FromBase64String($certData)
+          [IO.File]::WriteAllBytes("./mycert.pfx", $certBytes)
+          $password = ConvertTo-SecureString -String "${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./mycert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $password
+          Remove-Item ./mycert.pfx
+        shell: pwsh
+
+      - name: Sign spvnode.exe (x86_64-win-native-notpm)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Release/spvnode.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign such.exe (x86_64-win-native-notpm)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Release/such.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Sign sendtx.exe (x86_64-win-native-notpm)
+        uses: lando/code-sign-action@v2
+        with:
+          file: Release/sendtx.exe
+          certificate-data: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_DATA }}
+          certificate-password: ${{ secrets.LIBDOGECOIN_DEV_WINDOWS_CERT_PASSWORD }}
+
+      - name: Upload artifacts (x86_64-win-native-notpm)
+        uses: actions/upload-artifact@v4
+        with:
+          name: libdogecoin-${{ github.sha }}-x86_64-win-native-notpm-signed
+          path: |
+            Release/**
             test/**
 
   sign-i686-win:
