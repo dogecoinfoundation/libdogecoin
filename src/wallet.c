@@ -505,7 +505,7 @@ dogecoin_wallet* dogecoin_wallet_init(const dogecoin_chainparams* chain, const c
                         if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
                             bool overwrite = (buffer[0] == 'Y' || buffer[0] == 'y');
                             // encrypt seed for storage with software
-                            if (dogecoin_encrypt_seed_with_sw(seed, sizeof(seed), file_id, overwrite, NULL, NULL, NULL)) {
+                            if (dogecoin_encrypt_seed_with_sw(seed, sizeof(seed), file_id, overwrite, NULL, NULL, NULL) == false) {
                                 dogecoin_wallet_free(wallet);
                                 return NULL;
                             }
