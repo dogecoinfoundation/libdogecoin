@@ -6,6 +6,7 @@ SDK_PATH ?= $(BASEDIR)/SDKs
 NO_QT ?=
 NO_WALLET ?=
 NO_UPNP ?=
+NO_YUBIKEY ?=
 MULTIPROCESS ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
@@ -113,8 +114,9 @@ qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch
 
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
+yubikey_packages_$(NO_YUBIKEY) = $(yubikey_packages)
 
-packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_)
+packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(yubikey_packages_) $(qrencode_packages_)
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
 
 ifneq ($(qt_packages_),)

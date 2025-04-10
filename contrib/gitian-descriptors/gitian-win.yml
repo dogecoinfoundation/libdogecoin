@@ -99,6 +99,7 @@ script: |
   export PATH=${WRAP_DIR}:${PATH}
 
   cd libdogecoin
+  export NO_YUBIKEY=y
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do

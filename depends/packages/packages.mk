@@ -1,4 +1,4 @@
-packages:=libevent libunistring libyubikey libusb ykpers
+packages:=libevent libunistring
 native_packages := native_ccache
 
 wallet_packages=
@@ -6,6 +6,8 @@ wallet_packages=
 upnp_packages=
 
 darwin_native_packages =
+
+yubikey_packages = libyubikey libusb ykpers
 
 ifneq ($(build_os),darwin)
 darwin_native_packages += native_cctools native_libtapi
