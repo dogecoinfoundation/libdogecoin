@@ -79,6 +79,7 @@ script: |
   export PATH=${WRAP_DIR}:${PATH}
 
   cd libdogecoin
+  export NO_YUBIKEY=y
   BASEPREFIX=`pwd`/depends
 
   mkdir -p ${BASEPREFIX}/SDKs
