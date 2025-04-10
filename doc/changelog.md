@@ -41,6 +41,8 @@
 * cmake: restore flag settings by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/246
 * docs: update changelog.md by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/247
 * fixate 0.1.4 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/248
+* fixate gitian descriptors by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/249
+* docs: re-update changelog.md by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/250
 
 ## New Contributors
 * @UsaRandom made their first contribution in https://github.com/dogecoinfoundation/libdogecoin/pull/205
