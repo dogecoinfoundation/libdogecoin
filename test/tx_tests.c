@@ -835,7 +835,7 @@ void test_tx_sighash_ext()
 
         free(script_data);
 
-        uint256 hash;
+        uint256_t hash;
         dogecoin_tx_sighash(tx_sighash, str, txvalid_sighash[i].i, SIGHASH_ALL, hash);
 
         dogecoin_tx_free(tx_sighash);
@@ -869,11 +869,11 @@ void test_tx_sighash()
 
         free(script_data);
 
-        uint256 sighash;
+        uint256_t sighash;
         dogecoin_mem_zero(sighash, sizeof(sighash));
         dogecoin_tx_sighash(tx, script, test->inputindex, test->hashtype, sighash);
 
-        vector* vec = vector_new(10, dogecoin_script_op_free_cb);
+        vector_t* vec = vector_new(10, dogecoin_script_op_free_cb);
         dogecoin_script_get_ops(script, vec);
         enum dogecoin_tx_out_type type = dogecoin_script_classify_ops(vec);
         vector_free(vec, true);
@@ -933,7 +933,7 @@ void test_script_parse()
         utils_hex_to_bin(test->scripthex, script_data, strlen(test->scripthex), &outlen);
 
         cstring* script = cstr_new_buf(script_data, outlen);
-        vector* vec = vector_new(10, dogecoin_script_op_free_cb);
+        vector_t* vec = vector_new(10, dogecoin_script_op_free_cb);
         dogecoin_script_get_ops(script, vec);
         enum dogecoin_tx_out_type type = dogecoin_script_classify_ops(vec);
 
@@ -951,7 +951,7 @@ void test_script_parse()
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
 
         cstring* script = cstr_new_buf(script_data, outlen);
-        vector* vec = vector_new(10, dogecoin_script_op_free_cb);
+        vector_t* vec = vector_new(10, dogecoin_script_op_free_cb);
         u_assert_int_eq(dogecoin_script_get_ops(script, vec), true);
 
         cstring* new_script = cstr_new_sz(script->len);
@@ -964,7 +964,7 @@ void test_script_parse()
         vector_free(vec, true);
     }
 
-    vector* pubkeys = vector_new(3, free);
+    vector_t* pubkeys = vector_new(3, free);
     for (i = 0; i < 3; i++) {
         dogecoin_key key;
         dogecoin_privkey_init(&key);
@@ -1015,7 +1015,7 @@ void test_script_parse()
     cstr_free(txser, true);
     free(hexbuf);
 
-    uint256 txhash;
+    uint256_t txhash;
     dogecoin_tx_hash(tx, txhash);
     char txhashhex[sizeof(txhash) * 2 + 1];
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
@@ -1075,8 +1075,8 @@ void test_script_parse()
     dogecoin_hdnode node;
     u_assert_int_eq(dogecoin_hdnode_deserialize(masterkey, &dogecoin_chainparams_main, &node), true);
 
-    uint256 rev_code;
-    uint256 sig_hash;
+    uint256_t rev_code;
+    uint256_t sig_hash;
     dogecoin_hash(node.private_key, DOGECOIN_ECKEY_PKEY_LENGTH, rev_code);
 
     uint8_t sigdata[38] = {0x42, 0x49, 0x50, 0x00, 0x00, 0x00, 0x00};
@@ -1290,7 +1290,7 @@ void test_scripts()
     utils_hex_to_bin(script_p2pkh, (unsigned char*)script_data_p2pkh->str, strlen(script_p2pkh), &outlen);
     script_data_p2pkh->len = outlen;
 
-    vector* vec = vector_new(16, free);
+    vector_t* vec = vector_new(16, free);
     enum dogecoin_tx_out_type type = dogecoin_script_classify(script_data_p2pk, vec);
     u_assert_int_eq(type, DOGECOIN_TX_PUBKEY);
     type = dogecoin_script_classify(script_data_p2pkh, vec);

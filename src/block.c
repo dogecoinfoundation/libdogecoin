@@ -43,7 +43,7 @@
 #include <dogecoin/utils.h>
 #include <dogecoin/validation.h>
 
-dogecoin_bool check(void *ctx, uint256* hash, uint32_t chainid, dogecoin_chainparams* params) {
+dogecoin_bool check(void *ctx, uint256_t* hash, uint32_t chainid, dogecoin_chainparams* params) {
     dogecoin_auxpow_block* block = (dogecoin_auxpow_block*)ctx;
 
     if (block->parent_merkle_index != 0) {
@@ -57,7 +57,7 @@ dogecoin_bool check(void *ctx, uint256* hash, uint32_t chainid, dogecoin_chainpa
         return false;
     }
 
-    vector* chain_merkle_branch = vector_new(block->aux_merkle_count, NULL);
+    vector_t* chain_merkle_branch = vector_new(block->aux_merkle_count, NULL);
     for (size_t p = 0; p < block->aux_merkle_count; p++) {
         vector_add(chain_merkle_branch, block->aux_merkle_branch[p]);
     }
@@ -69,8 +69,15 @@ dogecoin_bool check(void *ctx, uint256* hash, uint32_t chainid, dogecoin_chainpa
     }
 
     // First call to check_merkle_branch for the auxiliary blockchain's merkle branch
-    uint256* chain_merkle_root = check_merkle_branch(hash, chain_merkle_branch, block->aux_merkle_index);
+    uint256_t* chain_merkle_root = check_merkle_branch(hash, chain_merkle_branch, block->aux_merkle_index);
     vector_free(chain_merkle_branch, true);
+
+    // Check that there is at least one input in the parent coinbase transaction
+    if (block->parent_coinbase->vin->len == 0) {
+        printf("Aux POW coinbase has no inputs\n");
+        dogecoin_free(chain_merkle_root);
+        return false;
+    }
 
     // Convert the root hash to a human-readable format (hex)
     unsigned char vch_roothash[64]; // Make sure it's large enough to hold the hash
@@ -78,20 +85,20 @@ dogecoin_bool check(void *ctx, uint256* hash, uint32_t chainid, dogecoin_chainpa
     dogecoin_free(chain_merkle_root); // Free the computed merkle root
 
     // Compute the Merkle root for the parent block
-    vector* parent_merkle_branch = vector_new(block->parent_merkle_count, NULL);
+    vector_t* parent_merkle_branch = vector_new(block->parent_merkle_count, NULL);
     for (size_t p = 0; p < block->parent_merkle_count; p++) {
         vector_add(parent_merkle_branch, block->parent_coinbase_merkle[p]);
     }
 
     // Compute the hash of the parent block's coinbase transaction
-    uint256 parent_coinbase_hash;
+    uint256_t parent_coinbase_hash;
     dogecoin_tx_hash(block->parent_coinbase, parent_coinbase_hash);
 
-    uint256* parent_merkle_root = check_merkle_branch(&parent_coinbase_hash, parent_merkle_branch, block->parent_merkle_index);
+    uint256_t* parent_merkle_root = check_merkle_branch(&parent_coinbase_hash, parent_merkle_branch, block->parent_merkle_index);
     vector_free(parent_merkle_branch, true);
 
     // Check that the computed Merkle root matches the parent block's Merkle root
-    if (memcmp(parent_merkle_root, block->parent_header->merkle_root, sizeof(uint256)) != 0) {
+    if (memcmp(parent_merkle_root, block->parent_header->merkle_root, sizeof(uint256_t)) != 0) {
         printf("Aux POW merkle root incorrect\n");
         dogecoin_free(parent_merkle_root);
         return false;
@@ -168,7 +175,6 @@ dogecoin_block_header* dogecoin_block_header_new() {
     header->auxpow->check = check;
     header->auxpow->ctx = header;
     header->auxpow->is = false;
-    dogecoin_mem_zero(&header->chainwork, DOGECOIN_HASH_LENGTH);
     return header;
     }
 
@@ -310,10 +316,11 @@ void print_block(dogecoin_auxpow_block* block) {
  * @param header The header object to be constructed.
  * @param buf The buffer to deserialize from.
  * @param params The chain parameters.
+ * @param chainwork The computed chainwork.
  *
  * @return 1 if deserialization was successful, 0 otherwise.
  */
-int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf, const dogecoin_chainparams *params) {
+int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct const_buffer* buf, const dogecoin_chainparams *params, uint256_t* chainwork) {
     dogecoin_auxpow_block* block = dogecoin_auxpow_block_new();
     if (!deser_s32(&block->header->version, buf))
         return false;
@@ -329,7 +336,7 @@ int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct cons
         return false;
     dogecoin_block_header_copy(header, block->header);
     if ((block->header->version & 0x100) != 0 && buf->len) {
-        if (!deserialize_dogecoin_auxpow_block(block, buf, params)) {
+        if (!deserialize_dogecoin_auxpow_block(block, buf, params, chainwork)) {
             printf("%s:%d:%s:%s\n", __FILE__, __LINE__, __func__, strerror(errno));
             return false;
         }
@@ -339,7 +346,7 @@ int dogecoin_block_header_deserialize(dogecoin_block_header* header, struct cons
     return true;
     }
 
-int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer, const dogecoin_chainparams *params) {
+int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const_buffer* buffer, const dogecoin_chainparams *params, uint256_t* chainwork) {
     if (buffer->len > DOGECOIN_MAX_P2P_MSG_SIZE) {
         return printf("\ntransaction is invalid or to large.\n\n");
         }
@@ -372,7 +379,7 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
     }
     uint8_t i = 0;
     if (block->parent_merkle_count > 0) {
-        block->parent_coinbase_merkle = dogecoin_calloc(block->parent_merkle_count, sizeof(uint256));
+        block->parent_coinbase_merkle = dogecoin_calloc(block->parent_merkle_count, sizeof(uint256_t));
     }
     for (; i < block->parent_merkle_count; i++) {
         if (!deser_u256(block->parent_coinbase_merkle[i], buffer)) {
@@ -390,7 +397,7 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
         return false;
     }
     if (block->aux_merkle_count > 0) {
-        block->aux_merkle_branch = dogecoin_calloc(block->aux_merkle_count, sizeof(uint256));
+        block->aux_merkle_branch = dogecoin_calloc(block->aux_merkle_count, sizeof(uint256_t));
     }
     for (i = 0; i < block->aux_merkle_count; i++) {
         if (!deser_u256(block->aux_merkle_branch[i], buffer)) {
@@ -428,7 +435,7 @@ int deserialize_dogecoin_auxpow_block(dogecoin_auxpow_block* block, struct const
         return false;
     }
 
-    if (!check_auxpow(block, (dogecoin_chainparams*)params)) {
+    if (!check_auxpow(block, (dogecoin_chainparams*)params, chainwork)) {
         printf("check_auxpow failed!\n");
         return false;
     }
@@ -473,7 +480,6 @@ void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_bloc
     dest->auxpow->check = src->auxpow->check;
     dest->auxpow->ctx = src->auxpow->ctx;
     dest->auxpow->is = src->auxpow->is;
-    memcpy_safe(&dest->chainwork, &src->chainwork, sizeof(src->chainwork));
     }
 
 /**
@@ -485,7 +491,7 @@ void dogecoin_block_header_copy(dogecoin_block_header* dest, const dogecoin_bloc
  *
  * @return True.
  */
-dogecoin_bool dogecoin_block_header_hash(dogecoin_block_header* header, uint256 hash) {
+dogecoin_bool dogecoin_block_header_hash(dogecoin_block_header* header, uint256_t hash) {
     cstring* s = cstr_new_sz(80);
     dogecoin_block_header_serialize(s, header);
     sha256_raw((const uint8_t*)s->str, s->len, hash);

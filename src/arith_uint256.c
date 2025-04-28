@@ -88,9 +88,9 @@ arith_uint256* set_compact(arith_uint256* hash, uint32_t compact, dogecoin_bool 
     uint32_t word = compact & 0x007fffff;
     if (size <= 3) {
         word >>= 8 * (3 - size);
-        memcpy_safe(&hash->pn[0], &word, sizeof word);
+        hash->pn[0] = word;
     } else {
-        memcpy_safe(&hash->pn[0], &word, sizeof word);
+        hash->pn[0] = word;
         arith_shift_left(hash, 8 * (size - 3));
     }
     if (pf_negative) *pf_negative = word != 0 && (compact & 0x00800000) != 0;
@@ -100,7 +100,7 @@ arith_uint256* set_compact(arith_uint256* hash, uint32_t compact, dogecoin_bool 
     return hash;
 }
 
-arith_uint256* uint_to_arith(const uint256* a)
+arith_uint256* uint_to_arith(const uint256_t* a)
 {
     static arith_uint256 b;
     memcpy_safe(b.pn, a, sizeof(b.pn));
@@ -108,8 +108,8 @@ arith_uint256* uint_to_arith(const uint256* a)
 }
 
 uint8_t* arith_to_uint256(const arith_uint256* a) {
-    static uint256 b = {0};
-    memcpy_safe(b, a->pn, sizeof(uint256));
+    static uint256_t b = {0};
+    memcpy_safe(b, a->pn, sizeof(uint256_t));
     return &b[0];
 }
 
@@ -152,21 +152,27 @@ arith_uint256* div_arith_uint256(arith_uint256* a, arith_uint256* b) {
 arith_uint256* add_arith_uint256(arith_uint256* a, arith_uint256* b) {
     arith_uint256* result = init_arith_uint256();
     uint64_t carry = 0;
-    for (int i = WIDTH - 1; i >= 0; i--) {
+    for (int i = 0; i < WIDTH; i++) {
         uint64_t sum = (uint64_t)a->pn[i] + b->pn[i] + carry;
-        result->pn[i] = sum; // This will only keep the lower 32 bits
-        carry = sum >> 32; // This will keep the upper 32 bits (carry)
+        result->pn[i] = (uint32_t)sum; // This will only keep the lower 32 bits
+        carry = sum >> 32; // Carry is the upper 32 bits
     }
     return result;
 }
 
 arith_uint256* sub_arith_uint256(arith_uint256* a, arith_uint256* b) {
+    if (arith_uint256_less_than(a, b)) {
+        // Handle underflow if necessary
+        return NULL;
+    }
     arith_uint256* result = init_arith_uint256();
-    int64_t carry = 0;
-    for (int i = WIDTH - 1; i >= 0; i--) {
-        int64_t diff = (uint64_t)a->pn[i] - b->pn[i] - carry;
-        result->pn[i] = diff; // This will only keep the lower 32 bits
-        carry = (diff < 0) ? 1 : 0; // If diff is negative, there's a borrow
+    uint64_t borrow = 0;
+    for (int i = 0; i < WIDTH; i++) {
+        uint64_t diff = (uint64_t)a->pn[i] - b->pn[i] - borrow;
+        result->pn[i] = (uint32_t)diff; // Keep only lower 32 bits
+        // If diff is less than zero when interpreted as signed, there's a borrow.
+        // Note: This checks the high bit of the 64-bit diff calculation for borrow.
+        borrow = (diff > (uint64_t)UINT32_MAX) ? 1 : 0;
     }
     return result;
 }

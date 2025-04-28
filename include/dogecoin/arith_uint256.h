@@ -53,9 +53,11 @@ typedef base_uint_ arith_uint256;
 
 void arith_negate(arith_uint256* input);
 arith_uint256* init_arith_uint256();
+void arith_shift_left(arith_uint256* input, unsigned int shift);
+void arith_shift_right(arith_uint256* input, unsigned int shift);
 arith_uint256* set_compact(arith_uint256* hash, uint32_t compact, dogecoin_bool *pf_negative, dogecoin_bool *pf_overflow);
 uint8_t* arith_to_uint256(const arith_uint256* a);
-arith_uint256* uint_to_arith(const uint256* a);
+arith_uint256* uint_to_arith(const uint256_t* a);
 uint64_t get_low64(arith_uint256* a);
 arith_uint256* div_arith_uint256(arith_uint256* a, arith_uint256* b);
 arith_uint256* add_arith_uint256(arith_uint256* a, arith_uint256* b);

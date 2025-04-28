@@ -22,7 +22,7 @@ This document describes the process of message signing within libdogecoin. It ai
 char* sign_message(char* privkey, char* msg) {
     if (!privkey || !msg) return false;
 
-    uint256 message_bytes;
+    uint256_t message_bytes;
     hash_message(msg, message_bytes);
 
     size_t compact_signature_length = 65;
@@ -66,7 +66,7 @@ char* sig = sign_message("QUtnMFjt3JFk1NfeMe6Dj5u4p25DHZA54FsvEFAiQxcNP4bZkPu2",
 int verify_message(char* sig, char* msg, char* address) {
     if (!(sig || msg || address)) return false;
 
-    uint256 message_bytes;
+    uint256_t message_bytes;
     hash_message(msg, message_bytes);
 
     size_t encoded_length = strlen((const char*)sig);

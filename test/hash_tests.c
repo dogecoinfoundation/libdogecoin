@@ -53,9 +53,9 @@ void test_hash()
 {
     const char data[] = "cea946542b91ca50e2afecba73cf546ce1383d82668ecb6265f79ffaa07daa49abb43e21a19c6b2b15c8882b4bc01085a8a5b00168139dcb8f4b2bbe22929ce196d43532898d98a3b0ea4d63112ba25e724bb50711e3cf55954cf30b4503b73d785253104c2df8c19b5b63e92bd6b1ff2573751ec9c508085f3f206c719aa4643776bf425344348cbf63f1450389";
     const char expected[] = "52aa8dd6c598d91d580cc446624909e52a076064ffab67a1751f5758c9f76d26";
-    uint256* digest_expected;
-    digest_expected = (uint256*)utils_hex_to_uint8(expected);
-    uint256 hashout;
+    uint256_t* digest_expected;
+    digest_expected = (uint256_t*)utils_hex_to_uint8(expected);
+    uint256_t hashout;
     dogecoin_hash((const unsigned char*)data, strlen(data), hashout);
     assert(memcmp(hashout, digest_expected, sizeof(hashout)) == 0);
 
@@ -84,7 +84,7 @@ void test_hash()
     hasher->write(hasher, 0x2F2E2D2C2B2A2928ULL);
     u_assert_uint64_eq(hasher->finalize(hasher), 0xe612a3cb9ecba951ull);
 
-    uint256* hash_in = dogecoin_uint256_vla(1);
+    uint256_t* hash_in = dogecoin_uint256_vla(1);
     utils_uint256_sethex("1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100", (uint8_t*)hash_in);
     u_assert_uint64_eq(siphash_u256(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL, hash_in), 0x7127512f72f27cceull);
 
@@ -114,7 +114,7 @@ void test_hash()
     // and the test would be affected by default tx version bumps if not fixed.
     tx->version = 1;
     dogecoin_tx_serialize(hw->cstr, tx);
-    u_assert_uint64_eq(siphash_u256(1, 2, (uint256*)hw->get_hash(hw)), 0x79751e980c2a0a35ULL);
+    u_assert_uint64_eq(siphash_u256(1, 2, (uint256_t*)hw->get_hash(hw)), 0x79751e980c2a0a35ULL);
 
     dogecoin_free(hash_in);
     dogecoin_free(hasher);

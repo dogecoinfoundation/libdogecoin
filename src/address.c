@@ -4,7 +4,7 @@
 
  Copyright (c) 2023 bluezr
  Copyright (c) 2023 edtubbs
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -491,6 +491,36 @@ int getDerivedHDAddress(const char* masterkey, uint32_t account, bool ischange, 
 }
 
 /**
+ * @brief This function generates a derived child address from a masterkey using
+ * a BIP44 standardized static, non hardened path comprised of an account, a change or
+ * receiving address and an address index.
+ *
+ * @param masterkey The master key from which children are derived from.
+ * @param account The account that the derived address would belong to.
+ * @param ischange Boolean value representing either a change or receiving address.
+ * @param addressindex The index of the receiving/change address per account.
+ * @param outp2pkh The derived address in P2PSH form.
+ *
+ * @return 1 if a derived address was successfully generated, 0 otherwise.
+ */
+int getDerivedHDAddressAsP2PKH(const char* masterkey, uint32_t account, bool ischange, uint32_t addressindex, char* outp2pkh) {
+        if (!masterkey) {
+            debug_print("%s", "no extended key\n");
+            return false;
+        }
+
+        char derived_path[DERIVED_PATH_STRINGLEN];
+        int derived_path_size = snprintf(derived_path, sizeof(derived_path), "m/44'/3'/%u'/%u/%u", account, ischange, addressindex);
+
+        if (derived_path_size >= (int)sizeof(derived_path)) {
+            debug_print("%s", "derivation path overflow\n");
+            return false;
+        }
+
+        return getDerivedHDAddressByPath(masterkey, derived_path, outp2pkh);
+}
+
+/**
  * @brief This function generates a new dogecoin address from a mnemonic by the slip44 key path.
  *
  * @param account The BIP44 account to generate the derived address.
@@ -842,4 +872,40 @@ int getDerivedHDAddressFromEncryptedHDNode(const uint32_t account, const uint32_
 
    return 0;
 
+}
+
+int getDerivedHDAddressFromAcctPubKey(const char* account_ext_pubkey, const uint32_t index, const CHANGE_LEVEL change_level, char* p2pkh_pubkey, const bool is_testnet) {
+    if (!account_ext_pubkey) {
+        debug_print("%s", "no extended key\n");
+        return false;
+    }
+
+    /* Initialize variables */
+    dogecoin_hdnode derived_node;
+
+    /* determine if mainnet or testnet/regtest */
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+
+    /* create account node */
+    dogecoin_hdnode* account_node = dogecoin_hdnode_new();
+    if (dogecoin_hdnode_deserialize(account_ext_pubkey, chain, account_node) == false) {
+        dogecoin_hdnode_free(account_node);
+        return false;
+    }
+
+    /* derive child key */
+    char path[KEYPATHMAXLEN];
+    sprintf(path, "m/%s/%u", change_level, index);
+    if (dogecoin_hd_generate_key(&derived_node, path, account_node->public_key, account_node->depth, account_node->chain_code, true) == false) {
+        dogecoin_hdnode_free(account_node);
+        return false;
+    }
+
+    /* get address */
+    dogecoin_hdnode_get_p2pkh_address(&derived_node, chain, p2pkh_pubkey, P2PKHLEN);
+
+    /* free memory */
+    dogecoin_hdnode_free(account_node);
+
+    return 0;
 }

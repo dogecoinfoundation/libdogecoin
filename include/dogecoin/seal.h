@@ -1,6 +1,6 @@
 /**********************************************************************
  * Copyright (c) 2023 edtubbs                                         *
- * Copyright (c) 2023 The Dogecoin Foundation                         *
+ * Copyright (c) 2023-2024 The Dogecoin Foundation                    *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -33,17 +33,33 @@ LIBDOGECOIN_API
 /* define test file number */
 #define TEST_FILE 999
 
+/* define the maximum size of an Encrypted BLOB */
+#define MAX_ENCRYPTED_BLOB_SIZE 2048
+
+/*
+ * Typedefs
+ */
+
+/* Encrypted BLOB */
+typedef uint8_t ENCRYPTED_BLOB[MAX_ENCRYPTED_BLOB_SIZE];
+
 /* Encrypt a BIP32 seed with the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_tpm (const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite);
+LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_tpm(const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite);
 
 /* Decrypt a BIP32 seed with the TPM */
-LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm (SEED seed, const int file_num);
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_tpm(SEED seed, const int file_num);
 
 /* Encrypt a BIP32 seed with software */
-LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw (const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite, const char* test_password);
+LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw(const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite, const char* test_password, ENCRYPTED_BLOB* encrypted_blob_out, size_t* encrypted_blob_size);
 
 /* Decrypt a BIP32 seed with software */
-LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw (SEED seed, const int file_num, const char* test_password);
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw(SEED seed, const int file_num, const char* test_password, ENCRYPTED_BLOB encrypted_blob);
+
+/* Encrypt a BIP32 seed with software and store it on YubiKey */
+LIBDOGECOIN_API dogecoin_bool dogecoin_encrypt_seed_with_sw_to_yubikey(const SEED seed, const size_t size, const int file_num, const dogecoin_bool overwrite, const char* test_password);
+
+/* Decrypt a BIP32 seed with software after retrieving it from YubiKey */
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_seed_with_sw_from_yubikey(SEED seed, const int file_num, const char* test_password);
 
 /* Generate a BIP39 mnemonic and encrypt it with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words);
@@ -52,10 +68,16 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_tpm(MNEMON
 LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_tpm(MNEMONIC mnemonic, const int file_num);
 
 /* Generate a BIP39 mnemonic and encrypt it with software */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words, const char* test_password);
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words, const char* test_password, ENCRYPTED_BLOB* encrypted_blob_out, size_t* encrypted_blob_size);
 
 /* Decrypt a BIP39 mnemonic with software */
-LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemonic, const int file_num, const char* test_password);
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw(MNEMONIC mnemonic, const int file_num, const char* test_password, ENCRYPTED_BLOB encrypted_blob);
+
+/* Generate a BIP39 mnemonic, encrypt it with software, and store it on YubiKey */
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_mnemonic_encrypt_with_sw_to_yubikey(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, const char* lang, const char* space, const char* words, const char* test_password);
+
+/* Decrypt a BIP39 mnemonic with software after retrieving it from YubiKey */
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_mnemonic_with_sw_from_yubikey(MNEMONIC mnemonic, const int file_num, const char* test_password);
 
 /* Generate a BIP32 HD node and encrypt it with the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite);
@@ -64,10 +86,16 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_tpm(dogecoin
 LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_tpm(dogecoin_hdnode* out, const int file_num);
 
 /* Generate a BIP32 HD node and encrypt it with software */
-LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite, const char* test_password);
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite, const char* test_password, ENCRYPTED_BLOB* encrypted_blob_out, size_t* encrypted_blob_size);
 
 /* Decrypt a BIP32 HD node object with software */
-LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int file_num, const char* test_password);
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_sw(dogecoin_hdnode* out, const int file_num, const char* test_password, ENCRYPTED_BLOB encrypted_blob);
+
+/* Generate a BIP32 HD node, encrypt it with software, and store it on YubiKey */
+LIBDOGECOIN_API dogecoin_bool dogecoin_generate_hdnode_encrypt_with_sw_to_yubikey(dogecoin_hdnode* out, const int file_num, const dogecoin_bool overwrite, const char* test_password);
+
+/* Decrypt a BIP32 HD node with software after retrieving it from YubiKey */
+LIBDOGECOIN_API dogecoin_bool dogecoin_decrypt_hdnode_with_sw_from_yubikey(dogecoin_hdnode* out, const int file_num, const char* test_password);
 
 /* List all encryption keys in the TPM */
 LIBDOGECOIN_API dogecoin_bool dogecoin_list_encryption_keys_in_tpm(wchar_t* names[], size_t* count);
@@ -76,7 +104,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_list_encryption_keys_in_tpm(wchar_t* name
 LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicTPM(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);
 
 /* Generate a 256-bit random english mnemonic with software */
-LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicSW(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite);
+LIBDOGECOIN_API dogecoin_bool generateRandomEnglishMnemonicSW(MNEMONIC mnemonic, const int file_num, const dogecoin_bool overwrite, ENCRYPTED_BLOB* encrypted_blob, size_t* encrypted_blob_size);
 
 LIBDOGECOIN_END_DECL
 

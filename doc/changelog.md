@@ -2,6 +2,57 @@
 
 ## [Released]
 
+## [0.1.4] - 2025-04-10
+## What's Changed
+* merge v0.1.3 into main by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/204
+* added 'tbs' library link by @UsaRandom in https://github.com/dogecoinfoundation/libdogecoin/pull/205
+* net: added disconnected state for shutdown by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/207
+* src: added intel assembly for sha algs by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/208
+* ci: comment out arm64-macos due to gh billing by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/209
+* build: require secp256k1 build first in Makefile by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/211
+* ci: pin macos version to 12 instead of latest by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/214
+* net: added http server by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/212
+* blockchain: moved chainwork to blockindex by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/213
+* crypto: adds chacha20 and fast_random_context by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/210
+* fix DragonFlyBSD 6.4-RELEASE support by @movepointsolutions in https://github.com/dogecoinfoundation/libdogecoin/pull/182
+* Make getDerivedHDAddress return address, not key by @chromatic in https://github.com/dogecoinfoundation/libdogecoin/pull/218
+* spvnode: move http callback function to it's own respective file by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/220
+* fixate 0.1.4-dogebox-pre by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/221
+* [feat] Add Key Management Enclaves with YubiKey and NanoPC-T6 Support by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/223
+* config: add -levent_core to AC_CHECK_LIB for event_extra by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/225
+* ci: added 'tags' to 'on:' for sign actions by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/227
+* ci: updated runner to macos-13 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/229
+* optee, openenclave: added custom key path parameter by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/238
+* depends: disable libunistring for mingw32 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/228
+* src: updated reference and error handling in rest by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/226
+* such: updated usage for public child keys by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/230
+* chainparams: added backup dns seed by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/239
+* add _t suffix to uint256, uint160 and vector types by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/240
+* sha2: added armv8 and armv8.2 crypto by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/231
+* rest: added getTimestamp endpoint by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/234
+* rest: added getLastBlockInfo endpoint  by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/235
+* rest: added utxo confirmations by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/236
+* validation: check auxpow PoW before other checks by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/237
+* ci: updated Windows signing certs and root by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/241
+* optee: enable TRNG, add LIBDIR overrides, and switch fortify flag by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/242
+* sha2: moved armv8 and armv82 guards by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/243
+* ci: added windows native release and no tpm builds by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/244
+* wallet: restore logic check by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/245
+* cmake: restore flag settings by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/246
+* docs: update changelog.md by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/247
+* fixate 0.1.4 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/248
+* fixate gitian descriptors by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/249
+* docs: re-update changelog.md by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/250
+* depends: make yubikey depends selectable by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/251
+* docs: finalize changelog.md by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/252
+
+## New Contributors
+* @UsaRandom made their first contribution in https://github.com/dogecoinfoundation/libdogecoin/pull/205
+* @movepointsolutions made their first contribution in https://github.com/dogecoinfoundation/libdogecoin/pull/182
+
+**Full Changelog**: https://github.com/dogecoinfoundation/libdogecoin/compare/v0.1.3...v0.1.4
+
+
 ## [0.1.3] - 2024-02-07
 * logdb: adds files and tests for spv node wallet database by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/110.
 * depends: add build support for arm64-apple-darwin by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/111.

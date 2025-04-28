@@ -3,7 +3,7 @@
  The MIT License (MIT)
  Copyright (c) 2023 bluezr
  Copyright (c) 2023 edtubbs
- Copyright (c) 2023 The Dogecoin Foundation
+ Copyright (c) 2023-2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(HAVE_CONFIG_H)
+#if defined(HAVE_CONFIG_H) && !defined(USE_LIB)
 #include <config/libdogecoin-config.h>
 #endif
 
@@ -134,6 +134,7 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 #define PRIVKEYHEXLEN DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1
 #define PUBKEYHEXLEN 67
 #define PUBKEYHASHLEN 41
+#define SCRIPTPUBKEYLEN 51 // 40 + 6 + 4 + 1
 #define KEYPATHMAXLEN 256
 
 /* Constants for transaction */
@@ -146,8 +147,8 @@ typedef uint8_t dogecoin_bool; //!serialize, c/c++ save bool
 LIBDOGECOIN_BEGIN_DECL
 
 /* Data array types */
-typedef uint8_t uint256[32];
-typedef uint8_t uint160[20];
+typedef uint8_t uint256_t[32];
+typedef uint8_t uint160_t[20];
 typedef uint8_t SEED[MAX_SEED_SIZE];
 
 static const int WIDTH = 0x0000100/32;

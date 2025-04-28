@@ -72,7 +72,12 @@ void test_spv()
     unlink(headersfile);
 
     // init new spv client with debugging off and syncing to memory:
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8);
+#ifndef __APPLE__
+    // due to TBD anomaly in ci environment, enable http server if not running Apple
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8, "localhost:8888");
+#else
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8, NULL);
+#endif
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
@@ -99,7 +104,7 @@ void test_reorg() {
     unlink(headersfile);
 
     // Initialize SPV client
-    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, false, false, 8);
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, false, false, false, 8, NULL);
     client->header_message_processed = test_spv_header_message_processed;
     client->sync_completed = test_spv_sync_completed;
     dogecoin_spv_client_load(client, headersfile, false);
@@ -109,6 +114,7 @@ void test_reorg() {
     dogecoin_block_header* header2 = dogecoin_block_header_new();
     dogecoin_block_header* header3 = dogecoin_block_header_new();
     dogecoin_block_header* header4 = dogecoin_block_header_new();
+    dogecoin_block_header* header2_stale = dogecoin_block_header_new();
     dogecoin_block_header* header2_fork = dogecoin_block_header_new();
     dogecoin_block_header* header3_fork = dogecoin_block_header_new();
     dogecoin_block_header* header4_fork = dogecoin_block_header_new();
@@ -163,6 +169,14 @@ void test_reorg() {
     utils_reverse_hex(merkleroot_hex4, 64);
     utils_hex_to_bin(merkleroot_hex4, (uint8_t*) header4->merkle_root, 64, &outlen);
 
+    // Initialize header2_stale
+    header2_stale->version = 1; // 2
+    header2_stale->timestamp = 1386474933; // 2
+    header2_stale->nonce = 3404481231; // 2
+    header2_stale->bits = 0x1e0ffff0; // 2
+    utils_hex_to_bin(prevblock_hex2, (uint8_t*) header2_stale->prev_block, 64, &outlen);
+    utils_hex_to_bin(merkleroot_hex2, (uint8_t*) header2_stale->merkle_root, 64, &outlen);
+
     // Initialize header2_fork
     header2_fork->version = 1; // 2
     header2_fork->timestamp = 1386474933; // 2
@@ -193,18 +207,19 @@ void test_reorg() {
     utils_hex_to_bin(merkleroot_hex2, (uint8_t*) header5_fork->merkle_root, 64, &outlen); // merkle is a don't care
 
     // Calculate the chainwork for each header
-    uint256 chainwork1, chainwork2, chainwork3, chainwork4, chainwork2_fork, chainwork3_fork, chainwork4_fork, chainwork5_fork;
+    uint256_t chainwork1, chainwork2, chainwork3, chainwork4, chainwork2_stale, chainwork2_fork, chainwork3_fork, chainwork4_fork, chainwork5_fork;
     arith_uint256* target1 = init_arith_uint256();
     arith_uint256* target2 = init_arith_uint256();
     arith_uint256* target3 = init_arith_uint256();
     arith_uint256* target4 = init_arith_uint256();
+    arith_uint256* target2_stale = init_arith_uint256();
     arith_uint256* target2_fork = init_arith_uint256();
     arith_uint256* target3_fork = init_arith_uint256();
     arith_uint256* target4_fork = init_arith_uint256();
     arith_uint256* target5_fork = init_arith_uint256();
     cstring* s = cstr_new_sz(64);
     dogecoin_bool f_negative, f_overflow;
-    uint256* hash = dogecoin_uint256_vla(1);
+    uint256_t* hash = dogecoin_uint256_vla(1);
 
     // Compute the hash of the block header 1
     dogecoin_block_header_serialize(s, header1);
@@ -251,6 +266,43 @@ void test_reorg() {
 
     arith_uint256* arith_chainwork2 = init_arith_uint256();
     memcpy(arith_chainwork2, &chainwork2, sizeof(arith_uint256));
+    arith_uint256* arith_chainwork2_stale = init_arith_uint256();
+
+    // Mine the stale block header 2
+    // loop until the chainwork of the stale is equal and the hash passes PoW
+    while (true) {
+        // Compute the hash of the block header 2
+        s = cstr_new_sz(64);
+        dogecoin_block_header_serialize(s, header2_stale);
+        dogecoin_block_header_scrypt_hash(s, hash);
+        cstr_free(s, true);
+
+        // Compute the chainwork 2
+        target2_stale = set_compact(target2_stale, header2_stale->bits, &f_negative, &f_overflow);
+        bool pow_passed = check_pow(hash, header2_stale->bits, chain, &chainwork2_stale);
+
+        // Update the arith_uint256 chainwork of the stale
+        memcpy(arith_chainwork2_stale, &chainwork2_stale, sizeof(uint256_t));
+
+        // Check if the chainwork of the stale is equal and the hash passes PoW
+        if (arith_uint256_equal(arith_chainwork2_stale, arith_chainwork2) && pow_passed) {
+            debug_print("Nonce: %u\n", header2_stale->nonce);
+            debug_print("Hash: %s\n", hash_to_string((uint8_t*) hash));
+            debug_print("Chainwork: %s\n", hash_to_string((uint8_t*) arith_chainwork2_stale));
+            break;
+        }
+
+        // Increment the nonce
+        header2_stale->nonce++;
+
+    }
+
+    // Free the arith_uint256 chainwork of the stale
+    dogecoin_free(arith_chainwork2_stale);
+
+    // Free the target and hash
+    dogecoin_free(target2_stale);
+
     arith_uint256* arith_chainwork2_fork = init_arith_uint256();
 
     // Mine the forked block header 2
@@ -267,7 +319,7 @@ void test_reorg() {
         bool pow_passed = check_pow(hash, header2_fork->bits, chain, &chainwork2_fork);
 
         // Update the arith_uint256 chainwork of the fork
-        memcpy(arith_chainwork2_fork, &chainwork2_fork, sizeof(uint256));
+        memcpy(arith_chainwork2_fork, &chainwork2_fork, sizeof(uint256_t));
 
         // Check if the chainwork of the fork is greater and the hash passes PoW
         if (arith_uint256_greater_than(arith_chainwork2_fork, arith_chainwork2) && pow_passed) {
@@ -314,7 +366,7 @@ void test_reorg() {
         bool pow_passed = check_pow(hash, header3_fork->bits, chain, &chainwork3_fork);
 
         // Update the arith_uint256 chainwork of the fork
-        memcpy(arith_chainwork3_fork, &chainwork3_fork, sizeof(uint256));
+        memcpy(arith_chainwork3_fork, &chainwork3_fork, sizeof(uint256_t));
 
         // Check if the hash passes PoW
         if (pow_passed) {
@@ -360,7 +412,7 @@ void test_reorg() {
         bool pow_passed = check_pow(hash, header4_fork->bits, chain, &chainwork4_fork);
 
         // Update the arith_uint256 chainwork of the fork
-        memcpy(arith_chainwork4_fork, &chainwork4_fork, sizeof(uint256));
+        memcpy(arith_chainwork4_fork, &chainwork4_fork, sizeof(uint256_t));
 
         // Check if the hash passes PoW
         if (pow_passed) {
@@ -403,10 +455,10 @@ void test_reorg() {
 
         // Compute the chainwork 5
         target5_fork = set_compact(target5_fork, header5_fork->bits, &f_negative, &f_overflow);
-        bool pow_passed = check_pow(hash, header5_fork->bits, chain, &chainwork4_fork);
+        bool pow_passed = check_pow(hash, header5_fork->bits, chain, &chainwork5_fork);
 
         // Update the arith_uint256 chainwork of the fork
-        memcpy(arith_chainwork5_fork, &chainwork5_fork, sizeof(uint256));
+        memcpy(arith_chainwork5_fork, &chainwork5_fork, sizeof(uint256_t));
 
         // Check if the hash passes PoW
         if (pow_passed) {
@@ -448,6 +500,9 @@ void test_reorg() {
     // Serialize header5_fork into cbuf_all
     dogecoin_block_header_serialize(cbuf_all, header5_fork);
 
+    // Serialize header2_stale into cbuf_all
+    dogecoin_block_header_serialize(cbuf_all, header2_stale);
+
     // Serialize header2_fork into cbuf_all
     dogecoin_block_header_serialize(cbuf_all, header2_fork);
 
@@ -457,7 +512,10 @@ void test_reorg() {
     // Serialize header4_fork into cbuf_all
     dogecoin_block_header_serialize(cbuf_all, header4_fork);
 
-    // Serialize header5_fork into cbuf_all
+    // Serialize header5_fork into cbuf_all again
+    dogecoin_block_header_serialize(cbuf_all, header5_fork);
+
+    // Serialize header5_fork into cbuf_all yet again (duplicate)
     dogecoin_block_header_serialize(cbuf_all, header5_fork);
 
     // Define a constant buffer for each header
@@ -466,10 +524,12 @@ void test_reorg() {
     struct const_buffer cbuf_header3 = {cbuf_all->str + 160, 80};
     struct const_buffer cbuf_header4 = {cbuf_all->str + 240, 80};
     struct const_buffer cbuf_header5_fork = {cbuf_all->str + 320, 80};
-    struct const_buffer cbuf_header2_fork = {cbuf_all->str + 400, 80};
-    struct const_buffer cbuf_header3_fork = {cbuf_all->str + 480, 80};
-    struct const_buffer cbuf_header4_fork = {cbuf_all->str + 560, 80};
-    struct const_buffer cbuf_header5_fork_again = {cbuf_all->str + 640, 80};
+    struct const_buffer cbuf_header2_stale = {cbuf_all->str + 400, 80};
+    struct const_buffer cbuf_header2_fork = {cbuf_all->str + 480, 80};
+    struct const_buffer cbuf_header3_fork = {cbuf_all->str + 560, 80};
+    struct const_buffer cbuf_header4_fork = {cbuf_all->str + 640, 80};
+    struct const_buffer cbuf_header5_fork_again = {cbuf_all->str + 720, 80};
+    struct const_buffer cbuf_header5_fork_duplicate = {cbuf_all->str + 800, 80};
 
     // Connect the headers to the database
     dogecoin_bool connected;
@@ -484,6 +544,8 @@ void test_reorg() {
     u_assert_true (connected);
     dogecoin_free(dogecoin_headers_db_connect_hdr(db, &cbuf_header5_fork, false, &connected));
     u_assert_true (!connected);
+    dogecoin_headers_db_connect_hdr(db, &cbuf_header2_stale, false, &connected);
+    u_assert_true (connected);
     dogecoin_headers_db_connect_hdr(db, &cbuf_header2_fork, false, &connected);
     u_assert_true (connected);
     dogecoin_headers_db_connect_hdr(db, &cbuf_header3_fork, false, &connected);
@@ -492,6 +554,8 @@ void test_reorg() {
     u_assert_true (connected);
     dogecoin_headers_db_connect_hdr(db, &cbuf_header5_fork_again, false, &connected);
     u_assert_true (connected);
+    dogecoin_free(dogecoin_headers_db_connect_hdr(db, &cbuf_header5_fork_duplicate, false, &connected));
+    u_assert_true (!connected);
 
     // Cleanup
     cstr_free(cbuf_all, true);
@@ -499,10 +563,22 @@ void test_reorg() {
     dogecoin_block_header_free(header2);
     dogecoin_block_header_free(header3);
     dogecoin_block_header_free(header4);
+    dogecoin_block_header_free(header2_stale);
     dogecoin_block_header_free(header2_fork);
     dogecoin_block_header_free(header3_fork);
     dogecoin_block_header_free(header4_fork);
     dogecoin_block_header_free(header5_fork);
+    dogecoin_spv_client_free(client);
+    remove_all_hashes();
+    remove_all_maps();
+
+    // Re-initialize SPV client and load the headers database
+    client = dogecoin_spv_client_new(chain, false, false, false, false, 8, NULL);
+    client->header_message_processed = test_spv_header_message_processed;
+    client->sync_completed = test_spv_sync_completed;
+    dogecoin_spv_client_load(client, headersfile, false);
+
+    // Cleanup
     dogecoin_spv_client_free(client);
     remove_all_hashes();
     remove_all_maps();

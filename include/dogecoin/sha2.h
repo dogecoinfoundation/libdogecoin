@@ -42,6 +42,9 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
+#define SHA1_BLOCK_LENGTH 64
+#define SHA1_DIGEST_LENGTH 20
+#define SHA1_DIGEST_STRING_LENGTH (SHA1_DIGEST_LENGTH * 2 + 1)
 #define SHA256_BLOCK_LENGTH 64
 #define SHA256_DIGEST_LENGTH 32
 #define SHA256_DIGEST_STRING_LENGTH (SHA256_DIGEST_LENGTH * 2 + 1)
@@ -49,6 +52,12 @@ LIBDOGECOIN_BEGIN_DECL
 #define SHA512_DIGEST_LENGTH 64
 #define SHA512_DIGEST_STRING_LENGTH (SHA512_DIGEST_LENGTH * 2 + 1)
 
+
+typedef struct _sha1_context {
+	uint32_t state[5];
+	uint64_t bitcount;
+	uint32_t buffer[SHA1_BLOCK_LENGTH/sizeof(uint32_t)];
+} sha1_context;
 typedef struct _sha256_context {
     uint32_t state[8];
     uint64_t bitcount;
@@ -59,6 +68,15 @@ typedef struct _sha512_context {
     uint64_t bitcount[2];
     uint8_t buffer[SHA512_BLOCK_LENGTH];
 } sha512_context;
+
+
+LIBDOGECOIN_API void sha1_Transform(const uint32_t* state_in, const uint32_t* data, uint32_t* state_out);
+LIBDOGECOIN_API void sha1_Init(sha1_context *);
+LIBDOGECOIN_API void sha1_Update(sha1_context*, const uint8_t*, size_t);
+LIBDOGECOIN_API void sha1_Final(sha1_context*, uint8_t[SHA1_DIGEST_LENGTH]);
+LIBDOGECOIN_API char* sha1_End(sha1_context*, char[SHA1_DIGEST_STRING_LENGTH]);
+LIBDOGECOIN_API void sha1_Raw(const uint8_t*, size_t, uint8_t[SHA1_DIGEST_LENGTH]);
+LIBDOGECOIN_API char* sha1_Data(const uint8_t*, size_t, char[SHA1_DIGEST_STRING_LENGTH]);
 
 LIBDOGECOIN_API void sha256_init(sha256_context*);
 LIBDOGECOIN_API void sha256_write(sha256_context*, const uint8_t*, size_t);
@@ -71,6 +89,11 @@ LIBDOGECOIN_API void sha512_write(sha512_context*, const uint8_t*, size_t);
 LIBDOGECOIN_API void sha512_finalize(sha512_context*, uint8_t[SHA512_DIGEST_LENGTH]);
 LIBDOGECOIN_API void sha512_raw(const uint8_t*, size_t, uint8_t[SHA512_DIGEST_LENGTH]);
 
+typedef struct _hmac_sha1_context {
+    uint8_t o_key_pad[SHA1_BLOCK_LENGTH];
+    sha1_context ctx;
+} hmac_sha1_context;
+
 typedef struct _hmac_sha256_context {
 	uint8_t o_key_pad[SHA256_BLOCK_LENGTH];
 	sha256_context ctx;
@@ -80,6 +103,12 @@ typedef struct _hmac_sha512_context {
 	uint8_t o_key_pad[SHA512_BLOCK_LENGTH];
 	sha512_context ctx;
 } hmac_sha512_context;
+
+LIBDOGECOIN_API void hmac_sha1_init(hmac_sha1_context* hctx, const uint8_t* key, const uint32_t keylen);
+LIBDOGECOIN_API void hmac_sha1_update(hmac_sha1_context* hctx, const uint8_t* msg, const uint32_t msglen);
+LIBDOGECOIN_API void hmac_sha1_final(hmac_sha1_context* hctx, uint8_t* hmac);
+LIBDOGECOIN_API void hmac_sha1(const uint8_t* key, const size_t keylen, const uint8_t* msg, const size_t msglen, uint8_t* hmac);
+LIBDOGECOIN_API void hmac_sha1_prepare(const uint8_t *key, const uint32_t keylen, uint32_t *opad_digest, uint32_t *ipad_digest);
 
 void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
                          uint32_t *opad_digest, uint32_t *ipad_digest);

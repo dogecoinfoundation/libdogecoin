@@ -3,8 +3,8 @@
  The MIT License (MIT)
 
  Copyright (c) 2015 Douglas J. Bakkum
- Copyright (c) 2022 bluezr
- Copyright (c) 2022-2024 The Dogecoin Foundation
+ Copyright (c) 2024 bluezr
+ Copyright (c) 2024 The Dogecoin Foundation
 
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 
 */
 
+#include <dogecoin/common.h>
 #include <dogecoin/random.h>
 
 #include <assert.h>
@@ -202,10 +203,11 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
     errno = ENOSYS;
     return -1;
 #else
-#ifdef USE_OPENENCLAVE
+#if USE_OPENENCLAVE || USE_OPTEE
     if (rng_ptr != NULL)
         if (rng_ptr(buf, len) == 0)
             return true;
+
 #endif
 
     (void)update_seed; //unused
@@ -219,3 +221,112 @@ dogecoin_bool dogecoin_random_bytes_internal(uint8_t* buf, uint32_t len, const u
 #endif
     }
 #endif
+
+void random_seed(struct fast_random_context* this)
+{
+    dogecoin_random_init();
+    uint256_t seed;
+    dogecoin_mem_zero(seed, 32);
+    dogecoin_random_bytes(seed, 32, 0);
+    this->rng->setkey(this->rng, seed, 32);
+    this->requires_seed = false;
+}
+
+void fill_byte_buffer(struct fast_random_context* this)
+{
+    if (this->requires_seed) {
+        random_seed(this);
+    }
+    this->rng->output(this->rng, this->bytebuf, sizeof(this->bytebuf));
+    this->bytebuf_size = sizeof(this->bytebuf);
+}
+
+uint256_t* rand256(struct fast_random_context* this)
+{
+    if (this->bytebuf_size < 32) {
+        fill_byte_buffer(this);
+    }
+    uint256_t* ret = dogecoin_uint256_vla(1);
+    memcpy(ret, this->bytebuf + 64 - this->bytebuf_size, 32);
+    this->bytebuf_size -= 32;
+    return ret;
+}
+
+/** Generate a random 64-bit integer. */
+uint64_t rand64(struct fast_random_context* this)
+{
+    if (this->requires_seed) random_seed(this);
+    unsigned char buf[8];
+    this->rng->output(this->rng, buf, 8);
+    return read_le64(buf);
+}
+
+void fill_bit_buffer(struct fast_random_context* this)
+{
+    this->bitbuf = rand64(this);
+    this->bitbuf_size = 64;
+}
+
+/** Generate a random (bits)-bit integer. */
+uint64_t randbits(struct fast_random_context* this, int bits)
+{
+    if (bits == 0) {
+        return 0;
+    } else if (bits > 32) {
+        return rand64(this) >> (64 - bits);
+    } else {
+        if (this->bitbuf_size < bits) fill_bit_buffer(this);
+        uint64_t zero = 0;
+        uint64_t ret = this->bitbuf & (~zero >> (64 - bits));
+        this->bitbuf >>= bits;
+        this->bitbuf_size -= bits;
+        return ret;
+    }
+}
+
+uint64_t randrange(struct fast_random_context* this, uint64_t range)
+{
+    assert(range);
+    --range;
+    int bits = count_bits(range);
+    while (true) {
+        uint64_t ret = randbits(this, bits);
+        if (ret <= range) return ret;
+    }
+}
+
+/** Generate a random 32-bit integer. */
+uint32_t rand32(struct fast_random_context* this) { return randbits(this, 32); }
+
+/** Generate a random boolean. */
+dogecoin_bool randbool(struct fast_random_context* this) { return randbits(this, 1); }
+
+struct fast_random_context* init_fast_random_context(dogecoin_bool f_deterministic, const uint256_t* seed) {
+    struct fast_random_context* this = dogecoin_calloc(1, sizeof(*this));
+    this->requires_seed = false;
+    this->random_seed = random_seed;
+    this->fill_bit_buffer = fill_bit_buffer;
+    this->fill_byte_buffer = fill_byte_buffer;
+    this->rand256 = rand256;
+    this->rand64 = rand64;
+    this->randbits = randbits;
+    this->rand32 = rand32;
+    this->randbool = randbool;
+    if (!f_deterministic) {
+        if (seed == NULL) {
+            this->rng = chacha20_new();
+            random_seed(this);
+        }
+        return this;
+    } else {
+        this->rng = chacha20_init((const unsigned char*)seed, 32);
+    }
+    return this;
+}
+
+void free_fast_random_context(struct fast_random_context* this) {
+    if (this->rng != NULL) {
+        chacha20_free(this->rng);
+    }
+    dogecoin_free(this);
+}

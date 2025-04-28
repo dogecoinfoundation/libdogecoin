@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2024 edtubbs
+ * Copyright (c) 2024 The Dogecoin Foundation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 // Copyright (c) Open Enclave SDK contributors.
 // Licensed under the MIT License.
 
@@ -11,8 +34,13 @@
 // Include the libdogecoin headher
 #include "libdogecoin.h"
 
+#include <sys/time.h>
+
 // Define the enclave's random number generator
 void set_rng(oe_result_t (*ptr)(void *, size_t));
+
+#define AUTH_TOKEN_LEN 6 // 6-digit TOTP
+uint32_t get_totp(const char* shared_secret, uint64_t timestamp);
 
 // This is the function that the host calls. It prints
 // a message in the enclave before calling back out to
@@ -67,25 +95,28 @@ void enclave_libdogecoin()
    printf("\nFinal signed transaction hex: %s\n\n", get_raw_transaction(idx));
 
    dogecoin_ecc_stop();
-
 }
 
 //#define PRIVKEYWIFLEN 51 //WIF length for uncompressed keys is 51 and should start with Q. This can be 52 also for compressed keys. 53 internally to lib (+stringterm)
-#define PRIVKEYWIFLEN 53 //Function takes 53 but needs to be fixed to take 51.
+//#define PRIVKEYWIFLEN 53 //Function takes 53 but needs to be fixed to take 51.
 
-//#define MASTERKEYLEN 111 //should be chaincode + privkey; starts with dgpv51eADS3spNJh8 or dgpv51eADS3spNJh9 (112 internally including stringterm? often 128. check this.)
-#define MASTERKEYLEN 128 // Function expects 128 but needs to be fixed to take 111.
+//#define HDKEYLEN 111 //should be chaincode + privkey; starts with dgpv51eADS3spNJh8 or dgpv51eADS3spNJh9 (112 internally including stringterm? often 128. check this.)
+//#define HDKEYLEN 128 // Function expects 128 but needs to be fixed to take 111.
 
-//#define PUBKEYLEN 34 //our mainnet addresses are 34 chars if p2pkh and start with D.  Internally this is cited as 35 for strings that represent it because +stringterm.
-#define PUBKEYLEN 35 // Function expects 35, but needs to be fixed to take 34.
+//#define P2PKHLEN 34 //our mainnet addresses are 34 chars if p2pkh and start with D.  Internally this is cited as 35 for strings that represent it because +stringterm.
+//#define P2PKHLEN 35 // Function expects 35, but needs to be fixed to take 34.
 
 // Lets try running a function for cli
 // start with some calls the cli apps make
 // then we'll try and integrate host and cli
-void enclave_libdogecoin_generate_mnemonic()
+void enclave_libdogecoin_run_example()
 {
     MNEMONIC mnemonic = { 0 };
     dogecoin_bool result = false;
+
+    // Set the Open Enclave random number generator in libdogecoin
+    set_rng (&oe_random);
+
     dogecoin_ecc_start();
 
     generateRandomEnglishMnemonic("256", mnemonic);
@@ -96,10 +127,10 @@ void enclave_libdogecoin_generate_mnemonic()
     // create variables
 
     char wif_privkey[PRIVKEYWIFLEN];
-    char p2pkh_pubkey[PUBKEYLEN];
-    char wif_master_privkey[MASTERKEYLEN];
-    char p2pkh_master_pubkey[PUBKEYLEN];
-    char p2pkh_child_pubkey[PUBKEYLEN];
+    char p2pkh_pubkey[P2PKHLEN];
+    char hd_master_privkey[HDKEYLEN];
+    char p2pkh_master_pubkey[P2PKHLEN];
+    char p2pkh_child_pubkey[P2PKHLEN];
 
     // keypair generation
     if (generatePrivPubKeypair(wif_privkey, p2pkh_pubkey, 0)) {
@@ -110,8 +141,8 @@ void enclave_libdogecoin_generate_mnemonic()
         oe_result_str(OE_FAILURE);
     }
 
-    if (generateHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-        printf("Mainnet master keypair 2:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_master_pubkey);
+    if (generateHDMasterPubKeypair(hd_master_privkey, p2pkh_master_pubkey, 0)) {
+        printf("Mainnet master keypair 2:\n===============================\nPrivate: %s\nPublic:  %s\n\n", hd_master_privkey, p2pkh_master_pubkey);
     }
     else {
         printf("Error occurred 2.\n");
@@ -119,8 +150,8 @@ void enclave_libdogecoin_generate_mnemonic()
     }
 
 
-    if (generateDerivedHDPubkey((const char*)wif_master_privkey, (char*)p2pkh_child_pubkey)) {
-        printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", wif_master_privkey, p2pkh_child_pubkey);
+    if (generateDerivedHDPubkey((const char*)hd_master_privkey, (char*)p2pkh_child_pubkey)) {
+        printf("Mainnet master derived keypair 3:\n===============================\nPrivate: %s\nPublic:  %s\n\n", hd_master_privkey, p2pkh_child_pubkey);
     }
     else {
         printf("Error occurred 3.\n");
@@ -137,19 +168,19 @@ void enclave_libdogecoin_generate_mnemonic()
         oe_result_str(OE_FAILURE);
     }
 
-    if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_master_pubkey, 0)) {
-        printf("Keypair (%s, %s) is valid for mainnet 5.\n\n", wif_master_privkey, p2pkh_master_pubkey);
+    if (verifyHDMasterPubKeypair(hd_master_privkey, p2pkh_master_pubkey, 0)) {
+        printf("Keypair (%s, %s) is valid for mainnet 5.\n\n", hd_master_privkey, p2pkh_master_pubkey);
     }
     else {
-        printf("Keypair (%s, %s) is not valid for mainnet 5.\n", wif_master_privkey, p2pkh_master_pubkey);
+        printf("Keypair (%s, %s) is not valid for mainnet 5.\n", hd_master_privkey, p2pkh_master_pubkey);
         oe_result_str(OE_FAILURE);
     }
 
-    if (verifyHDMasterPubKeypair(wif_master_privkey, p2pkh_child_pubkey, 0)) {
-        printf("Keypair (%s, %s) is valid for mainnet 6.\n\n", wif_master_privkey, p2pkh_child_pubkey);
+    if (verifyHDMasterPubKeypair(hd_master_privkey, p2pkh_child_pubkey, 0)) {
+        printf("Keypair (%s, %s) is valid for mainnet 6.\n\n", hd_master_privkey, p2pkh_child_pubkey);
     }
     else {
-        printf("Keypair (%s, %s) is not valid for mainnet 6.\n", wif_master_privkey, p2pkh_child_pubkey);
+        printf("Keypair (%s, %s) is not valid for mainnet 6.\n", hd_master_privkey, p2pkh_child_pubkey);
         oe_result_str(OE_FAILURE);
     }
     printf("\n");
@@ -345,4 +376,705 @@ void enclave_libdogecoin_generate_mnemonic()
     printf("\nTESTS COMPLETE!\n");
     dogecoin_ecc_stop();
 
+}
+
+// Secure Key Manager
+#include "libdogecoin_t.h" // Include the trusted libdogecoin header
+#include <openenclave/seal.h> // Include the Open Enclave seal API
+#include <openenclave/sgx/seal.h>
+#include <string.h>
+
+// TOTP Time step in seconds
+#define TOTP_TIME_STEP 30
+
+// TOTP Shared secret size in bytes
+#define TOTP_SECRET_SIZE 20
+
+// Maximum size of managed credentials (shared secret, password)
+#define MAX_MANAGED_CREDS_SIZE  1024
+
+uint32_t get_totp(const char* shared_secret, uint64_t timestamp) {
+    uint8_t hmac[SHA1_DIGEST_LENGTH];
+    uint8_t time_bytes[8];
+    uint32_t totp;
+
+    // Convert the timestamp to a byte array
+    for (int i = 7; i >= 0; i--) {
+        time_bytes[i] = timestamp & 0xFF;
+        timestamp >>= 8;
+    }
+
+    // Compute the HMAC-SHA1 of the time_bytes using the shared_secret
+    hmac_sha1((const uint8_t*)utils_hex_to_uint8(shared_secret), TOTP_SECRET_SIZE, time_bytes, sizeof(time_bytes), hmac);
+
+    // Dynamic truncation to get a 4-byte string (31 bits)
+    int offset = hmac[SHA1_DIGEST_LENGTH - 1] & 0x0F;  // Corrected the index to 19
+    totp = (hmac[offset] & 0x7F) << 24
+         | (hmac[offset + 1] & 0xFF) << 16
+         | (hmac[offset + 2] & 0xFF) << 8
+         | (hmac[offset + 3] & 0xFF);
+
+    // Return TOTP modulo 10^6
+    return totp % 1000000;
+}
+
+void enclave_libdogecoin_attest(uint8_t* report, size_t len)
+{
+    oe_result_t result;
+    uint8_t* report_buffer = NULL;
+    size_t report_size = 0;
+
+    // Generate the report
+    result = oe_get_report(
+        OE_REPORT_FLAGS_REMOTE_ATTESTATION,
+        NULL, 0,
+        NULL, 0,
+        &report_buffer, &report_size);
+
+    if (result != OE_OK)
+    {
+        printf("Failed to get report: %s\n", oe_result_str(result));
+        return;
+    }
+
+    if (report_size > len)
+    {
+        printf("Report buffer size is too small\n");
+        dogecoin_free(report_buffer);
+        return;
+    }
+
+    // Copy the report to the output buffer
+    memcpy(report, report_buffer, report_size);
+
+    // Free the report buffer
+    dogecoin_free(report_buffer);
+}
+
+void enclave_libdogecoin_generate_encrypted_seed(data_t* encrypted_blob) {
+    oe_result_t result;
+    SEED seed;
+    uint8_t* blob;
+    size_t blob_size;
+
+    // Generate a new seed
+    if (!dogecoin_random_bytes(seed, sizeof(seed), 1)) {
+        fprintf(stderr, "Failed to generate random bytes\n");
+        // Handle error
+        encrypted_blob->size = 0;
+    }
+
+    // Initialize the seal key info
+    const oe_seal_setting_t settings[1] = {OE_SEAL_SET_POLICY(OE_SEAL_POLICY_UNIQUE)};
+    result = oe_seal(
+        NULL,
+        settings,
+        1,
+        (const uint8_t*) seed, // Data to seal
+        sizeof(seed), // Size of data
+        NULL, // No additional data
+        0, // No additional data size
+        &blob, // Output: Pointer to the encrypted blob
+        &blob_size); // Output: Size of the encrypted blob
+
+    if (result == OE_OK) {
+        // Set the output parameters
+        encrypted_blob->data = blob;
+        encrypted_blob->size = blob_size;
+    } else {
+        fprintf(stderr, "Sealing failed with %d\n", result);
+        // Handle error
+        encrypted_blob->size = 0;
+    }
+}
+
+// ECALL to generate and encrypt a new master keypair
+void enclave_libdogecoin_generate_master_key(data_t* encrypted_blob) {
+    oe_result_t result;
+
+    char hd_master_privkey[HDKEYLEN];
+    char p2pkh_master_pubkey[P2PKHLEN];
+    uint8_t* blob;
+    size_t blob_size;
+
+    // Set the Open Enclave random number generator in libdogecoin
+    set_rng (&oe_random);
+
+    dogecoin_ecc_start();
+
+    if (generateHDMasterPubKeypair(hd_master_privkey, p2pkh_master_pubkey, 0)) {
+        printf("Mainnet master keypair \n===============================\nPrivate: %s\nPublic:  %s\n\n", hd_master_privkey, p2pkh_master_pubkey);
+    }
+    else {
+        printf("Error occurred.\n");
+        // Handle error
+        encrypted_blob->size = 0;
+    }
+
+    dogecoin_ecc_stop();
+
+    // Initialize the seal key info
+    const oe_seal_setting_t settings[1] = {OE_SEAL_SET_POLICY(OE_SEAL_POLICY_UNIQUE)};
+    result = oe_seal(
+        NULL,
+        settings,
+        1,
+        (const uint8_t*) hd_master_privkey, // Data to seal
+        sizeof(hd_master_privkey), // Size of data
+        NULL, // No additional data
+        0, // No additional data size
+        &blob, // Output: Pointer to the encrypted blob
+        &blob_size); // Output: Size of the encrypted blob
+
+    if (result == OE_OK) {
+        // Set the output parameters
+        encrypted_blob->data = blob;
+        encrypted_blob->size = blob_size;
+    } else {
+        fprintf(stderr, "Sealing failed with %d\n", result);
+        // Handle error
+        encrypted_blob->size = 0;
+    }
+}
+
+// ECALL to generate and encrypt a new mnemonic
+void enclave_libdogecoin_generate_mnemonic(data_t* encrypted_blob, char* mnemonic, char* shared_secret, MNEMONIC mnemonic_input, ENTROPY_SIZE entropy_size, char* password) {
+    // Validate the input parameters
+    if (mnemonic == NULL || (shared_secret == NULL && password == NULL)) {
+        fprintf(stderr, "Invalid input parameters\n");
+        encrypted_blob->size = 0;
+        return;
+    }
+
+    uint8_t* blob;
+    size_t blob_size;
+    oe_result_t result;
+
+    // Set the Open Enclave random number generator in libdogecoin
+    set_rng(&oe_random);
+
+    dogecoin_ecc_start();
+
+    if (mnemonic_input != NULL) {
+        // Use the provided mnemonic
+        strncpy(mnemonic, mnemonic_input, strlen(mnemonic_input));
+        mnemonic[strlen(mnemonic_input)] = '\0';
+    } else {
+        if (entropy_size == NULL) {
+            // Generate a new mnemonic with 256 bits of entropy
+            int mnemonicResult = generateRandomEnglishMnemonic("256", mnemonic);
+            if (mnemonicResult != 0) {
+                fprintf(stderr, "Failed to generate mnemonic\n");
+                encrypted_blob->size = 0;
+                dogecoin_ecc_stop();
+                return;
+            }
+        } else {
+            // Generate a new mnemonic with the specified entropy size
+            int mnemonicResult = generateRandomEnglishMnemonic(entropy_size, mnemonic);
+            if (mnemonicResult != 0) {
+                fprintf(stderr, "Failed to generate mnemonic\n");
+                encrypted_blob->size = 0;
+                dogecoin_ecc_stop();
+                return;
+            }
+        }
+    }
+
+    // Concatenate the mnemonic and managed credentials
+    char mnemonic_and_creds[MAX_MNEMONIC_SIZE + MAX_MANAGED_CREDS_SIZE] = {0};
+    snprintf(mnemonic_and_creds, sizeof(mnemonic_and_creds), "%s,%s,%s", mnemonic, shared_secret ? shared_secret : "", password ? password : "");
+
+    dogecoin_ecc_stop();
+
+    // Initialize the seal key info
+    const oe_seal_setting_t settings[1] = {OE_SEAL_SET_POLICY(OE_SEAL_POLICY_UNIQUE)};
+
+    // Perform the actual sealing
+    result = oe_seal(
+        NULL, // No specific plugin_id
+        settings, // Seal settings
+        1, // Number of settings
+        (const uint8_t*) mnemonic_and_creds, // Data to seal
+        sizeof(mnemonic_and_creds), // Size of data
+        NULL, // No additional data
+        0, // No additional data size
+        &blob, // Output: Pointer to the encrypted blob
+        &blob_size); // Output: Size of the encrypted blob
+
+    if (result == OE_OK) {
+        // Set the output parameters
+        encrypted_blob->data = blob;
+        encrypted_blob->size = blob_size;
+    } else {
+        fprintf(stderr, "Sealing failed with %d\n", result);
+        encrypted_blob->size = 0;
+    }
+}
+
+void enclave_libdogecoin_generate_extended_public_key(const data_t* encrypted_blob, char* custom_path, char* pubkey, uint32_t account, char* change_level, const uint32_t auth_token, char* password)
+{
+    // Validate the input parameters
+    if (encrypted_blob == NULL || pubkey == NULL) {
+        fprintf(stderr, "Invalid input parameters\n");
+        return;
+    }
+
+    uint8_t* persistent_data = NULL;
+    size_t persistent_data_size = 0;
+    char* mnemonic = NULL;
+    char* shared_secret = NULL;
+    char* stored_password = NULL;
+    size_t password_size = password ? strlen(password) : 0;
+
+    // Unseal the data
+    oe_result_t result = oe_unseal(
+        encrypted_blob->data,
+        encrypted_blob->size,
+        NULL,
+        0,
+        &persistent_data,
+        &persistent_data_size);
+
+    if (result != OE_OK) {
+        printf("Failed to unseal encrypted blob: %s\n", oe_result_str(result));
+        return;
+    }
+
+    // Split the persistent data into mnemonic and shared secret
+    mnemonic = strsep((char**)&persistent_data, ",");
+    if (!mnemonic) {
+        fprintf(stderr, "Failed to parse mnemonic\n");
+        return;
+    }
+    shared_secret = strsep((char**)&persistent_data, ",");
+    if (!shared_secret) {
+        shared_secret = "";
+    }
+    stored_password = strsep((char**)&persistent_data, ",");
+    if (!stored_password) {
+        stored_password = "";
+    }
+
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        fprintf(stderr, "Password or auth token required");
+        return;
+    }
+
+    // Verify that the password is part of the managed credentials, if supplied
+    if ((password && strcmp(password, stored_password)) ||
+        (!password && strcmp(stored_password, "") != 0)) {
+        fprintf(stderr, "Password verification failed\n");
+        return;
+    }
+
+    // Verify TOTP using the shared secret
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) != 0) {
+        fprintf(stderr, "Failed to get time\n");
+        return;
+    }
+
+    if (strcmp(shared_secret, "") != 0) {
+        uint32_t current_time = tv.tv_sec;
+        uint32_t totp = get_totp((const char*) shared_secret, current_time / TOTP_TIME_STEP);
+
+        if (totp != auth_token) {
+            printf("TOTP verification failed\n");
+            return;
+        }
+    } else {
+        if (strcmp(password, (const char*) stored_password) != 0) {
+            printf("Password verification failed\n");
+            return;
+        }
+    }
+
+    SEED seed;
+    dogecoin_seed_from_mnemonic((const char*)mnemonic, password, seed);
+
+    dogecoin_ecc_start();
+
+    char master_key[HDKEYLEN];
+    getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
+
+    char derived_pubkey[HDKEYLEN];
+    char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1];
+    if (!deriveBIP44ExtendedPublicKey(master_key, &account, change_level, NULL, custom_path, derived_pubkey, keypath)) {
+        fprintf(stderr, "Failed to derive extended public key\n");
+        dogecoin_ecc_stop();
+        return;
+    }
+
+    strncpy(pubkey, derived_pubkey, strlen(derived_pubkey));
+    pubkey[strlen(derived_pubkey)] = '\0';
+
+    dogecoin_ecc_stop();
+
+    dogecoin_free(persistent_data);
+}
+
+void enclave_libdogecoin_generate_address(const data_t* encrypted_blob, char* custom_path, char* addresses, uint32_t account, uint32_t address_index, char* change_level, uint32_t num_addresses, const uint32_t auth_token, char* password)
+{
+    // Validate the input parameters
+    if (encrypted_blob == NULL || addresses == NULL) {
+        fprintf(stderr, "Invalid input parameters\n");
+        return;
+    }
+
+    uint8_t* persistent_data = NULL;
+    size_t persistent_data_size = 0;
+    char* mnemonic = NULL;
+    char* shared_secret = NULL;
+    char* stored_password = NULL;
+    size_t password_size = password ? strlen(password) : 0;
+
+    // Unseal the data
+    oe_result_t result = oe_unseal(
+        encrypted_blob->data,
+        encrypted_blob->size,
+        NULL,
+        0,
+        &persistent_data,
+        &persistent_data_size);
+
+    if (result != OE_OK) {
+        printf("Failed to unseal encrypted blob: %s\n", oe_result_str(result));
+        return;
+    }
+
+    // Split the persistent data into mnemonic and shared secret
+    mnemonic = strsep((char**)&persistent_data, ",");
+    if (!mnemonic) {
+        fprintf(stderr, "Failed to parse mnemonic\n");
+        return;
+    }
+    shared_secret = strsep((char**)&persistent_data, ",");
+    if (!shared_secret) {
+        shared_secret = "";
+    }
+    stored_password = strsep((char**)&persistent_data, ",");
+    if (!stored_password) {
+        stored_password = "";
+    }
+
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        fprintf(stderr, "Password or auth token required");
+        return;
+    }
+
+    // Verify that the password is part of the managed credentials, if supplied
+    if ((password && strcmp(password, stored_password)) ||
+        (!password && strcmp(stored_password, "") != 0)) {
+        fprintf(stderr, "Password verification failed\n");
+        return;
+    }
+
+    // Verify TOTP using the shared secret
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) != 0) {
+        fprintf(stderr, "Failed to get time\n");
+        return;
+    }
+
+    if (strcmp(shared_secret, "") != 0) {
+        uint32_t current_time = tv.tv_sec;
+        uint32_t totp = get_totp((const char*) shared_secret, current_time / TOTP_TIME_STEP);
+
+        if (totp != auth_token) {
+            printf("TOTP verification failed\n");
+            return;
+        }
+    } else {
+        if (strcmp(password, (const char*) stored_password) != 0) {
+            printf("Password verification failed\n");
+            return;
+        }
+    }
+
+    SEED seed;
+    dogecoin_seed_from_mnemonic((const char*)mnemonic, password, seed);
+
+    dogecoin_ecc_start();
+
+    char master_key[HDKEYLEN];
+    getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
+
+    char address_p2pkh[P2PKHLEN * num_addresses];
+    memset(address_p2pkh, 0, sizeof(address_p2pkh));
+    size_t offset = 0;
+
+    if (custom_path) {
+        getDerivedHDAddressByPath(master_key, custom_path, address_p2pkh, false);
+    } else {
+        for (uint32_t i = 0; i < num_addresses; i++)
+        {
+            char derived_pubkey[HDKEYLEN];
+            char keypath[BIP44_KEY_PATH_MAX_LENGTH + 1];
+            deriveBIP44ExtendedPublicKey(master_key, &account, NULL, NULL, NULL, derived_pubkey, keypath);
+            getDerivedHDAddressFromAcctPubKey(derived_pubkey, address_index, change_level, address_p2pkh + offset, false);
+            offset += strlen(address_p2pkh + offset);
+            if (i < num_addresses - 1)
+            {
+                address_p2pkh[offset++] = '\n';
+            }
+            address_index++;
+        }
+    }
+
+    strncpy(addresses, address_p2pkh, strlen(address_p2pkh));
+    addresses[strlen(address_p2pkh)] = '\0';
+
+    dogecoin_ecc_stop();
+
+    dogecoin_free(persistent_data);
+}
+
+void enclave_libdogecoin_sign_message(const data_t* encrypted_blob, char* custom_path, char* message, char* signature, uint32_t account, uint32_t address_index, char* change_level, const uint32_t auth_token, char* password)
+{
+    // Validate the input parameters
+    if (encrypted_blob == NULL || message == NULL || signature == NULL) {
+        fprintf(stderr, "Invalid input parameters\n");
+        return;
+    }
+
+    uint8_t* persistent_data = NULL;
+    size_t persistent_data_size = 0;
+    char* mnemonic = NULL;
+    char* shared_secret = NULL;
+    char* stored_password = NULL;
+    size_t password_size = password ? strlen(password) : 0;
+
+    // Unseal the data
+    oe_result_t result = oe_unseal(
+        encrypted_blob->data,
+        encrypted_blob->size,
+        NULL,
+        0,
+        &persistent_data,
+        &persistent_data_size);
+
+    if (result != OE_OK) {
+        printf("Failed to unseal encrypted blob: %s\n", oe_result_str(result));
+        return;
+    }
+
+    // Split the persistent data into mnemonic and shared secret
+    mnemonic = strsep((char**)&persistent_data, ",");
+    if (!mnemonic) {
+        fprintf(stderr, "Failed to parse mnemonic\n");
+        return;
+    }
+    shared_secret = strsep((char**)&persistent_data, ",");
+    if (!shared_secret) {
+        shared_secret = "";
+    }
+    stored_password = strsep((char**)&persistent_data, ",");
+    if (!stored_password) {
+        stored_password = "";
+    }
+
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        fprintf(stderr, "Password or auth token required");
+        return;
+    }
+
+    // Verify that the password is part of the managed credentials, if supplied
+    if ((password && strcmp(password, stored_password)) ||
+        (!password && strcmp(stored_password, "") != 0)) {
+        fprintf(stderr, "Password verification failed\n");
+        return;
+    }
+
+    // Verify TOTP using the shared secret
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) != 0) {
+        fprintf(stderr, "Failed to get time\n");
+        return;
+    }
+
+    if (strcmp(shared_secret, "") != 0) {
+        uint32_t current_time = tv.tv_sec;
+        uint32_t totp = get_totp((const char*) shared_secret, current_time / TOTP_TIME_STEP);
+
+        if (totp != auth_token) {
+            printf("TOTP verification failed\n");
+            return;
+        }
+    } else {
+        if (strcmp(password, (const char*) stored_password) != 0) {
+            printf("Password verification failed\n");
+            return;
+        }
+    }
+
+    SEED seed;
+    dogecoin_seed_from_mnemonic((const char*)mnemonic, password, seed);
+
+    // Set the Open Enclave random number generator in libdogecoin
+    set_rng (&oe_random);
+
+    dogecoin_ecc_start();
+
+    char master_key[HDKEYLEN];
+    getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
+
+    char derived_path[BIP44_KEY_PATH_MAX_LENGTH + 1];
+    char outaddress[P2PKHLEN];
+    char privkeywif[PRIVKEYWIFLEN];
+    size_t wiflen = PRIVKEYWIFLEN;
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(master_key);
+    sprintf(derived_path, SLIP44_KEY_PATH "%s'/%d'/%s/%d", BIP44_COIN_TYPE, account, change_level, address_index);
+
+    dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(master_key, custom_path ? custom_path : derived_path, outaddress, true);
+    dogecoin_privkey_encode_wif((const dogecoin_key*)hdnode->private_key, chain, privkeywif, &wiflen);
+
+    char* sig = sign_message(privkeywif, (char*) message);
+    strncpy(signature, sig, strlen(sig));
+    signature[strlen(sig)] = '\0';
+
+    dogecoin_ecc_stop();
+
+    dogecoin_free(sig);
+    dogecoin_free(persistent_data);
+}
+
+void enclave_libdogecoin_sign_transaction(const data_t* encrypted_blob, char* custom_path, char* raw_tx, char* signed_tx, uint32_t account, uint32_t address_index, char* change_level, const uint32_t auth_token, char* password)
+{
+    // Validate the input parameters
+    if (encrypted_blob == NULL || raw_tx == NULL || signed_tx == NULL) {
+        fprintf(stderr, "Invalid input parameters\n");
+        return;
+    }
+
+    uint8_t* persistent_data = NULL;
+    size_t persistent_data_size = 0;
+    char* mnemonic = NULL;
+    char* shared_secret = NULL;
+    char* stored_password = NULL;
+    size_t password_size = password ? strlen(password) : 0;
+
+    // Unseal the data
+    oe_result_t result = oe_unseal(
+        encrypted_blob->data,
+        encrypted_blob->size,
+        NULL,
+        0,
+        &persistent_data,
+        &persistent_data_size);
+
+    if (result != OE_OK) {
+        printf("Failed to unseal encrypted blob: %s\n", oe_result_str(result));
+        return;
+    }
+
+    // Split the persistent data into mnemonic and shared secret
+    mnemonic = strsep((char**)&persistent_data, ",");
+    if (!mnemonic) {
+        fprintf(stderr, "Failed to parse mnemonic\n");
+        return;
+    }
+    shared_secret = strsep((char**)&persistent_data, ",");
+    if (!shared_secret) {
+        shared_secret = "";
+    }
+    stored_password = strsep((char**)&persistent_data, ",");
+    if (!stored_password) {
+        stored_password = "";
+    }
+
+    // If the auth token is 0 and no password is provided, then return
+    if (auth_token == 0 && !password) {
+        fprintf(stderr, "Password or auth token required");
+        return;
+    }
+
+    // Verify that the password is part of the managed credentials, if supplied
+    if ((password && strcmp(password, stored_password)) ||
+        (!password && strcmp(stored_password, "") != 0)) {
+        fprintf(stderr, "Password verification failed\n");
+        return;
+    }
+
+    // Verify TOTP using the shared secret
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) != 0) {
+        fprintf(stderr, "Failed to get time\n");
+        return;
+    }
+
+    if (strcmp(shared_secret, "") != 0) {
+        uint32_t current_time = tv.tv_sec;
+        uint32_t totp = get_totp((const char*) shared_secret, current_time / TOTP_TIME_STEP);
+
+        if (totp != auth_token) {
+            printf("TOTP verification failed\n");
+            return;
+        }
+    } else {
+        if (strcmp(password, (const char*) stored_password) != 0) {
+            printf("Password verification failed\n");
+            return;
+        }
+    }
+
+    SEED seed;
+    dogecoin_seed_from_mnemonic((const char*)mnemonic, password, seed);
+
+    // Set the Open Enclave random number generator in libdogecoin
+    set_rng (&oe_random);
+
+    dogecoin_ecc_start();
+
+    char master_key[HDKEYLEN];
+    getHDRootKeyFromSeed(seed, sizeof(seed), false, master_key);
+
+    char derived_path[BIP44_KEY_PATH_MAX_LENGTH + 1];
+    char outaddress[P2PKHLEN];
+    char privkeywif[PRIVKEYWIFLEN];
+    size_t wiflen = PRIVKEYWIFLEN;
+    const dogecoin_chainparams* chain = chain_from_b58_prefix(master_key);
+    sprintf(derived_path, SLIP44_KEY_PATH "%s'/%d'/%s/%d", BIP44_COIN_TYPE, account, change_level, address_index);
+
+    dogecoin_hdnode* hdnode = getHDNodeAndExtKeyByPath(master_key, custom_path ? custom_path : derived_path, outaddress, true);
+    dogecoin_privkey_encode_wif((const dogecoin_key*)hdnode->private_key, chain, privkeywif, &wiflen);
+
+    // Store the raw transaction
+    int idx = store_raw_transaction((char*)raw_tx);
+    if (idx < 0) {
+        printf("Failed to store raw transaction\n");
+        dogecoin_ecc_stop();
+        dogecoin_free(persistent_data);
+        return;
+    }
+
+    // Derive the script pub key
+    char* myscriptpubkey = dogecoin_private_key_wif_to_pubkey_hash(privkeywif);
+    if (!sign_transaction(idx, myscriptpubkey, privkeywif)) {
+        printf("Failed to sign transaction\n");
+        dogecoin_free(myscriptpubkey);
+        dogecoin_ecc_stop();
+        dogecoin_free(persistent_data);
+        return;
+    }
+
+    // Get the signed transaction
+    char* signed_tx_str = get_raw_transaction(idx);
+    if (!signed_tx_str) {
+        printf("Failed to get signed transaction\n");
+        dogecoin_free(myscriptpubkey);
+        dogecoin_ecc_stop();
+        dogecoin_free(persistent_data);
+        return;
+    }
+
+    strncpy(signed_tx, signed_tx_str, strlen(signed_tx_str));
+    signed_tx[strlen(signed_tx_str)] = '\0';
+
+    dogecoin_free(myscriptpubkey);
+    dogecoin_ecc_stop();
+    dogecoin_free(persistent_data);
 }

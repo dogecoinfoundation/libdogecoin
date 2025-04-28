@@ -54,14 +54,15 @@ void test_block_header()
         cstring* serialized = cstr_new_sz(80);
         const struct blockheadertest* test = &block_header_tests[i];
         uint8_t header_data[80];
-        uint256 hash_data;
+        uint256_t hash_data;
+        uint256_t chainwork = {0};
         utils_hex_to_bin(test->hexheader, header_data, 160, &outlen);
 
         utils_hex_to_bin(test->hexhash, hash_data, sizeof(hash_data), &outlen);
 
         dogecoin_block_header* header = dogecoin_block_header_new();
         struct const_buffer buf = {header_data, 80};
-        dogecoin_block_header_deserialize(header, &buf, block_header_tests[i].params);
+        dogecoin_block_header_deserialize(header, &buf, block_header_tests[i].params, &chainwork);
 
         // Check the copies are the same
         dogecoin_block_header* header_copy = dogecoin_block_header_new();
@@ -75,7 +76,7 @@ void test_block_header()
         assert(memcmp(hexbuf, test->hexheader, 160) == 0);
 
         // Check the block hash
-        uint256 blockhash;
+        uint256_t blockhash;
         dogecoin_block_header_hash(header, blockhash);
 
         utils_bin_to_hex(blockhash, DOGECOIN_HASH_LENGTH, hexbuf);
@@ -90,10 +91,9 @@ void test_block_header()
         // Check chainwork (genesis block only)
         if (i == 0) {
             arith_uint256* target = init_arith_uint256();
-            uint256 chainwork = {0};
             cstring* s = cstr_new_sz(64);
             dogecoin_bool f_negative, f_overflow;
-            uint256* hash = dogecoin_uint256_vla(1);
+            uint256_t* hash = dogecoin_uint256_vla(1);
 
             // Compute the hash of the block header
             dogecoin_block_header_serialize(s, header);
@@ -168,7 +168,8 @@ void test_block_header()
     utils_bin_to_hex((unsigned char *)blockheader_ser->str, blockheader_ser->len, headercheck);
     u_assert_str_eq(headercheck, blockheader_h371338);
 
-    uint256 checkhash;
+    uint256_t checkhash;
+    uint256_t chainwork;
     dogecoin_block_header_hash(&bheader, (uint8_t *)&checkhash);
     char hashhex[sizeof(checkhash) * 2 + 1];
     utils_bin_to_hex(checkhash, sizeof(checkhash), hashhex);
@@ -178,7 +179,7 @@ void test_block_header()
     struct const_buffer buf;
     buf.p = blockheader_ser->str;
     buf.len = blockheader_ser->len;
-    dogecoin_block_header_deserialize(&bheadercheck, &buf, &dogecoin_chainparams_main);
+    dogecoin_block_header_deserialize(&bheadercheck, &buf, &dogecoin_chainparams_main, &chainwork);
     u_assert_str_eq(utils_uint8_to_hex(bheader.prev_block, sizeof(bheader.prev_block)), utils_uint8_to_hex(bheadercheck.prev_block, sizeof(bheadercheck.prev_block)));
     cstr_free(blockheader_ser, true);
     dogecoin_block_header_hash(&bheaderprev, (uint8_t *)&checkhash);

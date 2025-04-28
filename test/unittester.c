@@ -1,7 +1,7 @@
 /**********************************************************************
- * Copyright (c) 2023 bluezr                                          *
- * Copyright (c) 2023 edtubbs                                         *
- * Copyright (c) 2023 The Dogecoin Foundation                         *
+ * Copyright (c) 2024 bluezr                                          *
+ * Copyright (c) 2024 edtubbs                                         *
+ * Copyright (c) 2024 The Dogecoin Foundation                         *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -38,6 +38,7 @@
 
 extern void test_address();
 extern void test_aes();
+extern void test_arith_uint256();
 extern void test_base58();
 extern void test_base64();
 extern void test_bip32();
@@ -45,6 +46,7 @@ extern void test_bip39();
 extern void test_bip44();
 extern void test_block_header();
 extern void test_buffer();
+extern void test_chacha20();
 extern void test_cstr();
 extern void test_ecc();
 extern void test_hash();
@@ -57,6 +59,8 @@ extern void test_random();
 extern void test_rmd160();
 extern void test_scrypt();
 extern void test_serialize();
+extern void test_sha1();
+extern void test_sha1_hmac();
 extern void test_sha_256();
 extern void test_sha_512();
 extern void test_sha_hmac();
@@ -115,6 +119,7 @@ int main()
 
     u_run_test(test_address);
     u_run_test(test_aes);
+    u_run_test(test_arith_uint256);
     u_run_test(test_base58);
     u_run_test(test_base64);
     u_run_test(test_bip32);
@@ -124,6 +129,7 @@ int main()
 #endif
     u_run_test(test_block_header);
     u_run_test(test_buffer);
+    u_run_test(test_chacha20);
     u_run_test(test_cstr);
     u_run_test(test_ecc);
     u_run_test(test_hash);
@@ -136,12 +142,16 @@ int main()
     u_run_test(test_rmd160);
     u_run_test(test_scrypt);
     u_run_test(test_serialize);
+    u_run_test(test_sha1);
+    u_run_test(test_sha1_hmac);
     u_run_test(test_sha_256);
     u_run_test(test_sha_512);
     u_run_test(test_sha_hmac);
     u_run_test(test_signmsg);
     u_run_test(test_signmsg_ext);
+#ifndef USE_OPTEE // TPM is not supported in OPTEE
     u_run_test(test_tpm);
+#endif
     u_run_test(test_transaction);
     u_run_test(test_tx_serialization);
     u_run_test(test_invalid_tx_deser);

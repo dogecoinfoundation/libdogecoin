@@ -14,6 +14,14 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+#  define htole8(x) (x)
+# elif __BYTE_ORDER == __BIG_ENDIAN
+#  define htole8(x) bswap_8(x)
+#else
+#error UNKNOWN BYTE ORDER
+#endif
+
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
 #define __WINDOWS__
@@ -52,7 +60,7 @@ LIBDOGECOIN_BEGIN_DECL
 
 #include <sys/endian.h>
 
-#elif defined(__NetBSD__) || defined(__FreeBSD__) || defined(__DragonFly__)
+#elif defined(__NetBSD__) || defined(__FreeBSD__)
 
 #include <sys/endian.h>
 
@@ -64,6 +72,10 @@ LIBDOGECOIN_BEGIN_DECL
 
 #define be64toh(x) betoh64(x)
 #define le64toh(x) letoh64(x)
+
+#elif defined(__DragonFly__)
+
+#include <sys/endian.h>
 
 #elif defined(__WINDOWS__)
 

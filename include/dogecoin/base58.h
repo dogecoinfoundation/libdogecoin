@@ -3,7 +3,7 @@
  * Copyright (c) 2013-2014 Pavol Rusnak
  * Copyright (c) 2022 bluezr
  * Copyright (c) 2022 The Dogecoin Foundation
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -39,8 +39,8 @@ LIBDOGECOIN_API size_t dogecoin_base58_decode_check(const char* str, uint8_t* da
 LIBDOGECOIN_API int dogecoin_base58_encode(char* b58, size_t* b58sz, const void* data, size_t binsz);
 LIBDOGECOIN_API int dogecoin_base58_decode(void* bin, size_t* binszp, const char* b58, size_t b58sz);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, size_t len);
-LIBDOGECOIN_API dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160 hashin, const dogecoin_chainparams* chain, char* addrout, size_t len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_addr_from_hash160(const uint160_t hashin, const dogecoin_chainparams* chain, char* addrout, size_t len);
+LIBDOGECOIN_API dogecoin_bool dogecoin_p2sh_addr_from_hash160(const uint160_t hashin, const dogecoin_chainparams* chain, char* addrout, size_t len);
 
 LIBDOGECOIN_END_DECL
 

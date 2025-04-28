@@ -40,6 +40,7 @@
 #include <win/wingetopt.h>
 #endif
 
+#include <ctype.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -47,6 +48,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include <event2/buffer.h>
+#include <event2/http.h>
 
 #if defined(HAVE_CONFIG_H)
 #include "libdogecoin-config.h"
@@ -57,12 +61,14 @@
 #include <dogecoin/base58.h>
 #include <dogecoin/bip39.h>
 #include <dogecoin/ecc.h>
+#include <dogecoin/headersdb_file.h>
 #include <dogecoin/koinu.h>
 #include <dogecoin/net.h>
 #include <dogecoin/seal.h>
 #include <dogecoin/spv.h>
 #include <dogecoin/protocol.h>
 #include <dogecoin/random.h>
+#include <dogecoin/rest.h>
 #include <dogecoin/serialize.h>
 #include <dogecoin/tool.h>
 #include <dogecoin/tx.h>
@@ -184,6 +190,7 @@ static struct option long_options[] = {
         {"encrypted_file", required_argument, NULL, 'y'},
         {"use_tpm", no_argument, NULL, 'j'},
         {"master_key", no_argument, NULL, 'k'},
+        {"http_server", required_argument, NULL, 'u'},
         {"daemon", no_argument, NULL, 'z'},
         {NULL, 0, NULL, 0} };
 
@@ -199,10 +206,10 @@ static void print_version() {
  */
 static void print_usage() {
     print_version();
-    printf("Usage: spvnode (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
-(-a[--address] <address>) (-n|-mnemonic <seed_phrase>) (-s|-pass_phrase) (-y|-encrypted_file <file_num 0-999>) \
-(-w|-wallet_file <filename>) (-h|-headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key] (-j[--use_tpm]) \
-(-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
+    printf("Usage: spvnode (-c|continuous) (-i|--ips <ip,ip,...>) (-m[--maxpeers] <int>) (-f <headersfile|0 for in mem only>) \
+(-a|--address <address>) (-n|--mnemonic <seed_phrase>) (-s|[--pass_phrase]) (-y|--encrypted_file <file_num 0-999>) \
+(-w|--wallet_file <filename>) (-h|--headers_file <filename>) (-l|[--no_prompt]) (-b[--full_sync]) (-p[--checkpoint]) (-k[--master_key]) (-j[--use_tpm]) \
+(-u|--http_server <ip:port>) (-t[--testnet]) (-r[--regtest]) (-d[--debug]) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -238,6 +245,12 @@ static void print_usage() {
     printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -b scan\n\n");
     printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use TPM:\n");
     printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -j -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use master key:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -k -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", with encrypted mnemonic 0, show debug info, with a headers file \"main_headers.db\", wait for new blocks, use master key, use TPM:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -h \"./main_headers.db\" -y 0 -k -j -b scan\n\n");
+    printf("Sync up, with a wallet file \"main_wallet.db\", show debug info, wait for new blocks, enable http server:\n");
+    printf("> ./spvnode -d -c -w \"./main_wallet.db\" -u \"0.0.0.0:8080\" -b scan\n\n");
     }
 
 
@@ -307,6 +320,7 @@ int main(int argc, char* argv[]) {
     dogecoin_bool encrypted = false;
     dogecoin_bool master_key = false;
     dogecoin_bool tpm = false;
+    char* http_server = NULL;
     int file_num = NO_FILE;
 
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
@@ -317,7 +331,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:u:w:h:a:lbpzkj:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -374,6 +388,13 @@ int main(int argc, char* argv[]) {
                 case 'w':
                     name = optarg;
                     break;
+                case 'u':
+                    http_server = optarg;
+                    if (!isdigit(http_server[0])) {
+                        printf("Please add the ip and port after -u and try again. e.g. '-u 0.0.0.0:8080'\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    break;
                 case 'z':
                     have_decl_daemon = true;
                     break;
@@ -389,7 +410,10 @@ int main(int argc, char* argv[]) {
 
     if (strcmp(data, "scan") == 0) {
         dogecoin_ecc_start();
-        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes);
+        dogecoin_spv_client* client = dogecoin_spv_client_new(chain, debug, (dbfile && (dbfile[0] == '0' || (strlen(dbfile) > 1 && dbfile[0] == 'n' && dbfile[0] == 'o'))) ? true : false, use_checkpoint, full_sync, maxnodes, http_server);
+        if (http_server) {
+            evhttp_set_gencb(client->nodegroup->http_server, dogecoin_http_request_cb, client);
+        }
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
         signal(SIGINT, handle_sigint);
@@ -482,6 +506,7 @@ int main(int argc, char* argv[]) {
             printf("done\n");
             printf("Discover peers...\n");
             dogecoin_spv_client_discover_peers(client, ips);
+
             printf("Connecting to the p2p network...\n");
             dogecoin_spv_client_runloop(client);
             dogecoin_spv_client_free(client);

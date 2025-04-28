@@ -42,12 +42,12 @@ LIBDOGECOIN_BEGIN_DECL
 
 typedef struct dogecoin_script_ {
     int* data;
-    size_t limit;   // Total size of the vector
+    size_t limit;   // Total size of the vector_t
     size_t current; //Number of vectors in it at present
 } dogecoin_script;
 
 typedef struct dogecoin_tx_outpoint_ {
-    uint256 hash;
+    uint256_t hash;
     uint32_t n;
 } dogecoin_tx_outpoint;
 
@@ -64,8 +64,8 @@ typedef struct dogecoin_tx_out_ {
 
 typedef struct dogecoin_tx_ {
     int32_t version;
-    vector* vin;
-    vector* vout;
+    vector_t* vin;
+    vector_t* vout;
     uint32_t locktime;
 } dogecoin_tx;
 
@@ -101,13 +101,13 @@ LIBDOGECOIN_API int dogecoin_tx_deserialize(const unsigned char* tx_serialized, 
 //!serialize a dogecoin data structure into a p2p serialized buffer
 LIBDOGECOIN_API void dogecoin_tx_serialize(cstring* s, const dogecoin_tx* tx);
 
-LIBDOGECOIN_API void dogecoin_tx_hash(const dogecoin_tx* tx, uint256 hashout);
+LIBDOGECOIN_API void dogecoin_tx_hash(const dogecoin_tx* tx, uint256_t hashout);
 
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256 hash);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256_t hash);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_address_out(dogecoin_tx* tx, const dogecoin_chainparams* chain, int64_t amount, const char* address);
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160 hash160);
-LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2pkh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160 hash160);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160_t hash160);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2pkh_hash160_out(dogecoin_tx* tx, int64_t amount, uint160_t hash160);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_p2pkh_out(dogecoin_tx* tx, int64_t amount, const dogecoin_pubkey* pubkey);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_data_out(dogecoin_tx* tx, const int64_t amount, const uint8_t* data, const size_t datalen);

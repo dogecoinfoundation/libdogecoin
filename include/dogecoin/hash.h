@@ -41,45 +41,45 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_is_empty(uint256 hash)
+LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_is_empty(uint256_t hash)
 {
     return hash[0] == 0 && !memcmp(hash, hash + 1, 19);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_clear(uint256 hash)
+LIBDOGECOIN_API static inline void dogecoin_hash_clear(uint256_t hash)
 {
     dogecoin_mem_zero(hash, DOGECOIN_HASH_LENGTH);
 }
 
-LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_equal(uint256 hash_a, uint256 hash_b)
+LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_equal(uint256_t hash_a, uint256_t hash_b)
 {
     return (memcmp(hash_a, hash_b, DOGECOIN_HASH_LENGTH) == 0);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_set(uint256 hash_dest, const uint256 hash_src)
+LIBDOGECOIN_API static inline void dogecoin_hash_set(uint256_t hash_dest, const uint256_t hash_src)
 {
     memcpy_safe(hash_dest, hash_src, DOGECOIN_HASH_LENGTH);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash(const unsigned char* datain, size_t length, uint256 hashout)
+LIBDOGECOIN_API static inline void dogecoin_hash(const unsigned char* datain, size_t length, uint256_t hashout)
 {
     sha256_raw(datain, length, hashout);
     sha256_raw(hashout, SHA256_DIGEST_LENGTH, hashout); // dogecoin double sha256 hash
 }
 
-LIBDOGECOIN_API static inline dogecoin_bool dogecoin_dblhash(const unsigned char* datain, size_t length, uint256 hashout)
+LIBDOGECOIN_API static inline dogecoin_bool dogecoin_dblhash(const unsigned char* datain, size_t length, uint256_t hashout)
 {
     sha256_raw(datain, length, hashout);
     sha256_raw(hashout, SHA256_DIGEST_LENGTH, hashout); // dogecoin double sha256 hash
     return true;
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_sngl_sha256(const unsigned char* datain, size_t length, uint256 hashout)
+LIBDOGECOIN_API static inline void dogecoin_hash_sngl_sha256(const unsigned char* datain, size_t length, uint256_t hashout)
 {
     sha256_raw(datain, length, hashout); // single sha256 hash
 }
 
-LIBDOGECOIN_API static inline void dogecoin_get_auxpow_hash(const uint32_t version, uint256 hashout)
+LIBDOGECOIN_API static inline void dogecoin_get_auxpow_hash(const uint32_t version, uint256_t hashout)
 {
     scrypt_1024_1_1_256(BEGIN(version), BEGIN(hashout));
 }
@@ -87,7 +87,7 @@ LIBDOGECOIN_API static inline void dogecoin_get_auxpow_hash(const uint32_t versi
 DISABLE_WARNING_PUSH
 DISABLE_WARNING(-Wunused-function)
 DISABLE_WARNING(-Wunused-variable)
-typedef uint256 chain_code;
+typedef uint256_t chain_code;
 
 typedef struct _chash256 {
     sha256_context* sha;
@@ -107,19 +107,19 @@ static inline chash256* dogecoin_chash256_init() {
     return chash;
 }
 
-// Hashes the data from two uint256 values and returns the double SHA-256 hash.
-static inline uint256* Hash(const uint256* p1, const uint256* p2) {
-    uint256* result = dogecoin_uint256_vla(1);
+// Hashes the data from two uint256_t values and returns the double SHA-256 hash.
+static inline uint256_t* Hash(const uint256_t* p1, const uint256_t* p2) {
+    uint256_t* result = dogecoin_uint256_vla(1);
     chash256* chash = dogecoin_chash256_init();
 
-    // Write the first uint256 to the hash context
+    // Write the first uint256_t to the hash context
     if (p1) {
-        chash->write(chash->sha, (const uint8_t*)p1, sizeof(uint256));
+        chash->write(chash->sha, (const uint8_t*)p1, sizeof(uint256_t));
     }
 
-    // Write the second uint256 to the hash context
+    // Write the second uint256_t to the hash context
     if (p2) {
-        chash->write(chash->sha, (const uint8_t*)p2, sizeof(uint256));
+        chash->write(chash->sha, (const uint8_t*)p2, sizeof(uint256_t));
     }
 
     // Finalize and reset for double hashing
@@ -148,11 +148,11 @@ typedef struct hashwriter {
     int n_type;
     int n_version;
     cstring* cstr;
-    uint256* hash;
+    uint256_t* hash;
     int (*get_type)(struct hashwriter* hw);
     int (*get_version)(struct hashwriter* hw);
     void (*write_hash)(struct hashwriter* hw, const char* pch, size_t size);
-    uint256* (*get_hash)(struct hashwriter* hw);
+    uint256_t* (*get_hash)(struct hashwriter* hw);
     void (*ser)(cstring* cstr, const void* obj);
 } hashwriter;
 
@@ -168,7 +168,7 @@ static void write_hash(struct hashwriter* hw, const char* pch, size_t size) {
     hw->ctx->write(hw->ctx->sha, (const unsigned char*)pch, size);
 }
 
-static uint256* get_hash(struct hashwriter* hw) {
+static uint256_t* get_hash(struct hashwriter* hw) {
     dogecoin_dblhash((const unsigned char*)hw->cstr->str, hw->cstr->len, *hw->hash);
     cstr_free(hw->cstr, true);
     return hw->hash;
@@ -289,10 +289,10 @@ static uint64_t siphasher_finalize(struct siphasher* sh) {
 }
 
 typedef union u256 {
-    uint256 data;
+    uint256_t data;
 } u256;
 
-static uint64_t get_uint64(uint256* data, int pos) {
+static uint64_t get_uint64(uint256_t* data, int pos) {
     const uint8_t* ptr = (const uint8_t*)data + pos * 8;
     return ((uint64_t)ptr[0]) | \
             ((uint64_t)ptr[1]) << 8 | \
@@ -304,14 +304,14 @@ static uint64_t get_uint64(uint256* data, int pos) {
             ((uint64_t)ptr[7]) << 56;
 }
 
-static inline union u256 init_u256(uint256* val) {
+static inline union u256 init_u256(uint256_t* val) {
     union u256* u256 = dogecoin_calloc(1, sizeof(*u256));
     memcpy_safe(u256->data, dogecoin_uint256_vla(1), 32);
     if (val != NULL) memcpy(u256->data, val, 32);
     return *u256;
 }
 
-static uint64_t siphash_u256(uint64_t k0, uint64_t k1, uint256* val) {
+static uint64_t siphash_u256(uint64_t k0, uint64_t k1, uint256_t* val) {
     /* Specialized implementation for efficiency */
     uint64_t d = get_uint64(val, 0);
     uint64_t v0 = 0x736f6d6570736575ULL ^ k0;

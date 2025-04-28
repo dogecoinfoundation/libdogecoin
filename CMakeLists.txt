@@ -5,7 +5,7 @@ SET(CMAKE_C_STANDARD 99)
 SET(CMAKE_C_STANDARD_REQUIRED TRUE)
 
 SET(LIBDOGECOIN_NAME dogecoin)
-PROJECT(lib${LIBDOGECOIN_NAME} VERSION 0.1.3)
+PROJECT(lib${LIBDOGECOIN_NAME} VERSION "0.1.4")
 
 option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 if(BUILD_SHARED_LIBS)
@@ -20,14 +20,20 @@ endif()
 
 INCLUDE(CTest)
 SET(USE_TESTS ${CMAKE_TESTING_ENABLED})
+SET(WITH_BENCH TRUE CACHE BOOL "enable bench")
 SET(WITH_TOOLS TRUE CACHE BOOL "enable dogecoin tool cli application")
 SET(WITH_NET TRUE CACHE BOOL "enable net functions")
 SET(WITH_LOGDB TRUE CACHE BOOL "enable logdb")
 SET(WITH_UNISTRING TRUE CACHE BOOL "enable unistring functions")
 SET(WITH_WALLET TRUE CACHE BOOL "enable wallet")
+SET(USE_AVX2 FALSE CACHE BOOL "enable intel avx2")
+SET(USE_SSE FALSE CACHE BOOL "enable intel sse")
 SET(USE_SSE2 FALSE CACHE BOOL "enable scrypt sse2")
+SET(USE_ARMV8 FALSE CACHE BOOL "enable armv8 crypto")
+SET(USE_ARMV82 FALSE CACHE BOOL "enable armv8.2 crypto")
 SET(USE_TPM2 TRUE CACHE BOOL "enable tpm2")
 SET(USE_OPENENCLAVE FALSE CACHE BOOL "enable openenclave")
+SET(USE_YUBIKEY FALSE CACHE BOOL "enable yubikey")
 SET(TEST_PASSWD FALSE CACHE BOOL "enable test password")
 string(RANDOM LENGTH 12 ALPHABET abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 PASSWD_STR)
 SET(RANDOM_DEVICE "/dev/urandom" CACHE STRING "set the device to read random data from")
@@ -71,14 +77,68 @@ IF(WITH_NET)
         FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
         FIND_LIBRARY(WINPTHREADS NAMES pthreadVC2 pthreadwin32 pthreads pthread HINTS "${PROJECT_SOURCE_DIR}/contrib/winpthreads/include/lib/x64/" REQUIRED)
     ELSE()
-        FIND_LIBRARY(LIBEVENT event REQUIRED)
+        # build libevent
+        execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/src/libevent/build)
+        execute_process(COMMAND cmake ..
+            -DCMAKE_C_FLAGS=-U_FORTIFY_SOURCE
+            -DEVENT__DISABLE_OPENSSL=ON
+            -DEVENT__DISABLE_SAMPLES=ON
+            -DEVENT__LIBRARY_TYPE=STATIC
+            -DEVENT__DISABLE_TESTS=ON
+            -DEVENT__DISABLE_THREAD_SUPPORT=OFF
+            -DEVENT__DISABLE_MM_REPLACEMENT=ON
+            -DEVENT__DISABLE_REGRESS=ON
+            -DEVENT__DISABLE_BENCHMARK=ON
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
+        execute_process(COMMAND cmake --build .
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/libevent/build)
+        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/build/include" DESTINATION "${PROJECT_SOURCE_DIR}")
+        file(COPY "${PROJECT_SOURCE_DIR}/src/libevent/include/event2" DESTINATION "${PROJECT_SOURCE_DIR}/include")
+        find_path(LIBEVENT_INCLUDE_DIR event.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
+        find_path(LIBEVENT_INCLUDE_DIR event-config.h PATHS "${PROJECT_SOURCE_DIR}/include/event2" REQUIRED)
+        FIND_LIBRARY(LIBEVENT NAMES event event_core event_extras event_pthreads HINTS "${PROJECT_SOURCE_DIR}/src/libevent/build/lib/${CMAKE_BUILD_TYPE}" REQUIRED)
         FIND_LIBRARY(LIBUNISTRING unistring REQUIRED)
     ENDIF()
 ENDIF()
 
+# NASM integration for AVX2
+if(USE_AVX2 OR USE_SSE)
+    enable_language(ASM_NASM)
+    if(NOT CMAKE_ASM_NASM_COMPILER_LOADED)
+        message(FATAL_ERROR "Can't find NASM assembler")
+    endif()
+
+    set(CMAKE_ASM_NASM_COMPILER nasm)
+
+    set(NASM_VERSION_REQUIRED "2.14")
+    execute_process(
+        COMMAND ${CMAKE_ASM_NASM_COMPILER} --version
+        OUTPUT_VARIABLE NASM_VERSION_OUTPUT
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX MATCH "NASM version ([0-9]*.[0-9]*)" NASM_VERSION "${NASM_VERSION_OUTPUT}")
+    if(NOT NASM_VERSION OR NASM_VERSION_REQUIRED VERSION_GREATER ${CMAKE_MATCH_1})
+        message(FATAL_ERROR "NASM version must be at least ${NASM_VERSION_REQUIRED}!")
+    endif()
+
+    # Define directories with assembly files (modify paths as needed)
+    set(DIR_ASM_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/intel)
+
+    # Define directories with include files (modify paths as needed)
+    set(DIR_ASM_INCLUDES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/intel)
+
+    # Find all assembly files in the defined directory
+    file(GLOB_RECURSE ASM_SOURCES "${DIR_ASM_SOURCES}/*.asm")
+
+    # Add include directories to the NASM compiler
+    set_property(SOURCE ${ASM_SOURCES} PROPERTY INCLUDE_DIRECTORIES ${DIR_ASM_INCLUDES})
+
+endif()
+
 ADD_DEFINITIONS(
     -DPACKAGE_NAME="${PROJECT_NAME}"
-    -DPACKAGE_VERSION="${PROJECT_VERSION}"
+    -DPACKAGE_VERSION="${PROJECT_VERSION}-dogebox-pre"
     -DRANDOM_DEVICE="${RANDOM_DEVICE}"
 )
 IF(BUILD_SHARED_LIBS)
@@ -87,6 +147,9 @@ ENDIF()
 
 IF(USE_TESTS)
     ADD_DEFINITIONS(-DUSE_TESTS=1)
+ENDIF()
+IF(WITH_BENCH)
+    ADD_DEFINITIONS(-DWITH_BENCH=1)
 ENDIF()
 IF(WITH_TOOLS)
     ADD_DEFINITIONS(-DWITH_TOOLS=1)
@@ -103,14 +166,55 @@ ENDIF()
 IF(WITH_WALLET)
     ADD_DEFINITIONS(-DWITH_WALLET=1)
 ENDIF()
+IF(USE_AVX2)
+    ADD_DEFINITIONS(-DUSE_AVX2=1)
+ENDIF()
+IF(USE_SSE)
+    ADD_DEFINITIONS(-DUSE_SSE=1)
+ENDIF()
 IF(USE_SSE2)
     ADD_DEFINITIONS(-DUSE_SSE2=1)
+ENDIF()
+IF(USE_ARMV8)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
+
+    ADD_DEFINITIONS(-DUSE_ARMV8=1)
+ENDIF()
+IF(USE_ARMV82)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8.2-a+crypto+sha3")
+    message(STATUS "Checking whether to build with armv8.2-a crypto")
+
+    include(CheckCXXSourceCompiles)
+    set(CMAKE_REQUIRED_FLAGS "-march=armv8.2-a+crypto+sha3")
+    check_cxx_source_compiles("
+        #include <arm_neon.h>
+        int main() {
+            uint64x2_t x;
+            x = vsha512su0q_u64(x, x);
+            return 0;
+        }
+    " ARMV82_CRYPTO_WORKS)
+
+    if (ARMV82_CRYPTO_WORKS)
+        add_definitions(-DUSE_ARMV82)
+        message(STATUS "yes")
+    else()
+        message(WARNING "sha512 missing, using armv8-a crypto without sha512")
+        string(REPLACE "-march=armv8.2-a+crypto+sha3" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
+    endif()
+
+    ADD_DEFINITIONS(-DUSE_ARMV82=1)
 ENDIF()
 IF(USE_TPM2)
     ADD_DEFINITIONS(-DUSE_TPM2=1)
 ENDIF()
 IF(USE_OPENENCLAVE)
     ADD_DEFINITIONS(-DUSE_OPENENCLAVE=1)
+ENDIF()
+IF(USE_YUBIKEY)
+    FIND_LIBRARY(LIBYKPIV NAMES ykpiv REQUIRED HINTS /usr/lib/x86_64-linux-gnu)
+    ADD_DEFINITIONS(-DUSE_YUBIKEY=1)
 ENDIF()
 IF(TEST_PASSWD)
     ADD_DEFINITIONS(-DTEST_PASSWD=1)
@@ -120,13 +224,18 @@ ENDIF()
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Options used to compile and link:")
 MESSAGE(STATUS "  USE_TESTS      = ${USE_TESTS}")
+MESSAGE(STATUS "  WITH_BENCH     = ${WITH_BENCH}")
 MESSAGE(STATUS "  WITH_TOOLS     = ${WITH_TOOLS}")
 MESSAGE(STATUS "  WITH_NET       = ${WITH_NET}")
 MESSAGE(STATUS "  WITH_LOGDB     = ${WITH_LOGDB}")
 MESSAGE(STATUS "  WITH_UNISTRING = ${WITH_UNISTRING}")
 MESSAGE(STATUS "  WITH_WALLET    = ${WITH_WALLET}")
 MESSAGE(STATUS "")
+MESSAGE(STATUS "  USE_AVX2       = ${USE_AVX2}")
+MESSAGE(STATUS "  USE_SSE        = ${USE_SSE}")
 MESSAGE(STATUS "  USE_SSE2       = ${USE_SSE2}")
+MESSAGE(STATUS "  USE_ARMV8      = ${USE_ARMV8}")
+MESSAGE(STATUS "  USE_ARMV82     = ${USE_ARMV82}")
 MESSAGE(STATUS "  USE_TPM2       = ${USE_TPM2}")
 MESSAGE(STATUS "  TEST_PASSWD    = ${TEST_PASSWD}")
 IF(TEST_PASSWD)
@@ -134,13 +243,14 @@ MESSAGE(STATUS "                   ${PASSWD_STR}")
 ENDIF()
 MESSAGE(STATUS "")
 MESSAGE(STATUS "  openenclave    = ${USE_OPENENCLAVE}")
+MESSAGE(STATUS "  yubikey        = ${USE_YUBIKEY}")
 MESSAGE(STATUS "")
 message(STATUS "  library type   = ${library_type}")
 MESSAGE(STATUS "")
 
 FILE(TOUCH config/libdogecoin-config.h)
 
-ADD_LIBRARY(${LIBDOGECOIN_NAME})
+ADD_LIBRARY(${LIBDOGECOIN_NAME} ${ASM_SOURCES})
 INSTALL(TARGETS
     ${LIBDOGECOIN_NAME}
     LIBRARY DESTINATION lib
@@ -166,6 +276,7 @@ TARGET_SOURCES(${LIBDOGECOIN_NAME} PRIVATE
     src/bip44.c
     src/block.c
     src/buffer.c
+    src/chacha20.c
     src/cstr.c
     src/ctaes.c
     src/ecc.c
@@ -253,12 +364,14 @@ IF(USE_TESTS)
     TARGET_SOURCES(tests ${visibility}
         test/address_tests.c
         test/aes_tests.c
+        test/arith_uint256_tests.c
         test/base58_tests.c
         test/bip32_tests.c
         test/bip39_tests.c
         test/bip44_tests.c
         test/block_tests.c
         test/buffer_tests.c
+        test/chacha20_tests.c
         test/cstr_tests.c
         test/ecc_tests.c
         test/hash_tests.c
@@ -272,6 +385,7 @@ IF(USE_TESTS)
         test/rmd160_tests.c
         test/scrypt_tests.c
         test/serialize_tests.c
+        test/sha1_tests.c
         test/sha2_tests.c
         test/signmsg_tests.c
         test/tpm_tests.c
@@ -282,10 +396,16 @@ IF(USE_TESTS)
         test/utils_tests.c
         test/vector_tests.c
 )
-IF (WIN32 AND USE_TPM2)
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt crypt32)
+IF (USE_YUBIKEY)
+    SET(LIBS ${LIBDOGECOIN_NAME} ${LIBUNISTRING} ${LIBYKPIV})
 ELSE()
-    TARGET_LINK_LIBRARIES(tests ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+    SET(LIBS ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+ENDIF()
+
+IF (WIN32 AND USE_TPM2)
+    TARGET_LINK_LIBRARIES(tests ${LIBS} tbs ncrypt crypt32)
+ELSE()
+    TARGET_LINK_LIBRARIES(tests ${LIBS})
 ENDIF()
     ADD_TEST(NAME ${LIBDOGECOIN_NAME}_tests COMMAND tests)
     # move test/wordlist to build
@@ -294,6 +414,14 @@ ENDIF()
         GET_FILENAME_COMPONENT(wordlist_name ${wordlist} NAME)
         CONFIGURE_FILE(${wordlist} "${CMAKE_CURRENT_BINARY_DIR}/test/wordlist/${wordlist_name}" COPYONLY)
     ENDFOREACH()
+ENDIF()
+
+IF (WITH_BENCH)
+    ADD_EXECUTABLE(bench)
+    TARGET_SOURCES(bench ${visibility}
+        src/bench.c
+    )
+    TARGET_LINK_LIBRARIES(bench ${LIBDOGECOIN_NAME})
 ENDIF()
 
 IF(WITH_LOGDB)
@@ -331,17 +459,22 @@ IF(WITH_WALLET)
 ENDIF()
 
 IF(WITH_NET)
+    INSTALL(FILES
+        include/dogecoin/rest.h
+        DESTINATION include/dogecoin
+    )
     TARGET_SOURCES(${LIBDOGECOIN_NAME} ${visibility}
         src/headersdb_file.c
         src/net.c
         src/protocol.c
+        src/rest.c
         src/spv.c
     )
 
     IF(WIN32 AND USE_TPM2)
-        TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING} ncrypt crypt32)
+        TARGET_LINK_LIBRARIES(${LIBS} ${LIBEVENT} ${LIBEVENT_PTHREADS} tbs ncrypt crypt32)
     ELSE()
-        TARGET_LINK_LIBRARIES(${LIBDOGECOIN_NAME} ${LIBEVENT} ${LIBEVENT_PTHREADS} ${LIBUNISTRING})
+        TARGET_LINK_LIBRARIES(${LIBS} ${LIBEVENT} ${LIBEVENT_PTHREADS})
     ENDIF()
     IF(USE_TESTS)
         TARGET_SOURCES(tests ${visibility}
@@ -362,9 +495,9 @@ IF(WITH_TOOLS)
     ADD_EXECUTABLE(such src/cli/such.c)
     INSTALL(TARGETS such RUNTIME)
     IF (WIN32 AND USE_TPM2)
-        TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING} tbs ncrypt crypt32)
+        TARGET_LINK_LIBRARIES(such ${LIBS} tbs ncrypt crypt32)
     ELSE()
-        TARGET_LINK_LIBRARIES(such ${LIBDOGECOIN_NAME} ${LIBUNISTRING})
+        TARGET_LINK_LIBRARIES(such ${LIBS})
     ENDIF()
     TARGET_INCLUDE_DIRECTORIES(such ${visibility} src)
 

@@ -305,15 +305,15 @@ signed char utils_hex_digit(char c)
  */
 void utils_uint256_sethex(char* psz, uint8_t* out)
 {
-    dogecoin_mem_zero(out, sizeof(uint256));
+    dogecoin_mem_zero(out, sizeof(uint256_t));
 
-    // skip leading spaces
-    while (isspace(*psz)) {
+    // skip leading space
+    while ((unsigned int)*psz == ' ' || (unsigned int)(*psz - 0x09) < 5u) {
         psz++;
         }
 
     // skip 0x
-    if (psz[0] == '0' && tolower(psz[1]) == 'x') {
+    if (psz[0] == '0' && (psz[1] == 'x' || psz[1] == 'X')) {
         psz += 2;
         }
 
@@ -324,7 +324,7 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
         }
     psz--;
     unsigned char* p1 = (unsigned char*)out;
-    unsigned char* pend = p1 + sizeof(uint256);
+    unsigned char* pend = p1 + sizeof(uint256_t);
     while (psz >= pbegin && p1 < pend) {
         *p1 = utils_hex_digit(*psz--);
         if (psz >= pbegin) {
@@ -334,9 +334,9 @@ void utils_uint256_sethex(char* psz, uint8_t* out)
         }
     }
 
-uint256* uint256S(const char *str)
+uint256_t* uint256S(const char *str)
 {
-    return (uint256*)utils_hex_to_uint8(str);
+    return (uint256_t*)utils_hex_to_uint8(str);
 }
 
 unsigned char* parse_hex(const char* psz)
@@ -345,7 +345,7 @@ unsigned char* parse_hex(const char* psz)
     unsigned char* input = dogecoin_uchar_vla(strlen(psz));
     while (true)
     {
-        while (isspace(*psz))
+        while (psz[0] == '0' && (psz[1] == 'x' || psz[1] == 'X'))
             psz++;
         signed char c = utils_hex_digit(*psz++);
         if (c == (signed char)-1)
@@ -465,7 +465,9 @@ void* safe_malloc(size_t size)
  */
     void dogecoin_cheap_random_bytes(uint8_t* buf, size_t len)
     {
+#ifndef USE_OPTEE // OPTEE has its own secure random number generator
     srand(time(NULL)); // insecure
+#endif
     for (size_t i = 0; i < len; i++) {
         buf[i] = rand(); // weak non secure cryptographic rng
         }
@@ -481,6 +483,7 @@ void* safe_malloc(size_t size)
  */
 void dogecoin_get_default_datadir(cstring* path_out)
     {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
     // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
     // Mac: ~/Library/Application Support/Bitcoin
@@ -507,6 +510,9 @@ void dogecoin_get_default_datadir(cstring* path_out)
     cstr_append_buf(path_out, posix_home, strlen(posix_home));
 #endif
 #endif
+#else
+    (void)path_out;
+#endif
     }
 
 
@@ -520,6 +526,7 @@ void dogecoin_get_default_datadir(cstring* path_out)
  */
 void dogecoin_file_commit(FILE* file)
     {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     fflush(file); // harmless if redundantly called
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
@@ -529,9 +536,13 @@ void dogecoin_file_commit(FILE* file)
 #elif defined(__APPLE__) && defined(F_FULLFSYNC)
     fcntl(fileno(file), F_FULLFSYNC, 0);
 #endif
+#else
+    (void)file;
+#endif
     }
 
 void print_header(char* filepath) {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     if (!filepath) return;
     char* filename = filepath;
     FILE* fptr = NULL;
@@ -544,14 +555,21 @@ void print_header(char* filepath) {
     print_image(fptr);
 
     fclose(fptr);
+#else
+    (void)filepath;
+#endif
     }
 
 void print_image(FILE* fptr)
     {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     char read_string[MAX_LEN];
 
     while (fgets(read_string, sizeof(read_string), fptr) != NULL)
         printf("%s", read_string);
+#else
+    (void)fptr;
+#endif
     }
 
 void print_bits(size_t const size, void const* ptr)
@@ -621,15 +639,21 @@ void slice(const char *str, char *result, size_t start, size_t end)
 }
 
 void remove_substr(char *string, char *sub) {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     char *match;
     int len = strlen(sub);
     while ((match = strstr(string, sub))) {
         *match = '\0';
         strcat(string, match+len);
     }
+#else
+    (void)string;
+    (void)sub;
+#endif
 }
 
 void replace_last_after_delim(const char *str, char* delim, char* replacement) {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     char* tmp = strdup((char*)str);
     char* new = tmp;
     char *strptr = strtok(new, delim);
@@ -643,6 +667,11 @@ void replace_last_after_delim(const char *str, char* delim, char* replacement) {
         append((char*)str, replacement);
     }
     dogecoin_free(tmp);
+#else
+    (void)str;
+    (void)delim;
+    (void)replacement;
+#endif
 }
 
 /**
@@ -687,8 +716,6 @@ const char* get_build() {
  */
 char *getpass(const char *prompt) {
     char buffer[MAX_LEN] = {0};  // Initialize to zero
-
-#ifndef USE_OPENENCLAVE
 #ifdef _WIN32
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     DWORD mode, count;
@@ -712,7 +739,16 @@ char *getpass(const char *prompt) {
         return NULL;
 
     buffer[count] = '\0';  // Ensure null-termination
+#elif defined(USE_OPENENCLAVE) || defined(USE_OPTEE)
+    printf("%s", prompt);
+    fflush(stdout);
 
+    if (!fgets(buffer, sizeof(buffer), stdin))
+        return NULL;
+
+    ssize_t nread = strlen(buffer);
+    if (nread > 0 && buffer[nread-1] == '\n')
+        buffer[nread-1] = '\0';  // Remove newline character
 #else
     struct termios old, new;
     ssize_t nread;
@@ -739,18 +775,6 @@ char *getpass(const char *prompt) {
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &old) != 0)
         return NULL;
 
-#endif
-
-#else // USE_OPENENCLAVE
-    printf("%s", prompt);
-    fflush(stdout);
-
-    if (!fgets(buffer, sizeof(buffer), stdin))
-        return NULL;
-
-    ssize_t nread = strlen(buffer);
-    if (nread > 0 && buffer[nread-1] == '\n')
-        buffer[nread-1] = '\0';  // Remove newline character
 #endif
     return strdup(buffer);
 }
@@ -804,9 +828,10 @@ int integer_length(int x) {
 
 int file_copy(char src [], char dest [])
 {
+#ifndef USE_OPTEE // OPTEE has no filesystem or console
     int   c;
     FILE *stream_read;
-    FILE *stream_write; 
+    FILE *stream_write;
 
     stream_read = fopen (src, "r");
     if (stream_read == NULL)
@@ -816,13 +841,18 @@ int file_copy(char src [], char dest [])
      {
         fclose (stream_read);
         return -2;
-     }    
+     }
     while ((c = fgetc(stream_read)) != EOF)
         fputc (c, stream_write);
     fclose (stream_read);
     fclose (stream_write);
 
     return 0;
+#else
+    (void)src;
+    (void)dest;
+    return -1;
+#endif
 }
 
 unsigned char base64_char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

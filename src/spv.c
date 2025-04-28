@@ -114,10 +114,14 @@ void dogecoin_net_set_spv(dogecoin_node_group *nodegroup)
  * @param params The chainparams struct that we created earlier.
  * @param debug If true, the node will print out debug messages to stdout.
  * @param headers_memonly If true, the headers database will not be loaded from disk.
+ * @param use_checkpoints If true, the client will use checkpoints.
+ * @param full_sync If true, the client will do a full sync.
+ * @param maxnodes The maximum amount of nodes that the client will connect to.
+ * @param http_server The IP and port for the HTTP server; if NULL, the HTTP server will not be initialized.
  *
  * @return A pointer to a dogecoin_spv_client object.
  */
-dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync, int maxnodes)
+dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params, dogecoin_bool debug, dogecoin_bool headers_memonly, dogecoin_bool use_checkpoints, dogecoin_bool full_sync, int maxnodes, const char* http_server)
 {
     dogecoin_spv_client* client;
     client = dogecoin_calloc(1, sizeof(*client));
@@ -154,6 +158,18 @@ dogecoin_spv_client* dogecoin_spv_client_new(const dogecoin_chainparams *params,
     client->sync_completed = NULL;
     client->header_message_processed = NULL;
     client->sync_transaction = NULL;
+
+    if (http_server) {
+        // split ip and port
+        char* http_server_copy = strdup(http_server);
+        char* ip = strtok(http_server_copy, ":");
+        char* port = strtok(NULL, ":");
+
+        // HTTP server initialization
+        dogecoin_http_server_init(client->nodegroup, ip, atoi(port));
+        client->nodegroup->log_write_cb("HTTP server initialized\n");
+        free(http_server_copy);
+    }
 
     return client;
 }
@@ -317,14 +333,14 @@ static dogecoin_bool dogecoin_net_spv_node_timer_callback(dogecoin_node *node, u
 }
 
 /**
- * Fill up the blocklocators vector with the blocklocators from the headers database
+ * Fill up the blocklocators vector_t with the blocklocators from the headers database
  *
  * @param client the spv client
- * @param blocklocators a vector of block hashes that we want to scan from
+ * @param blocklocators a vector_t of block hashes that we want to scan from
  *
  * @return The blocklocators are being returned.
  */
-void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *blocklocators) {
+void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector_t *blocklocators) {
     int64_t min_timestamp = client->oldest_item_of_interest - BLOCK_GAP_TO_DEDUCT_TO_START_SCAN_FROM * BLOCKS_DELTA_IN_S; /* ensure we going back ~300 blocks */
     if (client->headers_db->getchaintip(client->headers_db_ctx)->height == 0) {
         if (client->use_checkpoints && client->oldest_item_of_interest > BLOCK_GAP_TO_DEDUCT_TO_START_SCAN_FROM * BLOCKS_DELTA_IN_S) {
@@ -335,18 +351,18 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
             int i;
             for (i = length - 1; i >= 0; i--) {
                 if (checkpoint[i].timestamp < min_timestamp) {
-                    uint256 *hash = dogecoin_calloc(1, sizeof(uint256));
+                    uint256_t *hash = dogecoin_calloc(1, sizeof(uint256_t));
                     utils_uint256_sethex((char *)checkpoint[i].hash, (uint8_t *)hash);
                     vector_add(blocklocators, (void *)hash);
                     if (!client->headers_db->has_checkpoint_start(client->headers_db_ctx)) {
-                        client->headers_db->set_checkpoint_start(client->headers_db_ctx, *hash, checkpoint[i].height);
+                        client->headers_db->set_checkpoint_start(client->headers_db_ctx, *hash, checkpoint[i].height, (uint8_t*)client->chainparams->minimumchainwork);
                     }
                 }
             }
             if (blocklocators->len > 0) return; // return if we could fill up the blocklocator with checkpoints
         }
-        uint256 *hash = dogecoin_calloc(1, sizeof(uint256));
-        memcpy_safe(hash, &client->chainparams->genesisblockhash, sizeof(uint256));
+        uint256_t *hash = dogecoin_calloc(1, sizeof(uint256_t));
+        memcpy_safe(hash, &client->chainparams->genesisblockhash, sizeof(uint256_t));
         vector_add(blocklocators, (void *)hash);
         client->nodegroup->log_write_cb("Setting blocklocator with genesis block\n");
     } else {
@@ -364,7 +380,7 @@ void dogecoin_net_spv_fill_block_locator(dogecoin_spv_client *client, vector *bl
 void dogecoin_net_spv_node_request_headers_or_blocks(dogecoin_node *node, dogecoin_bool blocks)
 {
     // request next headers
-    vector *blocklocators = vector_new(1, free);
+    vector_t *blocklocators = vector_new(1, free);
 
     dogecoin_net_spv_fill_block_locator((dogecoin_spv_client *)node->nodegroup->ctx, blocklocators);
 
@@ -566,6 +582,12 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
 
             client->nodegroup->log_write_cb("Start parsing %d transactions...\n", (int)amount_of_txs);
 
+            // update the last block info for the client
+            client->last_block_tx_count = amount_of_txs;
+            client->last_block_size = hdr->data_len;
+
+            uint64_t total_tx_size = 0;
+
             size_t consumedlength = 0;
             unsigned int i;
             for (i = 0; i < amount_of_txs; i++)
@@ -583,15 +605,17 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
                 }
                 deser_skip(buf, consumedlength);
                 if (client->sync_transaction) { client->sync_transaction(client->sync_transaction_ctx, tx, i, pindex); }
+                total_tx_size += consumedlength;
                 dogecoin_tx_free(tx);
             }
-
+            client->last_block_total_tx_size = total_tx_size;
             client->nodegroup->log_write_cb("done (took %lld secs)\n", (unsigned long long)(time(NULL) - start));
         }
         else
         {
-            client->nodegroup->log_write_cb("Got invalid block with hash %s and height %d (not in sequence) from node %d\n", hash_to_string(pindex->hash), pindex->height, node->nodeid);
+            client->nodegroup->log_write_cb("Got invalid block (not in sequence) from node %d\n", node->nodeid);
             node->state &= ~NODE_BLOCKSYNC;
+            node->state |= NODE_MISSBEHAVED;
             node->nodegroup->node_connection_state_changed_cb(node);
             dogecoin_free(pindex);
             return;
@@ -638,6 +662,8 @@ void dogecoin_net_spv_post_cmd(dogecoin_node *node, dogecoin_p2p_msg_hdr *hdr, s
             {
                 client->nodegroup->log_write_cb("Got invalid headers (not in sequence) from node %d\n", node->nodeid);
                 node->state &= ~NODE_HEADERSYNC;
+                node->nodegroup->node_connection_state_changed_cb(node);
+                dogecoin_free(pindex);
                 break;
             } else {
                 if (client->header_connected) { client->header_connected(client); }

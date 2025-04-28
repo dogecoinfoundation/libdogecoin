@@ -58,6 +58,7 @@
 #include <event2/util.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <event2/http.h>
 
 #include <dogecoin/buffer.h>
 #include <dogecoin/chainparams.h>
@@ -75,10 +76,48 @@ static const int DOGECOIN_PING_INTERVAL_S = 120;
 static const int DOGECOIN_CONNECT_TIMEOUT_S = 10;
 
 /**
+ * Initializes the HTTP server part of the node group.
+ *
+ * @param group The node group containing the nodes and event base.
+ * @param bindaddr The address on which the HTTP server listens.
+ * @param port The port number on which the HTTP server listens.
+ */
+void dogecoin_http_server_init(dogecoin_node_group* group, const char* bindaddr, int port) {
+    assert(group != NULL);
+    assert(group->event_base != NULL);
+
+    group->http_server = evhttp_new(group->event_base);
+    if (!group->http_server) {
+        fprintf(stderr, "Could not create a new HTTP server.\n");
+        exit(1);
+    }
+
+    if (evhttp_bind_socket(group->http_server, bindaddr, port) != 0) {
+        fprintf(stderr, "Could not bind HTTP server to port %d.\n", port);
+        exit(1);
+    }
+
+    printf("HTTP server initialized on port %d\n", port);
+}
+
+/**
+ * Shuts down the HTTP server.
+ *
+ * @param group The node group containing the nodes and event base.
+ */
+void dogecoin_http_server_shutdown(dogecoin_node_group* group) {
+    assert(group != NULL);
+    assert(group->http_server != NULL);
+
+    evhttp_free(group->http_server);
+    group->http_server = NULL;
+}
+
+/**
  * This function is used to print debug messages to the log file
- * 
+ *
  * @param format The format string.
- * 
+ *
  * @return 1
  */
 int net_write_log_printf(const char* format, ...)
@@ -93,9 +132,9 @@ int net_write_log_printf(const char* format, ...)
 
 /**
  * This function is used to write to the log file
- * 
+ *
  * @param format The format string for the printf function.
- * 
+ *
  * @return 1
  */
 int net_write_log_null(const char* format, ...)
@@ -106,10 +145,10 @@ int net_write_log_null(const char* format, ...)
 
 /**
  * If we have a complete message, parse it
- * 
+ *
  * @param bev The bufferevent that is being read from.
  * @param ctx The node object.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 void read_cb(struct bufferevent* bev, void* ctx)
@@ -181,9 +220,9 @@ void read_cb(struct bufferevent* bev, void* ctx)
 
 /**
  * This function is called when the client sends data to the server
- * 
+ *
  * @param ev The bufferevent object.
- * @param ctx The context parameter is a pointer to the context object that was 
+ * @param ctx The context parameter is a pointer to the context object that was
  * passed to bufferevent_socket_new().
  */
 void write_cb(struct bufferevent* ev, void* ctx)
@@ -193,12 +232,12 @@ void write_cb(struct bufferevent* ev, void* ctx)
 }
 
 /**
- * The node_periodical_timer function is called every second by the node_timer_loop function and checks if the node is connected to the network. 
- * 
+ * The node_periodical_timer function is called every second by the node_timer_loop function and checks if the node is connected to the network.
+ *
  * @param fd The file descriptor of the socket.
  * @param event The event that triggered the callback.
  * @param ctx The node object.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 #if defined(_WIN32) && defined(__x86_64__)
@@ -237,7 +276,7 @@ void node_periodical_timer(int fd, short int event, void* ctx)
 
 /**
  * When the event callback is called it sets the node's state with the type of event that happened.
- * 
+ *
  * @param ev The bufferevent structure.
  * @param type The event type.
  * @param ctx The node object.
@@ -279,7 +318,7 @@ void event_cb(struct bufferevent* ev, short type, void* ctx)
 
 /**
  * Initializes a new dogecoin_node
- * 
+ *
  * @return A pointer to a new dogecoin_node object.
  */
 dogecoin_node* dogecoin_node_new()
@@ -302,10 +341,10 @@ dogecoin_node* dogecoin_node_new()
 
 /**
  * Given a node and a string, set the node's address to the string
- * 
+ *
  * @param node the node structure to be filled
  * @param ipport The IP address and port of the node.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 dogecoin_bool dogecoin_node_set_ipport(dogecoin_node* node, const char* ipport)
@@ -317,7 +356,7 @@ dogecoin_bool dogecoin_node_set_ipport(dogecoin_node* node, const char* ipport)
 
 /**
  * Release the event buffer and timer event
- * 
+ *
  * @param node The node that we're releasing the events for.
  */
 void dogecoin_node_release_events(dogecoin_node* node)
@@ -336,9 +375,9 @@ void dogecoin_node_release_events(dogecoin_node* node)
 
 /**
  * Mark the node as misbehaved
- * 
+ *
  * @param node The node that is being marked as misbehaved.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 dogecoin_bool dogecoin_node_misbehave(dogecoin_node* node)
@@ -351,7 +390,7 @@ dogecoin_bool dogecoin_node_misbehave(dogecoin_node* node)
 
 /**
  * If the node is connected, disconnect it
- * 
+ *
  * @param node The node that is being disconnected.
  */
 void dogecoin_node_disconnect(dogecoin_node* node)
@@ -370,7 +409,7 @@ void dogecoin_node_disconnect(dogecoin_node* node)
 
 /**
  * It frees the memory allocated to the node
- * 
+ *
  * @param node The node to disconnect from.
  */
 void dogecoin_node_free(dogecoin_node* node)
@@ -382,7 +421,7 @@ void dogecoin_node_free(dogecoin_node* node)
 
 /**
  * It takes a pointer to a dogecoin_node object and frees it
- * 
+ *
  * @param obj The object to be freed.
  */
 void dogecoin_node_free_cb(void* obj)
@@ -393,9 +432,9 @@ void dogecoin_node_free_cb(void* obj)
 
 /**
  * Creates a new dogecoin_node_group object
- * 
+ *
  * @param chainparams The chainparams to use. If NULL, use the mainnet.
- * 
+ *
  * @return A dogecoin_node_group object.
  */
 dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainparams)
@@ -415,7 +454,7 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
         /* Winsock DLL.                                  */
         printf("WSAStartup failed. error code : %d", err);
 	}
-	
+
 	printf("initialized.\n");
     /* Confirm that the WinSock DLL supports 2.2.*/
     /* Note that if the DLL supports versions greater    */
@@ -452,13 +491,14 @@ dogecoin_node_group* dogecoin_node_group_new(const dogecoin_chainparams* chainpa
     node_group->handshake_done_cb = NULL;
     node_group->log_write_cb = net_write_log_null;
     node_group->desired_amount_connected_nodes = 8;
+    node_group->http_server = NULL;
 
     return node_group;
 }
 
 /**
  * Shut down all the nodes in the group.
- * 
+ *
  * @param group The group to shutdown.
  */
 void dogecoin_node_group_shutdown(dogecoin_node_group *group) {
@@ -467,11 +507,15 @@ void dogecoin_node_group_shutdown(dogecoin_node_group *group) {
         dogecoin_node* node = vector_idx(group->nodes, i);
         dogecoin_node_disconnect(node);
     }
+
+    if (group->http_server) {
+        dogecoin_http_server_shutdown(group);
+    }
 }
 
 /**
  * It takes a pointer to a dogecoin_node_group, and frees the memory allocated to it
- * 
+ *
  * @param group The group to free.
  */
 void dogecoin_node_group_free(dogecoin_node_group* group)
@@ -491,7 +535,7 @@ void dogecoin_node_group_free(dogecoin_node_group* group)
 
 /**
  * The event loop is the core of the event-driven networking library
- * 
+ *
  * @param group The dogecoin_node_group object.
  */
 void dogecoin_node_group_event_loop(dogecoin_node_group* group)
@@ -501,7 +545,7 @@ void dogecoin_node_group_event_loop(dogecoin_node_group* group)
 
 /**
  * Adds a node to a node group
- * 
+ *
  * @param group The node group to add the node to.
  * @param node The node to add to the group.
  */
@@ -514,10 +558,10 @@ void dogecoin_node_group_add_node(dogecoin_node_group* group, dogecoin_node* nod
 
 /**
  * The function is used to count the number of nodes in the group that are in the given state
- * 
+ *
  * @param group the group to check
  * @param state The state of the node.
- * 
+ *
  * @return The number of nodes in the group that are in the given state.
  */
 int dogecoin_node_group_amount_of_connected_nodes(dogecoin_node_group* group, enum NODE_STATE state)
@@ -535,9 +579,9 @@ int dogecoin_node_group_amount_of_connected_nodes(dogecoin_node_group* group, en
 /**
  * Try to connect to a node that is not connected, not in connecting state, and has not
  * been connected for more than DOGECOIN_PERIODICAL_NODE_TIMER_S seconds.
- * 
+ *
  * @param group the node group we're connecting to
- * 
+ *
  * @return A boolean value.
  */
 dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
@@ -553,6 +597,7 @@ dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
         dogecoin_node* node = vector_idx(group->nodes, i);
         if (
             !((node->state & NODE_CONNECTED) == NODE_CONNECTED) &&
+            !((node->state & NODE_DISCONNECTED) == NODE_DISCONNECTED) &&
             !((node->state & NODE_CONNECTING) == NODE_CONNECTING)) {
             /* setup buffer event */
             node->event_bev = bufferevent_socket_new(group->event_base, -1, BEV_OPT_CLOSE_ON_FREE);
@@ -585,9 +630,9 @@ dogecoin_bool dogecoin_node_group_connect_next_nodes(dogecoin_node_group* group)
 }
 
 /**
- * If the node is in an error state or misbehaving state we disconnect it. If the 
- * node is in a connecting state we do nothing. Otherwise we send a version message to it. 
- * 
+ * If the node is in an error state or misbehaving state we disconnect it. If the
+ * node is in a connecting state we do nothing. Otherwise we send a version message to it.
+ *
  * @param node The node that has changed state.
  */
 void dogecoin_node_connection_state_changed(dogecoin_node* node)
@@ -615,10 +660,10 @@ void dogecoin_node_connection_state_changed(dogecoin_node* node)
 
 /**
  * Send a message to a node
- * 
+ *
  * @param node the node that is sending the message
  * @param data The data to send.
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 void dogecoin_node_send(dogecoin_node* node, cstring* data)
@@ -633,7 +678,7 @@ void dogecoin_node_send(dogecoin_node* node, cstring* data)
 
 /**
  * Send a version message to the remote node
- * 
+ *
  * @param node The node that is sending the message.
  */
 void dogecoin_node_send_version(dogecoin_node* node)
@@ -671,11 +716,11 @@ void dogecoin_node_send_version(dogecoin_node* node)
 
 /**
  * This function parses a command message received from another node.
- * 
+ *
  * @param node The node that received the message.
  * @param hdr The header of the message.
  * @param buf The buffer containing the message.
- * 
+ *
  * @return int
  */
 int dogecoin_node_parse_message(dogecoin_node* node, dogecoin_p2p_msg_hdr* hdr, struct const_buffer* buf)
@@ -724,17 +769,17 @@ int dogecoin_node_parse_message(dogecoin_node* node, dogecoin_p2p_msg_hdr* hdr, 
 }
 
 /**
- * Given a seed DNS name, return a vector of IP addresses and ports. 
+ * Given a seed DNS name, return a vector_t of IP addresses and ports.
  * (utility function to get peers (ips/port as char*) from a seed)
- * 
+ *
  * @param seed The seed DNS name.
- * @param ips_out A vector of strings.
+ * @param ips_out A vector_t of strings.
  * @param port The port to connect to.
  * @param family The address family of the socket. AF_INET or AF_INET6.
- * 
+ *
  * @return size_t
  */
-size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family)
+size_t dogecoin_get_peers_from_dns(const char* seed, vector_t* ips_out, int port, int family)
 {
     if (!seed || !ips_out || (family != AF_INET && family != AF_INET6) || port > 99999) {
         return 0;
@@ -778,31 +823,39 @@ size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, 
 
 /**
  * It takes a comma seperated list of IPs and adds them to the group
- * 
+ *
  * @param group the node group to add the nodes to
  * @param ips comma seperated list of ip addresses
- * 
+ *
  * @return dogecoin_bool (uint8_t)
  */
 dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *group, const char *ips) {
     if (ips == NULL) {
         /* === DNS QUERY === */
-        vector* ips_dns = vector_new(10, free);
-        const dogecoin_dns_seed seed = group->chainparams->dnsseeds[0];
-        if (strlen(seed.domain) == 0) {
-            return false;
-        }
-        /* todo: make sure we have enough peers, eventually */
-        dogecoin_get_peers_from_dns(seed.domain, ips_dns, group->chainparams->default_port, AF_INET);
-        unsigned int i;
-        for (i = 0; i < ips_dns->len; i++) {
-            char* ip = (char*)vector_idx(ips_dns, i);
+        vector_t* ips_dns = vector_new(10, free);
+        unsigned int seed_index;
+        /* dogecoin_chainparams has up to 8 dns seeds */
+        for (seed_index = 0; seed_index < 8; seed_index++) {
+            const dogecoin_dns_seed seed = group->chainparams->dnsseeds[seed_index];
+            if (strlen(seed.domain) == 0) {
+                continue;
+            }
+            /* todo: make sure we have enough peers, eventually */
+            dogecoin_get_peers_from_dns(seed.domain, ips_dns, group->chainparams->default_port, AF_INET);
+            unsigned int i;
+            for (i = 0; i < ips_dns->len; i++) {
+                char* ip = (char*)vector_idx(ips_dns, i);
 
-            /* create a node */
-            dogecoin_node* node = dogecoin_node_new();
-            if (dogecoin_node_set_ipport(node, ip) > 0) {
-                /* add the node to the group */
-                dogecoin_node_group_add_node(group, node);
+                /* create a node */
+                dogecoin_node* node = dogecoin_node_new();
+                if (dogecoin_node_set_ipport(node, ip) > 0) {
+                    /* add the node to the group */
+                    dogecoin_node_group_add_node(group, node);
+                }
+            }
+            /* exit if we get peers from a seed */
+            if (ips_dns->len > 0) {
+                break;
             }
         }
         vector_free(ips_dns, true);
@@ -882,7 +935,7 @@ void broadcast_handshake_done(struct dogecoin_node_* node) {
     dogecoin_p2p_inv_msg inv_msg;
     dogecoin_mem_zero(&inv_msg, sizeof(inv_msg));
 
-    uint256 hash;
+    uint256_t hash;
     dogecoin_tx_hash(ctx->tx, hash);
     dogecoin_p2p_msg_inv_init(&inv_msg, DOGECOIN_INV_TYPE_TX, hash);
 
@@ -931,7 +984,7 @@ void broadcast_post_cmd(struct dogecoin_node_* node, dogecoin_p2p_msg_hdr* hdr, 
     if (strcmp(hdr->command, DOGECOIN_MSG_INV) == 0) {
         /* hash the tx */
         /* TODO: cache the hash */
-        uint256 hash;
+        uint256_t hash;
         dogecoin_tx_hash(ctx->tx, hash);
 
         uint32_t vsize;
@@ -1026,7 +1079,7 @@ dogecoin_bool broadcast_tx(const dogecoin_chainparams* chain, const dogecoin_tx*
 
     dogecoin_node_group_add_peers_by_ip_or_seed(group, ips);
 
-    uint256 txhash;
+    uint256_t txhash;
     dogecoin_tx_hash(tx, txhash);
     char hexout[sizeof(txhash) * 2 + 1];
     utils_bin_to_hex(txhash, sizeof(txhash), hexout);

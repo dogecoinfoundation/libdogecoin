@@ -56,10 +56,11 @@ struct dogecoin_node_;
 typedef struct dogecoin_node_group_ {
     void* ctx; /* flexible context usefull in conjunction with the callbacks */
     struct event_base* event_base;
-    vector* nodes; /* the groups nodes */
+    vector_t* nodes; /* the groups nodes */
     char clientstr[1024];
     int desired_amount_connected_nodes;
     const dogecoin_chainparams* chainparams;
+    struct evhttp* http_server; /* HTTP server for processing API requests */
 
     /* callbacks */
     int (*log_write_cb)(const char* format, ...); /* log callback, default=printf */
@@ -89,7 +90,7 @@ typedef struct dogecoin_node_ {
     uint64_t lastping;
     uint64_t time_started_con;
     uint64_t time_last_request;
-    uint256 last_requested_inv;
+    uint256_t last_requested_inv;
 
     cstring* recvBuffer;
     uint64_t nonce;
@@ -102,6 +103,17 @@ typedef struct dogecoin_node_ {
 
     uint32_t hints; /* can be use for user defined state */
 } dogecoin_node;
+
+/* =================================== */
+/* HTTP SERVER */
+/* =================================== */
+
+LIBDOGECOIN_API void dogecoin_http_server_init(dogecoin_node_group* group, const char* bindaddr, int port);
+LIBDOGECOIN_API void dogecoin_http_server_shutdown(dogecoin_node_group* group);
+
+/* =================================== */
+/* LOGGING */
+/* =================================== */
 
 LIBDOGECOIN_API int net_write_log_printf(const char* format, ...);
 LIBDOGECOIN_API int net_write_log_null(const char* format, ...);
@@ -160,7 +172,7 @@ LIBDOGECOIN_API void dogecoin_node_connection_state_changed(dogecoin_node* node)
 /* =================================== */
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_node_group_add_peers_by_ip_or_seed(dogecoin_node_group *group, const char *ips);
-LIBDOGECOIN_API size_t dogecoin_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
+LIBDOGECOIN_API size_t dogecoin_get_peers_from_dns(const char* seed, vector_t* ips_out, int port, int family);
 
 struct broadcast_ctx {
     const dogecoin_tx* tx;
