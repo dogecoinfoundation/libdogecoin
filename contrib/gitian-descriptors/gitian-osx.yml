@@ -1,5 +1,5 @@
 ---
-name: "libdogecoin-osx-0.1.4"
+name: "libdogecoin-osx-0.1.5"
 enable_cache: true
 suites:
 - "focal"
@@ -99,7 +99,7 @@ script: |
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
-  git archive --format=tar --prefix=libdogecoin-0.1.4/ HEAD | gzip -9n > libdogecoin-0.1.4.tar.gz
+  git archive --format=tar --prefix=libdogecoin-0.1.5/ HEAD | gzip -9n > libdogecoin-0.1.5.tar.gz
   SOURCEDIST=`echo libdogecoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order
@@ -114,7 +114,7 @@ script: |
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     ./contrib/scripts/build.sh --host ${i} --depends
-    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.4"
+    ./contrib/scripts/pack.sh --host=${i} --prefix=build --commit="0.1.5"
   done
 
   # Move them to gitian-builder/build/out/src

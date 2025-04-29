@@ -44,7 +44,7 @@ jobs:
         include:
           - name: armhf-linux
             host: arm-linux-gnueabihf
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             packages: g++-arm-linux-gnueabihf qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
             config-opts: "--enable-static --disable-shared --enable-test-passwd"
@@ -52,7 +52,7 @@ jobs:
             goal: install
           - name: aarch64-linux
             host: aarch64-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
             config-opts: "LIBS='-levent_pthreads' --enable-static --disable-shared --enable-test-passwd --with-armv8-crypto --with-armv82-crypto"
@@ -60,7 +60,7 @@ jobs:
             goal: install
           - name: aarch64-linux-optee
             host: aarch64-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             run-tests: true
             run-container: true
             packages: g++-aarch64-linux-gnu qemu-user-static qemu-user
@@ -69,7 +69,7 @@ jobs:
             goal: install
           - name: aarch64-android
             host: aarch64-linux-android
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             packages: unzip
             dep-opts: "CROSS_COMPILE='yes' SPEED=slow V=1"
             config-opts: "--enable-static --disable-shared --enable-test-passwd"
@@ -79,8 +79,8 @@ jobs:
             android-ndk-shasum: "769ee342ea75f80619d985c2da990c48b3d8eaf45f48783a2d48870d04b46108"
           - name: x86_64-nixos
             host: x86_64-pc-linux-gnu
-            os: ubuntu-20.04
-            packages: docker.io
+            os: ubuntu-22.04
+            packages: docker.io containerd
             dep-opts: "SPEED=slow V=1"
             config-opts: "--enable-static --disable-shared --enable-test-passwd"
             run-tests: true
@@ -88,18 +88,18 @@ jobs:
             goal: install
           - name: x86_64-linux-dbg
             host: x86_64-pc-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             run-tests: true
-            packages: python3-dev python3-dbg python
+            packages: python3-dev python3-dbg
             dep-opts: "DEBUG=1 SPEED=slow V=1"
             config-opts: "--enable-debug --enable-test-passwd"
             goal: install
           - name: x86_64-linux-openenclave
             host: x86_64-pc-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             run-tests: true
             run-container: true
-            packages: python3-dev python3-dbg python
+            packages: python3-dev python3-dbg
             dep-opts: "DEBUG=1 SPEED=slow V=1"
             config-opts: "--enable-openenclave --enable-test-passwd CFLAGS=-Wp,-D_FORTIFY_SOURCE=0"
             goal: install
@@ -128,7 +128,7 @@ jobs:
           - name: x86_64-win
             host: x86_64-w64-mingw32
             arch: i386
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             packages: python3 nsis g++-mingw-w64-x86-64 wine64 wine-stable bc wine-binfmt
             postinstall: |
               sudo dpkg -s mono-runtime && sudo apt-get remove mono-runtime || echo "Very nothing to uninstall."
@@ -171,7 +171,7 @@ jobs:
           - name: i686-win
             host: i686-w64-mingw32
             arch: i386
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             packages: python3-pip python3-setuptools nsis g++ g++-mingw-w64-i686 mingw-w64-i686-dev wine-stable winehq-stable bc wine-binfmt binfmt-support
             preinstall: |
               OS_FLAVOR=$(cat /etc/*ease | grep UBUNTU_CODENAME | cut -d "=" -f 2)
@@ -180,7 +180,7 @@ jobs:
               sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/$OS_FLAVOR/winehq-$OS_FLAVOR.sources
               sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
               sudo apt-get update -qq
-              sudo apt-get install -yqq --allow-downgrades libgd3/focal libpcre2-8-0/focal libpcre2-16-0/focal libpcre2-32-0/focal libpcre2-posix2/focal
+              sudo apt-get install -yqq --allow-downgrades libgd3/jammy libpcre2-8-0/jammy libpcre2-16-0/jammy libpcre2-32-0/jammy
               sudo apt-get purge -yqq libmono* moby* mono* php* libgdiplus libpcre2-posix3 libzip4
             postinstall: |
               sudo update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix
@@ -192,7 +192,7 @@ jobs:
             goal: install
           - name: i686-linux
             host: i686-pc-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             packages: g++-multilib bc
             run-tests: true
             dep-opts: "SPEED=slow V=1"
