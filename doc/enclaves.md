@@ -224,7 +224,7 @@ docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash 
     set -e && \
     apt update && \
     apt -y upgrade && \
-    apt -y install netcat libusb-1.0-0-dev swig python2 python3-dev python3-setuptools e2tools && \
+    apt -y install libusb-1.0-0-dev swig python3-dev python3-setuptools e2tools && \
     curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo && chmod a+x /bin/repo && \
     mkdir -p optee && \
     cd optee && \
@@ -305,7 +305,7 @@ docker run -v "$(pwd):/src" -w /src jforissier/optee_os_ci:qemu_check /bin/bash 
     set -e && \
     apt update && \
     apt -y upgrade && \
-    apt -y install netcat libusb-1.0-0-dev swig python2 python3-dev python3-setuptools e2tools && \
+    apt -y install libusb-1.0-0-dev swig python3-dev python3-setuptools e2tools && \
     curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo && chmod a+x /bin/repo && \
     mkdir -p optee && \
     cd optee && \
