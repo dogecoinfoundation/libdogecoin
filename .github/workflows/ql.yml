@@ -55,7 +55,7 @@ jobs:
         popd
 
     - name: init codeql
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
 
@@ -66,4 +66,4 @@ jobs:
        make check -j3 VERBOSE=1
 
     - name: perform codeql analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
