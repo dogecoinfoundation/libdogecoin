@@ -688,6 +688,7 @@ int main(int argc, char* argv[])
     char* mnemonic_in = 0;
     char* pass = 0;
     char* entropy = 0;
+    ENTROPY_SIZE entropy_size = "256";
     MNEMONIC mnemonic = {0};
     SEED seed = {0};
     dogecoin_bool tpm = false;
@@ -727,6 +728,10 @@ int main(int argc, char* argv[])
                     if (encrypted)
                         return showError("Parameter -e cannot be used with -y");
                     entropy = optarg;
+                    if (entropy != NULL){
+                        sprintf(entropy_size, "%zu", strlen(entropy) / HEX_CHARS_PER_BYTE * 8);
+                    }
+
                     break;
                 case 'n':
                     mnemonic_in = optarg;
@@ -1170,7 +1175,7 @@ int main(int argc, char* argv[])
             }
 
         /* else generate mnemonic with ecc */
-        else if (generateEnglishMnemonic(entropy, "256", mnemonic) == -1) {
+        else if (generateEnglishMnemonic(entropy, entropy_size, mnemonic) == -1) {
             printf("generate_mnemonic (-e <hex_entropy>, optional),\n");
             return showError("Failed to generate mnemonic\n");
             }
