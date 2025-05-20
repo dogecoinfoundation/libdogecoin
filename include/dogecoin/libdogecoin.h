@@ -324,6 +324,9 @@ int generateRandomEnglishMnemonic(const ENTROPY_SIZE size, MNEMONIC mnemonic);
 /* Generates a seed from an mnemonic seedphrase */
 int dogecoin_seed_from_mnemonic(const MNEMONIC mnemonic, const PASS pass, SEED seed);
 
+/* Verifies the mnemonic phrase */
+int dogecoin_verify_mnemonic (const char* mnemonic, const char* language, const char* space, const char* filename);
+
 /* Generates a HD master key and p2pkh ready-to-use corresponding dogecoin address from a mnemonic */
 int getDerivedHDAddressFromMnemonic(const uint32_t account, const uint32_t index, const CHANGE_LEVEL change_level, const MNEMONIC mnemonic, const PASS pass, char* p2pkh_pubkey, const bool is_testnet);
 
