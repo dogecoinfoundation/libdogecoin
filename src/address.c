@@ -115,6 +115,7 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
     return true;
 }
 
+
 /**
  * @brief This function generates a new master public-private
  * key pair for a hierarchical deterministic wallet on the
@@ -126,7 +127,26 @@ int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey, bool is_testne
  *
  * @return 1 if the key pair was generated successfully.
  */
-int generateHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
+ int generateHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet)
+ {
+    /* determine if mainnet or testnet/regtest */
+    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
+
+    return generateHDMasterPubKeypairChain(hd_privkey_master, p2pkh_pubkey_master, chain);
+ }
+
+/**
+ * @brief This function generates a new master public-private
+ * key pair for a hierarchical deterministic wallet on the
+ * specified network.
+ *
+ * @param hd_privkey_master The generated master private key.
+ * @param p2pkh_pubkey_master The generated master public key.
+ * @param chain The chain parameters to use.
+ *
+ * @return 1 if the key pair was generated successfully.
+ */
+int generateHDMasterPubKeypairChain(char* hd_privkey_master, char* p2pkh_pubkey_master, const dogecoin_chainparams* chain)
 {
     char hd_privkey_master_local[HDKEYLEN];
     char hd_pubkey_master[P2PKHLEN];
@@ -138,9 +158,6 @@ int generateHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_maste
     if (p2pkh_pubkey_master) {
         memcpy_safe(hd_pubkey_master, p2pkh_pubkey_master, sizeof(hd_pubkey_master));
     }
-
-    /* determine if mainnet or testnet/regtest */
-    const dogecoin_chainparams* chain = is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main;
 
     /* generate a new hd master key */
     if (!hd_gen_master(chain, hd_privkey_master_local, sizeof(hd_privkey_master_local))) {

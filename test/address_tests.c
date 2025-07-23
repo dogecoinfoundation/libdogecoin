@@ -56,12 +56,16 @@ void test_address()
 
     char* masterkey_main = dogecoin_char_vla(masterkeylen);
     char* masterkey_test=dogecoin_char_vla(masterkeylen);
+    char* masterkey_regtest=dogecoin_char_vla(masterkeylen);
     char* p2pkh_master_pubkey_main=dogecoin_char_vla(pubkeylen);
     char* p2pkh_master_pubkey_test=dogecoin_char_vla(pubkeylen);
+    char* p2pkh_master_pubkey_regtest=dogecoin_char_vla(pubkeylen);
     dogecoin_mem_zero(masterkey_main, masterkeylen);
     dogecoin_mem_zero(masterkey_test, masterkeylen);
+    dogecoin_mem_zero(masterkey_regtest, masterkeylen);
     dogecoin_mem_zero(p2pkh_master_pubkey_main, pubkeylen);
     dogecoin_mem_zero(p2pkh_master_pubkey_test, pubkeylen);
+    dogecoin_mem_zero(p2pkh_master_pubkey_regtest, pubkeylen);
 
     /* test generation ability */
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey_main, NULL, false), true)
@@ -69,11 +73,15 @@ void test_address()
     u_assert_int_eq(generateHDMasterPubKeypair(NULL, NULL, true), true)
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey_main, p2pkh_master_pubkey_main, false), true);
     u_assert_int_eq(generateHDMasterPubKeypair(masterkey_test, p2pkh_master_pubkey_test, true), true);
+    u_assert_int_eq(generateHDMasterPubKeypairChain(masterkey_main, p2pkh_master_pubkey_main, &dogecoin_chainparams_main), true);
+    u_assert_int_eq(generateHDMasterPubKeypairChain(masterkey_test, p2pkh_master_pubkey_test, &dogecoin_chainparams_test), true);
+    u_assert_int_eq(generateHDMasterPubKeypairChain(masterkey_regtest, p2pkh_master_pubkey_regtest, &dogecoin_chainparams_regtest), true);
 
     /* test master keypair basic external validity */
     //TODO: public keys
     u_assert_int_eq(strncmp(masterkey_main,   "dgpv", 4), 0);
     u_assert_int_eq(strncmp(masterkey_test,   "tprv", 1), 0);
+    u_assert_int_eq(strncmp(masterkey_regtest,   "rprv", 1), 0);
 
     /* test master keypair association */
     u_assert_int_eq(verifyHDMasterPubKeypair(masterkey_main, p2pkh_master_pubkey_main, false), true);

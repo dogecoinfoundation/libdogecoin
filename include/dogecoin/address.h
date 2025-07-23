@@ -39,6 +39,9 @@ LIBDOGECOIN_API int generatePrivPubKeypair(char* wif_privkey, char* p2pkh_pubkey
 /* generate HD master key and p2pkh public key */
 LIBDOGECOIN_API int generateHDMasterPubKeypair(char* hd_privkey_master, char* p2pkh_pubkey_master, bool is_testnet);
 
+/* generate HD master key and p2pkh public key */
+LIBDOGECOIN_API int generateHDMasterPubKeypairChain(char* hd_privkey_master, char* p2pkh_pubkey_master, const dogecoin_chainparams* chain);
+
 /* generate an extended public key */
 LIBDOGECOIN_API int generateDerivedHDPubkey(const char* hd_privkey_master, char* p2pkh_pubkey);
 

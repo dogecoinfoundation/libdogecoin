@@ -148,6 +148,36 @@ int main() {
 
 ---
 
+### **generateHDMasterPubKeypairChain:**
+
+`int generateHDMasterPubKeypairChain(char* hd_privkey_master, char* p2pkh_pubkey_master, const dogecoin_chainparams *chain)`
+
+This function will populate provided string variables (privkey, pubkey) with freshly generated respective private and public keys for a hierarchical deterministic wallet, specifically for the chain you pass in. The function returns 1 on success and 0 on failure.
+
+_C usage:_
+
+```C
+#include "libdogecoin.h"
+#include <stdio.h>
+
+int main() {
+  int masterPrivkeyLen = HDKEYLEN; // enough cushion
+  int pubkeyLen = P2PKHLEN;
+
+  char masterPrivKey[masterPrivkeyLen];
+  char masterPubKey[pubkeyLen];
+
+  dogecoin_ecc_start();
+  generateHDMasterPubKeypairChain(masterPrivKey, masterPubKey, &dogecoin_chainparams_main);
+  dogecoin_ecc_stop();
+
+  printf("My private key for mainnet is: %s\n", masterPrivKey);
+  printf("My public key for mainnet is: %s\n", masterPubKey);
+}
+```
+
+---
+
 ### **generateDerivedHDPubKey:**
 
 `int generateDerivedHDPubkey(const char* hd_privkey_master, char* p2pkh_pubkey)`
