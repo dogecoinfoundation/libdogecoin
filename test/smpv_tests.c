@@ -780,6 +780,37 @@ void test_smpv_relevance_and_address_lookup() {
     dogecoin_smpv_client_free(client);
 }
 
+/* Test input-bound enforcement in add_watcher */
+void test_smpv_input_bounds() {
+    debug_print("%s", "Testing input-bound enforcement...\n");
+
+    dogecoin_smpv_client* client = dogecoin_smpv_client_new(&dogecoin_chainparams_main);
+    u_assert_true(client != NULL);
+
+    /* Empty string must be rejected */
+    u_assert_true(!dogecoin_smpv_add_watcher(client, ""));
+    u_assert_true(client->watcher_count == 0);
+
+    /* Oversized address (>= 90 chars) must be rejected */
+    const char oversized[] =
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    u_assert_true(strlen(oversized) >= 90);
+    u_assert_true(!dogecoin_smpv_add_watcher(client, oversized));
+    u_assert_true(client->watcher_count == 0);
+
+    /* Valid-length address must be accepted */
+    u_assert_true(dogecoin_smpv_add_watcher(client, "D7ZRpJYqGvXkLmN2xWfQsT9bCdE4hA6yKp"));
+    u_assert_true(client->watcher_count == 1);
+
+    /* Duplicate add must be idempotent */
+    u_assert_true(dogecoin_smpv_add_watcher(client, "D7ZRpJYqGvXkLmN2xWfQsT9bCdE4hA6yKp"));
+    u_assert_true(client->watcher_count == 1);
+
+    dogecoin_smpv_client_free(client);
+
+    debug_print("%s", "  Input-bound enforcement test passed\n\n");
+}
+
 /* Main test function for the test framework */
 void test_smpv() {
     debug_print("%s", "SMPV (Simplified Mempool Payment Verification) Test Suite\n");
@@ -793,6 +824,7 @@ void test_smpv() {
     test_error_handling();
     test_confirmation_tracking();
     test_smpv_relevance_and_address_lookup();
+    test_smpv_input_bounds();
 
     debug_print("%s", "All SMPV tests completed\n");
 }

@@ -267,9 +267,11 @@ dogecoin_bool dogecoin_smpv_add_watcher(
 
     /* Initialize new watcher */
     dogecoin_smpv_watcher* watcher = &client->watchers[client->watcher_count];
-    watcher->address = dogecoin_calloc(1, strlen(address) + 1);
+    size_t addr_len = strlen(address);
+    if (addr_len == 0 || addr_len >= 90) return false;
+    watcher->address = dogecoin_calloc(1, addr_len + 1);
     if (!watcher->address) return false;
-    strcpy(watcher->address, address);
+    strncpy(watcher->address, address, addr_len + 1);
     watcher->total_received = 0;
     watcher->total_sent = 0;
     watcher->balance = 0;
@@ -382,7 +384,7 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_smpv_process_tx(
     const size_t raw_len = strlen(raw_tx_hex);
     smpv_tx->raw_hex = (char*)dogecoin_calloc(1, raw_len + 1);
     if (!smpv_tx->raw_hex) { dogecoin_smpv_tx_free(smpv_tx); return false; }
-    strcpy(smpv_tx->raw_hex, raw_tx_hex);
+    strncpy(smpv_tx->raw_hex, raw_tx_hex, raw_len + 1);
 
     /* hex -> bytes */
     const size_t alloc_bytes = raw_len / 2;
