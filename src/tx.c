@@ -1349,5 +1349,14 @@ enum dogecoin_tx_sign_result dogecoin_tx_sign_input(dogecoin_tx* tx_in_out, cons
  * @return 1 if the address was added successfully, 0 otherwise.
  */
 int getAddrFromPubkeyHash(const char pubkey_hash[PUBKEYHASHLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]) {
-    return dogecoin_pubkey_hash_to_p2pkh_address((char *)utils_hex_to_uint8(pubkey_hash), SCRIPT_PUBKEY_LENGTH, p2pkh_address, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main);
+    /* pubkey_hash is a bare 20-byte hash160 (hex). Convert it directly to a
+       p2pkh address. Previously this routed through
+       dogecoin_pubkey_hash_to_p2pkh_address(), which expects a full 25-byte
+       scriptPubKey (it strips OP_DUP/OP_HASH160/.../OP_CHECKSIG and reads the
+       hash from offset 3) and was passed SCRIPT_PUBKEY_LENGTH as the length of
+       a 20-byte hash -- so feeding it the documented hash160 input produced a
+       wrong address and broke the address<->pubkey-hash round trip. */
+    uint8_t* hash160 = utils_hex_to_uint8(pubkey_hash);
+    if (!hash160) return false;
+    return dogecoin_p2pkh_addr_from_hash160(hash160, is_testnet ? &dogecoin_chainparams_test : &dogecoin_chainparams_main, p2pkh_address, P2PKHLEN);
 }
