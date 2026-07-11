@@ -1,0 +1,59 @@
+# ASAN + UBSAN gate (#329)
+# Complements valgrind (heap) with address/undefined sanitizers for:
+# global-buffer-overflow, signed-integer-overflow, unaligned loads, etc.
+name: Sanitizers
+
+on:
+  pull_request:
+  push:
+    branches:
+      - '*-dev-*'
+      - 'main'
+
+concurrency:
+  group: sanitizers-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  asan-ubsan:
+    name: x86_64-linux ASAN+UBSAN
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+
+    env:
+      CC: gcc
+      CXX: g++
+      CFLAGS: "-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined"
+      CXXFLAGS: "-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined"
+      LDFLAGS: "-fsanitize=address,undefined"
+      ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:abort_on_error=1"
+      UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1:abort_on_error=1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
+            autoconf automake libtool-bin build-essential pkg-config \
+            python3 curl ca-certificates
+
+      - name: Configure (static, tests, no shared)
+        run: |
+          ./autogen.sh
+          # Keep feature set modest so the sanitizer job stays a reliable gate,
+          # not a second full matrix. Enable core tests only.
+          ./configure \
+            --host=x86_64-pc-linux-gnu \
+            --enable-static \
+            --disable-shared \
+            --enable-tests \
+            --disable-dependency-tracking
+
+      - name: Build
+        run: make -j"$(nproc)"
+
+      - name: Run unit tests under sanitizers
+        run: make check
