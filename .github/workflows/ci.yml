@@ -121,6 +121,7 @@ jobs:
             dep-opts: "DEBUG=1 YUBIKEY=1 SPEED=slow V=1"
             config-opts: "--enable-openenclave CFLAGS=-Wp,-D_FORTIFY_SOURCE=0"
             goal: install
+            experimental: true
           - name: x86_64-macos
             host: x86_64-apple-darwin15
             os: macos-14
@@ -234,6 +235,11 @@ jobs:
             goal: install
 
     runs-on: ${{ matrix.os }}
+    # The openenclave leg builds inside a pinned focal (Ubuntu 20.04, EOL Apr 2025)
+    # container whose apt sources depend on third-party CDNs still serving a focal
+    # suite. Let it fail without blocking the matrix; only entries that opt in via
+    # matrix.experimental are affected. See doc/enclaves.md.
+    continue-on-error: ${{ matrix.experimental || false }}
 
     steps:
       - name: add architecture
@@ -611,14 +617,15 @@ jobs:
                   # Install dependencies
                   export DEBIAN_FRONTEND=noninteractive && \
                   apt-get update && \
-                  apt-get install -y wget gnupg2 cmake && \
+                  apt-get install -y ca-certificates gnupg2 cmake && \
+                  install -d -m 0755 /etc/apt/keyrings && \
                   cd /src/src/openenclave && \
-                  echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
-                  wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add - && \
-                  echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list && \
-                  wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
-                  echo 'deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main' | tee /etc/apt/sources.list.d/msprod.list && \
-                  wget -qO - https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+                  gpg --dearmor -o /etc/apt/keyrings/intel-sgx.gpg < /src/contrib/keys/intel-sgx-deb.asc && \
+                  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
+                  gpg --dearmor -o /etc/apt/keyrings/llvm.gpg < /src/contrib/keys/llvm-snapshot.asc && \
+                  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list && \
+                  gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg < /src/contrib/keys/microsoft.asc && \
+                  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/20.04/prod focal main' | tee /etc/apt/sources.list.d/msprod.list && \
                   apt update && \
                   apt -y install clang-11 libssl-dev gdb libsgx-enclave-common libsgx-quote-ex libprotobuf17 libsgx-dcap-ql libsgx-dcap-ql-dev az-dcap-client open-enclave && \
                   apt -y install dkms && \

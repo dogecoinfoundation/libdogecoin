@@ -61,6 +61,17 @@ Intel SGX (Software Guard Extensions) is a hardware-based security technology th
 
 OpenEnclave offers an interface for developing applications that run within SGX enclaves, enabling developers to build secure applications that protect sensitive data and operations. The host interacts with the enclave using ECALLS, allowing the enclave to perform cryptographic operations securely. Remote attestation is used to verify the integrity of the enclave to remote parties, ensuring that the enclave has not been tampered with.
 
+> **Attestation limitation (physical adversary).** SGX remote attestation's tamper-evidence
+> assumes an attacker without physical access to the memory bus. In September 2025 the *WireTap*
+> and *Battering RAM* research demonstrated that a low-cost (~$1,000) DDR4 DIMM interposer can
+> extract a machine's SGX **DCAP** attestation key — after which forged quotes are
+> indistinguishable from genuine ones. Intel classifies memory-bus interposition as outside the
+> SGX threat model and has issued no CVE or key revocation (note: this is the DCAP attestation
+> key, unrelated to the separate EPID/IAS attestation service Intel end-of-lifed in April 2025).
+> For an operator on their own trusted hardware the threat model is largely unchanged; for
+> custodial or hosted deployments where attestation is what justifies trusting a third party's
+> machine, this guarantee no longer holds on affected DDR4 platforms.
+
 ### ARM TrustZone and OP-TEE
 
 ARM TrustZone is another hardware-based security technology that creates TEEs within ARM CPUs. OP-TEE (Open Portable Trusted Execution Environment) is an open-source software framework that facilitates the development of applications running within ARM TrustZone enclaves. TrustZone creates a secure world and a normal world within the CPU, isolating sensitive operations from the rest of the system. The processor switches between the secure and normal worlds, ensuring that sensitive operations are performed securely. Memory is partitioned between the secure and normal worlds using page tables, protecting sensitive data from unauthorized access.
@@ -135,7 +146,7 @@ TOTP authentication using a **YubiKey** further enhances security by ensuring th
 
 ## Future Research
 
-To further improve the security and functionality of Dogecoin’s ecosystem, we recommend exploring **Remote Attestation** to validate the integrity of enclaves in distributed systems. This would allow external parties to verify the authenticity of enclaves, ensuring that they have not been tampered with. Intel SGX supports remote attestation, while ARM TrustZone can be extended to include this feature.
+To further improve the security and functionality of Dogecoin’s ecosystem, we recommend exploring **Remote Attestation** to validate the integrity of enclaves in distributed systems. This would allow external parties to verify the authenticity of enclaves, ensuring that they have not been tampered with. Intel SGX supports remote attestation, while ARM TrustZone can be extended to include this feature. Note, however, that SGX attestation's tamper-evidence assumes no physical access to the memory bus: the 2025 WireTap/Battering RAM interposer attacks extract the DCAP attestation key on DDR4 hardware (see the attestation-limitation note in the Intel SGX section above), so any distributed-verification design should treat attestation as one signal among several rather than a sole root of trust.
 
 Performance optimizations for secure enclaves are another area of interest, as reducing overhead can make enclaves more practical for a wider range of applications. Additonal analysis is needed to evaluate the performance impact of secure enclaves on key management operations at scale.
 
@@ -560,13 +571,14 @@ docker run --device /dev/sgx_enclave:/dev/sgx_enclave --device /dev/sgx_provisio
   make install && \
 
   # Set up the OpenEnclave environment and build the enclave
-  apt-get install -y wget gnupg2 cmake && \
-  echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
-  wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add - && \
-  echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list && \
-  wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
-  echo 'deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main' | tee /etc/apt/sources.list.d/msprod.list && \
-  wget -qO - https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+  apt-get install -y ca-certificates gnupg2 cmake && \
+  install -d -m 0755 /etc/apt/keyrings && \
+  gpg --dearmor -o /etc/apt/keyrings/intel-sgx.gpg < /src/contrib/keys/intel-sgx-deb.asc && \
+  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list && \
+  gpg --dearmor -o /etc/apt/keyrings/llvm.gpg < /src/contrib/keys/llvm-snapshot.asc && \
+  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main' | tee /etc/apt/sources.list.d/llvm-toolchain-focal-11.list && \
+  gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg < /src/contrib/keys/microsoft.asc && \
+  echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/20.04/prod focal main' | tee /etc/apt/sources.list.d/msprod.list && \
   apt update && \
   apt -y install clang-11 libssl-dev gdb libsgx-enclave-common libsgx-quote-ex libprotobuf17 libsgx-dcap-ql libsgx-dcap-ql-dev az-dcap-client open-enclave && \
   apt -y install dkms && \
