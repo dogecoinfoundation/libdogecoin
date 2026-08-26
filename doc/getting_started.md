@@ -188,6 +188,10 @@ gcc main.c -L./path/to/library/file -I./path/to/header/file -ldogecoin -levent_c
 
 Congratulations, you have just built an executable program that implements Libdogecoin!
 
+## Testing Against a Public Dogecoin Node
+
+If you need a public Dogecoin mainnet node for testing (for example when building with `--enable-net`), [OpenChainBench](https://openchainbench.com/benchmarks/dogecoin-rpc) publishes live latency and reliability data for the available keyless public endpoints, measured continuously from multiple regions. This can help you pick the most reliable endpoint before hardcoding one into your test setup.
+
 ## Cross Compilation with Depends
 
 There may be times when you would like to build the library for a different operating system than you are currently running. You can do this relatively easily with `depends`, included in the Libdogecoin repo! The available operating systems you can choose from are the following:
