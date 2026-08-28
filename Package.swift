@@ -144,7 +144,7 @@ let package = Package(
                 .define("WITH_WALLET", to: "1"),
                 .define("WITH_LOGDB", to: "1"),
                 .define("PACKAGE_NAME", to: "\"libdogecoin\""),
-                .define("PACKAGE_VERSION", to: "\"0.1.5-pre\""),
+                .define("PACKAGE_VERSION", to: "\"0.1.5\""),
 
                 // Disable networking (we'll use Swift networking in DogecoinKit)
                 .define("WITH_NET", to: "0"),

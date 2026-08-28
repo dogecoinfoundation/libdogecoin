@@ -2,6 +2,170 @@
 
 ## [Released]
 
+## [0.1.5] - 2026-08-25
+## What's Changed
+* src: added utf8proc, updated bip39 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/271
+* spv, wallet, ci: quit on q/Q, skip prompts with address, refresh macOS cmake by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/272
+* wallet: update init params to opts, utxo height on reorg by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/273
+* src, doc: added entropy size to such by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/281
+* rest: added getRawTx and viewTx by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/274
+* rest, spv, doc: added /stats and /chainStats for metrics by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/275
+* ci: update TPL_BIN to v1.19 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/276
+* ci: update to macos-14 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/283
+* headersdb_file, wallet: add conversion, prompt text by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/279
+* spv: added smpv for dashb0rd by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/282
+* better Swift support by @radmakr in https://github.com/dogecoinfoundation/libdogecoin/pull/285
+* src, doc, test: added mempool confirmations by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/286
+* build, depends, src, doc, test: add liboqs PQC support and draft BIP by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/288
+* build, src, doc, test: add bip37, spv filtering and smpv watchers by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/287
+* rest: fix tps window by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/289
+* build, validation, test: treat nVersion as signed and add tests by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/290
+* scrypt: fix MSVC cpuid by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/291
+* src, include, tests: use arith_uint256 for chainwork by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/292
+* build, ci, doc, seal, test: make test password follow test builds by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/293
+* ci, contrib: add gitian build with windows and macos code signing by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/295
+* build, contrib, pqc: add PQC carrier support and Raccoon-G by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/294
+* zk_carrier: add module, codec, commit/reveal helpers, tests and proof assets by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/305
+* build, ci: use YUBIKEY flag, add ci target, drop gitian overrides by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/296
+* seal: free memory in all paths, use dogecoin_free by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/299
+* utils, ecc, ci: add DIT support, enable arm64 macOS by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/304
+* depends, build, ci: add native nasm and test in ci by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/307
+* hd, contrib, doc: align getDerivedHDAddressByPath with P2PKH output by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/300
+* libdogecoin: expand APIs for smpv, spv, hd wallet and crypto/ecc by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/297
+* ci, docs: stage via make install, add wallet API doc by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/298
+* rest, tx, wallet: add /getSpends, fix /getBalance and /getTransactions by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/302
+* multisig: add P2SH workflow, signing support, docs and E2E tests by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/306
+* build, ci, docs, src, test: add linux TPM seal variants and swtpm by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/308
+* net: break event loop on shutdown by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/309
+* contrib: fix CFLAGS and LDFLAGS in build script by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/301
+* src: update tx validation, use memcpy_safe, P2PKHLEN and shared constants by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/311
+* spv: use SIGINT shutdown, drop stdin polling by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/312
+* build, ci, src, test: add avx2 and sse double-hash by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/313
+* ci: remove nixos target by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/314
+* ci: bump rk3588 DDR TPL_BIN from v1.19 to v1.21 by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/316
+* ci, build, depends: normalize depends option flags by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/315
+* psbt: add BIP174 PSBT support (all 6 roles, C API, CLI commands, docs) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/317
+* test: free the height-100 wtx in reorg utxo update test by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/318
+* tx: fix sigder_out guard and widen DER length check by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/319
+* fix: const-correct utils_bin_to_hex decl in umbrella header by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/320
+* update: apply upstream ctaes uint16_t cast hardening by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/321
+* fix: widen base58_decode_check buffer hint to accept valid short payl… by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/322
+* seal: use constant-time comparison for password verification hashes by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/349
+* serialize: prevent length truncation in ser_str / ser_varstr by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/350
+* psbt: bound key/value lengths before allocation in deser_psbt_kv by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/352
+* psbt: require exact 33-byte pubkey in bip32 derivation handlers by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/353
+* block: fix error-path leak in dogecoin_block_header_deserialize by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/354
+* sha2: fix OOB write in hmac_sha256_prepare by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/324
+* transaction: fix heap overflow in sign_raw_transaction in-place write by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/331
+* logdb: fix stack overflow and unbounded allocation in record deserialization by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/345
+* seal: remove redundant free in software seed decryption by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/343
+* bip32/bip37: fix signed-overflow UB in big-endian word assembly by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/325
+* sha2: avoid unaligned word loads in sha256_transform by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/326
+* arith_uint256/jpeg: fix signed-overflow UB in bit assembly by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/327
+* cstr: fix integer overflow in cstr_alloc_min_sz buffer sizing by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/344
+* fix: eliminate function-pointer type-mismatch UB via typed trampolines by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/361
+* ci: add ASAN+UBSAN make check gate by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/328
+* ci: match bare *-dev branches in push triggers by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/371
+* build, ci, docs, include, spv, src, test: stateless thread-safe refactor by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/330
+* transaction: mint never-reused registry ids; stop evicting live entries by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/333
+* block: fix UB and count truncation in auxpow deserialization by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/334
+* wallet: mint never-reused utxo ids; stop evicting live utxos by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/335
+* eckey: mint never-reused key ids; stop evicting (and leaking) live keys by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/336
+* map: mint never-reused hash/map ids; stop evicting live entries by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/337
+* protocol: bound getheaders locator count before allocating by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/339
+* script: bound OP_PUSHDATA before allocating in copy_without_op_codeseperator by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/338
+* wallet: bound transaction record length when loading from disk by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/342
+* transaction: fail cleanly on malformed WIF in sign_raw_transaction by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/332
+* net: dispatch only this message's payload to command handlers by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/340
+* tx: dogecoin_tx_add_address_out returns false when no output is added… by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/368
+* such: fix nondeterministic wrong amount when editing an output amount by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/369
+* key/eckey/bip32: zeroize private-key material after use (CWE-226) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/362
+* wallet: zeroize master seed, hdnode, and mnemonic in wallet_init (CWE… by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/367
+* ci: force IPv4 in the openenclave build container by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/373
+* net: verify message payload checksum before dispatch by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/341
+* ci: phase 0 static analysis — CodeQL security-extended, cppcheck, clang-tidy by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/359
+* build: add libFuzzer harness infrastructure and make fuzz target by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/351
+* fuzz: PSBT (BIP174) deserializer harness + regression corpus by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/357
+* coverage: measure fuzz harness reachability (stacked on #351) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/360
+* cmake: build and run the Raccoon-G test suite by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/346
+* cmake: link liboqs when USE_LIBOQS is enabled by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/347
+* test: assert PQC wrapper output lengths and reject tampered inputs by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/348
+* build, doc, src, test: add SLIP-0039 Shamir mnemonic secret sharing by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/323
+* contrib: add constant-time verification tests (dudect) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/365
+* seal: zeroize derived keys and hardware-path plaintext (CWE-226) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/363
+* docs: security assurance case, audit plan, and sanitizer sweep by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/366
+* Bip38 Support by @qlpqlp in https://github.com/dogecoinfoundation/libdogecoin/pull/277
+* cli: declare option arguments consistently in spvnode and sendtx by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/374
+* rpctest: stop discarding the SPV test exit code and bound its runtime by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/375
+* ci: move actions off the deprecated Node.js 20 runtime by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/376
+* random: fail closed on a short read from /dev/urandom (CWE-330) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/382
+* ci: bound every job with timeout-minutes by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/385
+* ci: build CMake natively, both WITH_NET settings by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/388
+* spv: parallel genesis header download over checkpoint segments by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/378
+* bip152: compact block types, serialization and negotiation (v1, pre-SegWit) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/379
+* ci: fix the cppcheck gate, and run cppcheck and clang-tidy on PRs at all by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/403
+* eckey, test: copy measured lengths instead of strcpy by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/418
+* wallet, utils, headersdb: put null guards above the dereference by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/404
+* utils, random: fix slice(), and make the TESTING RNG unbuildable in release by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/407
+* wallet, seal: create private files 0600 instead of at the umask by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/412
+* block: let a header own its AuxPoW proof by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/392
+* block: separate parsing a header from validating it (stacked on #392) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/393
+* block: serialize a header with its AuxPoW (stacked on #393) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/394
+* block: serialize a whole block (stacked on #394) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/395
+* block: compute merkle roots, with mutation detection (stacked on #395) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/399
+* golomb: add GCS encoding for compact block filters (BIP158) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/380
+* compact_filter: BIP157 messages, filter header chain and validation (stacked on #380) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/381
+* cf_checkpoints: populate testnet filter headers at 10000-block spacing (stacked on #381) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/383
+* cli: add YubiKey backend (-u/--yubikey) to such encrypted-key commands by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/364
+* ci: document the branch naming convention, run CodeQL on every PR, cancel superseded runs by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/377
+* context: move context definitions into dogecoin/context.h by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/396
+* pow, validation: report the condition that actually failed by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/397
+* chainparams: sync the public dogecoin_chainparams with the internal one by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/400
+* bip39, qr: bound the wordlist token read; don't rely on assert for indexing by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/401
+* doc: refresh the assurance status tables after the merge wave by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/402
+* cfheadersdb: persist filter headers and filter data per chain (stacked on #381) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/384
+* fuzz: BIP152 compact block deserializer harness (stacked on #351, #379) by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/391
+* random: the Windows RNG must report failure, not -1 by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/405
+* depends, libevent: update to 2.1.13-stable by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/406
+* rpctest: filter tar members on extraction; document two API contracts by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/409
+* such: stop writing through a string literal in the -e path by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/411
+* ci: scope CodeQL to first-party code by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/413
+* test: add RFC 6979 deterministic nonce regression tests by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/414
+* random, optee, openenclave: set the generator through the mapper, not set_rng by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/419
+* spvnode: retry peer discovery, and stop instead of hanging by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/426
+* ci: drop the VS2019 build tools install from the native Windows jobs by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/427
+* utils: add reentrant time formatting by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/424
+* rest, spv: spell the timestamp format in specifiers Windows has by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/425
+* bip38, tool, bench, random: check dogecoin_random_bytes everywhere by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/408
+* test: assert RNG and keygen output entropy, not just return codes by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/415
+* random: drop dogecoin_cheap_random_bytes, which was broken under OP-TEE by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/416
+* ecc: report 64 bytes from the recoverable signer, which is what it writes by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/417
+* spv: verify the checkpoint header's work before flushing a segment by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/420
+* scripts: don't assume a git checkout, and derive combine.sh's target from the triplet by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/423
+* ci: update the deprecated action versions by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/428
+* ci: bound the apt downloads so a bad mirror fails fast by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/429
+* chainparams, test: store pow_limit in internal byte order by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/398
+* all: print unsigned values with unsigned conversions by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/410
+* utils, qrengine, headersdb: stop creating files at the umask by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/433
+* spv, openenclave: audit follow-ups by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/432
+* mem, bip39, seal: allocate through the mapper that frees these pointers by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/434
+* cfheadersdb: create the datadir, and keep the cfilters store private by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/430
+* net: give a bare -i peer the chain's default port by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/431
+* rest, base58: check the bound before dereferencing at it by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/435
+* add missing file by @radmakr in https://github.com/dogecoinfoundation/libdogecoin/pull/436
+* tx: size the scriptPubKey output from the constant that describes it by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/439
+* address: correct the declared output buffer size for getDerivedHDAddress by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/442
+* tx: free the stripped-script buffer on the conversion failure path by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/440
+* tx: make getAddrFromPubkeyHash take a pubkey hash by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/441
+* doc: document the address-returning HD derivation functions by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/443
+* test: bound test_spv so an offline runner stops instead of hanging by @xanimo in https://github.com/dogecoinfoundation/libdogecoin/pull/444
+
+## New Contributors
+* @radmakr made their first contribution in https://github.com/dogecoinfoundation/libdogecoin/pull/285
+
+**Full Changelog**: https://github.com/dogecoinfoundation/libdogecoin/compare/v0.1.5-pre...v0.1.5
+
+
 ## [0.1.5-pre] - 2025-06-27
 ## What's Changed
 * merge v0.1.4 into main by @edtubbs in https://github.com/dogecoinfoundation/libdogecoin/pull/253
