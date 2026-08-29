@@ -934,6 +934,22 @@ dogecoin_bool dogecoin_tx_add_p2sh_hash160_out(dogecoin_tx* tx, int64_t amount, 
 /* add an op_return-style data output */
 dogecoin_bool dogecoin_tx_add_data_out(dogecoin_tx* tx, const int64_t amount, const uint8_t* data, const size_t datalen);
 
+/* ── Reading a transaction ────────────────────────────────────
+   dogecoin_tx is opaque here, so these are the only way to check what a
+   transaction actually does: which outpoint an input spends, and what each
+   output pays and to what script. Anyone being paid needs them, since a
+   signature over a transaction you have not read is a signature over whatever
+   the other party chose.
+   dogecoin_tx_output_get_scriptpubkey() reports the length it needs in
+   (len_out) and returns false when (out) is NULL or (cap) is too small, so
+   size then fetch. */
+size_t dogecoin_tx_num_inputs(const dogecoin_tx* tx);
+size_t dogecoin_tx_num_outputs(const dogecoin_tx* tx);
+/* (txid_out) is internal byte order, as dogecoin_tx_hash() produces; reverse to display */
+dogecoin_bool dogecoin_tx_input_get_prevout(const dogecoin_tx* tx, size_t idx, uint256_t txid_out, uint32_t* vout_out);
+dogecoin_bool dogecoin_tx_output_get_amount(const dogecoin_tx* tx, size_t idx, int64_t* amount_out);
+dogecoin_bool dogecoin_tx_output_get_scriptpubkey(const dogecoin_tx* tx, size_t idx, uint8_t* out, size_t cap, size_t* len_out);
+
 /* PSBT API (BIP174 / BIP370)
 --------------------------------------------------------------------------
 Partially Signed Dogecoin Transactions: a six-role pipeline —

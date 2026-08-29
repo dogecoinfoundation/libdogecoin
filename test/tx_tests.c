@@ -894,6 +894,71 @@ void test_tx_sighash()
 }
 
 
+/* Reading a transaction back: a consumer with a serialized transaction and no
+   access to the struct still has to be able to see what it spends and what it
+   pays, or it is signing something it has not read. */
+void test_tx_accessors()
+{
+    /* one input spending b14bdc..a260:0, one output of 1000000 koinu to a p2pkh */
+    char txhex[] = "0100000001b14bdcbc3e01bdaad36cc08e81e69c82e1060bc14e518db2b49aa43ad90ba260"
+                   "0000000049004730440220"
+                   "3f16c6f40162ab686621ef3000b04e75418a0c0cb2d8aebeac894ae360ac1e78"
+                   "0220ddc15ecdfc3507ac48e1681a33eb60996631bf6bf5bc0a0682c4db743ce7ca2b01"
+                   "ffffffff0140420f00000000001976a914660d4ef3a743e3e696ad990364e555c271ad504b88ac"
+                   "00000000";
+    const char* prevout_hex = "b14bdcbc3e01bdaad36cc08e81e69c82e1060bc14e518db2b49aa43ad90ba260";
+    const char* spk_hex = "76a914660d4ef3a743e3e696ad990364e555c271ad504b88ac";
+
+    uint8_t tx_data[sizeof(txhex) / 2];
+    size_t outlen = 0;
+    utils_hex_to_bin(txhex, tx_data, strlen(txhex), &outlen);
+
+    dogecoin_tx* tx = dogecoin_tx_new();
+    u_assert_int_eq(dogecoin_tx_deserialize(tx_data, outlen, tx, NULL), true);
+
+    u_assert_uint32_eq(dogecoin_tx_num_inputs(tx), 1);
+    u_assert_uint32_eq(dogecoin_tx_num_outputs(tx), 1);
+
+    uint256_t prevout;
+    uint32_t vout = 0xffffffff;
+    u_assert_int_eq(dogecoin_tx_input_get_prevout(tx, 0, prevout, &vout), true);
+    u_assert_uint32_eq(vout, 0);
+    char prevout_str[65] = {0};
+    utils_bin_to_hex(prevout, sizeof(uint256_t), prevout_str);
+    u_assert_str_eq(prevout_str, prevout_hex);
+
+    int64_t amount = 0;
+    u_assert_int_eq(dogecoin_tx_output_get_amount(tx, 0, &amount), true);
+    u_assert_int_eq((int)amount, 1000000);
+
+    /* size, then fetch */
+    size_t spklen = 0;
+    u_assert_int_eq(dogecoin_tx_output_get_scriptpubkey(tx, 0, NULL, 0, &spklen), false);
+    u_assert_uint32_eq(spklen, 25);
+    uint8_t spk[25];
+    u_assert_int_eq(dogecoin_tx_output_get_scriptpubkey(tx, 0, spk, sizeof(spk), &spklen), true);
+    char spk_str[51] = {0};
+    utils_bin_to_hex(spk, spklen, spk_str);
+    u_assert_str_eq(spk_str, spk_hex);
+
+    /* a buffer one byte short must refuse rather than truncate */
+    uint8_t small[24];
+    u_assert_int_eq(dogecoin_tx_output_get_scriptpubkey(tx, 0, small, sizeof(small), &spklen), false);
+    u_assert_uint32_eq(spklen, 25);
+
+    /* out of range and NULL */
+    u_assert_int_eq(dogecoin_tx_input_get_prevout(tx, 1, prevout, &vout), false);
+    u_assert_int_eq(dogecoin_tx_output_get_amount(tx, 1, &amount), false);
+    u_assert_int_eq(dogecoin_tx_output_get_scriptpubkey(tx, 1, spk, sizeof(spk), &spklen), false);
+    u_assert_int_eq(dogecoin_tx_output_get_amount(tx, 0, NULL), false);
+    u_assert_uint32_eq(dogecoin_tx_num_inputs(NULL), 0);
+    u_assert_uint32_eq(dogecoin_tx_num_outputs(NULL), 0);
+    u_assert_int_eq(dogecoin_tx_input_get_prevout(NULL, 0, prevout, &vout), false);
+    u_assert_int_eq(dogecoin_tx_output_get_amount(NULL, 0, &amount), false);
+
+    dogecoin_tx_free(tx);
+}
+
 void test_tx_negative_version()
 {
     char txhex[] = "ffffffff0100000000000000000000000000000000000000000000000000000000000000000000000000ffffffff0100e1f505000000000000000000";

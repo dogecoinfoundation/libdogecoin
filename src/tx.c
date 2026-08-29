@@ -1193,6 +1193,99 @@ dogecoin_bool dogecoin_tx_is_coinbase(dogecoin_tx* tx)
     return false;
 }
 
+/**
+ * @brief Number of inputs in a transaction.
+ *
+ * @param tx The transaction.
+ *
+ * @return The input count, 0 if tx is NULL.
+ */
+size_t dogecoin_tx_num_inputs(const dogecoin_tx* tx)
+{
+    if (!tx || !tx->vin) return 0;
+    return tx->vin->len;
+}
+
+/**
+ * @brief Number of outputs in a transaction.
+ *
+ * @param tx The transaction.
+ *
+ * @return The output count, 0 if tx is NULL.
+ */
+size_t dogecoin_tx_num_outputs(const dogecoin_tx* tx)
+{
+    if (!tx || !tx->vout) return 0;
+    return tx->vout->len;
+}
+
+/**
+ * @brief Read the outpoint an input spends.
+ *
+ * (txid_out) is filled in internal byte order, the same order
+ * dogecoin_tx_hash() produces, so reverse it to display it.
+ *
+ * @param tx The transaction.
+ * @param idx The input index.
+ * @param txid_out Receives the previous transaction hash, may be NULL.
+ * @param vout_out Receives the previous output index, may be NULL.
+ *
+ * @return True on success, false if tx is NULL or idx is out of range.
+ */
+dogecoin_bool dogecoin_tx_input_get_prevout(const dogecoin_tx* tx, size_t idx, uint256_t txid_out, uint32_t* vout_out)
+{
+    if (!tx || !tx->vin || idx >= tx->vin->len) return false;
+    const dogecoin_tx_in* vin = vector_idx(tx->vin, idx);
+    if (!vin) return false;
+    if (txid_out) memcpy(txid_out, vin->prevout.hash, sizeof(uint256_t));
+    if (vout_out) *vout_out = vin->prevout.n;
+    return true;
+}
+
+/**
+ * @brief Read the value of an output, in koinu.
+ *
+ * @param tx The transaction.
+ * @param idx The output index.
+ * @param amount_out Receives the value.
+ *
+ * @return True on success, false if tx is NULL or idx is out of range.
+ */
+dogecoin_bool dogecoin_tx_output_get_amount(const dogecoin_tx* tx, size_t idx, int64_t* amount_out)
+{
+    if (!tx || !tx->vout || idx >= tx->vout->len || !amount_out) return false;
+    const dogecoin_tx_out* vout = vector_idx(tx->vout, idx);
+    if (!vout) return false;
+    *amount_out = vout->value;
+    return true;
+}
+
+/**
+ * @brief Read the scriptPubKey of an output.
+ *
+ * Reports the length it needs in (len_out) and returns false when (out) is NULL
+ * or (cap) is too small, so callers size then fetch.
+ *
+ * @param tx The transaction.
+ * @param idx The output index.
+ * @param out Receives the script, may be NULL to size only.
+ * @param cap The capacity of (out).
+ * @param len_out Receives the script length.
+ *
+ * @return True when the script was written, false otherwise.
+ */
+dogecoin_bool dogecoin_tx_output_get_scriptpubkey(const dogecoin_tx* tx, size_t idx, uint8_t* out, size_t cap, size_t* len_out)
+{
+    if (!tx || !tx->vout || idx >= tx->vout->len) return false;
+    const dogecoin_tx_out* vout = vector_idx(tx->vout, idx);
+    if (!vout || !vout->script_pubkey) return false;
+    size_t len = vout->script_pubkey->len;
+    if (len_out) *len_out = len;
+    if (!out || cap < len) return false;
+    memcpy(out, vout->script_pubkey->str, len);
+    return true;
+}
+
 
 /**
  * @brief This function converts the result of the signing

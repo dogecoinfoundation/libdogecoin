@@ -133,6 +133,15 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_tx_add_puzzle_out(dogecoin_tx* tx, const 
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_outpoint_is_null(dogecoin_tx_outpoint* tx);
 LIBDOGECOIN_API dogecoin_bool dogecoin_tx_is_coinbase(dogecoin_tx* tx);
 
+/* Read back what a transaction contains. The struct is public here but opaque
+   in libdogecoin.h, so a consumer checking an input's prevout or an output's
+   value has no other way to reach them. */
+LIBDOGECOIN_API size_t dogecoin_tx_num_inputs(const dogecoin_tx* tx);
+LIBDOGECOIN_API size_t dogecoin_tx_num_outputs(const dogecoin_tx* tx);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_input_get_prevout(const dogecoin_tx* tx, size_t idx, uint256_t txid_out, uint32_t* vout_out);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_output_get_amount(const dogecoin_tx* tx, size_t idx, int64_t* amount_out);
+LIBDOGECOIN_API dogecoin_bool dogecoin_tx_output_get_scriptpubkey(const dogecoin_tx* tx, size_t idx, uint8_t* out, size_t cap, size_t* len_out);
+
 enum dogecoin_tx_sign_result {
     DOGECOIN_SIGN_UNKNOWN = 0,
     DOGECOIN_SIGN_INVALID_KEY = -2,

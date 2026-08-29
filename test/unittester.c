@@ -103,6 +103,7 @@ extern void test_tx_serialization();
 extern void test_tx_sighash();
 extern void test_tx_sighash_ext();
 extern void test_tx_negative_version();
+extern void test_tx_accessors();
 extern void test_validation_version_signed();
 extern void test_script_parse();
 extern void test_script_op_codeseperator();
@@ -263,6 +264,7 @@ int main()
     u_run_test(test_tx_sighash);
     u_run_test(test_tx_sighash_ext);
     u_run_test(test_tx_negative_version);
+    u_run_test(test_tx_accessors);
     u_run_test(test_validation_version_signed);
     u_run_test(test_scripts);
     u_run_test(test_script_parse);
