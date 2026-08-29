@@ -318,3 +318,44 @@ void test_cfheadersdb()
     remove(CFDB_TEST_HEADERS);
     remove(CFDB_TEST_FILTERS);
 }
+
+/* A cfheaders batch is only appended if it continues the chain we hold.
+   Without this, two getcfheaders in flight -- which the 33s CF timeout causes
+   by re-sending getcfcheckpt without cancelling the first -- both append, and
+   the same range lands twice. Measured against a peer: a resume from disk tip
+   6348646 took a 743-hash batch to 6349389 and then the same range again to
+   6350137, 743 past the chain tip, after which every cfilter from 6349390 up
+   failed validation. */
+void test_cfheaders_batch_extends_tip()
+{
+    extern dogecoin_bool dogecoin_cfheaders_batch_extends_tip(
+        const dogecoin_compact_filter_state *cfstate, const uint8_t *prev_filter_header);
+
+    uint8_t tip[32], other[32];
+    memset(tip, 0xAB, sizeof(tip));
+    memset(other, 0xCD, sizeof(other));
+
+    dogecoin_compact_filter_state *st = dogecoin_compact_filter_state_new();
+    u_assert_true(st != NULL);
+
+    /* Empty chain: the first batch establishes the anchor, so anything goes. */
+    u_assert_true(dogecoin_cfheaders_batch_extends_tip(st, tip));
+    u_assert_true(dogecoin_cfheaders_batch_extends_tip(st, other));
+
+    /* One header held, tip hash known. */
+    uint256_t *fh = dogecoin_calloc(1, sizeof(uint256_t));
+    memcpy(fh, tip, 32);
+    vector_add(st->filter_headers, fh);
+    memcpy(st->cfheaders_tip_hash, tip, 32);
+
+    /* Continues the chain. */
+    u_assert_true(dogecoin_cfheaders_batch_extends_tip(st, tip));
+    /* A duplicate of an already-applied batch, or a spliced chain, does not. */
+    u_assert_true(dogecoin_cfheaders_batch_extends_tip(st, other) == false);
+
+    /* Defensive: no state and no header are both refusals, not crashes. */
+    u_assert_true(dogecoin_cfheaders_batch_extends_tip(NULL, tip) == false);
+    u_assert_true(dogecoin_cfheaders_batch_extends_tip(st, NULL) == false);
+
+    dogecoin_compact_filter_state_free(st);
+}

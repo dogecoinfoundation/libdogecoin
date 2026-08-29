@@ -106,6 +106,13 @@ static const char* DOGECOIN_MSG_SENDCMPCT = "sendcmpct";
 static const char* DOGECOIN_MSG_CMPCTBLOCK = "cmpctblock";
 static const char* DOGECOIN_MSG_GETBLOCKTXN = "getblocktxn";
 static const char* DOGECOIN_MSG_BLOCKTXN = "blocktxn";
+/* BIP 157: Compact block filter protocol messages */
+static const char* DOGECOIN_MSG_GETCFILTERS = "getcfilters";
+static const char* DOGECOIN_MSG_CFILTER = "cfilter";
+static const char* DOGECOIN_MSG_GETCFHEADERS = "getcfheaders";
+static const char* DOGECOIN_MSG_CFHEADERS = "cfheaders";
+static const char* DOGECOIN_MSG_GETCFCHECKPT = "getcfcheckpt";
+static const char* DOGECOIN_MSG_CFCHECKPT = "cfcheckpt";
 DISABLE_WARNING_POP
 
 enum DOGECOIN_INV_TYPE {
