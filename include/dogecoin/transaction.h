@@ -135,11 +135,15 @@ LIBDOGECOIN_API int add_output_ts(dogecoin_transaction_context* ctx, int txindex
 
 // 'closes the inputs', specifies the recipient, specifies the amnt-to-subtract-as-fee, and returns the raw tx..
 // out_dogeamount == just an echoback of the total amount specified in the addutxos for verification
+/* Returns a pointer into a single shared static buffer, not heap memory: do not
+   free it, and copy it before the next call. Prefer the _ex form. */
 LIBDOGECOIN_API char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* public_key);
 /* THREAD-SAFE variant - adds change via dogecoin_tx_add_output_ts and runs the
    dogecoin_tx_finalize_ts integrity pass before serializing. */
 LIBDOGECOIN_API char* finalize_transaction_ts(dogecoin_transaction_context* ctx, int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* public_key);
 
+/* Returns a pointer into a single shared static buffer, not heap memory: do not
+   free it, and copy it before the next call. Prefer the _ex form. */
 LIBDOGECOIN_API char* get_raw_transaction(int txindex); // #returns 0 if not closed, returns rawtx again if closed/created.
 /* THREAD-SAFE variant - serializes under the working transaction's mutex. */
 LIBDOGECOIN_API char* get_raw_transaction_ts(dogecoin_transaction_context* ctx, int txindex);

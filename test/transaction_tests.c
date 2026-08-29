@@ -416,13 +416,53 @@ void test_transaction()
     // ----------------------------------------------------------------
     // test store_raw_transaction:
 
-    int working_transaction_index2 = store_raw_transaction(raw_hexadecimal_transaction);
+    /* raw_hexadecimal_transaction still points into the shared static, and the
+       thread-safe registry block above did its own hex conversions, so by now it
+       holds whatever that converted last rather than the signed transaction.
+       Fetch the working transaction into a buffer we own instead. */
+    char finalized[DOGECOIN_MAX_TX_HEX_LEN] = {0};
+    u_assert_true(get_raw_transaction_ex(working_transaction_index, finalized, sizeof(finalized)) > 0);
+    u_assert_str_eq(finalized, expected_single_utxo_signed_transaction);
+
+    int working_transaction_index2 = store_raw_transaction(finalized);
     // Indices are opaque, never-reused handles: assert they are distinct rather
     // than adjacent. (The old HASH_COUNT()+1 scheme made consecutive ids differ
     // by exactly 1, but that recycled ids after removals and could evict live
     // entries; the registry now mints monotonic ids, so don't assume spacing.)
     u_assert_true(working_transaction_index2 > 0);
-    u_assert_true(working_transaction_index2 != working_transaction_index);    u_assert_str_eq(get_raw_transaction(working_transaction_index), get_raw_transaction(working_transaction_index2));
+    u_assert_true(working_transaction_index2 != working_transaction_index);
+    /* Into separate buffers: get_raw_transaction() hands back one shared static,
+       so comparing two of its results compares that buffer with itself and the
+       assertion cannot fail. */
+    char stored_a[DOGECOIN_MAX_TX_HEX_LEN] = {0};
+    char stored_b[DOGECOIN_MAX_TX_HEX_LEN] = {0};
+    u_assert_int_eq(get_raw_transaction_ex(working_transaction_index, stored_a, sizeof(stored_a)),
+                    (int)strlen(stored_a));
+    u_assert_str_eq(stored_a, finalized);
+    u_assert_int_eq(get_raw_transaction_ex(working_transaction_index2, stored_b, sizeof(stored_b)),
+                    (int)strlen(stored_b));
+    u_assert_true(strlen(stored_a) > 0);
+    u_assert_str_eq(stored_a, stored_b);
+
+    /* Pin the ownership contract the headers state. get_raw_transaction()
+       returns one shared static: the same address for every index, holding
+       whatever was converted last. The _ex form writes where the caller says,
+       so an intervening conversion cannot touch it. */
+    const char* shared_a = get_raw_transaction(working_transaction_index);
+    char snapshot[DOGECOIN_MAX_TX_HEX_LEN] = {0};
+    memcpy(snapshot, shared_a, strlen(shared_a) + 1);
+    const char* shared_b = get_raw_transaction(working_transaction_index2);
+    u_assert_true(shared_a == shared_b);              /* one buffer, not two */
+    u_assert_str_eq(shared_a, snapshot);              /* same tx, so same bytes */
+
+    /* a conversion of something else overwrites it under the caller's feet */
+    uint8_t junk[4] = {0xde, 0xad, 0xbe, 0xef};
+    utils_uint8_to_hex(junk, sizeof(junk));
+    u_assert_str_eq(shared_a, "deadbeef");
+
+    /* the _ex results are untouched by that */
+    u_assert_str_eq(stored_a, stored_b);
+    u_assert_true(strlen(stored_a) > 8);
 
     // ----------------------------------------------------------------
     // test clear_transaction:

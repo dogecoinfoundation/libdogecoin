@@ -561,11 +561,18 @@ int start_transaction();
 /* add a utxo to the transaction being worked on at (txindex), specifying the utxo's txid and vout. returns 1 if successful.*/
 int add_utxo(int txindex, char* hex_utxo_txid, int vout);
 
+/* the buffer size the _ex forms below need to hold any transaction's hex */
+#define DOGECOIN_MAX_TX_HEX_LEN 200001
+
 /* add an output to the transaction being worked on at (txindex) of amount (amount) in dogecoins, returns 1 if successful. */
 int add_output(int txindex, char* destinationaddress, char* amount);
 
 /* finalize the transaction being worked on at (txindex), with the (destinationaddress) paying a fee of (subtractedfee), */
 /* re-specify the amount in dogecoin for verification, and change address for change. If not specified, change will go to the first utxo's address. */
+/* Returns a pointer into a single shared static buffer, not heap memory: do not
+   free it, and copy it before the next call, because any other hex conversion
+   anywhere in the library overwrites it. Prefer the _ex form below, which writes
+   into a buffer you own. */
 char* finalize_transaction(int txindex, char* destinationaddress, char* subtractedfee, char* out_dogeamount_for_verification, char* changeaddress);
 
 /* sign a raw transaction in memory at (txindex), sign (inputindex) with (scripthex) of (sighashtype), with (privkey) */
@@ -578,12 +585,17 @@ int sign_transaction_w_privkey(int txindex, int vout_index, char* privkey);
 void remove_all();
 
 /* retrieve the raw transaction at (txindex) as a hex string (char*) */
+/* Returns a pointer into a single shared static buffer, not heap memory: do not
+   free it, and copy it before the next call, because any other hex conversion
+   anywhere in the library overwrites it. Prefer the _ex form below, which writes
+   into a buffer you own. */
 char* get_raw_transaction(int txindex);
 
 /* clear the transaction at (txindex) in memory */
 void clear_transaction(int txindex);
 
 /* retrieve the raw transaction at (txindex) as a hex string (char*) in a buffer (buf) of size (buf_cap) */
+/* returns the number of hex characters written, or 0 if (txindex) is unknown or (buf_cap) is too small */
 int get_raw_transaction_ex(int txindex, char* buf, size_t buf_cap);
 
 /* sign a raw transaction in memory at (txindex), sign (inputindex) with (scripthex) of (sighashtype), with (privkey) in a buffer (signedrawtx) of size (signed_size) */
