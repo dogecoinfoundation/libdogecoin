@@ -41,50 +41,50 @@
 
 LIBDOGECOIN_BEGIN_DECL
 
-LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_is_empty(uint256_t hash)
+static inline dogecoin_bool dogecoin_hash_is_empty(uint256_t hash)
 {
     return hash[0] == 0 && !memcmp(hash, hash + 1, 19);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_clear(uint256_t hash)
+static inline void dogecoin_hash_clear(uint256_t hash)
 {
     dogecoin_mem_zero(hash, DOGECOIN_HASH_LENGTH);
 }
 
-LIBDOGECOIN_API static inline dogecoin_bool dogecoin_hash_equal(uint256_t hash_a, uint256_t hash_b)
+static inline dogecoin_bool dogecoin_hash_equal(uint256_t hash_a, uint256_t hash_b)
 {
     return (memcmp(hash_a, hash_b, DOGECOIN_HASH_LENGTH) == 0);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_set(uint256_t hash_dest, const uint256_t hash_src)
+static inline void dogecoin_hash_set(uint256_t hash_dest, const uint256_t hash_src)
 {
     memcpy_safe(hash_dest, hash_src, DOGECOIN_HASH_LENGTH);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash(const unsigned char* datain, size_t length, uint256_t hashout)
+static inline void dogecoin_hash(const unsigned char* datain, size_t length, uint256_t hashout)
 {
     sha256_raw(datain, length, hashout);
     sha256_raw(hashout, SHA256_DIGEST_LENGTH, hashout); // dogecoin double sha256 hash
 }
 
-LIBDOGECOIN_API static inline dogecoin_bool dogecoin_dblhash(const unsigned char* datain, size_t length, uint256_t hashout)
+static inline dogecoin_bool dogecoin_dblhash(const unsigned char* datain, size_t length, uint256_t hashout)
 {
     sha256_raw(datain, length, hashout);
     sha256_raw(hashout, SHA256_DIGEST_LENGTH, hashout); // dogecoin double sha256 hash
     return true;
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_2_inputs(const uint8_t* left, const uint8_t* right, uint256_t hashout)
+static inline void dogecoin_hash_2_inputs(const uint8_t* left, const uint8_t* right, uint256_t hashout)
 {
     sha256d_2_input(left, right, hashout);
 }
 
-LIBDOGECOIN_API static inline void dogecoin_hash_sngl_sha256(const unsigned char* datain, size_t length, uint256_t hashout)
+static inline void dogecoin_hash_sngl_sha256(const unsigned char* datain, size_t length, uint256_t hashout)
 {
     sha256_raw(datain, length, hashout); // single sha256 hash
 }
 
-LIBDOGECOIN_API static inline void dogecoin_get_auxpow_hash(const uint32_t version, uint256_t hashout)
+static inline void dogecoin_get_auxpow_hash(const uint32_t version, uint256_t hashout)
 {
     scrypt_1024_1_1_256(BEGIN(version), BEGIN(hashout));
 }
