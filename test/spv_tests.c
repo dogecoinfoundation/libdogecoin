@@ -42,6 +42,7 @@
 
 #include <dogecoin/arith_uint256.h>
 #include <dogecoin/block.h>
+#include <dogecoin/compact_filter.h>
 #include <dogecoin/headersdb_file.h>
 #include <dogecoin/net.h>
 #include <dogecoin/protocol.h>
@@ -85,8 +86,97 @@ dogecoin_bool test_spv_header_message_processed(struct dogecoin_spv_client_ *cli
     return true;
 }
 
+/* One construction, two properties, because a mainnet client is expensive to
+   build here -- opening the cfheaders db walks the on-disk file, and doing that
+   twice pushed the suite past its runtime.
+
+   Property one: the client holds the compiled-in checkpoints before it talks to
+   anyone. dogecoin_cf_load_hardcoded_checkpoints() previously had exactly one
+   caller in the whole BIP157 stack -- a unit test -- so at runtime the checkpoint
+   set came entirely from a peer's cfcheckpt, and a peer answering with a short
+   list left every filter header above it unanchored. The suite stayed green
+   throughout because the test called the loader itself and nothing asserted the
+   client did.
+
+   Property two: a peer cannot take them away. Driven through
+   nodegroup->postcmd_cb, which is dogecoin_net_spv_post_cmd, so this is the
+   production dispatch path rather than a re-implementation of it. No socket is
+   involved -- the handler reads node->nodeid and node->nodegroup, both of which
+   dogecoin_node_group_add_node sets. */
+static void test_spv_checkpoints_are_ours_and_stay_ours(void)
+{
+    const dogecoin_chainparams* chain = &dogecoin_chainparams_main;
+
+    size_t table_count = 0;
+    const dogecoin_cf_checkpoint *table = dogecoin_cf_get_checkpoints(chain, &table_count);
+    u_assert_true(table != NULL);
+    u_assert_true(table_count > 1);
+
+    dogecoin_spv_client* client = dogecoin_spv_client_new(chain, false, true, true, false, 8, NULL);
+    u_assert_true(client != NULL);
+    u_assert_true(client->cfilter_state != NULL);
+    u_assert_true(client->cfilter_state->checkpoints != NULL);
+    u_assert_true(client->nodegroup != NULL);
+    u_assert_true(client->nodegroup->postcmd_cb != NULL);
+
+    /* Loaded, and with the table's values rather than an empty vector. */
+    u_assert_uint32_eq((uint32_t)client->cfilter_state->checkpoints->len,
+                       (uint32_t)table_count);
+    uint256_t want;
+    utils_uint256_sethex((char *)table[0].filter_header, want);
+    u_assert_int_eq(memcmp(vector_idx(client->cfilter_state->checkpoints, 0), want, 32), 0);
+
+    /* A one-entry cfcheckpt, through the real handler. The entry is genuine, so
+       validation passes and the peer is not marked misbehaving -- the attack is
+       the truncation, not a forged value. */
+    dogecoin_node* node = dogecoin_node_new();
+    u_assert_true(node != NULL);
+    dogecoin_node_group_add_node(client->nodegroup, node);
+
+    cstring* payload = cstr_new_sz(64);
+    uint8_t filter_type = GCS_BASIC_FILTER_TYPE;
+    ser_bytes(payload, &filter_type, 1);
+    uint256_t stop_hash;
+    dogecoin_mem_zero(stop_hash, sizeof(stop_hash));
+    ser_u256(payload, stop_hash);
+    ser_varlen(payload, 1);
+    uint256_t cp0;
+    utils_uint256_sethex((char *)table[0].filter_header, cp0);
+    ser_u256(payload, cp0);
+
+    dogecoin_p2p_msg_hdr hdr;
+    dogecoin_mem_zero(&hdr, sizeof(hdr));
+    memcpy(hdr.command, DOGECOIN_MSG_CFCHECKPT, strlen(DOGECOIN_MSG_CFCHECKPT));
+
+    struct const_buffer buf = { payload->str, payload->len };
+    client->nodegroup->postcmd_cb(node, &hdr, &buf);
+
+    /* Still the whole table, still the table's values. Before the fix the
+       handler freed this vector and rebuilt it from the message, leaving one. */
+    u_assert_uint32_eq((uint32_t)client->cfilter_state->checkpoints->len,
+                       (uint32_t)table_count);
+    uint256_t last;
+    utils_uint256_sethex((char *)table[table_count - 1].filter_header, last);
+    u_assert_int_eq(memcmp(vector_idx(client->cfilter_state->checkpoints,
+                                      table_count - 1), last, 32), 0);
+
+    /* And dogecoin_cf_validate_checkpoints still accepts that truncated list --
+       pinned deliberately, so nobody routes anchoring back through it. */
+    vector_t *truncated = vector_new(1, dogecoin_free);
+    uint256_t *one = dogecoin_calloc(1, sizeof(uint256_t));
+    memcpy(one, cp0, 32);
+    vector_add(truncated, one);
+    u_assert_true(dogecoin_cf_validate_checkpoints(chain, truncated));
+    vector_free(truncated, true);
+
+    cstr_free(payload, true);
+    dogecoin_spv_client_free(client);
+}
+
 void test_spv()
 {
+    test_spv_checkpoints_are_ours_and_stay_ours();
+
     // set chain:
     const dogecoin_chainparams* chain = &dogecoin_chainparams_test;
 
@@ -633,6 +723,14 @@ void test_bip37_filter_state()
     dogecoin_spv_client* client = dogecoin_spv_client_new(&dogecoin_chainparams_main, false, true, false, false, 1, NULL);
     u_assert_true(client != NULL);
 
+    /* BIP37 and BIP157 are mutually exclusive for privacy reasons: a bloom
+     * filter leaks the watched scripts to peers, which is what compact filters
+     * avoid.  Compact filters are on by default, and filterload fails closed
+     * while they are, so a BIP37 consumer must opt out explicitly first. */
+    u_assert_true(!dogecoin_spv_client_filterload(client, (const uint8_t[]){0xaa}, 1, 1, 0, 0));
+    dogecoin_spv_enable_compact_filters(client, false);
+    u_assert_true(!client->compact_filters_enabled);
+
     uint8_t filter[3] = {0xaa, 0xbb, 0xcc};
     u_assert_true(dogecoin_spv_client_filterload(client, filter, sizeof(filter), 2, 123, 1));
     u_assert_true(client->bloom_filter != NULL);
@@ -899,6 +997,58 @@ void test_headers_db_write_appends()
         u_assert_uint32_eq(le32toh(got), h);
     }
     fclose(f);
+
+    dogecoin_headers_db_free(db);
+    unlink(path);
+}
+
+/* Looking up the same height twice must succeed twice.
+   scan_resume_pos stored the end of the matched record while the resume test
+   is "target >= scan_resume_height", so a repeat lookup restarted just past
+   the record it wanted and scanned to EOF. Against a real chain that made
+   every second lookup of a height miss, which forced the getcfilters stop-hash
+   fallback to substitute the chain tip and build a 40751-filter request
+   against a limit of 1000. */
+void test_headers_db_repeat_lookup()
+{
+    extern dogecoin_bool dogecoin_headers_db_write(dogecoin_headers_db *db,
+                                                   dogecoin_blockindex *bi);
+    const char *path = "test_headers_repeat.db";
+    unlink(path);
+
+    dogecoin_headers_db *db = dogecoin_headers_db_new(&dogecoin_chainparams_main, false);
+    u_assert_true(db != NULL);
+    u_assert_true(dogecoin_headers_db_load(db, path, false));
+
+    dogecoin_blockindex bi;
+    dogecoin_mem_zero(&bi, sizeof(bi));
+    uint32_t h;
+    for (h = 1; h <= 20; h++) {
+        bi.height = h;
+        memset(bi.hash, (int)h, sizeof(uint256_t));
+        u_assert_true(dogecoin_headers_db_write(db, &bi));
+    }
+    fflush(db->headers_tree_file);
+
+    uint256_t got;
+    uint8_t want[32];
+    memset(want, 10, sizeof(want));
+
+    /* First lookup populates the resume cursor. */
+    u_assert_true(dogecoin_headers_db_get_block_hash_at_height(db, 10, got));
+    u_assert_mem_eq(got, want, 32);
+
+    /* Same height again: must not resume past its own record. */
+    u_assert_true(dogecoin_headers_db_get_block_hash_at_height(db, 10, got));
+    u_assert_mem_eq(got, want, 32);
+
+    /* Forward from there still works, and so does going backwards. */
+    memset(want, 15, sizeof(want));
+    u_assert_true(dogecoin_headers_db_get_block_hash_at_height(db, 15, got));
+    u_assert_mem_eq(got, want, 32);
+    memset(want, 3, sizeof(want));
+    u_assert_true(dogecoin_headers_db_get_block_hash_at_height(db, 3, got));
+    u_assert_mem_eq(got, want, 32);
 
     dogecoin_headers_db_free(db);
     unlink(path);

@@ -176,6 +176,8 @@ extern void test_headers_db_write_appends();
 extern void test_bip37_filter_state();
 extern void test_bip37_merkleblock_vector();
 extern void test_cfheadersdb();
+extern void test_cfheaders_batch_extends_tip();
+extern void test_headers_db_repeat_lookup();
 #else
 extern void test_net_flag_not_defined();
 #endif
@@ -336,6 +338,8 @@ int main()
     u_run_test(test_bip37_filter_state);
     u_run_test(test_bip37_merkleblock_vector);
     u_run_test(test_cfheadersdb);
+    u_run_test(test_cfheaders_batch_extends_tip);
+    u_run_test(test_headers_db_repeat_lookup);
 #else
     u_run_test(test_net_flag_not_defined);
 #endif
