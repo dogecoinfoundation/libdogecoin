@@ -215,6 +215,12 @@ static struct option long_options[] = {
         {"select_checkpoint", no_argument, NULL, 'q'},
         {"daemon", no_argument, NULL, 'z'},
         {"genesis_headers", no_argument, NULL, 'H'},
+        {"no_cfilters", no_argument, NULL, 'e'},
+        {"export_cfcheckpts", no_argument, NULL, 'o'},
+        {"logfile", required_argument, NULL, 'L'},
+        {"cfheaders_path",   required_argument, NULL, 257},
+        {"cfilters_path",    required_argument, NULL, 258},
+        {"cf_start_height",  required_argument, NULL, 259},
         {NULL, 0, NULL, 0} };
 
 /**
@@ -235,7 +241,14 @@ static void print_usage() {
 (-u|--http_server <ip:port>) (-x|--smpv) (-g|--filtered_blocks) (-q|--select_checkpoint) (-t|--testnet) (-r|--regtest) (-d|--debug) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
+    printf("\nCompact filters (BIP157):\n");
+    printf("        --cf_start_height <height>  scan watched scripts from <height> (1 = genesis).\n");
+    printf("                                    Default starts at chainbottom, or wherever an\n");
+    printf("                                    existing cfheaders file begins, so transactions\n");
+    printf("                                    below that are never examined.\n");
     printf("\nExamples: \n");
+    printf("Find a watched address's history from height 6300000 rather than from the chain tip:\n");
+    printf("> ./spvnode -a \"DSVw8wkkTXccdq78etZ3UwELrmpfvAiVt1\" --cf_start_height 6300000 scan\n\n");
     printf("Sync up to the chain tip and stores all headers in headers.db (quit once synced):\n");
     printf("> ./spvnode scan\n\n");
     printf("Sync up to the chain tip and give some debug output during that process:\n");
@@ -298,6 +311,34 @@ dogecoin_bool spv_header_message_processed(struct dogecoin_spv_client_* client, 
     }
 
 static dogecoin_bool quit_when_synced = true;
+static FILE *g_logfile = NULL;
+
+static int spvnode_log_file(const char* format, ...) {
+    if (!g_logfile) return 0;
+    va_list args;
+    va_start(args, format);
+    fprintf(g_logfile, "DEBUG: ");
+    vfprintf(g_logfile, format, args);
+    va_end(args);
+    fflush(g_logfile);
+    return 1;
+}
+
+static int spvnode_log_both(const char* format, ...) {
+    va_list args, args2;
+    va_start(args, format);
+    va_copy(args2, args);
+    printf("DEBUG: ");
+    vprintf(format, args);
+    va_end(args);
+    if (g_logfile) {
+        fprintf(g_logfile, "DEBUG: ");
+        vfprintf(g_logfile, format, args2);
+        fflush(g_logfile);
+    }
+    va_end(args2);
+    return 1;
+}
 static dogecoin_bool spv_enable_filtered_blocks = false;
 static dogecoin_bool spv_select_checkpoint = false;
 static int spv_filter_oldest_utxo_height = 0;
@@ -496,7 +537,13 @@ int main(int argc, char* argv[]) {
     char* http_server = NULL;
     int file_num = NO_FILE;
     dogecoin_bool smpv_cli_enable = false;
+    dogecoin_bool no_cfilters = false;
+    dogecoin_bool export_cfcheckpts = false;
     int selected_checkpoint_index = -1;
+    char* logfile = NULL;
+    char* cfheaders_path      = NULL;
+    char* cfilters_path       = NULL;
+    uint32_t cf_start_height  = 0;
     if (argc <= 1 || strlen(argv[argc - 1]) == 0 || argv[argc - 1][0] == '-') {
         /* exit if no command was provided */
         print_usage();
@@ -505,7 +552,7 @@ int main(int argc, char* argv[]) {
     data = argv[argc - 1];
 
     /* get arguments */
-    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:u:w:h:a:lbpzkjxgqH", long_options, &long_index)) != -1) {
+    while ((opt = getopt_long_only(argc, argv, "i:ctrdsm:n:f:y:u:w:h:a:lbpzkjxgqHeoL:", long_options, &long_index)) != -1) {
         switch (opt) {
                 case 'c':
                     quit_when_synced = false;
@@ -589,6 +636,32 @@ int main(int argc, char* argv[]) {
                     spv_select_checkpoint = true;
                     use_checkpoint = true;
                     break;
+                case 'e':
+                    no_cfilters = true;
+                    break;
+                case 'o':
+                    export_cfcheckpts = true;
+                    break;
+                case 'L':
+                    logfile = optarg;
+                    break;
+                case 257:
+                    cfheaders_path = optarg;
+                    break;
+                case 258:
+                    cfilters_path = optarg;
+                    break;
+                case 259: {
+                    char *endp = NULL;
+                    errno = 0;
+                    unsigned long v = strtoul(optarg, &endp, 10);
+                    if (errno || !endp || *endp != '\0' || v == 0 || v > UINT32_MAX) {
+                        fprintf(stderr, "spvnode: --cf_start_height needs a height of 1 or more\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    cf_start_height = (uint32_t)v;
+                    break;
+                }
                 default:
                     print_usage();
                     exit(EXIT_FAILURE);
@@ -608,12 +681,51 @@ int main(int argc, char* argv[]) {
            anything that runs the loop until nothing is scheduled. */
         client->nodegroup->auto_reconnect = true;
 
+        if (logfile) {
+            g_logfile = dogecoin_fopen_private(logfile, "a");
+            if (!g_logfile) {
+                fprintf(stderr, "Cannot open logfile '%s': %s\n", logfile, strerror(errno));
+            } else {
+                client->nodegroup->log_write_cb = debug ? spvnode_log_both : spvnode_log_file;
+            }
+        }
+
         if (http_server) {
             evhttp_set_gencb(client->nodegroup->http_server, dogecoin_http_request_cb, client);
         }
         if (smpv_cli_enable) {
             dogecoin_spv_enable_smpv(client, true);
             printf("[smpv] enabled via CLI flag\n");
+        }
+        if (cfheaders_path)
+            client->cfheaders_path = strdup(cfheaders_path);
+        if (cfilters_path)
+            client->cfilters_path = strdup(cfilters_path);
+        /* Without this the cfheaders chain starts at chainbottom, or wherever a
+           previous run's cfheaders.dat happens to begin, and a filter cannot be
+           checked below the filter headers held for it. A watched address whose
+           transactions predate that floor is simply never looked at. */
+        if (cf_start_height)
+            client->cf_start_height = cf_start_height;
+
+        if (no_cfilters || full_sync) {
+            /* Disable BIP157 compact filter sync when:
+             *  - user explicitly passed --no_cfilters (-e)
+             *  - full_sync (-b) is requested: we need full blocks anyway,
+             *    and Dogecoin peers don't advertise NODE_COMPACT_FILTERS yet,
+             *    so BIP157 sync would stall indefinitely. */
+            dogecoin_spv_enable_compact_filters(client, false);
+            if (no_cfilters) {
+                printf("[bip157] compact filters disabled via CLI flag (--no_cfilters)\n");
+            } else {
+                printf("[bip157] compact filters disabled (full_sync mode uses direct block download)\n");
+            }
+        } else {
+            printf("[bip157] compact block filters enabled (default)\n");
+        }
+        if (export_cfcheckpts) {
+            client->cf_export_enabled = true;
+            printf("[bip157] filter header checkpoint export enabled; lines prefixed '[cfcheckpt-export]' will appear as headers sync\n");
         }
         client->header_message_processed = spv_header_message_processed;
         client->sync_completed = spv_sync_completed;
@@ -685,7 +797,20 @@ int main(int argc, char* argv[]) {
         }
 
         /* Optional BIP37 filter setup using filterload with fixed-size bloom. */
-        if (spv_enable_filtered_blocks && (wallet->waddr_vector->len > 0 || HASH_COUNT(wallet->utxos) > 0)) {
+        if (spv_enable_filtered_blocks && client->compact_filters_enabled) {
+            /* BIP37 and BIP157 are mutually exclusive here, for privacy: a bloom
+             * filter hands the watched scripts to every peer, which is exactly what
+             * compact filters avoid.  Compact filters are on by default, so -g on
+             * its own is a contradiction; dogecoin_spv_client_filterload() fails
+             * closed in that state.  Say why here -- its explanation goes through
+             * the nodegroup logger, which is not printing this early, so the user
+             * would otherwise see only an unexplained "Failed to send filterload". */
+            printf("-g/--filtered_blocks (BIP37) needs -e/--no_cfilters.\n"
+                   "A BIP37 bloom filter would leak the watched addresses to peers, which is\n"
+                   "what compact filters (BIP157, enabled by default) exist to prevent, so the\n"
+                   "two are mutually exclusive. Re-run with -e to use BIP37, or drop -g to use\n"
+                   "compact filters.\n");
+        } else if (spv_enable_filtered_blocks && (wallet->waddr_vector->len > 0 || HASH_COUNT(wallet->utxos) > 0)) {
             dogecoin_bip37_filter* filter = dogecoin_bip37_filter_new(0, 1); /* random tweak, UPDATE_ALL */
             if (!filter) {
                 printf("Failed to initialize BIP37 bloom filter\n");
@@ -751,6 +876,71 @@ int main(int argc, char* argv[]) {
                        (unsigned int)client->par_hdr->num_segs);
         }
 
+        /* BIP157 compact-filter address watching: add each wallet address's
+         * P2PKH scriptPubKey via filteradd so cfilters are matched against
+         * real wallet outputs.  Two sources:
+         *   1. waddr_vector — HD-derived keys controlled by this wallet.
+         *   2. wallet->utxos — previously discovered UTXOs whose script_pubkey
+         *      may cover watch-only or externally-derived addresses not present
+         *      in waddr_vector. */
+        if (client->compact_filters_enabled) {
+            unsigned int wi;
+            for (wi = 0; wi < wallet->waddr_vector->len; wi++) {
+                dogecoin_wallet_addr* waddr = vector_idx(wallet->waddr_vector, wi);
+                if (!waddr || waddr->ignore) continue;
+                /* P2PKH scriptPubKey: OP_DUP OP_HASH160 <20-byte hash> OP_EQUALVERIFY OP_CHECKSIG */
+                uint8_t spk[25];
+                spk[0]  = 0x76; /* OP_DUP          */
+                spk[1]  = 0xa9; /* OP_HASH160      */
+                spk[2]  = 0x14; /* push 20 bytes   */
+                memcpy(spk + 3, waddr->pubkeyhash, sizeof(uint160_t));
+                spk[23] = 0x88; /* OP_EQUALVERIFY  */
+                spk[24] = 0xac; /* OP_CHECKSIG     */
+                dogecoin_spv_client_filteradd(client, spk, sizeof(spk));
+                char addr_str[P2PKHLEN];
+                if (dogecoin_p2pkh_addr_from_hash160(waddr->pubkeyhash, chain, addr_str, sizeof(addr_str))) {
+                    printf("[bip157] watching address: %s\n", addr_str);
+                }
+            }
+            /* Also watch addresses supplied via -a/--address on the CLI. */
+            if (address && address[0] != '\0') {
+                char* addr_copy = strdup(address);
+                char* saveptr = NULL;
+                char* tok = strtok_r(addr_copy, " ", &saveptr);
+                while (tok) {
+                    uint8_t dec[64];
+                    size_t dec_len = dogecoin_base58_decode_check(tok, dec, sizeof(dec));
+                    if (dec_len == 21) { /* 1-byte version + 20-byte hash160 */
+                        uint8_t spk[25];
+                        spk[0]  = 0x76; /* OP_DUP          */
+                        spk[1]  = 0xa9; /* OP_HASH160      */
+                        spk[2]  = 0x14; /* push 20 bytes   */
+                        memcpy(spk + 3, dec + 1, 20);
+                        spk[23] = 0x88; /* OP_EQUALVERIFY  */
+                        spk[24] = 0xac; /* OP_CHECKSIG     */
+                        dogecoin_spv_client_filteradd(client, spk, sizeof(spk));
+                        dogecoin_wallet_add_watchonly_addr(wallet, tok);
+                        printf("[bip157] watching address (cli): %s\n", tok);
+                    }
+                    tok = strtok_r(NULL, " ", &saveptr);
+                }
+                dogecoin_free(addr_copy);
+            }
+            /* Also watch script_pubkeys from previously-tracked UTXOs (hex → raw). */
+            dogecoin_utxo* utxo;
+            dogecoin_utxo* tmp_utxo;
+            HASH_ITER(hh, wallet->utxos, utxo, tmp_utxo) {
+                if (!utxo->script_pubkey[0]) continue;
+                size_t spk_hex_len = strlen(utxo->script_pubkey);
+                size_t spk_raw_len = spk_hex_len / 2;
+                const uint8_t *spk_raw = utils_hex_to_uint8(utxo->script_pubkey);
+                if (!spk_raw) continue;
+                dogecoin_spv_client_filteradd(client, spk_raw, spk_raw_len);
+                printf("[bip157] watching utxo script (%s): %s\n",
+                       utxo->address, utxo->script_pubkey);
+            }
+        }
+
         client->sync_transaction = dogecoin_wallet_check_transaction;
         client->sync_transaction_ctx = wallet;
 #endif
@@ -782,6 +972,11 @@ int main(int argc, char* argv[]) {
         }
 
         dogecoin_free(headersfile);
+
+        /* Load auxiliary hash-lookup DB for filter IBD from genesis.
+         * Use open_for_scan instead of load() to avoid reading 1M+ records
+         * into the in-memory tree — only the file handle is needed for the
+         * sequential block-hash scan done by get_block_hash_at_height(). */
         if (!response) {
             printf("Could not load or create headers database...aborting\n");
 #if WITH_WALLET
@@ -854,7 +1049,15 @@ int main(int argc, char* argv[]) {
 #endif
             }
             printf("done\n");
+
+            /* Rescan any cfilters cached from a prior run before entering the
+             * network runloop — finds matches immediately without waiting for
+             * the cfheaders sync to complete. */
+            if (client->compact_filters_enabled)
+                dogecoin_spv_client_rescan_cached_filters(client);
+
             printf("Discover peers...\n");
+
             dogecoin_spv_client_discover_peers(client, ips);
 
             /* A DNS seed lookup that returns nothing is usually transient, so
