@@ -213,6 +213,9 @@ typedef struct dogecoin_mutex_ {
 #define HDKEYLEN 112
 #define PRIVKEYWIFLEN 53
 #define P2PKHLEN 35
+/* P2SH addresses are 34 chars on mainnet and 35 on testnet, so a buffer that
+   works on both chains needs 36 including the terminator. */
+#define P2SHLEN 36
 #define PRIVKEYHEXLEN DOGECOIN_ECKEY_PKEY_LENGTH * 2 + 1
 #define PUBKEYHEXLEN 67
 #define PUBKEYHASHLEN 41 // bare hash160 hex only, not a scriptPubKey

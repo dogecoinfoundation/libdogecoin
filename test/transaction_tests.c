@@ -1118,3 +1118,49 @@ void test_transaction_large(void)
     free(txhex_large);
     free(tx_work_buf);
 }
+/* An arbitrary redeem script must derive the same P2SH address as the
+   multisig helper does for the script it builds, and must reject anything it
+   cannot pay to. get_p2sh_multisig_address() was the only reachable path to a
+   P2SH address, so a hand-assembled script had none. */
+void test_p2sh_address_from_script()
+{
+    const char* pubkeys[2] = {
+        "02c0ded2bc1f1305fb0faac5e6c03ee3a1924234985427b6167ca569d13df435cf",
+        "0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2"
+    };
+    char ms_addr[P2SHLEN];
+    char redeem_hex[1024];
+    u_assert_int_eq(get_p2sh_multisig_address(pubkeys, 2, 2, false,
+                                              ms_addr, sizeof(ms_addr),
+                                              redeem_hex, sizeof(redeem_hex)), 1);
+
+    /* same script by the generic route must give the same address */
+    char addr[P2SHLEN];
+    u_assert_int_eq(get_p2sh_address_from_script(redeem_hex, false,
+                                                 addr, sizeof(addr)), 1);
+    u_assert_str_eq(addr, ms_addr);
+
+    /* testnet differs from mainnet for the same script */
+    char taddr[P2SHLEN];
+    u_assert_int_eq(get_p2sh_address_from_script(redeem_hex, true,
+                                                 taddr, sizeof(taddr)), 1);
+    u_assert_true(strcmp(taddr, addr) != 0);
+
+    /* a script the multisig helper cannot build: OP_IF <32 bytes> OP_ENDIF OP_1 */
+    const char* custom = "6320000000000000000000000000000000000000000000000000000000000000006851";
+    char caddr[P2SHLEN];
+    u_assert_int_eq(get_p2sh_address_from_script(custom, false, caddr, sizeof(caddr)), 1);
+    u_assert_true(caddr[0] == 'A' || caddr[0] == '9');
+
+    /* rejections: null, empty, odd length, non-hex, oversized, small buffer */
+    u_assert_int_eq(get_p2sh_address_from_script(NULL, false, caddr, sizeof(caddr)), 0);
+    u_assert_int_eq(get_p2sh_address_from_script("", false, caddr, sizeof(caddr)), 0);
+    u_assert_int_eq(get_p2sh_address_from_script("516", false, caddr, sizeof(caddr)), 0);
+    u_assert_int_eq(get_p2sh_address_from_script("51zz", false, caddr, sizeof(caddr)), 0);
+    u_assert_int_eq(get_p2sh_address_from_script(redeem_hex, false, caddr, P2PKHLEN), 0);
+
+    char big[521 * 2 + 1];
+    memset(big, '5', sizeof(big) - 1);
+    big[sizeof(big) - 1] = '\0';
+    u_assert_int_eq(get_p2sh_address_from_script(big, false, caddr, sizeof(caddr)), 0);
+}

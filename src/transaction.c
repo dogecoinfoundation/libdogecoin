@@ -1572,6 +1572,51 @@ int sign_transaction_w_privkey_ex(int  txindex,
  *
  * @return 1 on success, 0 on error (including insufficient buffer capacity).
  */
+/* Derive the P2SH address for an arbitrary redeem script.
+ *
+ * get_p2sh_multisig_address() covers plain M-of-N, which is the only redeem
+ * script a caller could previously reach: dogecoin_script_get_scripthash() and
+ * the script builders live in script.h, which is not installed. A consumer
+ * holding any other redeem script -- a timelocked branch, an escrow, anything
+ * assembled by hand -- had no way to compute the address it pays to.
+ *
+ * Takes the script as hex so no libdogecoin type appears in the signature. */
+int get_p2sh_address_from_script(const char* redeem_script_hex, int is_testnet,
+                                 char* p2sh_addr_out, size_t p2sh_addr_cap)
+{
+    if (!redeem_script_hex || !p2sh_addr_out) return 0;
+    if (p2sh_addr_cap < P2SHLEN) return 0;
+
+    size_t hexlen = strlen(redeem_script_hex);
+    if (hexlen == 0 || (hexlen % 2) != 0) return 0;
+    if (strspn(redeem_script_hex, VALID_HEX_CHARS) != hexlen) return 0;
+
+    /* A P2SH redeem script is pushed as a single stack element, so it cannot
+       exceed MAX_SCRIPT_ELEMENT_SIZE. Reject here rather than return an address
+       for a script that can never be spent. */
+    size_t binlen = hexlen / 2;
+    if (binlen > 520) return 0;
+
+    unsigned char* bin = (unsigned char*)dogecoin_malloc(binlen);
+    size_t outlen = 0;
+    utils_hex_to_bin(redeem_script_hex, bin, hexlen, &outlen);
+    if (outlen != binlen) { dogecoin_free(bin); return 0; }
+
+    cstring* redeem = cstr_new_buf(bin, binlen);
+    dogecoin_free(bin);
+    if (!redeem) return 0;
+
+    uint160_t script_hash;
+    dogecoin_bool ok = dogecoin_script_get_scripthash(redeem, script_hash);
+    cstr_free(redeem, true);
+    if (!ok) return 0;
+
+    const dogecoin_chainparams* chain = is_testnet
+        ? &dogecoin_chainparams_test
+        : &dogecoin_chainparams_main;
+    return dogecoin_p2sh_addr_from_hash160(script_hash, chain, p2sh_addr_out, p2sh_addr_cap) ? 1 : 0;
+}
+
 int get_p2sh_multisig_address(const char** pubkeys_hex, int n, int m, int is_testnet,
                                char* p2sh_addr_out, size_t p2sh_addr_cap,
                                char* redeem_script_hex_out, size_t redeem_script_hex_cap)

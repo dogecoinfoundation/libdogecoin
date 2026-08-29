@@ -601,9 +601,20 @@ int sign_transaction_ex(int txindex, const char* script_pubkey, const char* priv
 /* convenience wrapper: sign a single-key p2pkh tx at (txindex) using (privkey); writes signed hex into (buf) with capacity (buf_cap) */
 int sign_transaction_w_privkey_ex(int txindex, const char* privkey, char* buf, size_t buf_cap);
 
+/* derive the P2SH address an arbitrary redeem script pays to; (redeem_script_hex)
+   is the script as hex, at most 520 bytes once decoded (a P2SH redeem script is
+   pushed as one stack element and cannot exceed that);
+   writes the address into (p2sh_addr_out), which must hold at least P2SHLEN
+   bytes, capacity given by (p2sh_addr_cap);
+   returns 1 on success, 0 on error (bad hex, oversized script, small buffer) */
+int get_p2sh_address_from_script(const char* redeem_script_hex, int is_testnet,
+                                 char* p2sh_addr_out, size_t p2sh_addr_cap);
+
 /* build an M-of-N P2SH multisig address from (n) compressed pubkey hex strings;
-   writes the P2SH address into (p2sh_addr_out) (must hold at least P2PKHLEN bytes,
-   capacity given by (p2sh_addr_cap)) and the redeem script hex into
+   writes the P2SH address into (p2sh_addr_out) (must hold at least P2SHLEN
+   bytes: a mainnet P2SH address is 34 chars but a testnet one is 35, so a
+   P2PKHLEN buffer is refused on testnet, capacity given by (p2sh_addr_cap))
+   and the redeem script hex into
    (redeem_script_hex_out) (must hold at least (n*68+6)*2+1 bytes, capacity given
    by (redeem_script_hex_cap));
    returns 1 on success, 0 on error (including insufficient buffer capacity) */

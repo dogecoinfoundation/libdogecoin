@@ -187,6 +187,19 @@ LIBDOGECOIN_API int dogecoin_tx_sign_ts(dogecoin_tx* tx, struct dogecoin_wallet_
 /* THREAD-SAFE variant - uses internal mutex */
 LIBDOGECOIN_API int dogecoin_tx_finalize_ts(dogecoin_tx* tx);
 
+/* P2SH address helpers. Declared here as well as in libdogecoin.h so in-tree
+   callers that include this header rather than the public one get a prototype;
+   without it clang and the optee build reject the call outright while gcc only
+   warns. */
+LIBDOGECOIN_API int get_p2sh_multisig_address(const char** pubkeys_hex, int n, int m,
+                                              int is_testnet,
+                                              char* p2sh_addr_out, size_t p2sh_addr_cap,
+                                              char* redeem_script_hex_out,
+                                              size_t redeem_script_hex_cap);
+LIBDOGECOIN_API int get_p2sh_address_from_script(const char* redeem_script_hex,
+                                                 int is_testnet,
+                                                 char* p2sh_addr_out, size_t p2sh_addr_cap);
+
 LIBDOGECOIN_END_DECL
 
 #endif // __LIBDOGECOIN_TRANSACTION_H__

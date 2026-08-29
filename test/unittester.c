@@ -92,6 +92,7 @@ extern void test_eckey_idx_not_reused();
 extern void test_tpm();
 extern void test_psbt();
 extern void test_transaction();
+extern void test_p2sh_address_from_script();
 extern void test_transaction_ts_contexts();
 extern void test_transaction_ts_wrappers();
 #if !defined(_WIN32)
@@ -248,6 +249,7 @@ int main()
 #endif
     u_run_test(test_psbt);
     u_run_test(test_transaction);
+    u_run_test(test_p2sh_address_from_script);
     u_run_test(test_transaction_ts_contexts);
 #ifndef USE_OPTEE
     u_run_test(test_transaction_ts_wrappers);
