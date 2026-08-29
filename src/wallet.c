@@ -1509,6 +1509,41 @@ dogecoin_wallet_addr* dogecoin_p2pkh_address_to_wallet(const char* address_in, d
     return NULL;
 }
 
+dogecoin_bool dogecoin_wallet_add_watchonly_addr(dogecoin_wallet* wallet, const char* address_in) {
+    if (!wallet || !address_in) return false;
+
+    /* skip if already present */
+    vector_t* addrs = vector_new(1, free);
+    dogecoin_wallet_get_addresses(wallet, addrs);
+    dogecoin_bool match = false;
+    unsigned int i;
+    for (i = 0; i < addrs->len; i++) {
+        if (strncmp((char*)vector_idx(addrs, i), address_in, P2PKHLEN - 1) == 0) {
+            match = true;
+            break;
+        }
+    }
+    vector_free(addrs, true);
+    if (match) return true;
+
+    char* pubkey_hash = dogecoin_address_to_pubkey_hash((char*)address_in);
+    if (!pubkey_hash) return false;
+
+    dogecoin_wallet_addr* addr = dogecoin_wallet_addr_new();
+    memcpy_safe(addr->pubkeyhash, utils_hex_to_uint8(pubkey_hash), 20);
+    addr->childindex = wallet->next_childindex;
+    dogecoin_btree_tsearch(addr, &wallet->waddr_rbtree, dogecoin_wallet_addr_compare);
+    vector_add(wallet->waddr_vector, addr);
+    cstring* record = cstr_new_sz(256);
+    dogecoin_wallet_addr_serialize(record, wallet->chain, addr);
+    if (!wallet_write_record(wallet, record, WALLET_DB_REC_TYPE_ADDR))
+        fprintf(stderr, "wallet: failed to write watch-only address %s\n", address_in);
+    cstr_free(record, true);
+    dogecoin_file_commit(wallet->dbfile);
+    wallet->next_childindex++;
+    return true;
+}
+
 void dogecoin_wallet_get_addresses(dogecoin_wallet* wallet, vector_t* addr_out)
 {
     unsigned int i;
@@ -1875,6 +1910,7 @@ void dogecoin_wallet_check_transaction(void *ctx, dogecoin_tx *tx, unsigned int 
         uint256_t blockhash;
         dogecoin_block_header_hash(&pindex->header, blockhash);
         printf("Found new relevant transaction: %s (height: %u)\n", txid_hex, pindex->height);
+        fflush(stdout);
         dogecoin_hash_set(wtx->blockhash, blockhash);
         wtx->height = pindex->height;
         dogecoin_tx_copy(wtx->tx, tx);

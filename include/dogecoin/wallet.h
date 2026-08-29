@@ -202,6 +202,7 @@ LIBDOGECOIN_API int dogecoin_wallet_add_hd_account_ts(dogecoin_wallet* wallet, u
 LIBDOGECOIN_API int dogecoin_wallet_get_address_ts(dogecoin_wallet* wallet, char* address, size_t len, uint32_t account, uint32_t index, dogecoin_bool change);
 LIBDOGECOIN_API dogecoin_bool dogecoin_p2pkh_address_to_wallet_pubkeyhash(const char* address_in, dogecoin_wallet_addr* addr, dogecoin_wallet* wallet);
 LIBDOGECOIN_API dogecoin_wallet_addr* dogecoin_p2pkh_address_to_wallet(const char* address_in, dogecoin_wallet* wallet);
+LIBDOGECOIN_API dogecoin_bool dogecoin_wallet_add_watchonly_addr(dogecoin_wallet* wallet, const char* address_in);
 
 /** writes all available addresses (P2PKH) to the addr_out vector_t */
 LIBDOGECOIN_API void dogecoin_wallet_get_addresses(dogecoin_wallet* wallet, vector_t* addr_out);

@@ -31,6 +31,7 @@
 
 #include <dogecoin/dogecoin.h>
 #include <dogecoin/blockchain.h>
+#include <dogecoin/compact_filter.h>
 #include <dogecoin/headersdb.h>
 #include <dogecoin/net.h>
 #include <dogecoin/tx.h>
@@ -42,6 +43,7 @@ LIBDOGECOIN_BEGIN_DECL
 enum SPV_CLIENT_STATE {
     SPV_HEADER_SYNC_FLAG        = (1 << 0),
     SPV_FULLBLOCK_SYNC_FLAG     = (1 << 1),
+    SPV_CFILTER_SYNC_FLAG       = (1 << 2),
 };
 
 typedef struct spv_block_sample_
@@ -167,6 +169,35 @@ typedef struct dogecoin_spv_client_
     uint256_t filtered_history_last_rerequest_txid; /* dedupe repeated tail re-requests for the same matched tx */
     int32_t  filtered_history_last_rerequest_height;
 
+    /* Comma-separated "host:port" strings supplied by the caller via
+     * dogecoin_spv_client_discover_peers().  When non-NULL, the reconnect
+     * callback reuses these peers instead of querying DNS seeds, so the
+     * client stays connected to the explicitly-named hosts only. */
+    char *peer_ips;
+
+    /* BIP157 genesis-filter support: optional read-only secondary headers DB
+     * used only for block-hash lookup at early heights when the primary DB is
+     * checkpoint-based.  Populated via --filter-hash-db CLI option. */
+    void                                *aux_hash_db_ctx; /**< Context for aux block-hash lookup DB */
+    const dogecoin_headers_db_interface *aux_hash_db;     /**< Interface for aux block-hash lookup DB */
+
+    /* When non-zero, overrides the cfheaders start height (auto default:
+     * chainbottom for checkpoint-based sync, 1 for genesis sync). */
+    uint32_t cf_start_height;
+
+    /* BIP157: compact filter sync state */
+    dogecoin_bool compact_filters_enabled; /**< Whether compact filter sync is active */
+    dogecoin_compact_filter_state *cfilter_state; /**< BIP157 per-client compact filter state */
+    struct dogecoin_cfheaders_db_ *cfheaders_db;  /**< Persistent storage for BIP157 filter headers */
+    struct dogecoin_cfilters_db_  *cfilters_db;   /**< Persistent storage for BIP157 filter data */
+    char *cfheaders_path;  /**< Override path for cfheaders.dat (NULL = default datadir) */
+    char *cfilters_path;   /**< Override path for cfilters.dat (NULL = default datadir) */
+
+    /* BIP158 filter header computation during full block sync */
+    uint256_t cf_prev_filter_header;   /**< Running filter header chain for BIP158 */
+    uint32_t  cf_computed_height;      /**< Last height for which a filter header was computed */
+    dogecoin_bool cf_export_enabled;   /**< Log filter header checkpoints during sync */
+
     /* callbacks */
     /* ========= */
     void (*header_connected)(struct dogecoin_spv_client_ *client);
@@ -223,6 +254,20 @@ LIBDOGECOIN_API dogecoin_bool dogecoin_spv_client_filteradd(
     uint32_t data_len);
 
 LIBDOGECOIN_API dogecoin_bool dogecoin_spv_client_filterclear(dogecoin_spv_client* client);
+
+/* BIP157: enable or disable compact filter sync for this client */
+LIBDOGECOIN_API void dogecoin_spv_enable_compact_filters(dogecoin_spv_client *client, dogecoin_bool enable);
+
+/* BIP157: rescan all cached cfilters in cfilters.dat against watched scripts.
+ * Call after dogecoin_spv_client_filteradd and before dogecoin_spv_client_runloop
+ * to check locally-stored filters immediately without waiting for cfheaders sync. */
+LIBDOGECOIN_API void dogecoin_spv_client_rescan_cached_filters(dogecoin_spv_client *client);
+
+
+/* BIP157: send getcfcheckpt, getcfheaders, getcfilters to a peer */
+LIBDOGECOIN_API dogecoin_bool dogecoin_spv_request_cfcheckpt(dogecoin_spv_client *client, dogecoin_node *node);
+LIBDOGECOIN_API dogecoin_bool dogecoin_spv_request_cfheaders(dogecoin_spv_client *client, dogecoin_node *node, uint32_t start_height, const uint256_t stop_hash);
+LIBDOGECOIN_API dogecoin_bool dogecoin_spv_request_cfilters(dogecoin_spv_client *client, dogecoin_node *node, uint32_t start_height, const uint256_t stop_hash);
 
 LIBDOGECOIN_END_DECL
 

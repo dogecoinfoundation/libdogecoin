@@ -57,6 +57,11 @@ typedef struct dogecoin_headers_db_
     dogecoin_blockindex *chainbottom;
     dogecoin_bool batch_write;   /**< Suppress per-record fdatasync; caller must commit after */
     dogecoin_bool skip_pow;      /**< Skip scrypt PoW verify (for checkpoint-anchored bulk loads) */
+    /* Sequential scan state for dogecoin_headers_db_get_block_hash_at_height.
+     * cfheaders batches request increasing heights; resuming from the last
+     * found record avoids O(N²) re-reads over a 6.2M-block file. */
+    long     scan_resume_pos;    /**< File offset after last successful scan record */
+    uint32_t scan_resume_height; /**< Block height at scan_resume_pos */
 } dogecoin_headers_db;
 
 dogecoin_headers_db *dogecoin_headers_db_new(const dogecoin_chainparams* chainparams, dogecoin_bool inmem_only);
@@ -69,6 +74,22 @@ dogecoin_blockindex * dogecoin_headersdb_getchaintip(dogecoin_headers_db* db);
 dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db);
 dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db);
 void dogecoin_headersdb_set_checkpoint_start(dogecoin_headers_db* db, uint256_t hash, uint32_t height, arith_uint256 chainwork);
+
+/**
+ * @brief Find the block hash stored at a specific height in the on-disk header file.
+ *
+ * Scans the headers.db file from its beginning, reading fixed-size records until
+ * the one with @p target_height is found.  Falls back to walking the in-memory
+ * prev-chain first for blocks near the chain tip (no file I/O needed there).
+ *
+ * @param db          The headers database (file handle must be open).
+ * @param target_height  Block height to look up.
+ * @param hash_out    Receives the 32-byte block hash on success.
+ * @return true if found and @p hash_out is populated.
+ */
+dogecoin_bool dogecoin_headers_db_open_for_scan(dogecoin_headers_db *db, const char *filename);
+dogecoin_bool dogecoin_headers_db_get_block_hash_at_height(dogecoin_headers_db *db, uint32_t target_height, uint256_t hash_out);
+dogecoin_bool dogecoin_headers_db_get_block_hash_at_height_seq(dogecoin_headers_db *db, uint32_t target_height, uint256_t hash_out);
 
 /* Defined in headersdb_file.c using typed trampolines (avoids the
  * function-pointer-cast UB that -fsanitize=function flags). */

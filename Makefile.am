@@ -530,6 +530,13 @@ fuzz_fuzz_compact_block_LDADD = libdogecoin.la $(ASM_LIB_FILES)
 fuzz_fuzz_compact_block_CFLAGS = $(AM_CFLAGS) -fsanitize=fuzzer,address,undefined
 fuzz_fuzz_compact_block_LDFLAGS = -fsanitize=fuzzer,address,undefined -static
 
+noinst_PROGRAMS += fuzz/fuzz_compact_filter
+fuzz_fuzz_compact_filter_SOURCES = fuzz/fuzz_compact_filter.c
+fuzz_fuzz_compact_filter_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/include
+fuzz_fuzz_compact_filter_LDADD = libdogecoin.la $(ASM_LIB_FILES)
+fuzz_fuzz_compact_filter_CFLAGS = $(AM_CFLAGS) -fsanitize=fuzzer,address,undefined
+fuzz_fuzz_compact_filter_LDFLAGS = -fsanitize=fuzzer,address,undefined -static
+
 noinst_PROGRAMS += fuzz/fuzz_block
 fuzz_fuzz_block_SOURCES = fuzz/fuzz_block.c
 fuzz_fuzz_block_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/include
@@ -542,6 +549,13 @@ fuzz_fuzz_block_LDFLAGS = -fsanitize=fuzzer,address,undefined -static
 # Gate the harness on the same condition so `make fuzz` still builds the
 # net-independent targets when networking is disabled.
 if WITH_NET
+noinst_PROGRAMS += fuzz/fuzz_cfdb
+fuzz_fuzz_cfdb_SOURCES = fuzz/fuzz_cfdb.c
+fuzz_fuzz_cfdb_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/include
+fuzz_fuzz_cfdb_LDADD = libdogecoin.la $(ASM_LIB_FILES)
+fuzz_fuzz_cfdb_CFLAGS = $(AM_CFLAGS) -fsanitize=fuzzer,address,undefined
+fuzz_fuzz_cfdb_LDFLAGS = -fsanitize=fuzzer,address,undefined -static
+
 noinst_PROGRAMS += fuzz/fuzz_protocol
 fuzz_fuzz_protocol_SOURCES = fuzz/fuzz_protocol.c
 fuzz_fuzz_protocol_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/include
@@ -586,9 +600,9 @@ fuzz-corpus: fuzz/seed_logdb_corpus
 	./fuzz/seed_logdb_corpus $(CORPUS)
 
 
-FUZZ_TARGETS = fuzz/fuzz_tx fuzz/fuzz_block fuzz/fuzz_wtx fuzz/fuzz_logdb fuzz/fuzz_psbt fuzz/fuzz_compact_block
+FUZZ_TARGETS = fuzz/fuzz_tx fuzz/fuzz_block fuzz/fuzz_wtx fuzz/fuzz_logdb fuzz/fuzz_psbt fuzz/fuzz_compact_block fuzz/fuzz_compact_filter
 if WITH_NET
-FUZZ_TARGETS += fuzz/fuzz_protocol
+FUZZ_TARGETS += fuzz/fuzz_protocol fuzz/fuzz_cfdb
 endif
 
 fuzz: $(FUZZ_TARGETS)

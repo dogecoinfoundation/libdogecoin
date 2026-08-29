@@ -214,21 +214,18 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
     size_t connected_headers_count = 0;
     if (db->headers_tree_file && !create)
     {
-        printf("Loading headers from disk, this may take several minutes...\n");
+        printf("Loading headers from disk...\n");
         while (!feof(db->headers_tree_file))
         {
-            // print progress
-            if (connected_headers_count % 1000 == 0)
+            if (connected_headers_count % 100000 == 0 && connected_headers_count > 0)
             {
-                printf("\r%ld headers loaded", connected_headers_count);
+                printf("\r%zu headers loaded", connected_headers_count);
                 fflush(stdout);
             }
 
             uint8_t buf_all[SPV_HEADERS_FILE_REC_LEN];
             if (fread(buf_all, sizeof(buf_all), 1, db->headers_tree_file) == 1) {
                 struct const_buffer cbuf_all = {buf_all, sizeof(buf_all)};
-
-                //load all
 
                 uint256_t hash;
                 uint32_t height;
@@ -270,8 +267,44 @@ dogecoin_bool dogecoin_headers_db_load(dogecoin_headers_db* db, const char *file
             }
         }
     }
-    printf("\nConnected %ld headers, now at height: %" PRIu32 "\n",  connected_headers_count, db->chaintip->height);
+    printf("\nConnected %zu headers, now at height: %" PRIu32 "\n", connected_headers_count, db->chaintip->height);
     return (db->headers_tree_file != NULL);
+}
+
+/**
+ * Open an existing headers DB file for sequential hash lookup only.
+ *
+ * Unlike dogecoin_headers_db_load(), this function does NOT read any block
+ * records or build the in-memory tree.  It simply opens the file, verifies
+ * the 8-byte magic+version header, and leaves the file handle ready for
+ * dogecoin_headers_db_get_block_hash_at_height().  Use this for the aux
+ * hash-lookup DB in BIP157 genesis filter IBD — no tree needed.
+ */
+dogecoin_bool dogecoin_headers_db_open_for_scan(dogecoin_headers_db *db, const char *filename)
+{
+    if (!db || !filename) return false;
+
+    db->headers_tree_file = fopen(filename, "rb");
+    if (!db->headers_tree_file) {
+        fprintf(stderr, "headers_db: cannot open '%s' for scan: %s\n", filename, strerror(errno));
+        return false;
+    }
+
+    uint8_t buf[sizeof(file_hdr_magic) + sizeof(current_version)];
+    if (fread(buf, sizeof(buf), 1, db->headers_tree_file) != 1 ||
+        memcmp(buf, file_hdr_magic, sizeof(file_hdr_magic)) != 0) {
+        fprintf(stderr, "headers_db: bad magic in '%s'\n", filename);
+        fclose(db->headers_tree_file);
+        db->headers_tree_file = NULL;
+        return false;
+    }
+    if (le32toh(*(uint32_t *)(buf + sizeof(file_hdr_magic))) > current_version) {
+        fprintf(stderr, "headers_db: unsupported version in '%s'\n", filename);
+        fclose(db->headers_tree_file);
+        db->headers_tree_file = NULL;
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -573,6 +606,120 @@ dogecoin_bool dogecoin_headersdb_disconnect_tip(dogecoin_headers_db* db) {
  */
 dogecoin_bool dogecoin_headersdb_has_checkpoint_start(dogecoin_headers_db* db) {
     return (db->chainbottom->height != 0);
+}
+
+/**
+ * Find a block hash by height, first in the in-memory prev chain and then by
+ * scanning the on-disk header file.  Used by the BIP157 cfheaders batcher to
+ * compute a valid stop_hash without needing a height-indexed block index.
+ */
+dogecoin_bool dogecoin_headers_db_get_block_hash_at_height(dogecoin_headers_db *db, uint32_t target_height, uint256_t hash_out)
+{
+    if (!db) return false;
+
+    /* Fast path: walk the in-memory prev chain (works for the last max_hdr_in_mem entries) */
+    dogecoin_blockindex *bi = db->chaintip;
+    while (bi && (uint32_t)bi->height > target_height)
+        bi = bi->prev;
+    if (bi && (uint32_t)bi->height == target_height) {
+        memcpy_safe(hash_out, bi->hash, sizeof(uint256_t));
+        return true;
+    }
+
+    /* Slow path: scan the on-disk file.
+     * Records are written in ascending height order (one getheaders batch at a time).
+     * Record layout: hash(32) + height(4 LE) + chainwork(32) + header(80) = 148 bytes.
+     *
+     * cfheaders batches request heights in ascending order (2000, 4000, ...).
+     * Scanning from offset 0 each time would be O(N²) over a 6M-block file.
+     * Instead, resume from the last scan position when target_height is beyond
+     * what was found before; reset to the beginning only when scanning backwards. */
+    if (!db->headers_tree_file) return false;
+
+    long saved_pos = ftell(db->headers_tree_file);
+
+    long start_pos = SPV_HEADERS_FILE_HDR_LEN;
+    if (db->scan_resume_height > 0 && target_height >= db->scan_resume_height)
+        start_pos = db->scan_resume_pos; /* continue forward from last find */
+
+    fseek(db->headers_tree_file, start_pos, SEEK_SET);
+
+    uint8_t rec[SPV_HEADERS_FILE_REC_LEN];
+    dogecoin_bool found = false;
+    while (fread(rec, SPV_HEADERS_FILE_REC_LEN, 1, db->headers_tree_file) == 1) {
+        uint32_t h;
+        memcpy(&h, rec + 32, 4); /* height field is at offset 32 (after the hash) */
+        h = le32toh(h);
+        if (h == target_height) {
+            memcpy_safe(hash_out, rec, sizeof(uint256_t));
+            /* Remember this position so the next forward lookup can skip ahead. */
+            /* Start of the matched record, not the end of it. Storing the end
+               made a repeat lookup of the same height resume past its own
+               record -- the test is target_height >= scan_resume_height -- so
+               it scanned to EOF and reported not found. The second lookup of
+               any height failed, which is what drove the getcfilters stop-hash
+               fallback and the oversized request behind it. */
+            db->scan_resume_pos    = ftell(db->headers_tree_file) - SPV_HEADERS_FILE_REC_LEN;
+            db->scan_resume_height = h;
+            found = true;
+            break;
+        }
+    }
+
+    fseek(db->headers_tree_file, saved_pos, SEEK_SET);
+    return found;
+}
+
+/* Sequential variant used during the cfilter rescan: like
+ * dogecoin_headers_db_get_block_hash_at_height but never restores the file
+ * position.  The caller (spv_rescan_cb) visits heights in strictly ascending
+ * order so the file pointer advances forward only, keeping I/O O(N) instead
+ * of O(N²) that the save/restore pattern would produce. */
+dogecoin_bool dogecoin_headers_db_get_block_hash_at_height_seq(dogecoin_headers_db *db, uint32_t target_height, uint256_t hash_out)
+{
+    if (!db) return false;
+
+    /* Fast path: in-memory prev chain — only useful for heights near the tip.
+     * Skip if target is more than max_hdr_in_mem below the tip to avoid
+     * walking the full 1440-entry chain 6M+ times during a bulk rescan. */
+    if (db->chaintip &&
+        (uint32_t)db->chaintip->height <= target_height + db->max_hdr_in_mem) {
+        dogecoin_blockindex *bi = db->chaintip;
+        while (bi && (uint32_t)bi->height > target_height)
+            bi = bi->prev;
+        if (bi && (uint32_t)bi->height == target_height) {
+            memcpy_safe(hash_out, bi->hash, sizeof(uint256_t));
+            return true;
+        }
+    }
+
+    if (!db->headers_tree_file) return false;
+
+    long start_pos = SPV_HEADERS_FILE_HDR_LEN;
+    if (db->scan_resume_height > 0 && target_height >= db->scan_resume_height)
+        start_pos = db->scan_resume_pos;
+
+    fseek(db->headers_tree_file, start_pos, SEEK_SET);
+
+    uint8_t rec[SPV_HEADERS_FILE_REC_LEN];
+    while (fread(rec, SPV_HEADERS_FILE_REC_LEN, 1, db->headers_tree_file) == 1) {
+        uint32_t h;
+        memcpy(&h, rec + 32, 4);
+        h = le32toh(h);
+        if (h == target_height) {
+            memcpy_safe(hash_out, rec, sizeof(uint256_t));
+            /* Start of the matched record, not the end of it. Storing the end
+               made a repeat lookup of the same height resume past its own
+               record -- the test is target_height >= scan_resume_height -- so
+               it scanned to EOF and reported not found. The second lookup of
+               any height failed, which is what drove the getcfilters stop-hash
+               fallback and the oversized request behind it. */
+            db->scan_resume_pos    = ftell(db->headers_tree_file) - SPV_HEADERS_FILE_REC_LEN;
+            db->scan_resume_height = h;
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
