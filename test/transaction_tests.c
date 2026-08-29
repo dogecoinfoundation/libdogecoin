@@ -1118,3 +1118,61 @@ void test_transaction_large(void)
     free(txhex_large);
     free(tx_work_buf);
 }
+/* Every symbol the public header declares must exist in the shipped archive.
+   dogecoin_hash and dogecoin_dblhash are LIBDOGECOIN_API static inline, which
+   is a contradiction: static wins, no symbol is emitted, and declaring them
+   would compile for a consumer and fail at link. They are excluded for that
+   reason; this pins the ones that are real. */
+void test_consumer_surface_links(void)
+{
+    /* memory: allocate and free through the library's mapper */
+    void *p = dogecoin_malloc(32);
+    u_assert_not_null(p);
+    memset(p, 0xAB, 32);
+    p = dogecoin_realloc(p, 64);
+    u_assert_not_null(p);
+    u_assert_int_eq(((unsigned char *)p)[0], 0xAB);
+    dogecoin_free(p);
+
+    /* pubkey helpers */
+    dogecoin_key key;
+    dogecoin_privkey_init(&key);
+    dogecoin_privkey_gen(&key);
+    dogecoin_pubkey pub;
+    dogecoin_pubkey_init(&pub);
+    dogecoin_pubkey_from_key(&key, &pub);
+
+    uint160_t h160;
+    dogecoin_pubkey_get_hash160(&pub, h160);
+    int nonzero = 0;
+    for (size_t i = 0; i < sizeof(uint160_t); i++) if (h160[i]) nonzero = 1;
+    u_assert_int_eq(nonzero, 1);
+
+    char pubhex[PUBKEYHEXLEN];
+    size_t hexlen = sizeof(pubhex);
+    u_assert_true(dogecoin_pubkey_get_hex(&pub, pubhex, &hexlen));
+    u_assert_int_eq((int)strlen(pubhex), DOGECOIN_ECKEY_COMPRESSED_LENGTH * 2);
+
+    /* sizeout left at zero must fail, which is why the header now says so */
+    char pubhex2[PUBKEYHEXLEN];
+    size_t zero = 0;
+    u_assert_true(dogecoin_pubkey_get_hex(&pub, pubhex2, &zero) == false);
+
+    /* hex helpers */
+    char txid[65] = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
+    char copy[65];
+    memcpy(copy, txid, sizeof(txid));
+    utils_reverse_hex(copy, 64);
+    u_assert_true(strcmp(copy, txid) != 0);
+    utils_reverse_hex(copy, 64);
+    u_assert_str_eq(copy, txid);
+
+    uint8_t out[32];
+    utils_uint256_sethex(txid, out);
+    /* sethex reverses, so the first byte is the last of the display form */
+    u_assert_int_eq(out[0], 0x20);
+    u_assert_int_eq(out[31], 0x01);
+
+    dogecoin_privkey_cleanse(&key);
+    dogecoin_pubkey_cleanse(&pub);
+}

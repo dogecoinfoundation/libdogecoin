@@ -232,6 +232,8 @@ dogecoin_bool addresses_from_pubkey(const dogecoin_chainparams* chain, const cha
 int getAddressFromPubkey(const char pubkey_hex[PUBKEYHEXLEN], const dogecoin_bool is_testnet, char p2pkh_address[P2PKHLEN]);
 
 /* generate the hex publickey from a given WIF private key */
+/* (sizeout) is in/out: set it to the capacity of (pubkey_hex) before calling.
+   Left at zero these return failure, since the hex conversion has no room. */
 dogecoin_bool pubkey_from_privatekey(const dogecoin_chainparams* chain, const char privkey_wif[PRIVKEYWIFLEN], char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
 int getPubkeyFromPrivkey(const char privkey_wif[PRIVKEYWIFLEN], const dogecoin_bool is_testnet, char pubkey_hex[PUBKEYHEXLEN], size_t* sizeout);
 
@@ -393,6 +395,11 @@ dogecoin_bool deriveBIP44ExtendedPublicKey(
 /* utilities */
 uint8_t* utils_hex_to_uint8(const char* str);
 char* utils_uint8_to_hex(const uint8_t* bin, size_t l);
+/* reverse a hex string in place, (len) is the string length in characters;
+   converts between display and internal byte order for txids and hashes */
+void utils_reverse_hex(char* h, size_t len);
+/* parse a 64-character hex hash into 32 bytes, reversing to internal order */
+void utils_uint256_sethex(char* psz, uint8_t* out);
 void utils_hex_to_bin(const char* str, unsigned char* out, size_t inLen, size_t* outLen);
 void utils_bin_to_hex(const unsigned char* bin_in, size_t inlen, char* hex_out);
 char* getpass(const char *prompt);
@@ -659,6 +666,10 @@ uint64_t coins_to_koinu_str(char* coins);
 --------------------------------------------------------------------------
 */
 char* dogecoin_char_vla(size_t size);
+/* allocate memory through the library's mapper; pair with dogecoin_free */
+void* dogecoin_malloc(size_t size);
+/* resize memory allocated through the library's mapper */
+void* dogecoin_realloc(void* ptr, size_t size);
 /* allocate zero-initialized memory for count elements of size bytes each */
 void* dogecoin_calloc(size_t count, size_t size);
 /* allocate an unsigned char variable-length array */
@@ -684,6 +695,14 @@ dogecoin_bool dogecoin_pubkey_is_valid(const dogecoin_pubkey* pubkey);
 void dogecoin_pubkey_cleanse(dogecoin_pubkey* pubkey);
 /* derive a public key from a private key */
 void dogecoin_pubkey_from_key(const dogecoin_key* privkey, dogecoin_pubkey* pubkey_inout);
+
+/* hash160 of a public key, for building scripts that reference it by hash */
+void dogecoin_pubkey_get_hash160(const dogecoin_pubkey* pubkey, uint160_t hash160);
+
+/* hex form of a public key; (strsize) is in/out: set it to the capacity of
+   (str) before calling, it is updated to the length written */
+dogecoin_bool dogecoin_pubkey_get_hex(const dogecoin_pubkey* pubkey, char* str, size_t* strsize);
+
 /* sign a 32-byte hash and return a 64-byte compact signature with recovery id (fixed compression) */
 dogecoin_bool dogecoin_key_sign_hash_compact_recoverable_fcomp(const dogecoin_key* privkey, const uint256_t hash, unsigned char* sigout, size_t* outlen, int* recid);
 /* recover a public key from a compact signature and recovery id */
