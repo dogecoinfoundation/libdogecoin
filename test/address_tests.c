@@ -351,6 +351,24 @@ void test_address()
     res = getDerivedHDAddressFromMnemonic(0, 0, BIP44_CHANGE_EXTERNAL, seedphrase, NULL, p2pkh_pubkey_main, false);
     u_assert_str_eq(p2pkh_pubkey_main, "DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT");
 
+    /* chain_from_b58_prefix() against the version byte rather than the first
+       character. regtest's 0x6f encodes to 'm' for a low hash160 and 'n' for a
+       high one, while testnet's 0x71 is only ever 'n', so the character alone
+       cannot tell a high regtest address from a testnet one. */
+    u_assert_str_eq(chain_from_b58_prefix(
+        "mfWxJ45yp2SFn7UciZyNpvDKrzbhyfKrY8")->chainname, "regtest");
+    u_assert_str_eq(chain_from_b58_prefix(
+        "n4rZHAPGXCu8bYchjzJhK3V7VVreascJxe")->chainname, "regtest");
+    u_assert_str_eq(chain_from_b58_prefix(
+        "nUCAGGgZEPN1QyknmQe1oAku817bQAFKFt")->chainname, "testnet3");
+    u_assert_str_eq(chain_from_b58_prefix(
+        "nsXmFNyqwZptEQtsnpyLHJ2gkWNXz5V95u")->chainname, "testnet3");
+    u_assert_str_eq(chain_from_b58_prefix(
+        "DTdKu8YgcxoXyjFCDtCeKimaZzsK27rcwT")->chainname, "main");
+    /* a corrupt checksum cannot decode, so it keeps the old answer */
+    u_assert_str_eq(chain_from_b58_prefix(
+        "n4rZHAPGXCu8bYchjzJhK3V7VVreascJxf")->chainname, "testnet3");
+
     /*free up VLAs*/
     free(masterkey_main);
     free(masterkey_test);

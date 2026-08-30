@@ -26,6 +26,7 @@
 
  */
 
+#include <dogecoin/base58.h>
 #include <dogecoin/chainparams.h>
 #include <dogecoin/utils.h>
 
@@ -235,9 +236,20 @@ const dogecoin_chainparams* chain_from_b58_prefix(const char* address) {
         case '6':
             count++;
             break;
-        case 'n':
+        case 'n': {
+            /* Ambiguous by construction. Regtest's 0x6f encodes to 'm' or 'n'
+               depending on the hash160, and testnet's 0x71 is only ever 'n', so
+               an 'n' address is either one and the character cannot say which.
+               Read the version byte, which can. */
+            uint8_t decoded[64];
+            if (dogecoin_base58_decode_check(address, decoded, sizeof(decoded)) == 25 &&
+                decoded[0] == dogecoin_chainparams_regtest.b58prefix_pubkey_address) {
+                return &dogecoin_chainparams_regtest;
+            }
             return &dogecoin_chainparams_test;
+        }
         case 'm':
+            /* 0x71 never reaches 'm', so this one is unambiguous */
             return &dogecoin_chainparams_regtest;
     }
     return count ? &dogecoin_chainparams_main : &dogecoin_chainparams_test;
