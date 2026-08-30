@@ -289,6 +289,7 @@ tests_SOURCES = \
     test/cf_checkpoints_tests.c \
     test/chacha20_tests.c \
     test/chainparams_abi_tests.c \
+    test/sighash_surface_tests.c \
     test/checkpoints_tests.c \
     test/context_tests.c \
     test/cstr_tests.c \

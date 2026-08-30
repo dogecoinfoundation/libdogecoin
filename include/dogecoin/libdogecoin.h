@@ -690,6 +690,9 @@ dogecoin_bool dogecoin_key_sign_hash_compact_recoverable_fcomp(const dogecoin_ke
 dogecoin_bool dogecoin_key_recover_pubkey(const unsigned char* sig, const uint256_t hash, int recid, dogecoin_pubkey* pubkey);
 /* verify a compact encoded signature with given pubkey and return true if valid */
 dogecoin_bool dogecoin_pubkey_verify_sigcmp(const dogecoin_pubkey* pubkey, const uint256_t hash, unsigned char* sigcmp);
+/* verify a DER encoded signature with given pubkey and return true if valid.
+   (len) excludes the trailing hashtype byte that a scriptSig signature carries. */
+dogecoin_bool dogecoin_pubkey_verify_sig(const dogecoin_pubkey* pubkey, const uint256_t hash, unsigned char* sigder, size_t len);
 /* derive a p2pkh address from a public key */
 dogecoin_bool dogecoin_pubkey_getaddr_p2pkh(const dogecoin_pubkey* pubkey, const dogecoin_chainparams* chain, char* addrout);
 
@@ -923,6 +926,25 @@ void dogecoin_tx_copy(dogecoin_tx* dest, const dogecoin_tx* src);
 int dogecoin_tx_deserialize(const unsigned char* tx_serialized, size_t inlen, dogecoin_tx* tx, size_t* consumed_length);
 /* compute transaction hash */
 void dogecoin_tx_hash(const dogecoin_tx* tx, uint256_t hashout);
+/* signature hash types, for the hashtype argument below. guarded because
+   script.h declares the same enum and a consumer may reach both. */
+#ifndef DOGECOIN_SIGHASH_TYPES_DEFINED
+#define DOGECOIN_SIGHASH_TYPES_DEFINED
+enum {
+    SIGHASH_ALL = 1,
+    SIGHASH_NONE = 2,
+    SIGHASH_SINGLE = 3,
+    SIGHASH_ANYONECANPAY = 0x80,
+};
+#endif
+/* compute the signature hash for input (in_num) with (fromPubKey) as the script
+   code, which is the redeem script for a p2sh input. this is the digest a
+   signature on that input covers, so it is what a receiving party verifies
+   against with dogecoin_pubkey_verify_sig(). build the cstring with
+   cstr_new_buf() from <dogecoin/cstr.h> and release it with cstr_free(). */
+dogecoin_bool dogecoin_tx_sighash(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint256_t hash);
+/* the same digest as a plain 32-byte buffer */
+dogecoin_bool dogecoin_tx_sighash32(const dogecoin_tx* tx_to, const cstring* fromPubKey, size_t in_num, int hashtype, uint8_t out32[32]);
 /* return whether transaction is coinbase */
 dogecoin_bool dogecoin_tx_is_coinbase(dogecoin_tx* tx);
 /* add a p2pkh output for an address */

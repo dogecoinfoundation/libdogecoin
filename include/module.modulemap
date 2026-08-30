@@ -7,5 +7,11 @@ module clibdogecoin {
     // This only contains a const char array, no typedef conflicts
     header "bip39/english.h"
 
+    // cstring is the buffer dogecoin_tx_sighash() takes its script code in.
+    // libdogecoin.h only forward declares it, so without this a caller can name
+    // the type but cannot build one. The struct is tagged the same in both, so
+    // the typedefs agree.
+    header "dogecoin/cstr.h"
+
     export *
 }

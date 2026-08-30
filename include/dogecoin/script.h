@@ -43,12 +43,15 @@ enum dogecoin_sig_version {
 };
 
 /** Signature hash types/flags */
+#ifndef DOGECOIN_SIGHASH_TYPES_DEFINED
+#define DOGECOIN_SIGHASH_TYPES_DEFINED
 enum {
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
 };
+#endif
 
 /** Script opcodes */
 enum opcodetype {

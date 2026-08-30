@@ -54,6 +54,7 @@ extern void test_compact_block();
 extern void test_buffer();
 extern void test_chacha20();
 extern void test_chainparams_abi();
+extern void test_sighash_surface();
 extern void test_checkpoints();
 extern void test_cstr();
 extern void test_ecc();
@@ -208,6 +209,7 @@ int main()
     u_run_test(test_buffer);
     u_run_test(test_chacha20);
     u_run_test(test_chainparams_abi);
+    u_run_test(test_sighash_surface);
     u_run_test(test_checkpoints);
     u_run_test(test_cstr);
     u_run_test(test_ecc);
